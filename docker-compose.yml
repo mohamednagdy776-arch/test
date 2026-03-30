@@ -1,61 +1,89 @@
 version: '3.8'
 
 services:
-  # Backend API service
+
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: ../docker/backend/Dockerfile
     ports:
       - "3000:3000"
+    env_file: .env
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://user:password@postgres:5432/jawazaty
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+      - REDIS_URL=redis://redis:6379
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - tayyibt-network
+    restart: unless-stopped
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: ../docker/admin/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+    networks:
+      - tayyibt-network
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: ../docker/ai-service/Dockerfile
+    ports:
+      - "5000:5000"
+    env_file: .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
       - redis
     networks:
-      - jawazaty-network
+      - tayyibt-network
+    restart: unless-stopped
 
-  # PostgreSQL Database
   postgres:
-    image: postgres:15
+    image: postgres:15-alpine
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: jawazaty
+      POSTGRES_USER: ${DB_USER:-user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-tayyibt}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     networks:
-      - jawazaty-network
+      - tayyibt-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-user} -d ${DB_NAME:-tayyibt}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
-  # Redis Cache
   redis:
-    image: redis:7
+    image: redis:7-alpine
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     networks:
-      - jawazaty-network
-
-  # AI Service
-  ai-service:
-    build:
-      context: ./ai-service
-      dockerfile: Dockerfile
-    ports:
-      - "5000:5000"
-    environment:
-      - FLASK_ENV=development
-    depends_on:
-      - backend
-    networks:
-      - jawazaty-network
+      - tayyibt-network
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  redis_data:
 
 networks:
-  jawazaty-network:
+  tayyibt-network:
     driver: bridge
