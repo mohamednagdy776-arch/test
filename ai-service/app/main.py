@@ -6,7 +6,7 @@ from app.core.config import settings
 app = FastAPI(
     title="Tayyibt AI Service",
     version="1.0.0",
-    docs_url="/docs" if settings.DEBUG else None,  # hide docs in production
+    docs_url="/docs",  # always available in dev
 )
 
 app.add_middleware(
