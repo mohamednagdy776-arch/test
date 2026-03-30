@@ -10,6 +10,8 @@ docker/
 │   └── Dockerfile          # NestJS backend image
 ├── admin/
 │   └── Dockerfile          # Next.js admin dashboard image
+├── web/
+│   └── Dockerfile          # Next.js user-facing web app image
 ├── mobile/
 │   └── Dockerfile          # Flutter build image (CI/CD use)
 ├── ai-service/

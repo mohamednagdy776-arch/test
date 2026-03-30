@@ -19,7 +19,7 @@ To provide a secure, intelligent, and culturally aligned platform that facilitat
 - AI-Powered Matching (compatibility scoring 0–100)
 - Multi-Role System: Users, Guardians, Agents, Admins
 - Secure Communication: real-time chat, voice, video (premium)
-- Social Features: Groups, Posts, Comments, Nested Replies
+- Social Features: Groups, Posts, Comments, Nested Replies (like Facebook)
 - Subscription & Monetization: Free/Premium plans, affiliate commissions
 - Multi-Language: Arabic-first (RTL), English, French, Turkish, Urdu
 
@@ -27,8 +27,9 @@ To provide a secure, intelligent, and culturally aligned platform that facilitat
 
 ## Platforms
 
+- Web App (Next.js) — user-facing web platform (matching, chat, groups, posts, profile)
 - Mobile App (Flutter) — Android & iOS
-- Admin Dashboard (Next.js)
+- Admin Dashboard (Next.js) — internal admin panel only
 - Backend API (NestJS REST + WebSocket)
 - AI Service (FastAPI / Python)
 
@@ -37,12 +38,14 @@ To provide a secure, intelligent, and culturally aligned platform that facilitat
 ## Technology Stack
 
 - Backend: NestJS + TypeScript
-- Frontend: Next.js + React
+- Web App: Next.js + React + Tailwind CSS (user-facing)
+- Admin: Next.js + React + Tailwind CSS (admin only)
 - Mobile: Flutter + Dart
 - AI: FastAPI + Python
 - Database: PostgreSQL + Redis
 - Storage: AWS S3
 - Auth: JWT (access + refresh tokens)
+- Real-time: Socket.IO WebSocket
 
 ---
 
@@ -50,7 +53,8 @@ To provide a secure, intelligent, and culturally aligned platform that facilitat
 
 - Modular Monolith (Phase 1) → Microservices-ready (Phase 2)
 - AI service is a separate microservice
-- Real-time via WebSocket
+- Real-time via WebSocket (chat, notifications)
+- Web and Mobile share the same backend API
 
 ---
 
@@ -63,6 +67,6 @@ To provide a secure, intelligent, and culturally aligned platform that facilitat
 
 ## Development Phases
 
-- Phase 1 (MVP): Auth, profiles, basic AI matching, text chat, admin dashboard, subscriptions
+- Phase 1 (MVP): Auth, profiles, basic AI matching, text chat, admin dashboard, subscriptions, web app
 - Phase 2: Video calls, real-time translation, social features, AI improvements
 - Phase 3+: AI child prediction, genetic analysis, marketplace & real estate modules

@@ -36,6 +36,21 @@ services:
       - tayyibt-network
     restart: unless-stopped
 
+  web:
+    build:
+      context: ./web
+      dockerfile: ../docker/web/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+        - NEXT_PUBLIC_WS_URL=http://localhost:3000
+    ports:
+      - "3002:3002"
+    depends_on:
+      - backend
+    networks:
+      - tayyibt-network
+    restart: unless-stopped
+
   ai-service:
     build:
       context: ./ai-service

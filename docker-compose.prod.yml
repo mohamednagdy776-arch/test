@@ -58,6 +58,21 @@ services:
       - tayyibt-network
     restart: always
 
+  web:
+    build:
+      context: ./web
+      dockerfile: ../docker/web/Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+    expose:
+      - "3002"
+    depends_on:
+      - backend
+    networks:
+      - tayyibt-network
+    restart: always
+
   ai-service:
     build:
       context: ./ai-service

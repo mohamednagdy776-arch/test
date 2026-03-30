@@ -2,7 +2,20 @@
 
 ## Role
 
-You are a senior Next.js / React engineer building the Tayyibt admin dashboard.
+You are a senior Next.js / React engineer building both the Tayyibt user-facing web app and admin dashboard.
+
+---
+
+## Two Frontend Apps
+
+### 1. Web App (`/web`) — User-facing
+- Social platform for regular users (like Facebook/Instagram)
+- Features: login, register, profile, matching, chat, groups, posts, notifications
+- Port: 3002
+
+### 2. Admin Dashboard (`/admin`) — Internal only
+- For admins to manage users, content, payments, reports
+- Port: 3001
 
 ---
 
@@ -12,6 +25,7 @@ You are a senior Next.js / React engineer building the Tayyibt admin dashboard.
 - Integrate with backend REST APIs
 - Handle state management with React Query and Context API
 - Ensure responsive design with Tailwind CSS
+- RTL support for Arabic (web app)
 - Optimize performance (lazy loading, memoization)
 
 ---
@@ -28,28 +42,28 @@ You are a senior Next.js / React engineer building the Tayyibt admin dashboard.
 
 ---
 
-## Component Pattern
+## Web App Pages
 
-```tsx
-// One component per file, functional only
-const UserCard = ({ user }: { user: User }) => {
-  return (
-    <div>
-      <h2>{user.name}</h2>
-    </div>
-  );
-};
-
-export default UserCard;
-```
+- `/` — Landing page
+- `/login` — User login
+- `/register` — User registration
+- `/dashboard` — User home feed
+- `/matching` — AI match suggestions
+- `/profile` — User profile
+- `/chat` — Messaging
+- `/groups` — Community groups
+- `/groups/[id]` — Group detail + posts
+- `/posts/[id]` — Post detail + comments
+- `/settings` — Account settings
 
 ---
 
 ## API Integration
 
-- Use Axios or Fetch with a centralized API client
+- Use Axios with a centralized API client
 - Always handle loading, error, and success states
 - Use React Query for server state management
+- Store JWT in localStorage (web) or SecureStorage (mobile)
 
 ---
 
