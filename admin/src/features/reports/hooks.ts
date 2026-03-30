@@ -11,3 +11,11 @@ export const useResolveReport = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['reports'] }),
   });
 };
+
+export const useDismissReport = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: reportsApi.dismiss,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['reports'] }),
+  });
+};
