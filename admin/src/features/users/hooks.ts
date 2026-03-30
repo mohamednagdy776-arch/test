@@ -14,3 +14,11 @@ export const useBanUser = () => {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
   });
 };
+
+export const useUnbanUser = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: usersApi.unban,
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+  });
+};
