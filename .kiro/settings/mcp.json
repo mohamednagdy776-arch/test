@@ -1,0 +1,25 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "../"],
+      "disabled": false,
+      "autoApprove": []
+    },
+    "database": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "${DATABASE_URL}"],
+      "env": {
+        "DATABASE_URL": "${DATABASE_URL}"
+      },
+      "disabled": false,
+      "autoApprove": []
+    },
+    "git": {
+      "command": "C:\\Users\\Combu saif\\.local\\bin\\uvx.exe",
+      "args": ["mcp-server-git", "--repository", "../"],
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}

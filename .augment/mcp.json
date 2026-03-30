@@ -1,0 +1,23 @@
+{
+  "servers": [
+    {
+      "name": "filesystem",
+      "type": "filesystem",
+      "root": "./"
+    },
+    {
+      "name": "api",
+      "type": "http",
+      "baseUrl": "http://localhost:3000/api/v1"
+    },
+    {
+      "name": "database",
+      "type": "postgres",
+      "connectionString": "postgresql://user:password@localhost:5432/tayyibt"
+    },
+    {
+      "name": "git",
+      "type": "git"
+    }
+  ]
+}
