@@ -28,7 +28,7 @@ const PostCard = ({ post }: { post: Post }) => (
 export const PostFeed = () => {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['posts-feed'],
-    queryFn: () => apiClient.get('/posts', { params: { page: 1, limit: 20 } }).then((r) => r.data),
+    queryFn: () => apiClient.get('/feed', { params: { page: 1, limit: 20 } }).then((r) => r.data),
   });
 
   if (isLoading) return <div className="space-y-4">{[1,2,3].map((i) => <div key={i} className="h-32 rounded-xl bg-white animate-pulse" />)}</div>;
