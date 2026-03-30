@@ -17,6 +17,12 @@ export class MatchingController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  @Get(':id')
+  async getById(@Param('id') id: string) {
+    const match = await this.matchingService.getById(id);
+    return ok(match);
+  }
+
   @Patch(':id/accept')
   async accept(@Param('id') id: string, @CurrentUser() user: User) {
     const match = await this.matchingService.respondToMatch(id, user.id, 'accepted');

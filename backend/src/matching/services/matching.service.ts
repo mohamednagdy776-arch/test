@@ -24,4 +24,8 @@ export class MatchingService {
     match.status = status;
     return this.matchesRepo.save(match);
   }
+
+  async getById(id: string) {
+    return this.matchesRepo.findOneOrFail({ where: { id } });
+  }
 }

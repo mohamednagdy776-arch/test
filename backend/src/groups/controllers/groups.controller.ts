@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { GroupsService } from '../services/groups.service';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { ok, paginated } from '../../common/response.helper';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { User } from '../../auth/entities/user.entity';
@@ -22,5 +24,13 @@ export class GroupsController {
   async findAll(@Query() query: PaginationDto) {
     const { data, total } = await this.groupsService.findAll(query.page!, query.limit!);
     return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async delete(@Param('id') id: string) {
+    await this.groupsService.delete(id);
+    return ok(null, 'Group deleted');
   }
 }

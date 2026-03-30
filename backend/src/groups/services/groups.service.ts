@@ -24,4 +24,8 @@ export class GroupsService {
     });
     return { data, total };
   }
+
+  async delete(groupId: string) {
+    await this.groupsRepo.delete(groupId);
+  }
 }

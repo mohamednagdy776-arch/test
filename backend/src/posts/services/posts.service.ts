@@ -30,6 +30,17 @@ export class PostsService {
     return { data, total };
   }
 
+  // Admin: list all posts across all groups
+  async findAll(page: number, limit: number) {
+    const [data, total] = await this.postsRepo.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['group', 'user'],
+    });
+    return { data, total };
+  }
+
   async delete(postId: string) {
     await this.postsRepo.delete(postId);
   }
