@@ -6,9 +6,11 @@
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "baseUrl": "../backend",
+    "strict": false,
+    "types": ["node"],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["../backend/src/*"]
     }
   },
   "include": ["./**/*.ts"],

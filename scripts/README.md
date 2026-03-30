@@ -19,21 +19,48 @@ scripts/
     └── generate-module.sh  # Scaffold a new NestJS module
 ```
 
+## Setup
+
+Install script dependencies first (one time):
+```bash
+cd scripts && npm install
+```
+
 ## Usage Examples
 
 Seed the database:
 ```bash
-npx ts-node scripts/db/seed.ts
+cd scripts && npm run seed
+```
+
+Run migrations:
+```bash
+cd scripts && npm run migrate
+```
+
+Reset database (dev only — requires --confirm):
+```bash
+cd scripts && npm run reset -- --confirm
 ```
 
 Precompute AI matches:
 ```bash
-npx ts-node scripts/ai/precompute-matches.ts
+cd scripts && npm run precompute
+```
+
+Scaffold a new NestJS module:
+```bash
+bash scripts/utils/generate-module.sh <module-name>
 ```
 
 Deploy to staging:
 ```bash
 bash scripts/deploy/deploy-staging.sh
+```
+
+Deploy to production:
+```bash
+bash scripts/deploy/deploy-prod.sh
 ```
 
 ## Standards

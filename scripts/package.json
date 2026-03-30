@@ -1,0 +1,24 @@
+{
+  "name": "tayyibt-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "seed": "ts-node --project tsconfig.json db/seed.ts",
+    "migrate": "ts-node --project tsconfig.json db/migrate.ts",
+    "reset": "ts-node --project tsconfig.json db/reset.ts",
+    "precompute": "ts-node --project tsconfig.json ai/precompute-matches.ts"
+  },
+  "dependencies": {
+    "typeorm": "^0.3.0",
+    "pg": "^8.0.0",
+    "bcrypt": "^5.0.0",
+    "dotenv": "^16.0.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
