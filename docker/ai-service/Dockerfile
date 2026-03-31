@@ -3,6 +3,13 @@ FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
+# Install build dependencies for packages like scikit-learn
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Install deps into a virtual env to keep the final image clean
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
