@@ -17,6 +17,7 @@ export const Navbar = () => {
         <Link href="/dashboard" className="text-xl font-bold text-primary">طيبت</Link>
         <div className="flex items-center gap-4">
           <Link href="/matching" className="text-sm text-gray-600 hover:text-primary">التوافق</Link>
+          <Link href="/search" className="text-sm text-gray-600 hover:text-primary">البحث</Link>
           <Link href="/groups" className="text-sm text-gray-600 hover:text-primary">المجتمعات</Link>
           <Link href="/chat" className="text-sm text-gray-600 hover:text-primary">المحادثات</Link>
           <Link href="/profile" className="text-sm text-gray-600 hover:text-primary">الملف</Link>

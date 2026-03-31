@@ -5,6 +5,7 @@ import { clsx } from 'clsx';
 
 const navItems = [
   { label: 'الرئيسية', href: '/dashboard', icon: '🏠' },
+  { label: 'البحث', href: '/search', icon: '🔍' },
   { label: 'التوافق', href: '/matching', icon: '💫' },
   { label: 'المجتمعات', href: '/groups', icon: '👥' },
   { label: 'المحادثات', href: '/chat', icon: '💬' },
