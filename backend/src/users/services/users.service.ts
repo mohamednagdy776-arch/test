@@ -13,15 +13,31 @@ export class UsersService {
   ) {}
 
   async getProfile(userId: string) {
+    // Return profile if exists, otherwise return null (user can create it)
     const profile = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
-    if (!profile) throw new NotFoundException('Profile not found');
-    return profile;
+    return profile ?? null;
+  }
+
+  async createProfile(userId: string, dto: UpdateProfileDto) {
+    const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
+    if (existing) {
+      Object.assign(existing, dto);
+      return this.profilesRepo.save(existing);
+    }
+    const profile = this.profilesRepo.create({
+      ...dto,
+      user: { id: userId } as any,
+      fullName: dto.fullName ?? '',
+      age: dto.age ?? 18,
+      gender: 'male',
+      country: dto.country ?? '',
+      city: dto.city ?? '',
+    });
+    return this.profilesRepo.save(profile);
   }
 
   async updateProfile(userId: string, dto: UpdateProfileDto) {
-    const profile = await this.getProfile(userId);
-    Object.assign(profile, dto);
-    return this.profilesRepo.save(profile);
+    return this.createProfile(userId, dto);
   }
 
   // Admin: list all users with pagination

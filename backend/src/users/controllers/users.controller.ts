@@ -14,6 +14,18 @@ import { User } from '../../auth/entities/user.entity';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  @Get('me')
+  async getProfile(@CurrentUser() user: User) {
+    const profile = await this.usersService.getProfile(user.id);
+    return ok(profile);
+  }
+
+  @Patch('me')
+  async updateProfile(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
+    const profile = await this.usersService.updateProfile(user.id, dto);
+    return ok(profile, 'Profile updated');
+  }
+
   // Admin: list all users
   @Get()
   @UseGuards(RolesGuard)
@@ -23,7 +35,7 @@ export class UsersController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
-  // Admin: get user by id
+  // Admin: get user by id — must be AFTER /me to avoid conflict
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -48,17 +60,5 @@ export class UsersController {
   async unban(@Param('id') id: string) {
     const user = await this.usersService.unban(id);
     return ok(user, 'User unbanned');
-  }
-
-  @Get('me')
-  async getProfile(@CurrentUser() user: User) {
-    const profile = await this.usersService.getProfile(user.id);
-    return ok(profile);
-  }
-
-  @Patch('me')
-  async updateProfile(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
-    const profile = await this.usersService.updateProfile(user.id, dto);
-    return ok(profile, 'Profile updated');
   }
 }
