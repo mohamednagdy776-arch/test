@@ -1,14 +1,7 @@
 # ── Stage 1: Build ──────────────────────────────────────────────
-FROM python:3.11-slim AS builder
+FROM python:3.11 AS builder
 
 WORKDIR /app
-
-# Install build dependencies for packages like scikit-learn
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
 
 # Install deps into a virtual env to keep the final image clean
 RUN python -m venv /opt/venv
@@ -18,7 +11,7 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Stage 2: Production image ────────────────────────────────────
-FROM python:3.11-slim AS runner
+FROM python:3.11 AS runner
 
 WORKDIR /app
 
