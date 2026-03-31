@@ -15,47 +15,34 @@ import { User } from '../../auth/entities/user.entity';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
+  // ── Current user ──────────────────────────────────────────────
+
   @Get('me')
   async getProfile(@CurrentUser() user: User) {
-    const profile = await this.usersService.getProfile(user.id);
-    return ok(profile);
+    return ok(await this.usersService.getProfile(user.id));
   }
 
   @Patch('me')
   async updateProfile(@CurrentUser() user: User, @Body() dto: UpdateProfileDto) {
-    const profile = await this.usersService.updateProfile(user.id, dto);
-    return ok(profile, 'Profile updated');
+    return ok(await this.usersService.updateProfile(user.id, dto), 'Profile updated');
   }
 
-  // Search users with filters
+  // ── Search (must be before :id routes) ───────────────────────
+
   @Get('search')
   async search(@Query() dto: SearchUsersDto) {
-    const result = await this.usersService.searchUsers(dto);
-    return ok(result);
+    return ok(await this.usersService.searchUsers(dto));
   }
 
-  // Get public profile of another user
+  // ── Public profile ────────────────────────────────────────────
+
   @Get(':id/profile')
   async getPublicProfile(@Param('id') id: string) {
-    const profile = await this.usersService.getPublicProfile(id);
-    return ok(profile);
+    return ok(await this.usersService.getPublicProfile(id));
   }
 
-  // Search users by profile fields
-  @Get('search')
-  async search(@Query() dto: SearchUsersDto, @CurrentUser() user: User) {
-    const result = await this.usersService.search(dto, user.id);
-    return ok(result);
-  }
+  // ── Admin ─────────────────────────────────────────────────────
 
-  // Get any user's public profile
-  @Get(':id/profile')
-  async getPublicProfile(@Param('id') id: string) {
-    const profile = await this.usersService.getPublicProfile(id);
-    return ok(profile);
-  }
-
-  // Admin: list all users
   @Get()
   @UseGuards(RolesGuard)
   @Roles('admin')
@@ -64,30 +51,24 @@ export class UsersController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
-  // Admin: get user by id — must be AFTER /me to avoid conflict
   @Get(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
   async findOne(@Param('id') id: string) {
-    const user = await this.usersService.findOne(id);
-    return ok(user);
+    return ok(await this.usersService.findOne(id));
   }
 
-  // Admin: ban user
   @Patch(':id/ban')
   @UseGuards(RolesGuard)
   @Roles('admin')
   async ban(@Param('id') id: string) {
-    const user = await this.usersService.ban(id);
-    return ok(user, 'User banned');
+    return ok(await this.usersService.ban(id), 'User banned');
   }
 
-  // Admin: unban user
   @Patch(':id/unban')
   @UseGuards(RolesGuard)
   @Roles('admin')
   async unban(@Param('id') id: string) {
-    const user = await this.usersService.unban(id);
-    return ok(user, 'User unbanned');
+    return ok(await this.usersService.unban(id), 'User unbanned');
   }
 }
