@@ -7,7 +7,6 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { UsersService } from '../services/users.service';
 import { ok } from '../../common/response.helper';
 import { User } from '../../auth/entities/user.entity';
-import { memoryStorage } from 'multer';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -16,9 +15,8 @@ export class AvatarController {
 
   @Post('me/avatar')
   @UseInterceptors(FileInterceptor('file', {
-    storage: memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-    fileFilter: (_, file, cb) => {
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (_req: any, file: any, cb: any) => {
       if (!file.mimetype.startsWith('image/')) {
         return cb(new BadRequestException('Only image files allowed'), false);
       }
@@ -26,15 +24,13 @@ export class AvatarController {
     },
   }))
   async uploadAvatar(
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file: any,
     @CurrentUser() user: User,
   ) {
     if (!file) throw new BadRequestException('No file uploaded');
 
-    // Convert to base64 data URL for storage (no S3 needed in dev)
-    const base64 = file.buffer.toString('base64');
-    const dataUrl = `data:${file.mimetype};base64,${base64}`;
-
+    // Store as base64 data URL (no S3 needed in dev)
+    const dataUrl = `data:${file.mimetype};base64,${(file.buffer as Buffer).toString('base64')}`;
     const profile = await this.usersService.updateProfile(user.id, { avatarUrl: dataUrl });
     return ok({ avatarUrl: profile.avatarUrl }, 'Avatar uploaded');
   }
