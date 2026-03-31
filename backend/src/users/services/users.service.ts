@@ -29,7 +29,7 @@ export class UsersService {
       user: { id: userId } as any,
       fullName: dto.fullName ?? '',
       age: dto.age ?? 18,
-      gender: 'male',
+      gender: dto.gender ?? 'male',
       country: dto.country ?? '',
       city: dto.city ?? '',
     });
