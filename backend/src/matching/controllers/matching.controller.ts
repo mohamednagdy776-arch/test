@@ -17,6 +17,15 @@ export class MatchingController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  @Get('profile/:userId')
+  async getProfileWithMatch(
+    @CurrentUser() user: User,
+    @Param('userId') targetUserId: string,
+  ) {
+    const result = await this.matchingService.getProfileWithMatchScore(user.id, targetUserId);
+    return ok(result);
+  }
+
   @Get(':id')
   async getById(@Param('id') id: string) {
     const match = await this.matchingService.getById(id);

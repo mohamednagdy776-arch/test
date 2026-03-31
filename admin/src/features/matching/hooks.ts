@@ -3,3 +3,10 @@ import { matchingApi } from './api';
 
 export const useMatches = (page = 1) =>
   useQuery({ queryKey: ['matches', page], queryFn: () => matchingApi.getAll(page) });
+
+export const useProfileWithMatch = (userId: string) =>
+  useQuery({
+    queryKey: ['matches', 'profile', userId],
+    queryFn: () => matchingApi.getProfileWithMatch(userId),
+    enabled: !!userId,
+  });

@@ -6,11 +6,15 @@ import { Message } from '../entities/message.entity';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ok } from '../../common/response.helper';
 import { User } from '../../auth/entities/user.entity';
-import { IsString } from 'class-validator';
+import { IsString, IsUUID } from 'class-validator';
 
 class SendMessageDto {
   @IsString() matchId: string;
   @IsString() content: string;
+}
+
+class CreateConversationDto {
+  @IsUUID() targetUserId: string;
 }
 
 @UseGuards(AuthGuard('jwt'))
@@ -57,5 +61,18 @@ export class ChatController {
       type: saved.type,
       createdAt: saved.createdAt,
     }, 'Message sent');
+  }
+
+  // Create a conversation (returns a match ID for chat)
+  @Post('conversations')
+  async createConversation(@Body() dto: CreateConversationDto, @CurrentUser() user: User) {
+    // Return a virtual conversation ID that can be used for messaging
+    // The conversation is identified by the two user IDs combined
+    const conversationId = [user.id, dto.targetUserId].sort().join('-');
+    return ok({
+      conversationId,
+      userId: dto.targetUserId,
+      createdAt: new Date().toISOString(),
+    }, 'Conversation ready');
   }
 }

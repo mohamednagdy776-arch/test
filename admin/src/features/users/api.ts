@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client';
-import type { ApiResponse, PaginatedResponse, User } from '@/types';
+import type { ApiResponse, PaginatedResponse, User, SearchParams, UserProfile } from '@/types';
 
 export const usersApi = {
   getAll: (page = 1, limit = 20) =>
@@ -13,4 +13,10 @@ export const usersApi = {
 
   unban: (id: string) =>
     apiClient.patch<ApiResponse<User>>(`/users/${id}/unban`).then((r) => r.data),
+
+  search: (params: SearchParams) =>
+    apiClient.get<PaginatedResponse<UserProfile>>('/users/search', { params }).then((r) => r.data),
+
+  getProfile: (id: string) =>
+    apiClient.get<ApiResponse<UserProfile>>(`/users/${id}/profile`).then((r) => r.data),
 };

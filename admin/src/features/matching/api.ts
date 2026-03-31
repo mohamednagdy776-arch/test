@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client';
-import type { ApiResponse, PaginatedResponse, Match } from '@/types';
+import type { ApiResponse, PaginatedResponse, Match, ProfileWithMatch } from '@/types';
 
 export const matchingApi = {
   getAll: (page = 1, limit = 20) =>
@@ -7,4 +7,7 @@ export const matchingApi = {
 
   getById: (id: string) =>
     apiClient.get<ApiResponse<Match>>(`/matches/${id}`).then((r) => r.data),
+
+  getProfileWithMatch: (userId: string) =>
+    apiClient.get<ApiResponse<ProfileWithMatch>>(`/matches/profile/${userId}`).then((r) => r.data),
 };

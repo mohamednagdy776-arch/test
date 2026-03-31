@@ -61,3 +61,75 @@ export interface Transaction {
   status: string;
   createdAt: string;
 }
+
+// Search parameters for user search
+export interface SearchParams {
+  name?: string;
+  gender?: string;
+  country?: string;
+  city?: string;
+  sect?: string;
+  lifestyle?: string;
+  education?: string;
+  prayerLevel?: string;
+  minAge?: number;
+  maxAge?: number;
+  page?: number;
+  limit?: number;
+}
+
+// User profile with extended details
+export interface UserProfile {
+  id: string;
+  email: string;
+  phone: string;
+  accountType: 'user' | 'guardian' | 'agent' | 'admin';
+  status: 'active' | 'pending' | 'banned';
+  createdAt: string;
+  // Extended profile fields
+  firstName?: string;
+  lastName?: string;
+  gender?: 'male' | 'female';
+  age?: number;
+  dateOfBirth?: string;
+  country?: string;
+  city?: string;
+  sect?: string;
+  lifestyle?: string;
+  education?: string;
+  occupation?: string;
+  bio?: string;
+  avatar?: string;
+  prayerLevel?: 'never' | 'sometimes' | 'always';
+  lookingFor?: string;
+}
+
+// Profile with match score
+export interface ProfileWithMatch {
+  user: UserProfile;
+  matchScore: number;
+  matchReasons?: string[];
+  compatibilityDetails?: {
+    criteria: string;
+    score: number;
+    weight: number;
+  }[];
+}
+
+// Chat and Conversation types
+export interface Conversation {
+  id: string;
+  conversationId: string;
+  userId: string;
+  createdAt: string;
+}
+
+export interface Message {
+  id: string;
+  conversationId: string;
+  content: string;
+  senderId: string;
+  isOwn: boolean;
+  type: 'text' | 'image' | 'video';
+  createdAt: string;
+}
