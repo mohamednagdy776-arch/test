@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike, Between, FindOptionsWhere } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Profile } from '../entities/profile.entity';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 import { SearchUsersDto } from '../dto/search-users.dto';
@@ -14,9 +14,7 @@ export class UsersService {
   ) {}
 
   async getProfile(userId: string) {
-    // Return profile if exists, otherwise return null (user can create it)
-    const profile = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
-    return profile ?? null;
+    return this.profilesRepo.findOne({ where: { user: { id: userId } } }) ?? null;
   }
 
   async createProfile(userId: string, dto: UpdateProfileDto) {
@@ -41,6 +39,7 @@ export class UsersService {
     return this.createProfile(userId, dto);
   }
 
+  // Search users by profile fields
   async searchUsers(dto: SearchUsersDto) {
     const { name, gender, country, city, sect, lifestyle, education, prayerLevel, minAge, maxAge, page = 1, limit = 20 } = dto;
 
@@ -65,25 +64,29 @@ export class UsersService {
       .take(limit)
       .getManyAndCount();
 
-    const data = profiles.map((p) => ({
-      userId: p.user?.id,
-      fullName: p.fullName,
-      age: p.age,
-      gender: p.gender,
-      country: p.country,
-      city: p.city,
-      education: p.education,
-      jobTitle: p.jobTitle,
-      lifestyle: p.lifestyle,
-      sect: p.sect,
-      prayerLevel: p.prayerLevel,
-      bio: p.bio,
-      avatarUrl: p.avatarUrl,
-    }));
-
-    return { data, total, page, totalPages: Math.ceil(total / limit) };
+    return {
+      data: profiles.map((p) => ({
+        userId: p.user?.id,
+        fullName: p.fullName,
+        age: p.age,
+        gender: p.gender,
+        country: p.country,
+        city: p.city,
+        education: p.education,
+        jobTitle: p.jobTitle,
+        lifestyle: p.lifestyle,
+        sect: p.sect,
+        prayerLevel: p.prayerLevel,
+        bio: p.bio,
+        avatarUrl: p.avatarUrl,
+      })),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
+  // Get public profile of any user
   async getPublicProfile(userId: string) {
     const profile = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
     if (!profile) return null;
@@ -105,70 +108,7 @@ export class UsersService {
     };
   }
 
-  // Public: get any user's profile by userId
-  async getPublicProfile(userId: string) {
-    return this.profilesRepo.findOne({
-      where: { user: { id: userId } },
-      relations: ['user'],
-    });
-  }
-
-  // Search users by profile fields
-  async search(dto: SearchUsersDto, currentUserId: string) {
-    const where: FindOptionsWhere<Profile> = {};
-
-    if (dto.name) where.fullName = ILike(`%${dto.name}%`);
-    if (dto.gender) where.gender = dto.gender;
-    if (dto.country) where.country = ILike(`%${dto.country}%`);
-    if (dto.city) where.city = ILike(`%${dto.city}%`);
-    if (dto.sect) where.sect = dto.sect;
-    if (dto.lifestyle) where.lifestyle = dto.lifestyle;
-    if (dto.education) where.education = dto.education;
-    if (dto.prayerLevel) where.prayerLevel = dto.prayerLevel;
-    if (dto.minAge && dto.maxAge) where.age = Between(dto.minAge, dto.maxAge);
-    else if (dto.minAge) where.age = Between(dto.minAge, 100);
-    else if (dto.maxAge) where.age = Between(0, dto.maxAge);
-
-    const page = dto.page ?? 1;
-    const limit = dto.limit ?? 20;
-
-    const [data, total] = await this.profilesRepo.findAndCount({
-      where,
-      relations: ['user'],
-      order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
-
-    // Exclude current user and banned users
-    const filtered = data.filter(
-      (p) => p.user?.id !== currentUserId && p.user?.status !== 'banned'
-    );
-
-    return {
-      data: filtered.map((p) => ({
-        userId: p.user?.id,
-        fullName: p.fullName,
-        age: p.age,
-        gender: p.gender,
-        country: p.country,
-        city: p.city,
-        education: p.education,
-        jobTitle: p.jobTitle,
-        lifestyle: p.lifestyle,
-        sect: p.sect,
-        prayerLevel: p.prayerLevel,
-        avatarUrl: p.avatarUrl,
-        bio: p.bio,
-      })),
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  // Admin: list all users with pagination
+  // Admin: list all users
   async findAll(page: number, limit: number) {
     const [data, total] = await this.usersRepo.findAndCount({
       order: { createdAt: 'DESC' },
@@ -186,13 +126,11 @@ export class UsersService {
     });
   }
 
-  // Admin: ban a user
   async ban(userId: string) {
     await this.usersRepo.update(userId, { status: 'banned' });
     return this.usersRepo.findOneOrFail({ where: { id: userId } });
   }
 
-  // Admin: unban a user
   async unban(userId: string) {
     await this.usersRepo.update(userId, { status: 'active' });
     return this.usersRepo.findOneOrFail({ where: { id: userId } });
