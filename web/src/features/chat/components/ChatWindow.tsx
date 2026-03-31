@@ -32,13 +32,12 @@ export const ChatWindow = ({ match, onBack }: Props) => {
 
   useEffect(() => {
     if (data?.data) {
-      const userId = typeof window !== 'undefined' ? localStorage.getItem('user_id') : null;
       setMessages(data.data.map((m: any) => ({
         id: m.id,
-        content: m.contentEncrypted,
-        senderId: m.sender?.id,
+        content: m.content,
+        senderId: m.senderId,
         timestamp: m.createdAt,
-        isOwn: m.sender?.id === userId,
+        isOwn: m.isOwn,
       })));
     }
   }, [data]);
