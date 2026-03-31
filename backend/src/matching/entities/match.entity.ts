@@ -18,7 +18,7 @@ export class Match {
   score: number;
 
   @Column({ default: 'pending' })
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'chat';
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

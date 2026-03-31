@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
@@ -20,7 +21,21 @@ const categories = [
 ];
 
 export const UserProfileModal = ({ user, onClose }: Props) => {
+  const router = useRouter();
   const [tab, setTab] = useState<'profile' | 'match'>('profile');
+
+  // Create conversation mutation
+  const createConversation = useMutation({
+    mutationFn: () => apiClient.post('/chat/conversations', { targetUserId: user.userId }),
+    onSuccess: (response) => {
+      const { matchId } = response.data.data;
+      onClose();
+      router.push(`/chat?conversation=${matchId}&user=${user.userId}`);
+    },
+    onError: () => {
+      alert('Failed to start chat. Please try again.');
+    },
+  });
 
   // Fetch full profile
   const { data: profileData } = useQuery({
@@ -35,26 +50,22 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
     queryFn: () => apiClient.get('/users/me').then((r) => r.data),
   });
 
-  const [aiScore, setAiScore] = useState<{ compatibilityScore: number; matchReasons: string[] } | null>(null);
+  const [aiScore, setAiScore] = useState<{ matchScore: number; matchReasons: string[] } | null>(null);
   const [loadingScore, setLoadingScore] = useState(false);
 
   const calcScore = async () => {
     if (aiScore) return;
     setLoadingScore(true);
     try {
-      const me = myProfile?.data;
-      const res = await fetch('http://localhost:5000/api/v1/match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_a: { user_id: 'me', age: me?.age, country: me?.country, city: me?.city, sect: me?.sect, lifestyle: me?.lifestyle, prayer_level: me?.prayerLevel },
-          user_b: { user_id: user.userId, age: user.age, country: user.country, city: user.city, sect: user.sect, lifestyle: user.lifestyle, prayer_level: user.prayerLevel },
-        }),
+      // Call backend endpoint instead of AI service directly
+      const res = await apiClient.get(`/matches/profile/${user.userId}`);
+      const data = res.data?.data;
+      setAiScore({
+        matchScore: data?.matchScore ?? 0,
+        matchReasons: data?.matchReasons ?? [],
       });
-      const json = await res.json();
-      setAiScore(json);
     } catch {
-      setAiScore({ compatibilityScore: 0, matchReasons: ['تعذر حساب التوافق'] });
+      setAiScore({ matchScore: 0, matchReasons: ['تعذر حساب التوافق'] });
     } finally {
       setLoadingScore(false);
     }
@@ -137,15 +148,15 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
               ) : aiScore ? (
                 <>
                   {/* Overall score */}
-                  <div className={`rounded-xl p-5 text-center ${aiScore.compatibilityScore >= 80 ? 'bg-green-50' : aiScore.compatibilityScore >= 60 ? 'bg-yellow-50' : 'bg-red-50'}`}>
-                    <p className={`text-6xl font-black ${scoreColor(aiScore.compatibilityScore)}`}>
-                      {aiScore.compatibilityScore}%
+                  <div className={`rounded-xl p-5 text-center ${aiScore.matchScore >= 80 ? 'bg-green-50' : aiScore.matchScore >= 60 ? 'bg-yellow-50' : 'bg-red-50'}`}>
+                    <p className={`text-6xl font-black ${scoreColor(aiScore.matchScore)}`}>
+                      {aiScore.matchScore}%
                     </p>
                     <p className="text-sm text-gray-500 mt-1">نسبة التوافق الإجمالية</p>
                   </div>
 
                   {/* Match reasons */}
-                  {aiScore.matchReasons.length > 0 && (
+                  {aiScore.matchReasons?.length > 0 && (
                     <div className="rounded-xl bg-blue-50 p-4">
                       <p className="text-xs font-semibold text-blue-700 mb-2">أسباب التوافق</p>
                       <ul className="space-y-1">
@@ -163,7 +174,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                     <p className="text-xs font-semibold text-gray-600 mb-3">تفصيل التوافق حسب المحاور</p>
                     <div className="space-y-3">
                       {categories.map((c) => {
-                        const val = Math.min(100, Math.round(aiScore.compatibilityScore * (0.7 + Math.random() * 0.6)));
+                        const val = Math.min(100, Math.round(aiScore.matchScore * (0.7 + Math.random() * 0.6)));
                         return (
                           <div key={c.label} className="flex items-center gap-3">
                             <span className="text-lg w-7 shrink-0">{c.icon}</span>
@@ -187,7 +198,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                     <div className="grid grid-cols-3 bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-500">
                       <span>المحور</span>
                       <span className="text-center">أنت</span>
-                      <span className="text-center">{user.fullName?.split(' ')[0]}</span>
+                      <span className="text-center">{user.fullName?.split(' ')?.[0] ?? ''}</span>
                     </div>
                     {[
                       ['المذهب', myProfile?.data?.sect, user.sect],
@@ -213,6 +224,27 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
               )}
             </div>
           )}
+        </div>
+
+        {/* Footer with Start Chat button */}
+        <div className="p-4 border-t bg-white">
+          <button
+            onClick={() => createConversation.mutate()}
+            disabled={createConversation.isPending}
+            className="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {createConversation.isPending ? (
+              <>
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <span>جاري بدء المحادثة...</span>
+              </>
+            ) : (
+              <>
+                <span>💬</span>
+                <span>ابدأ المحادثة</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

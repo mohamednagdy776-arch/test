@@ -22,8 +22,35 @@ export class MatchingService {
       order: { score: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
+      relations: ['user1', 'user2'],
     });
-    return { data, total };
+
+    // Enrich with profile data for the "other" user in each match
+    const enrichedData = await Promise.all(
+      data.map(async (match) => {
+        // Determine which user is the "other" user (not the current user)
+        const otherUserId = match.user1.id === userId ? match.user2.id : match.user1.id;
+        
+        // Get the other user's profile
+        const profile = await this.profilesRepo.findOne({
+          where: { user: { id: otherUserId } },
+        });
+
+        return {
+          id: match.id,
+          user1Id: match.user1.id,
+          user2Id: match.user2.id,
+          score: match.score,
+          status: match.status,
+          createdAt: match.createdAt,
+          // Include the other user's profile info for display
+          otherUserName: profile?.fullName || null,
+          otherUserAvatar: profile?.avatarUrl || null,
+        };
+      })
+    );
+
+    return { data: enrichedData, total };
   }
 
   async respondToMatch(matchId: string, userId: string, status: 'accepted' | 'rejected') {
@@ -60,7 +87,7 @@ export class MatchingService {
 
     // Call AI service for match score
     const aiResponse = await this.httpService.axiosRef.post(
-      'http://ai-service:8000/api/v1/match',
+      'http://ai-service:5000/api/v1/match',
       { user_a: profileA, user_b: profileB },
     );
 

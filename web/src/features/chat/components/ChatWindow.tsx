@@ -98,11 +98,17 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       {/* Header */}
       <div className="flex items-center gap-3 border-b px-4 py-3 shrink-0">
         <button onClick={onBack} className="lg:hidden text-gray-400 hover:text-gray-600 text-lg">←</button>
-        <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
-          {match.user2Id?.slice(0, 2).toUpperCase()}
+        <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm overflow-hidden">
+          {match.otherUserAvatar ? (
+            <img src={match.otherUserAvatar} alt="" className="w-full h-full object-cover" />
+          ) : (
+            (match.otherUserName || match.user2Id || 'U').charAt(0).toUpperCase()
+          )}
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">مستخدم {match.user2Id?.slice(0, 8)}</p>
+          <p className="text-sm font-semibold text-gray-900">
+            {match.otherUserName || `مستخدم ${match.user2Id?.slice(0, 8)}`}
+          </p>
           <p className="text-xs text-green-500">متصل</p>
         </div>
         <div className="mr-auto">

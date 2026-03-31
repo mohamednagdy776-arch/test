@@ -46,12 +46,16 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
             activeMatchId === m.id ? 'bg-primary/10' : 'bg-white hover:bg-gray-50'
           )}
         >
-          <div className="h-11 w-11 shrink-0 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-            {m.user2Id?.slice(0, 2).toUpperCase()}
+          <div className="h-11 w-11 shrink-0 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden">
+            {m.otherUserAvatar ? (
+              <img src={m.otherUserAvatar} alt="" className="w-full h-full object-cover" />
+            ) : (
+              (m.otherUserName || m.user2Id || 'U').charAt(0).toUpperCase()
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className={clsx('text-sm font-medium truncate', activeMatchId === m.id ? 'text-primary' : 'text-gray-900')}>
-              مستخدم {m.user2Id?.slice(0, 8)}
+              {m.otherUserName || `مستخدم ${m.user2Id?.slice(0, 8)}`}
             </p>
             <p className="text-xs text-gray-400 truncate">
               توافق {m.score}% · {new Date(m.createdAt).toLocaleDateString('ar-EG')}

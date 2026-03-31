@@ -30,7 +30,7 @@ export interface Match {
   user1Id: string;
   user2Id: string;
   score: number;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'chat';
   createdAt: string;
 }
 

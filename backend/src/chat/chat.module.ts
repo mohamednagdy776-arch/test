@@ -3,9 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Message } from './entities/message.entity';
 import { ChatGateway } from './chat.gateway';
 import { ChatController } from './controllers/chat.controller';
+import { Match } from '../matching/entities/match.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Message])],
+  imports: [TypeOrmModule.forFeature([Message, Match])],
   providers: [ChatGateway],
   controllers: [ChatController],
 })

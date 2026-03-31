@@ -1,6 +1,9 @@
 # ── Stage 1: Build ──────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
+# Install dependencies needed for Next.js SWC
+RUN apk add --no-cache libc6-compat
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -17,6 +20,9 @@ RUN npm run build
 
 # ── Stage 2: Production image ────────────────────────────────────
 FROM node:20-alpine AS runner
+
+# Install dependencies needed for runtime
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
