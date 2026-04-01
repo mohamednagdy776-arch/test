@@ -28,3 +28,41 @@ export function useCreatePost() {
     },
   });
 }
+
+export function useComments(postId: string) {
+  return useQuery({
+    queryKey: ['comments', postId],
+    queryFn: () => postsApi.getComments(postId),
+    enabled: !!postId,
+  });
+}
+
+export function useAddComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, content, parentId }: { postId: string; content: string; parentId?: string }) =>
+      postsApi.addComment(postId, content, parentId),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['comments', variables.postId] });
+    },
+  });
+}
+
+export function useReactions(postId: string) {
+  return useQuery({
+    queryKey: ['reactions', postId],
+    queryFn: () => postsApi.getReactions(postId),
+    enabled: !!postId,
+  });
+}
+
+export function useToggleReaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, type }: { postId: string; type: string }) =>
+      postsApi.toggleReaction(postId, type),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['reactions', variables.postId] });
+    },
+  });
+}
