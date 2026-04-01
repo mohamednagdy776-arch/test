@@ -21,6 +21,9 @@ export class Post {
   @Column({ name: 'media_url', nullable: true })
   mediaUrl: string;
 
+  @Column({ name: 'media_type', nullable: true })
+  mediaType: string; // 'image' | 'video' | null
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

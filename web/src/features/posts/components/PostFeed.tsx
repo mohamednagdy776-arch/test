@@ -1,10 +1,9 @@
 'use client';
 import { useState } from 'react';
 import { useFeed, useComments, useAddComment, useReactions, useToggleReaction } from '../hooks';
-import type { Post } from '@/types';
 
 // ─── Comment Section ──────────────────────────────────────────
-function CommentSection({ postId }: { postId: string }) {
+export function CommentSection({ postId }: { postId: string }) {
   const [text, setText] = useState('');
   const { data, isLoading } = useComments(postId);
   const addComment = useAddComment();
@@ -20,7 +19,6 @@ function CommentSection({ postId }: { postId: string }) {
 
   return (
     <div className="mt-3 border-t pt-3">
-      {/* Comment list */}
       {isLoading ? (
         <div className="space-y-2 mb-3">
           {[1, 2].map((i) => <div key={i} className="h-10 bg-gray-50 rounded-lg animate-pulse" />)}
@@ -48,7 +46,6 @@ function CommentSection({ postId }: { postId: string }) {
         <p className="text-xs text-gray-400 mb-3">لا توجد تعليقات بعد</p>
       )}
 
-      {/* Add comment */}
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           type="text"
@@ -70,7 +67,7 @@ function CommentSection({ postId }: { postId: string }) {
 }
 
 // ─── Reaction Bar ─────────────────────────────────────────────
-function ReactionBar({ postId }: { postId: string }) {
+export function ReactionBar({ postId }: { postId: string }) {
   const { data } = useReactions(postId);
   const toggle = useToggleReaction();
 
@@ -119,7 +116,7 @@ function ReactionBar({ postId }: { postId: string }) {
 }
 
 // ─── Post Card ────────────────────────────────────────────────
-function PostCard({ post }: { post: any }) {
+export function PostCard({ post, showGroupLink = true }: { post: any; showGroupLink?: boolean }) {
   const [showComments, setShowComments] = useState(false);
 
   const userName = post.user?.profile?.fullName || post.user?.email?.split('@')[0] || 'مستخدم';
@@ -127,9 +124,11 @@ function PostCard({ post }: { post: any }) {
   const groupName = post.group?.name;
   const groupId = post.group?.id;
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3000';
+  const mediaUrl = post.mediaUrl?.startsWith('/uploads/') ? `${apiUrl}${post.mediaUrl}` : post.mediaUrl;
+
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm border border-gray-100">
-      {/* User info */}
       <div className="mb-3 flex items-center gap-3">
         <div className="h-10 w-10 shrink-0 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
           {userInitial}
@@ -137,11 +136,8 @@ function PostCard({ post }: { post: any }) {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-gray-900">{userName}</p>
           <div className="flex items-center gap-2">
-            {groupName && (
-              <a
-                href={`/groups/${groupId}`}
-                className="text-xs text-primary hover:underline truncate"
-              >
+            {showGroupLink && groupName && (
+              <a href={`/groups/${groupId}`} className="text-xs text-primary hover:underline truncate">
                 في {groupName}
               </a>
             )}
@@ -156,18 +152,22 @@ function PostCard({ post }: { post: any }) {
         </div>
       </div>
 
-      {/* Content */}
       <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">{post.content}</p>
-      {post.mediaUrl && (
-        <img src={post.mediaUrl} alt="" className="mt-3 rounded-lg w-full object-cover max-h-64" />
+
+      {mediaUrl && post.mediaType === 'image' && (
+        <img src={mediaUrl} alt="" className="mt-3 rounded-lg w-full object-cover max-h-80" />
+      )}
+      {mediaUrl && post.mediaType === 'video' && (
+        <video src={mediaUrl} controls className="mt-3 rounded-lg w-full max-h-80" />
+      )}
+      {mediaUrl && !post.mediaType && (
+        <img src={mediaUrl} alt="" className="mt-3 rounded-lg w-full object-cover max-h-80" />
       )}
 
-      {/* Reactions */}
       <div className="mt-3 pt-3 border-t">
         <ReactionBar postId={post.id} />
       </div>
 
-      {/* Comment toggle */}
       <div className="mt-2">
         <button
           onClick={() => setShowComments(!showComments)}
@@ -177,7 +177,6 @@ function PostCard({ post }: { post: any }) {
         </button>
       </div>
 
-      {/* Comments */}
       {showComments && <CommentSection postId={post.id} />}
     </div>
   );
@@ -199,9 +198,7 @@ export const PostFeed = () => {
 
   if (isError) {
     return (
-      <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">
-        فشل تحميل المنشورات
-      </div>
+      <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">فشل تحميل المنشورات</div>
     );
   }
 

@@ -17,7 +17,12 @@ export class PostsService {
       group: { id: groupId } as any,
       user,
     });
-    return this.postsRepo.save(post);
+    const saved = await this.postsRepo.save(post);
+    // Reload with relations for the response
+    return this.postsRepo.findOne({
+      where: { id: (saved as any).id },
+      relations: ['user', 'group'],
+    });
   }
 
   async findByGroup(groupId: string, page: number, limit: number) {
@@ -26,12 +31,11 @@ export class PostsService {
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
-      relations: ['user'],
+      relations: ['user', 'group'],
     });
     return { data, total };
   }
 
-  // Admin: list all posts across all groups
   async findAll(page: number, limit: number) {
     const [data, total] = await this.postsRepo.findAndCount({
       order: { createdAt: 'DESC' },
@@ -42,7 +46,6 @@ export class PostsService {
     return { data, total };
   }
 
-  // Feed: list all posts with user info, ordered by newest
   async getFeed(page: number, limit: number) {
     const [data, total] = await this.postsRepo.findAndCount({
       order: { createdAt: 'DESC' },

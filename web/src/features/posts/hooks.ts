@@ -20,8 +20,20 @@ export function useGroupPosts(groupId: string, page = 1, limit = 20) {
 export function useCreatePost() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ groupId, content, mediaUrl }: { groupId: string; content: string; mediaUrl?: string }) =>
-      postsApi.createPost(groupId, content, mediaUrl),
+    mutationFn: ({ groupId, content, mediaUrl, mediaType }: { groupId: string; content: string; mediaUrl?: string; mediaType?: string }) =>
+      postsApi.createPost(groupId, content, mediaUrl, mediaType),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['feed'] });
+      qc.invalidateQueries({ queryKey: ['group-posts'] });
+    },
+  });
+}
+
+export function useCreatePostWithMedia() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ groupId, content, file }: { groupId: string; content: string; file: File }) =>
+      postsApi.createPostWithMedia(groupId, content, file),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['group-posts'] });
