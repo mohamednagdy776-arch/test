@@ -9,6 +9,7 @@ import { ChatModule } from './chat/chat.module';
 import { GroupsModule } from './groups/groups.module';
 import { PostsModule } from './posts/posts.module';
 import { CommentsModule } from './comments/comments.module';
+import { ReactionsModule } from './reactions/reactions.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { PaymentsModule } from './payments/payments.module';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -40,6 +41,7 @@ import { ReportsModule } from './reports/reports.module';
     GroupsModule,
     PostsModule,
     CommentsModule,
+    ReactionsModule,
     SubscriptionsModule,
     PaymentsModule,
     NotificationsModule,

@@ -26,6 +26,7 @@ export class PostsService {
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
+      relations: ['user'],
     });
     return { data, total };
   }
@@ -41,7 +42,25 @@ export class PostsService {
     return { data, total };
   }
 
+  // Feed: list all posts with user info, ordered by newest
+  async getFeed(page: number, limit: number) {
+    const [data, total] = await this.postsRepo.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['user', 'group'],
+    });
+    return { data, total };
+  }
+
   async delete(postId: string) {
     await this.postsRepo.delete(postId);
+  }
+
+  async findById(postId: string) {
+    return this.postsRepo.findOne({
+      where: { id: postId },
+      relations: ['user', 'group'],
+    });
   }
 }

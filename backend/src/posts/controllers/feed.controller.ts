@@ -12,7 +12,7 @@ export class FeedController {
 
   @Get()
   async getFeed(@Query() query: PaginationDto) {
-    const { data, total } = await this.postsService.findAll(query.page!, query.limit!);
+    const { data, total } = await this.postsService.getFeed(query.page!, query.limit!);
     return paginated(data, total, query.page!, query.limit!);
   }
 }
