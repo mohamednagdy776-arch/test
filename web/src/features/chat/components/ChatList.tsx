@@ -25,9 +25,9 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
     <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">فشل تحميل المحادثات</div>
   );
 
-  const accepted: Match[] = (data?.data ?? []).filter((m: Match) => m.status === 'accepted');
+  const conversations: Match[] = (data?.data ?? []).filter((m: Match) => m.status === 'accepted' || m.status === 'chat');
 
-  if (accepted.length === 0) return (
+  if (conversations.length === 0) return (
     <div className="rounded-xl bg-white p-8 text-center text-gray-400">
       <p className="text-3xl mb-2">💬</p>
       <p className="text-sm font-medium">لا توجد محادثات بعد</p>
@@ -37,7 +37,7 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
 
   return (
     <div className="space-y-1 overflow-y-auto">
-      {accepted.map((m) => (
+      {conversations.map((m) => (
         <button
           key={m.id}
           onClick={() => onSelect(m)}
