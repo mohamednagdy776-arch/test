@@ -25,6 +25,13 @@ export function useGroupAutocomplete(query: string) {
   });
 }
 
+export function useGroup(id: string) {
+  return useQuery({
+    queryKey: ['group', id],
+    queryFn: () => groupsApi.getGroup(id),
+  });
+}
+
 export function useMyGroups() {
   return useQuery({
     queryKey: ['my-groups'],

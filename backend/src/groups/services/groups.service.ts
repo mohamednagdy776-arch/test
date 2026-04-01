@@ -73,6 +73,16 @@ export class GroupsService {
       .getMany();
   }
 
+  async findOne(groupId: string, userId: string) {
+    const group = await this.groupsRepo.findOne({ where: { id: groupId } });
+    if (!group) throw new NotFoundException('Group not found');
+
+    const isMember = await this.isMember(groupId, userId);
+    const memberCount = await this.getMemberCount(groupId);
+
+    return { ...group, isMember, memberCount };
+  }
+
   async join(groupId: string, user: User) {
     const group = await this.groupsRepo.findOne({ where: { id: groupId } });
     if (!group) throw new NotFoundException('Group not found');

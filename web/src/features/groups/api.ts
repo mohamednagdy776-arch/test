@@ -10,6 +10,9 @@ export const groupsApi = {
   autocomplete: (query: string) =>
     apiClient.get('/groups/autocomplete', { params: { q: query } }).then((r) => r.data),
 
+  getGroup: (id: string) =>
+    apiClient.get(`/groups/${id}`).then((r) => r.data),
+
   getMyGroups: () =>
     apiClient.get('/groups/my').then((r) => r.data),
 

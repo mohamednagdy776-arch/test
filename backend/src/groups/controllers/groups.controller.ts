@@ -44,6 +44,12 @@ export class GroupsController {
     return ok(groups);
   }
 
+  @Get(':id')
+  async findOne(@Param('id') id: string, @CurrentUser() user: User) {
+    const group = await this.groupsService.findOne(id, user.id);
+    return ok(group);
+  }
+
   @Post(':id/join')
   async join(@Param('id') id: string, @CurrentUser() user: User) {
     const group = await this.groupsService.join(id, user);
