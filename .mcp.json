@@ -2,7 +2,7 @@
   "mcpServers": {
     "filesystem": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "../"],
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./"],
       "disabled": false,
       "autoApprove": []
     },
@@ -16,14 +16,14 @@
       "autoApprove": []
     },
     "git": {
-      "command": "C:\\Users\\Combu saif\\.local\\bin\\uvx.exe",
-      "args": ["mcp-server-git", "--repository", "../"],
+      "command": "npx",
+      "args": ["-y", "mcp-server-git", "--repository", "./"],
       "disabled": false,
       "autoApprove": []
     },
     "figma": {
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "figma-developer-mcp", "--figma-api-key=${FIGMA_API_KEY}", "--stdio"],
+      "command": "npx",
+      "args": ["-y", "figma-developer-mcp", "--figma-api-key=${FIGMA_API_KEY}", "--stdio"],
       "env": {
         "FIGMA_API_KEY": "${FIGMA_API_KEY}"
       },

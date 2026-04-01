@@ -9,13 +9,10 @@ export const RegisterForm = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
-  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement>) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault(); setError('');
     if (form.password !== form.confirm) { setError('كلمتا المرور غير متطابقتين'); return; }
     setLoading(true);
     try {
@@ -23,11 +20,8 @@ export const RegisterForm = () => {
       localStorage.setItem('access_token', res.data.accessToken);
       localStorage.setItem('refresh_token', res.data.refreshToken);
       router.push('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message ?? 'فشل إنشاء الحساب');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { setError(err.response?.data?.message ?? 'فشل إنشاء الحساب'); }
+    finally { setLoading(false); }
   };
 
   const fields = [
@@ -39,21 +33,26 @@ export const RegisterForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+      {error && (
+        <div className="flex items-center gap-3 rounded-xl border border-[#B05252]/30 bg-[#B05252]/10 px-4 py-3">
+          <svg className="h-5 w-5 shrink-0 text-[#B05252]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
+          <p className="text-sm font-medium text-[#B05252]">{error}</p>
+        </div>
+      )}
       {fields.map((f) => (
-        <div key={f.key}>
-          <label className="mb-1 block text-sm font-medium text-gray-700">{f.label}</label>
+        <div key={f.key} className="space-y-1.5">
+          <label className="block text-sm font-medium text-[#213448]">{f.label}</label>
           <input type={f.type} required value={(form as any)[f.key]} onChange={set(f.key)} placeholder={f.placeholder}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+            className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200" />
         </div>
       ))}
       <button type="submit" disabled={loading}
-        className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+        className="w-full h-11 rounded-xl text-sm font-semibold text-[#FDFAF5] shadow-sm hover:shadow-md disabled:opacity-50 transition-all duration-200 active:scale-[0.98] mt-2"
+        style={{ background: 'linear-gradient(to left, #213448, #547792)' }}>
         {loading ? 'جاري الإنشاء...' : 'إنشاء حساب'}
       </button>
-      <p className="text-center text-sm text-gray-500">
-        لديك حساب بالفعل؟{' '}
-        <Link href="/login" className="font-medium text-primary hover:underline">تسجيل الدخول</Link>
+      <p className="text-center text-sm text-[#547792]">
+        لديك حساب بالفعل؟{' '}<Link href="/login" className="font-medium text-[#213448] hover:underline">تسجيل الدخول</Link>
       </p>
     </form>
   );

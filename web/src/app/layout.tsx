@@ -3,14 +3,17 @@ import './globals.css';
 import { Providers } from '@/store/providers';
 
 export const metadata: Metadata = {
-  title: 'Tayyibt',
-  description: 'AI-powered matchmaking platform',
+  title: {
+    default: 'طيبت — منصة التوافق الذكي',
+    template: '%s | طيبت',
+  },
+  description: 'منصة طيبت للتوافق الذكي والزواج الإسلامي',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ar" dir="rtl">
-      <body>
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
+      <body className="min-h-screen font-sans antialiased">
         <Providers>{children}</Providers>
       </body>
     </html>

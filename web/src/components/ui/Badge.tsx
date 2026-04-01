@@ -3,21 +3,20 @@ import { cn } from '@/lib/utils';
 
 interface BadgeProps {
   label: string;
-  variant?: 'success' | 'danger' | 'warning' | 'default';
+  variant?: 'success' | 'danger' | 'warning' | 'info' | 'default';
+  size?: 'sm' | 'md';
   className?: string;
 }
 
-const variants = {
-  success: 'bg-green-100 text-green-800',
-  danger: 'bg-red-100 text-red-800',
-  warning: 'bg-yellow-100 text-yellow-800',
-  default: 'bg-gray-100 text-gray-800',
+const variants: Record<string, string> = {
+  success: 'bg-[#4A8C6F]/15 text-[#4A8C6F]',
+  danger:  'bg-[#B05252]/15 text-[#B05252]',
+  warning: 'bg-[#C9923A]/15 text-[#C9923A]',
+  info:    'bg-[#D4E8EE] text-[#547792]',
+  default: 'bg-[#EAE0CF] text-[#213448]',
 };
+const sizes = { sm: 'px-2 py-0.5 text-[10px]', md: 'px-2.5 py-0.5 text-xs' };
 
-export function Badge({ label, variant = 'default', className }: BadgeProps) {
-  return (
-    <span className={cn('inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium', variants[variant], className)}>
-      {label}
-    </span>
-  );
+export function Badge({ label, variant = 'default', size = 'md', className }: BadgeProps) {
+  return <span className={cn('inline-flex items-center rounded-full font-medium transition-colors', variants[variant], sizes[size], className)}>{label}</span>;
 }

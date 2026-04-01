@@ -5,14 +5,14 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gray-100">
+      <div className="min-h-screen bg-[#EAE0CF]">
         <Navbar />
-        <div className="mx-auto max-w-6xl px-4 py-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
           <div className="flex gap-6">
             <aside className="hidden w-64 shrink-0 lg:block">
-              <Sidebar />
+              <div className="sticky top-[5.5rem]"><Sidebar /></div>
             </aside>
-            <main className="flex-1 min-w-0">{children}</main>
+            <main className="flex-1 min-w-0 animate-fade-in">{children}</main>
           </div>
         </div>
       </div>

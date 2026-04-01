@@ -25,31 +25,93 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[hsl(var(--foreground))]">Dashboard</h1>
+          <p className="text-sm text-[hsl(var(--muted-foreground))] mt-1">Overview of your platform performance</p>
+        </div>
+        <div className="flex items-center gap-2 rounded-xl bg-white border border-[hsl(var(--border))]/60 px-4 py-2 shadow-card">
+          <div className="status-online" />
+          <span className="text-sm font-medium text-[hsl(var(--foreground))]">All systems operational</span>
+        </div>
+      </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="Total Users" value={users?.meta.total ?? '—'} sub={`${activeUsers} active`} color="blue" />
-        <StatCard label="Total Matches" value={matches?.meta.total ?? '—'} sub={`${acceptedMatches} accepted`} color="green" />
-        <StatCard label="Groups" value={groups?.meta.total ?? '—'} sub="Active communities" color="yellow" />
-        <StatCard label="Pending Reports" value={pendingReports} sub="Needs attention" color="red" />
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Total Users"
+          value={users?.meta.total ?? '—'}
+          sub={`${activeUsers} active`}
+          color="blue"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+            </svg>
+          }
+        />
+        <StatCard
+          label="Total Matches"
+          value={matches?.meta.total ?? '—'}
+          sub={`${acceptedMatches} accepted`}
+          color="green"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+            </svg>
+          }
+        />
+        <StatCard
+          label="Groups"
+          value={groups?.meta.total ?? '—'}
+          sub="Active communities"
+          color="yellow"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+            </svg>
+          }
+        />
+        <StatCard
+          label="Pending Reports"
+          value={pendingReports}
+          sub="Needs attention"
+          color="red"
+          icon={
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+          }
+        />
       </div>
 
       {/* Recent Activity */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
         {/* Recent Users */}
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <h2 className="mb-4 text-sm font-semibold text-gray-700 uppercase tracking-wide">Recent Users</h2>
+        <div className="rounded-2xl border border-[hsl(var(--border))]/60 bg-white shadow-card p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-sm font-bold text-[hsl(var(--foreground))] uppercase tracking-wider">Recent Users</h2>
+            <span className="text-xs text-[hsl(var(--muted-foreground))]">{recentUsers.length} shown</span>
+          </div>
           {recentUsers.length === 0 ? (
-            <p className="text-sm text-gray-400">No users yet</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <svg className="h-10 w-10 text-[hsl(var(--muted-foreground))]/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+              </svg>
+              <p className="text-sm text-[hsl(var(--muted-foreground))]">No users yet</p>
+            </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-[hsl(var(--border))]/40">
               {recentUsers.map((u: User) => (
-                <li key={u.id} className="flex items-center justify-between py-2.5">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{u.email}</p>
-                    <p className="text-xs text-gray-400">{new Date(u.createdAt).toLocaleDateString()}</p>
+                <li key={u.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 text-xs font-bold text-blue-700">
+                      {u.email?.[0]?.toUpperCase() || '?'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-[hsl(var(--foreground))]">{u.email}</p>
+                      <p className="text-xs text-[hsl(var(--muted-foreground))]">{new Date(u.createdAt).toLocaleDateString()}</p>
+                    </div>
                   </div>
                   <Badge
                     label={u.status}
@@ -62,24 +124,32 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Matches */}
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
-          <h2 className="mb-4 text-sm font-semibold text-gray-700 uppercase tracking-wide">Recent Matches</h2>
+        <div className="rounded-2xl border border-[hsl(var(--border))]/60 bg-white shadow-card p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-sm font-bold text-[hsl(var(--foreground))] uppercase tracking-wider">Recent Matches</h2>
+            <span className="text-xs text-[hsl(var(--muted-foreground))]">{recentMatches.length} shown</span>
+          </div>
           {recentMatches.length === 0 ? (
-            <p className="text-sm text-gray-400">No matches yet</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <svg className="h-10 w-10 text-[hsl(var(--muted-foreground))]/40 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+              </svg>
+              <p className="text-sm text-[hsl(var(--muted-foreground))]">No matches yet</p>
+            </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-[hsl(var(--border))]/40">
               {recentMatches.map((m: Match) => (
-                <li key={m.id} className="flex items-center justify-between py-2.5">
+                <li key={m.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      <span className="font-mono text-xs">{m.user1Id.slice(0, 6)}</span>
-                      {' ↔ '}
-                      <span className="font-mono text-xs">{m.user2Id.slice(0, 6)}</span>
+                    <p className="text-sm font-medium text-[hsl(var(--foreground))]">
+                      <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">{m.user1Id.slice(0, 6)}</span>
+                      <span className="mx-1.5 text-[hsl(var(--muted-foreground))]">↔</span>
+                      <span className="font-mono text-xs bg-slate-100 px-1.5 py-0.5 rounded">{m.user2Id.slice(0, 6)}</span>
                     </p>
-                    <p className="text-xs text-gray-400">{new Date(m.createdAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-[hsl(var(--muted-foreground))] mt-0.5">{new Date(m.createdAt).toLocaleDateString()}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-primary">{m.score}%</span>
+                    <span className="text-sm font-bold text-[hsl(var(--primary))]">{m.score}%</span>
                     <Badge
                       label={m.status}
                       variant={m.status === 'accepted' ? 'success' : m.status === 'rejected' ? 'danger' : 'warning'}
@@ -93,18 +163,21 @@ export default function DashboardPage() {
       </div>
 
       {/* System Status */}
-      <div className="rounded-lg border border-gray-200 bg-white p-5">
-        <h2 className="mb-4 text-sm font-semibold text-gray-700 uppercase tracking-wide">System Status</h2>
-        <div className="flex flex-wrap gap-4 text-sm">
+      <div className="rounded-2xl border border-[hsl(var(--border))]/60 bg-white shadow-card p-6">
+        <h2 className="text-sm font-bold text-[hsl(var(--foreground))] uppercase tracking-wider mb-5">System Status</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
             { label: 'Backend API', status: 'online' },
             { label: 'AI Service', status: 'online' },
             { label: 'Database', status: 'online' },
             { label: 'Redis Cache', status: 'online' },
           ].map((s) => (
-            <div key={s.label} className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              <span className="text-gray-600">{s.label}</span>
+            <div key={s.label} className="flex items-center gap-3 rounded-xl bg-emerald-50/50 border border-emerald-200/60 px-4 py-3">
+              <div className="status-online" />
+              <div>
+                <p className="text-sm font-medium text-[hsl(var(--foreground))]">{s.label}</p>
+                <p className="text-xs text-emerald-600">Operational</p>
+              </div>
             </div>
           ))}
         </div>
