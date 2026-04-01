@@ -35,6 +35,6 @@ COPY --from=builder /app/.next/static ./.next/static
 EXPOSE 3002
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD wget -qO- http://localhost:3002 || exit 1
+  CMD wget -qO- http://127.0.0.1:3002 || exit 1
 
 CMD ["node", "server.js"]

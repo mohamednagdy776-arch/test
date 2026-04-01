@@ -71,8 +71,7 @@ export default function UsersPage() {
   const hasAdvancedFilters = Object.values(advancedFilters).some(v => v !== '' && v !== undefined);
   
   const { data, isLoading, isError } = useSearchUsers(
-    hasAdvancedFilters ? buildSearchParams() : { page, limit: 20 },
-    page
+    hasAdvancedFilters ? buildSearchParams() : { page, limit: 20 }
   );
   const banUser = useBanUser();
   const unbanUser = useUnbanUser();

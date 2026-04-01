@@ -1,6 +1,7 @@
 'use client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usersApi } from './api';
+import type { SearchParams } from '@/types';
 
 export function useUsers(page = 1, limit = 20) {
   return useQuery({
@@ -17,11 +18,11 @@ export function useUser(id: string) {
   });
 }
 
-export function useSearchUsers(query: string) {
+export function useSearchUsers(params: SearchParams) {
   return useQuery({
-    queryKey: ['search-users', query],
-    queryFn: () => usersApi.searchUsers(query),
-    enabled: query.length >= 2,
+    queryKey: ['search-users', params],
+    queryFn: () => usersApi.searchUsers(params),
+    enabled: !!params && (params.name ? params.name.length >= 2 : true),
   });
 }
 

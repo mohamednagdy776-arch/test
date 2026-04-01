@@ -7,6 +7,7 @@ import { useMatches } from '@/features/matching/hooks';
 import { useGroups } from '@/features/groups/hooks';
 import { usePayments } from '@/features/payments/hooks';
 import { useReports } from '@/features/reports/hooks';
+import type { User, Match } from '@/types';
 
 export default function DashboardPage() {
   const { data: users } = useUsers(1);
@@ -15,9 +16,9 @@ export default function DashboardPage() {
   const { data: payments } = usePayments(1);
   const { data: reports } = useReports(1);
 
-  const pendingReports = reports?.data.filter((r) => r.status === 'pending').length ?? 0;
-  const acceptedMatches = matches?.data.filter((m) => m.status === 'accepted').length ?? 0;
-  const activeUsers = users?.data.filter((u) => u.status === 'active').length ?? 0;
+  const pendingReports = reports?.data.filter((r: { status: string }) => r.status === 'pending').length ?? 0;
+  const acceptedMatches = matches?.data.filter((m: Match) => m.status === 'accepted').length ?? 0;
+  const activeUsers = users?.data.filter((u: User) => u.status === 'active').length ?? 0;
 
   const recentUsers = users?.data.slice(0, 5) ?? [];
   const recentMatches = matches?.data.slice(0, 5) ?? [];
@@ -44,7 +45,7 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-400">No users yet</p>
           ) : (
             <ul className="divide-y divide-gray-100">
-              {recentUsers.map((u) => (
+              {recentUsers.map((u: User) => (
                 <li key={u.id} className="flex items-center justify-between py-2.5">
                   <div>
                     <p className="text-sm font-medium text-gray-900">{u.email}</p>
@@ -67,7 +68,7 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-400">No matches yet</p>
           ) : (
             <ul className="divide-y divide-gray-100">
-              {recentMatches.map((m) => (
+              {recentMatches.map((m: Match) => (
                 <li key={m.id} className="flex items-center justify-between py-2.5">
                   <div>
                     <p className="text-sm font-medium text-gray-900">

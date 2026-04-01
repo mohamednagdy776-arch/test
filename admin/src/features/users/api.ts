@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api-client';
+import type { SearchParams } from '@/types';
 
 export const usersApi = {
   getUsers: (page = 1, limit = 20) =>
@@ -7,8 +8,8 @@ export const usersApi = {
   getUser: (id: string) =>
     apiClient.get(`/users/${id}`).then((r) => r.data),
 
-  searchUsers: (query: string) =>
-    apiClient.get('/users/search', { params: { name: query } }).then((r) => r.data),
+  searchUsers: (params: SearchParams) =>
+    apiClient.get('/users/search', { params }).then((r) => r.data),
 
   getUserProfile: (id: string) =>
     apiClient.get(`/users/${id}/profile`).then((r) => r.data),

@@ -25,21 +25,22 @@ export class ChatService {
     return { data, total };
   }
 
-  async sendMessage(matchId: string, senderId: string, content: string, type?: string) {
+  async sendMessage(matchId: string, senderId: string, content: string, type?: string): Promise<Message> {
     const msg = this.messagesRepo.create({
       match: { id: matchId } as any,
       sender: { id: senderId } as any,
       contentEncrypted: content,
       type: type || 'text',
-    });
-    return this.messagesRepo.save(msg);
+    } as any) as unknown as Message;
+    const saved = await this.messagesRepo.save(msg as any);
+    return saved as unknown as Message;
   }
 
   async createConversation(userId: string, targetUserId: string) {
     const existingMatch = await this.matchRepo
       .createQueryBuilder('match')
       .where(
-        '(match.user1 = :userId AND match.user2 = :targetId) OR (match.user1 = :targetId AND match.user2 = :userId)',
+        '(match.user1_id = :userId AND match.user2_id = :targetId) OR (match.user1_id = :targetId AND match.user2_id = :userId)',
         { userId, targetId: targetUserId },
       )
       .andWhere('match.status = :status', { status: 'chat' })
@@ -58,13 +59,13 @@ export class ChatService {
       user2: { id: targetUserId } as any,
       status: 'chat' as any,
       score: 0,
-    });
-    const savedMatch = await this.matchRepo.save(match);
+    } as any);
+    const savedMatch = await this.matchRepo.save(match as any);
 
     return {
-      matchId: savedMatch.id,
+      matchId: (savedMatch as any).id,
       userId: targetUserId,
-      createdAt: savedMatch.createdAt,
+      createdAt: (savedMatch as any).createdAt,
     };
   }
 }

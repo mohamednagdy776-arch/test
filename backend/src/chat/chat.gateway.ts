@@ -25,7 +25,7 @@ export class ChatGateway {
     @MessageBody() payload: { matchId: string; encryptedContent: string; senderId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const saved = await this.chatService.sendMessage(
+    const saved: any = await this.chatService.sendMessage(
       payload.matchId,
       payload.senderId,
       payload.encryptedContent,

@@ -33,7 +33,7 @@ export class ChatController {
 
   @Post('messages')
   async sendMessage(@Body() dto: SendMessageDto, @CurrentUser() user: User) {
-    const saved = await this.chatService.sendMessage(dto.matchId, user.id, dto.content, dto.type);
+    const saved: any = await this.chatService.sendMessage(dto.matchId, user.id, dto.content, dto.type);
     return ok({
       id: saved.id,
       matchId: dto.matchId,
