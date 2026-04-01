@@ -26,6 +26,36 @@ export class GroupsController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  @Get('search')
+  async search(@Query('q') q: string, @CurrentUser() user: User) {
+    const result = await this.groupsService.search(q, user.id);
+    return ok(result);
+  }
+
+  @Get('autocomplete')
+  async autocomplete(@Query('q') q: string) {
+    const results = await this.groupsService.autocomplete(q);
+    return ok(results);
+  }
+
+  @Get('my')
+  async myGroups(@CurrentUser() user: User) {
+    const groups = await this.groupsService.getMyGroups(user.id);
+    return ok(groups);
+  }
+
+  @Post(':id/join')
+  async join(@Param('id') id: string, @CurrentUser() user: User) {
+    const group = await this.groupsService.join(id, user);
+    return ok(group, 'Joined group');
+  }
+
+  @Delete(':id/leave')
+  async leave(@Param('id') id: string, @CurrentUser() user: User) {
+    await this.groupsService.leave(id, user.id);
+    return ok(null, 'Left group');
+  }
+
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')
