@@ -6,12 +6,14 @@ import {
   ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { ChatService } from './services/chat.service';
 
-// Real-time chat via WebSocket
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway {
   @WebSocketServer()
   server: Server;
+
+  constructor(private chatService: ChatService) {}
 
   @SubscribeMessage('joinMatch')
   handleJoin(@MessageBody() matchId: string, @ConnectedSocket() client: Socket) {
@@ -19,15 +21,20 @@ export class ChatGateway {
   }
 
   @SubscribeMessage('sendMessage')
-  handleMessage(
-    @MessageBody() payload: { matchId: string; encryptedContent: string },
+  async handleMessage(
+    @MessageBody() payload: { matchId: string; encryptedContent: string; senderId: string },
     @ConnectedSocket() client: Socket,
   ) {
-    // Broadcast encrypted message to match room only
-    // TODO: persist via ChatService before emitting
+    const saved = await this.chatService.sendMessage(
+      payload.matchId,
+      payload.senderId,
+      payload.encryptedContent,
+    );
     this.server.to(`match:${payload.matchId}`).emit('newMessage', {
-      content: payload.encryptedContent,
-      timestamp: new Date(),
+      id: saved.id,
+      content: saved.contentEncrypted,
+      senderId: payload.senderId,
+      timestamp: saved.createdAt,
     });
   }
 }

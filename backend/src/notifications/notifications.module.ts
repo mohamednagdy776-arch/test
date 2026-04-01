@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Notification } from './entities/notification.entity';
+import { NotificationsService } from './services/notifications.service';
+import { NotificationsController } from './controllers/notifications.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Notification])],
-  // TODO: add NotificationsService and NotificationsController
-  // Integrate Firebase Cloud Messaging (FCM) for push notifications
+  providers: [NotificationsService],
+  controllers: [NotificationsController],
 })
 export class NotificationsModule {}

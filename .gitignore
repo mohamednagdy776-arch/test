@@ -18,6 +18,8 @@ build/
 *.o
 *.so
 *.dylib
+*.tsbuildinfo
+.next/
 
 # IDE
 .vscode/
@@ -52,6 +54,7 @@ temp/
 # OS
 Thumbs.db
 .DS_Store
+nul
 
 # Docker
 .dockerignore
