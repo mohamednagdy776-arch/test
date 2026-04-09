@@ -127,8 +127,63 @@ export class GroupsService {
     return this.memberRepo.count({ where: { group: { id: groupId } } });
   }
 
+  async getMembers(groupId: string, page: number, limit: number) {
+    const [data, total] = await this.memberRepo.findAndCount({
+      where: { group: { id: groupId } },
+      relations: ['user'],
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { joinedAt: 'DESC' },
+    });
+    return { data: data.map(m => ({ ...m.user, joinedAt: m.joinedAt })), total };
+  }
+
   async delete(groupId: string) {
     await this.memberRepo.delete({ group: { id: groupId } as any });
     await this.groupsRepo.delete(groupId);
+  }
+
+  async banMember(groupId: string, memberUserId: string, adminUserId: string) {
+    const adminMembership = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: adminUserId } },
+    });
+    if (!adminMembership || adminMembership.role !== 'admin') {
+      throw new ConflictException('Only admins can ban members');
+    }
+
+    const member = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: memberUserId } },
+    });
+    if (!member) throw new NotFoundException('Member not found');
+    if (member.role === 'admin') throw new ConflictException('Cannot ban an admin');
+
+    member.isBanned = true;
+    await this.memberRepo.save(member);
+    return member;
+  }
+
+  async unbanMember(groupId: string, memberUserId: string, adminUserId: string) {
+    const adminMembership = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: adminUserId } },
+    });
+    if (!adminMembership || adminMembership.role !== 'admin') {
+      throw new ConflictException('Only admins can unban members');
+    }
+
+    const member = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: memberUserId } },
+    });
+    if (!member) throw new NotFoundException('Member not found');
+
+    member.isBanned = false;
+    await this.memberRepo.save(member);
+    return member;
+  }
+
+  async getMemberRole(groupId: string, userId: string): Promise<string> {
+    const member = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: userId } },
+    });
+    return member?.role || 'none';
   }
 }

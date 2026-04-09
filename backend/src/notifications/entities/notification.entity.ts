@@ -1,6 +1,11 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 
+export type NotificationType = 
+  | 'friend_request' | 'friend_accepted' | 'like' | 'comment' | 'tag' 
+  | 'share' | 'mention' | 'birthday' | 'group_invite' | 'event_invite' 
+  | 'memory' | 'story_view';
+
 @Entity('notifications')
 export class Notification {
   @PrimaryGeneratedColumn('uuid')
@@ -10,13 +15,19 @@ export class Notification {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column()
-  type: string;
+  @Column({ type: 'varchar', length: 50 })
+  type: NotificationType;
 
   @Column()
   message: string;
 
-  @Column({ name: 'read_status', default: false })
+  @Column({ nullable: true })
+  entityType: string;
+
+  @Column({ nullable: true })
+  entityId: string;
+
+  @Column({ default: false })
   readStatus: boolean;
 
   @CreateDateColumn({ name: 'created_at' })

@@ -31,6 +31,7 @@ export class NotificationsService {
     const notification = this.notificationRepo.create({
       ...dto,
       user: { id: userId } as any,
+      readStatus: false,
     });
     return this.notificationRepo.save(notification);
   }

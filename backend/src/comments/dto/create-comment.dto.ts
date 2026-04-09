@@ -1,11 +1,26 @@
-import { IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID, IsBoolean } from 'class-validator';
+import { CommentReactionType } from '../entities/comment-reaction.entity';
 
 export class CreateCommentDto {
   @IsString()
   content: string;
 
-  // If provided, this is a reply to another comment
   @IsOptional()
   @IsUUID()
   parentId?: string;
+}
+
+export class UpdateCommentDto {
+  @IsString()
+  content: string;
+}
+
+export class ReactToCommentDto {
+  @IsEnum(CommentReactionType)
+  type: CommentReactionType;
+}
+
+export class PinCommentDto {
+  @IsBoolean()
+  isPinned: boolean;
 }

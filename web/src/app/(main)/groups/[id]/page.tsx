@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useGroup, useJoinGroup, useLeaveGroup } from '@/features/groups/hooks';
 import { useGroupPosts, useCreatePostWithMedia, useCreatePost } from '@/features/posts/hooks';
-import { PostCard } from '@/features/posts/components/PostFeed';
+import { PostCard } from '@/features/posts/components/PostCard';
 
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();

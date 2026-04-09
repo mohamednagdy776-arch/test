@@ -12,9 +12,11 @@ interface Props {
 const empty = {
   fullName: '', age: 25, gender: 'male', country: '', city: '',
   socialStatus: '', childrenCount: 0, bio: '',
+  website: '', relationshipStatus: '', location: '', workplace: '', introVisibility: 'public',
   education: '', jobTitle: '', financialLevel: '', culturalLevel: '', lifestyle: '',
   sect: '', prayerLevel: '', religiousCommitment: '',
   minAge: 20, maxAge: 40, preferredCountry: '', relocateWilling: false, wantsChildren: true,
+  workEntries: [], educationEntries: [],
 };
 
 const tabs = ['الأساسية', 'التعليم والعمل', 'الدين', 'التفضيلات'];
@@ -77,12 +79,19 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
       {sel('gender', 'الجنس', [['male', 'ذكر'], ['female', 'أنثى']])}
       {inp('country', 'الدولة', 'text', 'مصر')}
       {inp('city', 'المدينة', 'text', 'القاهرة')}
+      {inp('location', 'الموقع (مدينة/دولة)', 'text', 'القاهرة، مصر')}
       {sel('socialStatus', 'الحالة الاجتماعية', [['single', 'أعزب'], ['divorced', 'مطلق'], ['widowed', 'أرمل']])}
+      {sel('relationshipStatus', 'الحالة العاطفية', [
+        ['single', 'عزباء'], ['in_relationship', 'في علاقة'], ['engaged', 'مخطوبة'], ['married', 'متزوجة'],
+      ])}
       {inp('childrenCount', 'عدد الأطفال', 'number', '0')}
+      {inp('workplace', 'مكان العمل', 'text', 'شركة تقنية')}
+      {inp('website', 'الموقع الإلكتروني', 'url', 'https://example.com')}
       <div className="sm:col-span-2">
         <label className="mb-1 block text-xs font-medium text-gray-600">نبذة شخصية</label>
-        <textarea value={form.bio} onChange={str('bio')} rows={3} placeholder="اكتب نبذة مختصرة عن نفسك..."
+        <textarea value={form.bio} onChange={str('bio')} rows={3} maxLength={101} placeholder="اكتب نبذة مختصرة عن نفسك..."
           className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
+        <p className="text-xs text-gray-400 mt-1">{form.bio?.length || 0}/101</p>
       </div>
     </div>,
 

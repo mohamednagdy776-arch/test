@@ -1,8 +1,5 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
 import { PostsService } from '../services/posts.service';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -10,64 +7,68 @@ import { ok, paginated } from '../../common/response.helper';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { User } from '../../auth/entities/user.entity';
 
-const storage = diskStorage({
-  destination: './uploads',
-  filename: (req, file, cb) => {
-    const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`;
-    cb(null, uniqueName);
-  },
-});
-
-const fileFilter = (req: any, file: any, cb: any) => {
-  const allowedImage = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  const allowedVideo = ['video/mp4', 'video/webm', 'video/quicktime'];
-  if (allowedImage.includes(file.mimetype) || allowedVideo.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(new Error('File type not supported'), false);
-  }
-};
-
 @UseGuards(AuthGuard('jwt'))
-@Controller('groups/:groupId/posts')
+@Controller('posts')
 export class PostsController {
   constructor(private postsService: PostsService) {}
 
-  @Post()
-  async create(
-    @Param('groupId') groupId: string,
-    @Body() dto: CreatePostDto,
-    @CurrentUser() user: User,
-  ) {
-    const post = await this.postsService.create(groupId, dto, user);
-    return ok(post, 'Post created');
+  @Get(':postId')
+  async getPost(@Param('postId') postId: string) {
+    const post = await this.postsService.findById(postId);
+    return ok(post);
   }
 
-  @Post('upload')
-  @UseInterceptors(FileInterceptor('file', { storage, fileFilter, limits: { fileSize: 50 * 1024 * 1024 } }))
-  async createWithMedia(
-    @Param('groupId') groupId: string,
-    @Body() dto: CreatePostDto,
-    @UploadedFile() file: any,
-    @CurrentUser() user: User,
-  ) {
-    if (file) {
-      dto.mediaUrl = `/uploads/${file.filename}`;
-      dto.mediaType = file.mimetype.startsWith('video/') ? 'video' : 'image';
-    }
-    const post = await this.postsService.create(groupId, dto, user);
-    return ok(post, 'Post created');
-  }
-
-  @Get()
-  async findAll(@Param('groupId') groupId: string, @Query() query: PaginationDto) {
-    const { data, total } = await this.postsService.findByGroup(groupId, query.page!, query.limit!);
-    return paginated(data, total, query.page!, query.limit!);
+  @Patch(':postId')
+  async updatePost(@Param('postId') postId: string, @Body() dto: CreatePostDto, @CurrentUser() user: User) {
+    const post = await this.postsService.update(postId, dto, user.id);
+    return ok(post, 'Post updated');
   }
 
   @Delete(':postId')
-  async delete(@Param('postId') postId: string) {
-    await this.postsService.delete(postId);
+  async deletePost(@Param('postId') postId: string, @CurrentUser() user: User) {
+    await this.postsService.softDelete(postId, user.id);
     return ok(null, 'Post deleted');
+  }
+
+  @Post(':postId/pin')
+  async pinPost(@Param('postId') postId: string, @CurrentUser() user: User) {
+    const post = await this.postsService.togglePin(postId, user.id);
+    return ok(post, post.isPinned ? 'Post pinned' : 'Post unpinned');
+  }
+
+  @Post(':postId/archive')
+  async archivePost(@Param('postId') postId: string, @CurrentUser() user: User) {
+    const post = await this.postsService.archive(postId, user.id);
+    return ok(post, 'Post archived');
+  }
+
+  @Post(':postId/save')
+  async savePost(@Param('postId') postId: string, @CurrentUser() user: User) {
+    const saved = await this.postsService.saveForLater(postId, user.id);
+    return ok(saved, 'Post saved');
+  }
+
+  @Post(':postId/share')
+  async sharePost(@Param('postId') postId: string, @Body('content') content: string, @CurrentUser() user: User) {
+    const shared = await this.postsService.share(postId, content, user.id);
+    return ok(shared, 'Post shared');
+  }
+
+  @Get('saved')
+  async getSavedPosts(@CurrentUser() user: User, @Query() query: PaginationDto) {
+    const { data, total } = await this.postsService.getSavedPosts(user.id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Get('scheduled')
+  async getScheduledPosts(@CurrentUser() user: User, @Query() query: PaginationDto) {
+    const { data, total } = await this.postsService.getScheduledPosts(user.id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Post(':postId/comments-disabled')
+  async toggleComments(@Param('postId') postId: string, @Body('disabled') disabled: boolean, @CurrentUser() user: User) {
+    const post = await this.postsService.toggleComments(postId, user.id, disabled);
+    return ok(post, disabled ? 'Comments disabled' : 'Comments enabled');
   }
 }

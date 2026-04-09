@@ -1,5 +1,8 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
+import { GroupMember } from './group-member.entity';
+
+export type GroupPrivacy = 'public' | 'private' | 'secret';
 
 @Entity('groups')
 export class Group {
@@ -13,7 +16,19 @@ export class Group {
   description: string;
 
   @Column({ default: 'public' })
-  privacy: 'public' | 'private';
+  privacy: GroupPrivacy;
+
+  @Column({ nullable: true })
+  coverPhoto: string;
+
+  @Column({ nullable: true })
+  location: string;
+
+  @Column({ nullable: true })
+  rules: string;
+
+  @Column({ nullable: true })
+  tags: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })
@@ -21,4 +36,7 @@ export class Group {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  @OneToMany(() => GroupMember, member => member.group)
+  members: GroupMember[];
 }

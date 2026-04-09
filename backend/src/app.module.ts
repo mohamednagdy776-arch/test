@@ -16,6 +16,14 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AffiliatesModule } from './affiliates/affiliates.module';
 import { HealthModule } from './health/health.module';
 import { ReportsModule } from './reports/reports.module';
+import { FriendsModule } from './friends/friends.module';
+import { UploadModule } from './upload/upload.module';
+import { PagesModule } from './pages/pages.module';
+import { EventsModule } from './events/events.module';
+import { SearchModule } from './search/search.module';
+import { SettingsModule } from './settings/settings.module';
+import { MemoriesModule } from './memories/memories.module';
+import { VideosModule } from './videos/videos.module';
 
 @Module({
   imports: [
@@ -48,6 +56,14 @@ import { ReportsModule } from './reports/reports.module';
     AffiliatesModule,
     HealthModule,
     ReportsModule,
+    FriendsModule,
+    UploadModule,
+    PagesModule,
+    EventsModule,
+    SearchModule,
+    SettingsModule,
+    MemoriesModule,
+    VideosModule,
   ],
 })
 export class AppModule {}

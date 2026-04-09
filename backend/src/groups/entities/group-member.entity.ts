@@ -1,6 +1,8 @@
-import { CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { Group } from './group.entity';
 import { User } from '../../auth/entities/user.entity';
+
+export type MemberRole = 'admin' | 'moderator' | 'member';
 
 @Entity('group_members')
 @Unique(['group', 'user'])
@@ -15,6 +17,12 @@ export class GroupMember {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @Column({ default: 'member' })
+  role: MemberRole;
+
+  @Column({ default: false })
+  isBanned: boolean;
 
   @CreateDateColumn({ name: 'joined_at' })
   joinedAt: Date;

@@ -62,6 +62,12 @@ export class GroupsController {
     return ok(null, 'Left group');
   }
 
+  @Get(':id/members')
+  async getMembers(@Param('id') id: string, @Query() query: PaginationDto) {
+    const members = await this.groupsService.getMembers(id, query.page!, query.limit!);
+    return ok(members);
+  }
+
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles('admin')

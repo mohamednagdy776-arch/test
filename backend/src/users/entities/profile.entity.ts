@@ -1,5 +1,7 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
+import { ProfileWork } from './profile-work.entity';
+import { ProfileEducation } from './profile-education.entity';
 
 @Entity('profiles')
 export class Profile {
@@ -36,9 +38,41 @@ export class Profile {
   @Column({ name: 'avatar_url', nullable: true })
   avatarUrl: string;
 
+  // Cover photo
+  @Column({ name: 'cover_url', nullable: true })
+  coverUrl: string;
+
   // Bio
   @Column({ nullable: true, type: 'text' })
   bio: string;
+
+  // Website
+  @Column({ nullable: true })
+  website: string;
+
+  // Relationship status
+  @Column({ name: 'relationship_status', nullable: true })
+  relationshipStatus: string;
+
+  // Location
+  @Column({ nullable: true })
+  location: string;
+
+  // Workplace
+  @Column({ nullable: true })
+  workplace: string;
+
+  // Intro visibility (public/friends/only_me)
+  @Column({ name: 'intro_visibility', default: 'public' })
+  introVisibility: string;
+
+  // Work entries
+  @OneToMany(() => ProfileWork, work => work.profile, { cascade: true })
+  workEntries: ProfileWork[];
+
+  // Education entries
+  @OneToMany(() => ProfileEducation, edu => edu.profile, { cascade: true })
+  educationEntries: ProfileEducation[];
 
   // Profile details (from profile_details table — merged here for simplicity)
   @Column({ nullable: true })
