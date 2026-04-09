@@ -1,5 +1,5 @@
 'use client';
-import type { SearchFiltersState } from './SearchPage';
+import type { SearchFiltersState } from '../types';
 
 interface Props {
   filters: SearchFiltersState;

@@ -44,6 +44,26 @@
     --radius:            0.75rem;
   }
 
+  .dark {
+    --background:        #131F2E;
+    --foreground:        #FDFAF5;
+    --card:              #213448;
+    --card-foreground:   #FDFAF5;
+    --primary:           #D4E8EE;
+    --primary-foreground:#131F2E;
+    --secondary:         #547792;
+    --secondary-foreground: #FDFAF5;
+    --muted:             #213448;
+    --muted-foreground:  #94B4C1;
+    --accent:            #94B4C1;
+    --accent-foreground: #131F2E;
+    --destructive:       #B05252;
+    --destructive-foreground: #FDFAF5;
+    --border:            #547792;
+    --input:             #547792;
+    --ring:              #94B4C1;
+  }
+
   * {
     @apply border-[#C8D8DF];
   }
@@ -55,9 +75,12 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
-    @apply text-[#213448];
-    font-weight: 700;
+  .dark body {
+    @apply bg-[#131F2E] text-[#FDFAF5];
+  }
+
+  .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+    @apply text-[#FDFAF5];
   }
 }
 

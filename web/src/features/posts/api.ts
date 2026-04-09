@@ -1,6 +1,9 @@
 import { apiClient } from '@/lib/api-client';
 
 export const postsApi = {
+  searchPosts: (query: string, cursor?: string, limit = 10) =>
+    apiClient.get('/posts/search', { params: { q: query, cursor, limit } }).then((r) => r.data),
+
   getFeed: (cursor?: string, limit = 10) =>
     apiClient.get('/feed', { params: { cursor, limit } }).then((r) => r.data),
 

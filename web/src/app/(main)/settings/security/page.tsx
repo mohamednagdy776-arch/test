@@ -31,6 +31,7 @@ export default function SecurityPage() {
   const [verifyCode, setVerifyCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const [error, setError] = useState('');
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -322,6 +323,75 @@ const [sessionsRes, profileRes] = await Promise.all([
             </Button>
             <Button variant="danger" onClick={handleDisable2FA} loading={twoFactorLoading} disabled={!disableCode.trim()} className="flex-1">
               إلغاء التفعيل
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Card variant="warm">
+        <CardHeader>
+          <CardTitle className="text-[#213448] flex items-center gap-2">
+            <span>🚪</span> تسجيل الخروج
+          </CardTitle>
+          <CardDescription>تسجيل الخروج من جميع الأجهزة</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-start justify-between p-4 rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60">
+            <div className="flex-1">
+              <h3 className="font-semibold text-[#213448]">تسجيل الخروج من كل الجلسات</h3>
+              <p className="text-sm text-[#547792] mt-0.5">سيتم تسجيل الخروج من جميع الأجهزة باستثناء هذا الجهاز</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRevokeAllSessions}
+              loading={revoking === 'all'}
+              className="text-[#B05252] border-[#B05252]/30 hover:bg-[#B05252]/10 hover:border-[#B05252]"
+            >
+              تسجيل الخروج
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card variant="warm">
+        <CardHeader>
+          <CardTitle className="text-[#213448] flex items-center gap-2">
+            <span>⚠️</span> danger zone
+          </CardTitle>
+          <CardDescription>إجراءات خطرة على حسابك</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-start justify-between p-4 rounded-xl bg-[#B05252]/5 border border-[#B05252]/30">
+            <div className="flex-1">
+              <h3 className="font-semibold text-[#B05252]">حذف الحساب</h3>
+              <p className="text-sm text-[#547792] mt-0.5">طلب حذف حسابك بشكل نهائي</p>
+            </div>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setShowDeleteModal(true)}
+            >
+              حذف الحساب
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="حذف الحساب">
+        <div className="space-y-4">
+          <p className="text-sm text-[#547792]">
+            هل أنت متأكد من طلب حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه وسيتم حذف جميع بياناتك نهائياً.
+          </p>
+          <div className="p-3 rounded-xl bg-[#B05252]/10 text-[#B05252] text-sm">
+            ⚠️ سيتم حذف جميع منشوراتك، صورك، رسائلك، وصدقائك نهائياً
+          </div>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={() => setShowDeleteModal(false)} className="flex-1">
+              إلغاء
+            </Button>
+            <Button variant="danger" onClick={() => alert('تم إرسال طلب حذف الحساب')} className="flex-1">
+              تأكيد الحذف
             </Button>
           </div>
         </div>

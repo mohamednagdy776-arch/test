@@ -60,4 +60,10 @@ export const friendsApi = {
 
   unfollow: (userId: string) =>
     apiClient.delete(`/friends/follow/${userId}`).then(r => r.data),
+
+  addToFriendList: (listId: string, memberId: string) =>
+    apiClient.post(`/friends/lists/${listId}/members`, { memberId }).then(r => r.data),
+
+  removeFromFriendList: (listId: string, memberId: string) =>
+    apiClient.delete(`/friends/lists/${listId}/members/${memberId}`).then(r => r.data),
 };

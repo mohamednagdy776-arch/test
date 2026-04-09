@@ -191,3 +191,34 @@ export function useDeleteFriendList() {
     },
   });
 }
+
+export function useAddToFriendList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ listId, memberId }: { listId: string; memberId: string }) => friendsApi.addToFriendList(listId, memberId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['friend-lists'] });
+    },
+  });
+}
+
+export function useRemoveFromFriendList() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ listId, memberId }: { listId: string; memberId: string }) => friendsApi.removeFromFriendList(listId, memberId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['friend-lists'] });
+    },
+  });
+}
+
+export function useFriendBirthdays() {
+  return useQuery({
+    queryKey: ['friend-birthdays'],
+    queryFn: () => Promise.resolve([
+      { id: '1', name: 'أحمد محمد', date: '2026-04-12', avatar: null },
+      { id: '2', name: 'سارة علي', date: '2026-04-15', avatar: null },
+      { id: '3', name: 'محمد خالد', date: '2026-04-20', avatar: null },
+    ] as any),
+  });
+}

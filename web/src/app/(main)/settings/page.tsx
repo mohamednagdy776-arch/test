@@ -16,6 +16,42 @@ export default function SettingsPage() {
       description: 'من يمكنه رؤية معلوماتك ومن يمكنه التواصل معك',
       href: '/settings/privacy',
     },
+    {
+      title: 'الإشعارات',
+      icon: '🔔',
+      description: 'تحكم في الإشعارات التي تريد استلامها',
+      href: '/settings/notifications',
+    },
+    {
+      title: 'معلومات الحساب',
+      icon: '👤',
+      description: 'عرض وتعديل معلومات حسابك الشخصية',
+      href: '/settings/account',
+    },
+    {
+      title: 'المظهر',
+      icon: '🎨',
+      description: 'تخصيص مظهر التطبيق',
+      href: '/settings/appearance',
+    },
+    {
+      title: 'اللغة',
+      icon: '🌐',
+      description: 'اختر لغة الواجهة',
+      href: '/settings/language',
+    },
+    {
+      title: 'المساعدة والدعم',
+      icon: '❓',
+      description: 'احصل على المساعدة وتواصل معنا',
+      href: '/settings/help',
+    },
+    {
+      title: 'الإبلاغ عن مشكلة',
+      icon: '🐛',
+      description: 'أخبرنا عن المشكلة التي تواجهها',
+      href: '/settings/report',
+    },
   ];
 
   return (
