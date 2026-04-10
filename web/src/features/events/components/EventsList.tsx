@@ -32,17 +32,17 @@ export const EventsList = () => {
   return (
     <div className="space-y-3">
       {events.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">لا توجد أحداث</p>
+        <p className="text-center text-[#547792] py-8">لا توجد أحداث</p>
       ) : (
         events.map((event: any) => (
-          <div key={event.id} className="p-4 rounded-xl bg-white border border-gray-100 hover:shadow-sm transition-shadow">
-            <h3 className="font-medium text-gray-900 mb-1">{event.title}</h3>
-            <p className="text-xs text-gray-500 mb-2">
+          <div key={event.id} className="p-4 rounded-xl bg-[#FDFAF5] border border-[#C8D8DF] hover:shadow-sm transition-shadow">
+            <h3 className="font-medium text-[#213448] mb-1">{event.title}</h3>
+            <p className="text-xs text-[#547792] mb-2">
               {event.startDate ? new Date(event.startDate).toLocaleDateString('ar-SA') : ''}
               {event.location && ` • ${event.location}`}
             </p>
             {event.description && (
-              <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
+              <p className="text-sm text-[#547792] line-clamp-2">{event.description}</p>
             )}
             <div className="flex gap-2 mt-3">
               <button 

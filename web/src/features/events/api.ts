@@ -28,8 +28,10 @@ export const eventsApi = {
   getPastEvents: (page = 1, limit = 20) =>
     apiClient.get('/events/past', { params: { page, limit } }).then((r) => r.data),
 
-  createEvent: (title: string, description?: string, location?: string, startDate?: string, privacy?: string) =>
-    apiClient.post('/events', { title, description, location, startDate, privacy }).then((r) => r.data),
+  createEvent: (title: string, description?: string, location?: string, startDate?: string, privacy?: string) => {
+    const isoDate = startDate ? new Date(startDate).toISOString() : undefined;
+    return apiClient.post('/events', { title, description, location, startDate: isoDate, privacy }).then((r) => r.data);
+  },
 
   createEventWithCover: (title: string, description: string, location: string, startDate: string, privacy: string, coverPhoto: File) => {
     const formData = new FormData();
