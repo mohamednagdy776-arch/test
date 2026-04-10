@@ -7,6 +7,7 @@ import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
 import { ProfileSection } from '@/features/profile/components/ProfileSection';
 import { ProfileTabs } from '@/features/profile/components/ProfileTabs';
 import { ActivityLogViewer } from '@/features/profile/components/ActivityLogViewer';
+import { PostCard } from '@/features/posts/components/PostCard';
 
 type Tab = 'posts' | 'about' | 'friends' | 'photos' | 'videos' | 'activity';
 
@@ -53,9 +54,45 @@ export default function UserProfilePage() {
 }
 
 function PostsTab({ userId }: { userId: string }) {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['user-posts', userId],
+    queryFn: () => apiClient.get(`/users/${userId}/posts`).then((r) => r.data),
+    enabled: !!userId,
+  });
+
+  const posts = (data as any)?.data || [];
+
+  if (isLoading) {
+    return (
+      <div className="rounded-xl bg-white p-6">
+        <p className="text-gray-500 text-center">جاري تحميل المنشورات...</p>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-xl bg-white p-6">
+        <p className="text-red-500 text-center">فشل تحميل المنشورات</p>
+      </div>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="rounded-xl bg-white p-6">
+        <p className="text-gray-400 text-center">لا توجد منشورات</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-xl bg-white p-6">
-      <p className="text-gray-500 text-center">جاري تحميل المنشورات...</p>
+    <div className="space-y-4">
+      {posts.map((post: any) => (
+        <div key={post.id} className="rounded-xl bg-white p-4">
+          <PostCard post={post} />
+        </div>
+      ))}
     </div>
   );
 }

@@ -39,6 +39,15 @@ export interface Match {
   // Additional fields returned by the API
   otherUserName?: string | null;
   otherUserAvatar?: string | null;
+  user?: {
+    id: string;
+    username: string;
+    fullName: string;
+    avatarUrl?: string;
+    age?: number;
+    location?: string;
+    prayerLevel?: string;
+  };
 }
 
 export interface Group {
