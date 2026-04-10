@@ -337,7 +337,9 @@ export const SearchPage = () => {
                     </div>
                   </div>
                   {activeTab !== 'posts' && (
-                    <button className="w-full mt-3 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+                    <button 
+                      className="w-full mt-3 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    >
                       {String(activeTab) === 'people' ? 'عرض الملف' : String(activeTab) === 'groups' ? 'انضم' : String(activeTab) === 'pages' ? 'متابعة' : 'عرض'}
                     </button>
                   )}

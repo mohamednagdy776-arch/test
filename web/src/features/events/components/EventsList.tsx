@@ -2,12 +2,24 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Spinner } from '@/components/ui/Spinner';
+import { useRsvpEvent } from '../hooks';
 
 export const EventsList = () => {
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: () => apiClient.get('/events').then(res => res.data),
   });
+
+  const rsvpEvent = useRsvpEvent();
+
+  const handleRsvp = async (eventId: string, status: 'going' | 'interested' | 'not_going') => {
+    try {
+      await rsvpEvent.mutateAsync({ eventId, status });
+      refetch();
+    } catch (err) {
+      console.error('RSVP failed:', err);
+    }
+  };
 
   if (isLoading) return <Spinner />;
 
@@ -29,11 +41,26 @@ export const EventsList = () => {
               <p className="text-sm text-gray-600 line-clamp-2">{event.description}</p>
             )}
             <div className="flex gap-2 mt-3">
-              <button className="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-50 text-green-600 hover:bg-green-100">
+              <button 
+                onClick={() => handleRsvp(event.id, 'going')}
+                disabled={rsvpEvent.isPending}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-50 text-green-600 hover:bg-green-100 disabled:opacity-50"
+              >
                 ذاهب ({event.goingCount || 0})
               </button>
-              <button className="px-3 py-1.5 text-xs font-medium rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100">
+              <button 
+                onClick={() => handleRsvp(event.id, 'interested')}
+                disabled={rsvpEvent.isPending}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 disabled:opacity-50"
+              >
                 مهتم ({event.interestedCount || 0})
+              </button>
+              <button 
+                onClick={() => handleRsvp(event.id, 'not_going')}
+                disabled={rsvpEvent.isPending}
+                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50"
+              >
+                لا ذاهب
               </button>
             </div>
           </div>
