@@ -2,6 +2,7 @@
 import { EventsList } from '@/features/events/components/EventsList';
 import { useCreateEvent } from '@/features/events/hooks';
 import { useState } from 'react';
+import { useToast } from '@/components/ui/Toast';
 
 export default function EventsPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -10,16 +11,22 @@ export default function EventsPage() {
   const [location, setLocation] = useState('');
   const [startDate, setStartDate] = useState('');
   const createEvent = useCreateEvent();
+  const { showToast } = useToast();
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !startDate) return;
-    await createEvent.mutateAsync({ title: title.trim(), description: description.trim(), location: location.trim(), startDate });
-    setTitle('');
-    setDescription('');
-    setLocation('');
-    setStartDate('');
-    setShowCreate(false);
+    try {
+      await createEvent.mutateAsync({ title: title.trim(), description: description.trim(), location: location.trim(), startDate });
+      showToast('تم إنشاء الحدث بنجاح', 'success');
+      setTitle('');
+      setDescription('');
+      setLocation('');
+      setStartDate('');
+      setShowCreate(false);
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'فشل إنشاء الحدث', 'error');
+    }
   };
 
   return (

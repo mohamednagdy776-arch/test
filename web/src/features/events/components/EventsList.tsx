@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Spinner } from '@/components/ui/Spinner';
 import { useRsvpEvent } from '../hooks';
+import { useToast } from '@/components/ui/Toast';
 
 export const EventsList = () => {
   const { data, isLoading, refetch } = useQuery({
@@ -11,12 +12,15 @@ export const EventsList = () => {
   });
 
   const rsvpEvent = useRsvpEvent();
+  const { showToast } = useToast();
 
   const handleRsvp = async (eventId: string, status: 'going' | 'interested' | 'not_going') => {
     try {
       await rsvpEvent.mutateAsync({ eventId, status });
+      showToast('تم تحديث حالة الحضور بنجاح', 'success');
       refetch();
-    } catch (err) {
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'فشل تحديث حالة الحضور', 'error');
       console.error('RSVP failed:', err);
     }
   };
@@ -44,23 +48,23 @@ export const EventsList = () => {
               <button 
                 onClick={() => handleRsvp(event.id, 'going')}
                 disabled={rsvpEvent.isPending}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-50 text-green-600 hover:bg-green-100 disabled:opacity-50"
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all disabled:opacity-50 ${event.userRsvp === 'going' ? 'bg-green-600 text-white' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
               >
-                ذاهب ({event.goingCount || 0})
+                {rsvpEvent.isPending ? '...' : `ذاهب (${event.goingCount || 0})`}
               </button>
               <button 
                 onClick={() => handleRsvp(event.id, 'interested')}
                 disabled={rsvpEvent.isPending}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 disabled:opacity-50"
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all disabled:opacity-50 ${event.userRsvp === 'interested' ? 'bg-yellow-600 text-white' : 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'}`}
               >
-                مهتم ({event.interestedCount || 0})
+                {rsvpEvent.isPending ? '...' : `مهتم (${event.interestedCount || 0})`}
               </button>
               <button 
                 onClick={() => handleRsvp(event.id, 'not_going')}
                 disabled={rsvpEvent.isPending}
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-600 hover:bg-red-100 disabled:opacity-50"
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all disabled:opacity-50 ${event.userRsvp === 'not_going' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
               >
-                لا ذاهب
+                {rsvpEvent.isPending ? '...' : 'لا ذاهب'}
               </button>
             </div>
           </div>
