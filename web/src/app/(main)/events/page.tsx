@@ -15,9 +15,14 @@ export default function EventsPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !startDate) return;
+    if (!title.trim() || !startDate) {
+      showToast('يرجى إدخال العنوان والتاريخ', 'error');
+      return;
+    }
+    console.log('[EventsPage] Creating event:', { title, description, location, startDate });
     try {
-      await createEvent.mutateAsync({ title: title.trim(), description: description.trim(), location: location.trim(), startDate });
+      const result = await createEvent.mutateAsync({ title: title.trim(), description: description.trim(), location: location.trim(), startDate, privacy: 'public' });
+      console.log('[EventsPage] Create success:', result);
       showToast('تم إنشاء الحدث بنجاح', 'success');
       setTitle('');
       setDescription('');
@@ -25,7 +30,9 @@ export default function EventsPage() {
       setStartDate('');
       setShowCreate(false);
     } catch (err: any) {
-      showToast(err?.response?.data?.message || 'فشل إنشاء الحدث', 'error');
+      console.error('[EventsPage] Create error:', err);
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'فشل إنشاء الحدث';
+      showToast(errorMessage, 'error');
     }
   };
 

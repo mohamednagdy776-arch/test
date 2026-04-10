@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { EventsService } from '../services/events.service';
 import { CreateEventDto, UpdateRsvpDto } from '../dto/create-event.dto';
@@ -10,12 +10,23 @@ import { User } from '../../auth/entities/user.entity';
 @UseGuards(AuthGuard('jwt'))
 @Controller('events')
 export class EventsController {
+  private logger = new Logger(EventsController.name);
+
   constructor(private eventsService: EventsService) {}
 
   @Post()
   async create(@Body() dto: CreateEventDto, @CurrentUser() user: User) {
-    const event = await this.eventsService.create(dto, user);
-    return ok(event, 'Event created');
+    this.logger.log(`POST /events - Creating event: ${dto.title}`);
+    this.logger.debug('Request body:', dto);
+    try {
+      const event = await this.eventsService.create(dto, user);
+      this.logger.log(`Event created successfully: ${event.id}`);
+      return ok(event, 'Event created');
+    } catch (err) {
+      this.logger.error('Error creating event:', err);
+      if (err instanceof HttpException) throw err;
+      throw new HttpException(err.message || 'Failed to create event', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 
   @Get()

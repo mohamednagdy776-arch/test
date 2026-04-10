@@ -24,6 +24,7 @@ import { SearchModule } from './search/search.module';
 import { SettingsModule } from './settings/settings.module';
 import { MemoriesModule } from './memories/memories.module';
 import { VideosModule } from './videos/videos.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { VideosModule } from './videos/videos.module';
     SettingsModule,
     MemoriesModule,
     VideosModule,
+    SeedModule,
   ],
 })
 export class AppModule {}

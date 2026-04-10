@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from '../entities/event.entity';
@@ -8,25 +8,35 @@ import { User } from '../../auth/entities/user.entity';
 
 @Injectable()
 export class EventsService {
+  private logger = new Logger(EventsService.name);
+
   constructor(
     @InjectRepository(Event) private eventsRepo: Repository<Event>,
     @InjectRepository(EventRSVP) private rsvpRepo: Repository<EventRSVP>,
   ) {}
 
   async create(dto: CreateEventDto, user: User) {
+    this.logger.log(`Creating event: ${dto.title} by user ${user.id}`);
+    this.logger.debug('DTO received:', dto);
     const event = this.eventsRepo.create({
       ...dto,
       startDate: new Date(dto.startDate),
       endDate: dto.endDate ? new Date(dto.endDate) : undefined,
       createdBy: user,
     });
-    const saved = await this.eventsRepo.save(event);
-    await this.rsvpRepo.save(this.rsvpRepo.create({
-      event: saved,
-      user,
-      status: 'going',
-    }));
-    return saved;
+    try {
+      const saved = await this.eventsRepo.save(event);
+      this.logger.log(`Event created with id: ${saved.id}`);
+      await this.rsvpRepo.save(this.rsvpRepo.create({
+        event: saved,
+        user,
+        status: 'going',
+      }));
+      return saved;
+    } catch (err) {
+      this.logger.error('Error creating event:', err);
+      throw err;
+    }
   }
 
   async findAll(page: number, limit: number, userId?: string) {
