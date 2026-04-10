@@ -117,7 +117,7 @@ export default function AccountPage() {
                   onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
                   disabled={!editing}
                   rows={3}
-                  className="w-full px-4 py-2 rounded-xl border border-[#C8D8DF] bg-white text-[#213448] focus:outline-none focus:border-[#547792] disabled:bg-gray-50"
+                  className="w-full px-4 py-2 rounded-xl border border-[#C8D8DF] bg-white text-black focus:outline-none focus:border-[#547792] disabled:bg-gray-50"
                   placeholder="اكتب نبذة عن نفسك..."
                 />
               </div>

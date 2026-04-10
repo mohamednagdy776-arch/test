@@ -227,8 +227,8 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
         {showSchedule && (
           <div className="mt-3 p-3 bg-[#EAE0CF]/40 rounded-xl flex gap-2 items-center">
             <svg className="h-5 w-5 text-[#547792]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="bg-transparent text-sm text-[#213448] focus:outline-none" />
-            <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="bg-transparent text-sm text-[#213448] focus:outline-none" />
+            <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="bg-transparent text-sm text-black focus:outline-none" />
+            <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="bg-transparent text-sm text-black focus:outline-none" />
             <button type="button" onClick={() => setShowSchedule(false)} className="ml-auto text-[#547792]">✕</button>
           </div>
         )}
@@ -240,7 +240,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
               value={pollQuestion}
               onChange={(e) => setPollQuestion(e.target.value)}
               placeholder="ما هو سؤالك؟"
-              className="w-full bg-transparent text-sm text-[#213448] placeholder:text-[#BFB9AD] focus:outline-none border-b border-[#C8D8DF] pb-2"
+              className="w-full bg-transparent text-sm text-black placeholder:text-[#BFB9AD] focus:outline-none border-b border-[#C8D8DF] pb-2"
             />
             <div className="space-y-2">
               {pollOptions.map((opt, i) => (
@@ -250,7 +250,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                     value={opt}
                     onChange={(e) => updatePollOption(i, e.target.value)}
                     placeholder={`خيار ${i + 1}`}
-                    className="flex-1 bg-[#FDFAF5] rounded-lg px-3 py-2 text-sm text-[#213448] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20"
+                    className="flex-1 bg-[#FDFAF5] rounded-lg px-3 py-2 text-sm text-black placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20"
                   />
                   {pollOptions.length > 2 && (
                     <button type="button" onClick={() => removePollOption(i)} className="text-[#B05252] text-sm">✕</button>

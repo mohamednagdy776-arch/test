@@ -12,7 +12,7 @@ export const Select = ({ value, onChange, options, placeholder, className = '' }
   <select
     value={value}
     onChange={(e) => onChange(e.target.value)}
-    className={`rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary ${className}`}
+    className={`rounded-md border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary ${className}`}
   >
     {placeholder && <option value="">{placeholder}</option>}
     {options.map((o) => (

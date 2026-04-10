@@ -191,7 +191,7 @@ export const SearchPage = () => {
                 onFocus={() => setShowSuggestions(true)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="ابحث في المجتمع..."
-                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm text-black focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
               />
             </div>
             <button onClick={() => handleSearch()}
@@ -201,7 +201,7 @@ export const SearchPage = () => {
             <select
               value={searchType}
               onChange={(e) => { setSearchType(e.target.value as SearchType); setActiveTab(e.target.value === 'all' ? 'people' : e.target.value as TabType); }}
-              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 focus:border-primary focus:outline-none"
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none"
             >
               {TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>

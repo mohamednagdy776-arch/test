@@ -47,14 +47,14 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const inp = (k: keyof typeof form, label: string, type = 'text', ph = '') => (
     <Field label={label}>
       <input type={type} value={(form as any)[k] ?? ''} onChange={type === 'number' ? num(k) : str(k)} placeholder={ph}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
     </Field>
   );
 
   const sel = (k: keyof typeof form, label: string, opts: [string, string][]) => (
     <Field label={label}>
       <select value={(form as any)[k] ?? ''} onChange={str(k)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none">
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none">
         <option value="">اختر...</option>
         {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
@@ -64,7 +64,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const boolSel = (k: keyof typeof form, label: string) => (
     <Field label={label}>
       <select value={String((form as any)[k])} onChange={bool(k)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none">
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none">
         <option value="true">نعم</option>
         <option value="false">لا</option>
       </select>
@@ -90,7 +90,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
       <div className="sm:col-span-2">
         <label className="mb-1 block text-xs font-medium text-gray-600">نبذة شخصية</label>
         <textarea value={form.bio} onChange={str('bio')} rows={3} maxLength={101} placeholder="اكتب نبذة مختصرة عن نفسك..."
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
         <p className="text-xs text-gray-400 mt-1">{form.bio?.length || 0}/101</p>
       </div>
     </div>,

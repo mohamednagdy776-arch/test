@@ -25,14 +25,14 @@ export const SearchFilters = ({ filters, onChange, onReset, onSearch }: Props) =
   const inp = (k: keyof SearchFiltersState, label: string, ph = '') => (
     <Field label={label}>
       <input type="text" value={filters[k]} onChange={s(k)} placeholder={ph}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none" />
+        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none" />
     </Field>
   );
 
   const sel = (k: keyof SearchFiltersState, label: string, opts: [string, string][]) => (
     <Field label={label}>
       <select value={filters[k]} onChange={s(k)}
-        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-primary focus:outline-none">
+        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none">
         <option value="">الكل</option>
         {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
@@ -49,10 +49,10 @@ export const SearchFilters = ({ filters, onChange, onReset, onSearch }: Props) =
         <Field label="الفئة العمرية">
           <div className="flex gap-1 items-center">
             <input type="number" value={filters.minAge} onChange={s('minAge')} placeholder="من"
-              className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm focus:border-primary focus:outline-none" />
+              className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm text-black focus:border-primary focus:outline-none" />
             <span className="text-gray-400 text-xs shrink-0">—</span>
             <input type="number" value={filters.maxAge} onChange={s('maxAge')} placeholder="إلى"
-              className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm focus:border-primary focus:outline-none" />
+              className="w-full rounded-lg border border-gray-200 px-2 py-2 text-sm text-black focus:border-primary focus:outline-none" />
           </div>
         </Field>
 

@@ -39,7 +39,7 @@ export default function PagesPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="اسم الصفحة"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm mb-3 focus:border-primary focus:outline-none"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-black mb-3 focus:border-primary focus:outline-none"
             required
           />
           <input
@@ -47,14 +47,14 @@ export default function PagesPage() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             placeholder="الفئة"
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm mb-3 focus:border-primary focus:outline-none"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-black mb-3 focus:border-primary focus:outline-none"
           />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="وصف الصفحة"
             rows={2}
-            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm mb-3 focus:border-primary focus:outline-none resize-none"
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-black mb-3 focus:border-primary focus:outline-none resize-none"
           />
           <button
             type="submit"
