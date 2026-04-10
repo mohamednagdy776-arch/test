@@ -47,4 +47,7 @@ export const pagesApi = {
 
   unlikePage: (id: string) =>
     apiClient.delete(`/pages/${id}/like`).then((r) => r.data),
+
+  getPagePosts: (id: string, page = 1, limit = 20) =>
+    apiClient.get(`/pages/${id}/posts`, { params: { page, limit } }).then((r) => r.data),
 };

@@ -112,3 +112,11 @@ export function useCreatePage() {
     },
   });
 }
+
+export function usePagePosts(id: string, page = 1, limit = 20) {
+  return useQuery({
+    queryKey: ['page-posts', id, page],
+    queryFn: () => pagesApi.getPagePosts(id, page, limit),
+    enabled: !!id,
+  });
+}
