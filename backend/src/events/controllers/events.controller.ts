@@ -19,8 +19,8 @@ export class EventsController {
   }
 
   @Get()
-  async findAll(@Query() query: PaginationDto) {
-    const { data, total } = await this.eventsService.findAll(query.page!, query.limit!);
+  async findAll(@Query() query: PaginationDto, @CurrentUser() user?: User) {
+    const { data, total } = await this.eventsService.findAll(query.page!, query.limit!, user?.id);
     return paginated(data, total, query.page!, query.limit!);
   }
 

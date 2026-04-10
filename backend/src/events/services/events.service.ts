@@ -29,7 +29,7 @@ export class EventsService {
     return saved;
   }
 
-  async findAll(page: number, limit: number) {
+  async findAll(page: number, limit: number, userId?: string) {
     const [data, total] = await this.eventsRepo
       .createQueryBuilder('event')
       .where('event.start_date >= NOW()')
@@ -37,7 +37,22 @@ export class EventsService {
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
-    return { data, total };
+
+    if (!userId) {
+      return { data, total };
+    }
+
+    const rsvps = await this.rsvpRepo.find({
+      where: { user: { id: userId } },
+    });
+    const rsvpMap = new Map(rsvps.map(r => [r.event.id, r.status]));
+
+    const dataWithRsvp = data.map(event => ({
+      ...event,
+      userRsvp: rsvpMap.get(event.id) || null,
+    }));
+
+    return { data: dataWithRsvp, total };
   }
 
   async findOne(eventId: string, userId?: string) {
