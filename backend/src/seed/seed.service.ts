@@ -1,10 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import * as bcrypt from 'bcrypt';
 import { User } from '../auth/entities/user.entity';
 import { Profile } from '../users/entities/profile.entity';
 import { Post, PostType, Audience } from '../posts/entities/post.entity';
 import { Friendship, FriendshipStatus } from '../friends/entities/friendship.entity';
+import { Conversation, ConversationType } from '../chat/entities/conversation.entity';
+import { Message, MessageType } from '../chat/entities/message.entity';
+import { ConversationParticipant, ParticipantRole } from '../chat/entities/conversation-participant.entity';
 import {
   egyptianCities,
   egyptianMaleNames,
@@ -29,6 +33,12 @@ export class SeedService {
     private postRepository: Repository<Post>,
     @InjectRepository(Friendship)
     private friendshipRepository: Repository<Friendship>,
+    @InjectRepository(Conversation)
+    private conversationRepository: Repository<Conversation>,
+    @InjectRepository(Message)
+    private messageRepository: Repository<Message>,
+    @InjectRepository(ConversationParticipant)
+    private participantRepository: Repository<ConversationParticipant>,
   ) {}
 
   async seedAll() {
@@ -38,6 +48,7 @@ export class SeedService {
     await this.seedProfiles();
     await this.seedPosts();
     await this.seedFriendships();
+    await this.seedConversations();
 
     this.logger.log('Seed completed successfully!');
     return { message: 'Seed completed successfully!' };
@@ -72,7 +83,7 @@ export class SeedService {
       users.push({
         email: `user${i + 1}@example.com`,
         phone: `+2010000000${String(i + 1).padStart(2, '0')}`,
-        passwordHash: '$2a$10$hashedplaceholderonly',
+        passwordHash: '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG',
         firstName,
         lastName,
         username: `${firstName.toLowerCase()}${lastName.toLowerCase()}${i}`,
@@ -203,9 +214,78 @@ export class SeedService {
     this.logger.log(`Created ${friendships.length} friendships`);
   }
 
+  private async seedConversations() {
+    this.logger.log('Seeding conversations and messages...');
+
+    const existingConversations = await this.conversationRepository.count();
+    if (existingConversations > 0) {
+      this.logger.log('Conversations already exist. Skipping.');
+      return;
+    }
+
+    const conversations: Partial<Conversation>[] = [];
+    const messages: Partial<Message>[] = [];
+    const participants: Partial<ConversationParticipant>[] = [];
+
+    const sampleMessages = [
+      'Assalamualaikum! How are you?',
+      'Waalaikumsalam! I am fine, alhamdulillah. How about you?',
+      'Doing great! Have you found someone special yet?',
+      'Not yet, still looking. What about you?',
+      'I am still searching too. Let us keep making dua.',
+      'Absolutely! May Allah make it easy for us.',
+      'Which city are you from?',
+      'I am from Cairo. You?',
+      'Alexandria here. Nice to meet you!',
+      'Nice to meet you too!',
+    ];
+
+    for (let i = 0; i < Math.min(10, this.userIds.length - 1); i++) {
+      const user1Id = this.userIds[i];
+      const user2Id = this.userIds[i + 1];
+
+      const conversation = await this.conversationRepository.save({
+        type: ConversationType.ONE_TO_ONE,
+        createdBy: { id: user1Id } as User,
+        isGroup: false,
+      });
+      conversations.push(conversation);
+
+      participants.push({
+        conversationId: conversation.id,
+        userId: user1Id,
+        role: ParticipantRole.MEMBER,
+        isAdmin: false,
+      });
+      participants.push({
+        conversationId: conversation.id,
+        userId: user2Id,
+        role: ParticipantRole.MEMBER,
+        isAdmin: false,
+      });
+
+      for (let j = 0; j < 3; j++) {
+        const msgIndex = (i * 3 + j) % sampleMessages.length;
+        messages.push({
+          conversation: { id: conversation.id } as Conversation,
+          sender: { id: user1Id } as User,
+          contentEncrypted: sampleMessages[msgIndex],
+          type: MessageType.TEXT,
+        });
+      }
+    }
+
+    await this.participantRepository.save(participants);
+    await this.messageRepository.save(messages);
+    this.logger.log(`Created ${conversations.length} conversations with messages`);
+  }
+
   async resetDatabase() {
     this.logger.log('Resetting database...');
 
+    await this.participantRepository.delete({});
+    await this.messageRepository.delete({});
+    await this.conversationRepository.delete({});
     await this.friendshipRepository.delete({});
     await this.postRepository.delete({});
     await this.profileRepository.delete({});
@@ -223,13 +303,17 @@ export class SeedService {
     const profiles = await this.profileRepository.count();
     const posts = await this.postRepository.count();
     const friendships = await this.friendshipRepository.count();
+    const conversations = await this.conversationRepository.count();
+    const messages = await this.messageRepository.count();
 
     return {
       users,
       profiles,
       posts,
       friendships,
-      total: users + profiles + posts + friendships,
+      conversations,
+      messages,
+      total: users + profiles + posts + friendships + conversations + messages,
     };
   }
 }

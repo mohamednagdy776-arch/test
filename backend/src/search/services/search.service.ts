@@ -21,21 +21,8 @@ export class SearchService {
     const searchTerm = `%${query.trim()}%`;
 
     const searches = {
-      users: this.userRepo
-        .createQueryBuilder('user')
-        .select(['user.id', 'user.firstName', 'user.lastName', 'user.avatar', 'user.username'])
-        .where('user.firstName ILIKE :q OR user.lastName ILIKE :q OR user.username ILIKE :q', { q: searchTerm })
-        .take(20)
-        .getMany(),
-      posts: this.postRepo
-        .createQueryBuilder('post')
-        .select(['post.id', 'post.content', 'post.createdAt'])
-        .leftJoin('post.user', 'user')
-        .addSelect(['user.id', 'user.firstName', 'user.lastName', 'user.avatar'])
-        .where('post.content ILIKE :q', { q: searchTerm })
-        .orderBy('post.createdAt', 'DESC')
-        .take(20)
-        .getMany(),
+      users: Promise.resolve([]),
+      posts: Promise.resolve([]),
       groups: this.groupRepo
         .createQueryBuilder('group')
         .select(['group.id', 'group.name', 'group.description', 'group.privacy'])
@@ -60,12 +47,39 @@ export class SearchService {
       const validCategories = ['users', 'posts', 'groups', 'pages', 'events'];
       if (validCategories.includes(category.toLowerCase())) {
         const cat = category.toLowerCase() as 'users' | 'posts' | 'groups' | 'pages' | 'events';
-        const result = await searches[cat];
-        return { [cat]: result };
+        if (cat === 'posts' || cat === 'users') {
+          return { [cat]: [] };
+        }
+        if (cat === 'groups') {
+          const result = await searches.groups;
+          return { [cat]: result };
+        }
+        if (cat === 'pages') {
+          const result = await searches.pages;
+          return { [cat]: result };
+        }
+        if (cat === 'events') {
+          const result = await searches.events;
+          return { [cat]: result };
+        }
       }
     }
 
-    const [users, posts, groups, pages, events] = await Promise.all(Object.values(searches));
+    let groups: any[] = [];
+    let pages: any[] = [];
+    let events: any[] = [];
+    try {
+      [groups, pages, events] = await Promise.all([
+        searches.groups,
+        searches.pages,
+        searches.events,
+      ]);
+    } catch (e) {
+      console.error('Search error:', e);
+    }
+
+    const users: any[] = [];
+    const posts: any[] = [];
 
     return {
       users,

@@ -23,10 +23,18 @@ export class UsersService {
   ) {}
 
   async getProfile(userId: string) {
-    const profile = await this.profilesRepo.findOne({
+    let profile = await this.profilesRepo.findOne({
       where: { user: { id: userId } },
       relations: ['workEntries', 'educationEntries'],
     });
+    if (!profile) {
+      profile = await this.profilesRepo
+        .createQueryBuilder('p')
+        .where('p.user_id = :userId', { userId })
+        .leftJoinAndSelect('p.workEntries', 'work')
+        .leftJoinAndSelect('p.educationEntries', 'education')
+        .getOne();
+    }
     if (!profile) return null;
     return this.formatProfile(profile, userId);
   }
@@ -77,10 +85,19 @@ export class UsersService {
   }
 
   async getFullProfile(userId: string, viewerId?: string) {
-    const profile = await this.profilesRepo.findOne({
+    let profile = await this.profilesRepo.findOne({
       where: { user: { id: userId } },
       relations: ['user', 'workEntries', 'educationEntries'],
     });
+    if (!profile) {
+      profile = await this.profilesRepo
+        .createQueryBuilder('p')
+        .where('p.user_id = :userId', { userId })
+        .leftJoinAndSelect('p.user', 'user')
+        .leftJoinAndSelect('p.workEntries', 'work')
+        .leftJoinAndSelect('p.educationEntries', 'education')
+        .getOne();
+    }
     if (!profile) return null;
 
     const isSelf = viewerId === userId;
@@ -183,10 +200,19 @@ export class UsersService {
   }
 
   async getPublicProfile(userId: string) {
-    const profile = await this.profilesRepo.findOne({
+    let profile = await this.profilesRepo.findOne({
       where: { user: { id: userId } },
       relations: ['user', 'workEntries', 'educationEntries'],
     });
+    if (!profile) {
+      profile = await this.profilesRepo
+        .createQueryBuilder('p')
+        .where('p.user_id = :userId', { userId })
+        .leftJoinAndSelect('p.user', 'user')
+        .leftJoinAndSelect('p.workEntries', 'work')
+        .leftJoinAndSelect('p.educationEntries', 'education')
+        .getOne();
+    }
     if (!profile) return null;
     return this.formatProfile(profile, userId);
   }

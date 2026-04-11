@@ -5,23 +5,23 @@
 ALTER TABLE profiles DISABLE TRIGGER ALL;
 ALTER TABLE users DISABLE TRIGGER ALL;
 
--- Insert sample users (password: password123 hashed with bcrypt)
+-- Insert sample users (password: password123 hashed with bcrypt cost 12)
 INSERT INTO users (id, email, phone, password_hash, account_type, status, created_at) VALUES
-  (gen_random_uuid(), 'ahmed.hassan@test.com', '+201001000001', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'fatima.ali@test.com', '+201001000002', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'omar.khalid@test.com', '+201001000003', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'aisha.mohammed@test.com', '+201001000004', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'youssef.ibrahim@test.com', '+201001000005', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'mariam.saad@test.com', '+201001000006', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'karim.nasser@test.com', '+201001000007', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'layla.ahmad@test.com', '+201001000008', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'tariq.mahmoud@test.com', '+201001000009', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'nour.hussein@test.com', '+201001000010', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'hassan.ali@test.com', '+201001000011', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'sara.khalid@test.com', '+201001000012', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'mohamed.rashid@test.com', '+201001000013', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'huda.saleh@test.com', '+201001000014', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW()),
-  (gen_random_uuid(), 'ali.hassan@test.com', '+201001000015', '$2b$10$kJ/apx3gHldAR44ALOHbQOBRup19kRhbGQK.hUVu3SBBRdSXGh/iK', 'user', 'active', NOW())
+  (gen_random_uuid(), 'ahmed.hassan@test.com', '+201001000001', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'fatima.ali@test.com', '+201001000002', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'omar.khalid@test.com', '+201001000003', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'aisha.mohammed@test.com', '+201001000004', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'youssef.ibrahim@test.com', '+201001000005', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'mariam.saad@test.com', '+201001000006', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'karim.nasser@test.com', '+201001000007', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'layla.ahmad@test.com', '+201001000008', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'tariq.mahmoud@test.com', '+201001000009', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'nour.hussein@test.com', '+201001000010', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'hassan.ali@test.com', '+201001000011', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'sara.khalid@test.com', '+201001000012', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'mohamed.rashid@test.com', '+201001000013', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'huda.saleh@test.com', '+201001000014', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW()),
+  (gen_random_uuid(), 'ali.hassan@test.com', '+201001000015', '$2b$12$PgdVH.7CmqaAflur2IeVxeKIiTaerwF7i8TiV4.ZHd9y6GieFH2EG', 'user', 'active', NOW())
 ON CONFLICT (email) DO NOTHING;
 
 -- Insert profiles for each user

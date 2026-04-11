@@ -65,6 +65,34 @@ export class PostsService {
     return { data, total };
   }
 
+  async getFeedByCursor(cursor: string | undefined, limit: number) {
+    const whereCondition = cursor ? { createdAt: LessThan(new Date(cursor)) } : {};
+    const data = await this.postsRepo.find({
+      where: whereCondition,
+      order: { isPinned: 'DESC', createdAt: 'DESC' },
+      take: limit + 1,
+      relations: ['user', 'group'],
+    });
+    const hasMore = data.length > limit;
+    const results = hasMore ? data.slice(0, limit) : data;
+    const nextCursor = hasMore ? results[results.length - 1]?.createdAt?.toISOString() : undefined;
+    return { data: results, nextCursor, hasMore };
+  }
+
+  async getRecentFeedByCursor(cursor: string | undefined, limit: number) {
+    const whereCondition = cursor ? { createdAt: LessThan(new Date(cursor)) } : {};
+    const data = await this.postsRepo.find({
+      where: whereCondition,
+      order: { createdAt: 'DESC' },
+      take: limit + 1,
+      relations: ['user', 'group'],
+    });
+    const hasMore = data.length > limit;
+    const results = hasMore ? data.slice(0, limit) : data;
+    const nextCursor = hasMore ? results[results.length - 1]?.createdAt?.toISOString() : undefined;
+    return { data: results, nextCursor, hasMore };
+  }
+
   async delete(postId: string) {
     await this.postsRepo.delete(postId);
   }
