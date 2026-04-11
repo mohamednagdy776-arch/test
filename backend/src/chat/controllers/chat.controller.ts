@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Delete, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Delete, Query, UseGuards, NotFoundException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ChatService } from '../services/chat.service';
 import { SendMessageDto, EditMessageDto, DeleteMessageDto, ReactMessageDto, ForwardMessageDto, SearchMessageDto } from '../dto/message.dto';
@@ -81,6 +81,7 @@ export class ChatController {
     @CurrentUser() user: User,
   ) {
     const reaction = await this.chatService.reactToMessage(messageId, user.id, dto.emoji);
+    if (!reaction) throw new NotFoundException('Message not found');
     return ok({ id: reaction.id, emoji: reaction.emoji }, 'Reaction added');
   }
 

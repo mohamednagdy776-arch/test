@@ -42,6 +42,12 @@ export class FriendsController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  @Get()
+  async getFriendsAlias(@CurrentUser() user: User, @Query() query: PaginationDto) {
+    const { data, total } = await this.friendsService.getFriends(user.id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
   @Get('requests')
   async getPendingRequests(@CurrentUser() user: User) {
     const requests = await this.friendsService.getPendingRequests(user.id);

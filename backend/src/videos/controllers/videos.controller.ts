@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { VideosService } from '../services/videos.service';
 import { CreateVideoDto } from '../dto/create-video.dto';
@@ -24,8 +24,30 @@ export class VideosController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  @Get('trending')
+  async trending(@Query() query: PaginationDto) {
+    const { data, total } = await this.videosService.findTrending(query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Get('recommended')
+  async recommended(@Query() query: PaginationDto) {
+    const { data, total } = await this.videosService.findRecommended(query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Get('continue-watching')
+  async continueWatching(@Query() query: PaginationDto) {
+    const { data, total } = await this.videosService.findContinueWatching(query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      throw new HttpException('Video not found', HttpStatus.NOT_FOUND);
+    }
     const video = await this.videosService.findOne(id);
     return ok(video);
   }

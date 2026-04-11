@@ -118,12 +118,14 @@ export class ChatGateway {
   ) {
     const reaction: any = await this.chatService.reactToMessage(payload.messageId, payload.userId, payload.emoji);
     
-    const message = await this.chatService.getMessages('', '', 1, 1);
-    this.server.to(`conversation:${(reaction as any).message?.conversationId}`).emit('reactionAdded', {
-      messageId: payload.messageId,
-      emoji: payload.emoji,
-      userId: payload.userId,
-    });
+    const conversationId = (reaction as any).message?.conversation?.id;
+    if (conversationId) {
+      this.server.to(`conversation:${conversationId}`).emit('reactionAdded', {
+        messageId: payload.messageId,
+        emoji: payload.emoji,
+        userId: payload.userId,
+      });
+    }
   }
 
   @SubscribeMessage('removeReaction')

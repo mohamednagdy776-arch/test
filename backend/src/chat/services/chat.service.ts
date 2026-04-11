@@ -131,6 +131,7 @@ export class ChatService {
   async reactToMessage(messageId: string, userId: string, emoji: string) {
     const existing = await this.reactionRepo.findOne({
       where: { message: { id: messageId }, user: { id: userId } },
+      relations: ['message'],
     });
     if (existing) {
       existing.emoji = emoji;
@@ -141,7 +142,11 @@ export class ChatService {
       user: { id: userId } as any,
       emoji,
     });
-    return this.reactionRepo.save(reaction);
+    const saved = await this.reactionRepo.save(reaction);
+    return this.reactionRepo.findOne({
+      where: { id: saved.id },
+      relations: ['message'],
+    });
   }
 
   async removeReaction(messageId: string, userId: string) {

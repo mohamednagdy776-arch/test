@@ -26,6 +26,36 @@ export class VideosService {
     return { data, total };
   }
 
+  async findTrending(page: number, limit: number) {
+    const [data, total] = await this.videosRepo.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { views: 'DESC', createdAt: 'DESC' },
+      relations: ['createdBy'],
+    });
+    return { data, total };
+  }
+
+  async findRecommended(page: number, limit: number) {
+    const [data, total] = await this.videosRepo.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      relations: ['createdBy'],
+    });
+    return { data, total };
+  }
+
+  async findContinueWatching(page: number, limit: number) {
+    const [data, total] = await this.videosRepo.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      relations: ['createdBy'],
+    });
+    return { data, total };
+  }
+
   async findOne(videoId: string) {
     const video = await this.videosRepo.findOne({
       where: { id: videoId },

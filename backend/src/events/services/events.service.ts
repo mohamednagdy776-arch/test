@@ -54,8 +54,9 @@ export class EventsService {
 
     const rsvps = await this.rsvpRepo.find({
       where: { user: { id: userId } },
+      relations: ['event'],
     });
-    const rsvpMap = new Map(rsvps.map(r => [r.event.id, r.status]));
+    const rsvpMap = new Map(rsvps.filter(r => r.event).map(r => [r.event.id, r.status]));
 
     const dataWithRsvp = data.map(event => ({
       ...event,
