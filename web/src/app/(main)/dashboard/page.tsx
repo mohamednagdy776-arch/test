@@ -52,10 +52,10 @@ function SuggestedConnections() {
 // ─── Right Sidebar: Trending Topics ───────────────────────────
 function TrendingTopics() {
   const topics = [
-    { tag: '#الزواج_الإسلامي', posts: 234 },
-    { tag: '#قصص_نجاح', posts: 187 },
-    { tag: '#نصائح_للعروسين', posts: 156 },
-    { tag: '#توافق', posts: 142 },
+    { tag: '#الزواج_الإسلامي', posts: 234, image: '💍', color: 'from-rose-100 to-rose-200' },
+    { tag: '#قصص_نجاح', posts: 187, image: '🏆', color: 'from-amber-100 to-amber-200' },
+    { tag: '#نصائح_للعروسين', posts: 156, image: '💒', color: 'from-pink-100 to-pink-200' },
+    { tag: '#توافق', posts: 142, image: '💕', color: 'from-purple-100 to-purple-200' },
   ];
 
   return (
@@ -65,12 +65,22 @@ function TrendingTopics() {
       </div>
       <div className="p-3 space-y-1">
         {topics.map((t, i) => (
-          <button key={t.tag} className="w-full text-right rounded-xl p-2.5 hover:bg-[#D4E8EE]/50 transition-colors">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-[#547792]">{t.tag}</p>
-              <span className="text-[10px] text-[#BFB9AD] font-medium">#{i + 1}</span>
+          <button key={t.tag} className="w-full text-right rounded-xl p-2.5 hover:bg-[#D4E8EE]/50 transition-colors group">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                'h-10 w-10 rounded-xl flex items-center justify-center text-xl shadow-inner-soft',
+                'bg-gradient-to-br', t.color
+              )}>
+                {t.image}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-bold text-[#547792]">{t.tag}</p>
+                  <span className="text-[10px] text-[#BFB9AD] font-medium">#{i + 1}</span>
+                </div>
+                <p className="text-[11px] text-[#BFB9AD]">{t.posts} منشور</p>
+              </div>
             </div>
-            <p className="text-[11px] text-[#BFB9AD]">{t.posts} منشور</p>
           </button>
         ))}
       </div>

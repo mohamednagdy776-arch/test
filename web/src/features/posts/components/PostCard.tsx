@@ -3,15 +3,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
 import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
-import { ThumbsUp, Heart, Smiley, SmileyMeh, SmileySad, SmileyAngry, ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt, XCircle, CaretLeft } from '@phosphor-icons/react';
+import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt } from '@phosphor-icons/react';
 
 const REACTIONS = [
-  { type: 'like', icon: ThumbsUp, label: 'إعجاب', activeBg: 'bg-[#D4E8EE]', activeText: 'text-[#213448]' },
-  { type: 'love', icon: Heart, label: 'حب', activeBg: 'bg-[#B05252]/15', activeText: 'text-[#B05252]' },
-  { type: 'haha', icon: Smiley, label: 'ضحك', activeBg: 'bg-[#F9D71C]/20', activeText: 'text-[#F9D71C]' },
-  { type: 'wow', icon: SmileyMeh, label: 'مثير', activeBg: 'bg-[#F9A825]/20', activeText: 'text-[#F9A825]' },
-  { type: 'sad', icon: SmileySad, label: 'حزن', activeBg: 'bg-[#5C6BC0]/20', activeText: 'text-[#5C6BC0]' },
-  { type: 'angry', icon: SmileyAngry, label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
+  { type: 'like', emoji: '👍', label: 'إعجاب', activeBg: 'bg-[#D4E8EE]', activeText: 'text-[#213448]' },
+  { type: 'love', emoji: '❤️', label: 'حب', activeBg: 'bg-[#B05252]/15', activeText: 'text-[#B05252]' },
+  { type: 'haha', emoji: '😂', label: 'ضحك', activeBg: 'bg-[#F9D71C]/20', activeText: 'text-[#F9D71C]' },
+  { type: 'wow', emoji: '😮', label: 'مثير', activeBg: 'bg-[#F9A825]/20', activeText: 'text-[#F9A825]' },
+  { type: 'sad', emoji: '😢', label: 'حزن', activeBg: 'bg-[#5C6BC0]/20', activeText: 'text-[#5C6BC0]' },
+  { type: 'angry', emoji: '😠', label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
 ];
 
 function timeAgo(date: string | Date) {
@@ -29,20 +29,17 @@ function timeAgo(date: string | Date) {
 function ReactionPicker({ onSelect, onClose }: { onSelect: (type: string) => void; onClose: () => void }) {
   return (
     <div className="absolute bottom-full mb-2 left-0 bg-[#FDFAF5] rounded-2xl shadow-glow-lg border border-[#C8D8DF]/60 p-3 animate-scale-in z-20">
-      <div className="flex gap-1">
-        {REACTIONS.map((r) => {
-          const Icon = r.icon;
-          return (
-            <button
-              key={r.type}
-              onClick={() => { onSelect(r.type); onClose(); }}
-              className="p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125 hover:shadow-soft"
-              title={r.label}
-            >
-              <Icon size={24} weight="fill" />
-            </button>
-          );
-        })}
+      <div className="flex gap-2">
+        {REACTIONS.map((r) => (
+          <button
+            key={r.type}
+            onClick={() => { onSelect(r.type); onClose(); }}
+            className="text-2xl p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125 hover:shadow-soft"
+            title={r.label}
+          >
+            {r.emoji}
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -68,7 +65,7 @@ function ReactionDisplay({ postId }: { postId: string }) {
   }, []);
 
   const currentReaction = REACTIONS.find(r => r.type === userReaction);
-  const DefaultIcon = ThumbsUp;
+  const defaultEmoji = '👍';
 
   return (
     <div className="relative" ref={pickerRef}>
@@ -81,7 +78,7 @@ function ReactionDisplay({ postId }: { postId: string }) {
             currentReaction ? `${currentReaction.activeBg} ${currentReaction.activeText}` : 'bg-[#EAE0CF]/60 text-[#547792] hover:bg-[#EAE0CF] hover:text-[#213448]'
           )}
         >
-          <span className="text-sm">{currentReaction ? <currentReaction.icon size={16} weight="fill" /> : <DefaultIcon size={16} weight="fill" />}</span>
+          <span className="text-base">{currentReaction?.emoji || defaultEmoji}</span>
           <span>{currentReaction?.label || 'إعجاب'}</span>
         </button>
         {total > 0 && <span className="text-xs text-[#547792] font-medium shadow-soft rounded-full px-2 py-0.5">{total}</span>}
