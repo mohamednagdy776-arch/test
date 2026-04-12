@@ -2,6 +2,7 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { Camera, PencilSimple, Briefcase, Heart } from '@phosphor-icons/react';
 
 interface Props {
   profile: any;
@@ -62,7 +63,7 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
               <div className="w-16 h-16 rounded-2xl bg-[#FDFAF5]/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
-                <span className="text-2xl">🏔️</span>
+                <Camera size={32} className="text-[#FDFAF5]/50" />
               </div>
               <p className="text-sm text-[#FDFAF5]/70 font-medium">أضف صورة غلاف</p>
             </div>
@@ -74,7 +75,7 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
           onClick={() => coverRef.current?.click()}
           className="absolute bottom-4 left-4 px-4 py-2 bg-[#131F2E]/70 hover:bg-[#131F2E]/90 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105"
         >
-          <span>📷</span>
+          <Camera size={18} />
           <span>تعديل غلاف</span>
         </button>
         <input
@@ -106,7 +107,7 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
               onClick={() => avatarRef.current?.click()}
               className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gradient-to-r from-[#213448] to-[#547792] text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft hover:shadow-glow hover:scale-110 transition-all duration-200"
             >
-              {uploading ? '…' : '📷'}
+              {uploading ? '...' : <Camera size={14} />}
             </button>
             {/* Status indicator */}
             <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-[#4A8C6F] ring-2 ring-[#FDFAF5] shadow-[0_0_8px_rgba(74,140,111,0.5)]" />
@@ -129,10 +130,10 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
               {[profile.location, profile.city, profile.country].filter(Boolean).join('، ')}
             </p>
             {profile.workplace && (
-              <p className="mt-1 text-sm text-[#547792] font-medium">💼 {profile.workplace}</p>
+              <p className="mt-1 text-sm text-[#547792] font-medium"><Briefcase size={14} className="inline mr-1" /> {profile.workplace}</p>
             )}
             {profile.relationshipStatus && (
-              <p className="mt-1 text-sm text-[#547792] font-medium">💕 {profile.relationshipStatus}</p>
+              <p className="mt-1 text-sm text-[#547792] font-medium"><Heart size={14} className="inline mr-1" weight="fill" /> {profile.relationshipStatus}</p>
             )}
             {profile.bio && (
               <p className="mt-2 text-sm text-[#131F2E]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
@@ -151,6 +152,7 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
               onClick={onEdit}
               className="shrink-0 mt-16 rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-[#D4E8EE] hover:border-[#547792] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
             >
+              <PencilSimple size={16} className="inline mr-1" />
               تعديل الملف
             </button>
           )}

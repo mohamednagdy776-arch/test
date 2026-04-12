@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { ThumbsUp, Heart, Smiley, SmileyMeh, SmileySad, SmileyAngry, MapPin, ChatCircle, DotsThree, Pencil, Trash, CaretRight } from '@phosphor-icons/react';
 
 interface Comment {
   id: string;
@@ -34,12 +35,12 @@ interface CommentListProps {
 }
 
 const REACTIONS = [
-  { type: 'like', icon: '👍', label: 'إعجاب' },
-  { type: 'love', icon: '❤️', label: 'حب' },
-  { type: 'haha', icon: '😂', label: 'ضحك' },
-  { type: 'wow', icon: '😮', label: 'مثير' },
-  { type: 'sad', icon: '😢', label: 'حزن' },
-  { type: 'angry', icon: '😠', label: 'غضب' },
+  { type: 'like', icon: ThumbsUp, label: 'إعجاب' },
+  { type: 'love', icon: Heart, label: 'حب' },
+  { type: 'haha', icon: Smiley, label: 'ضحك' },
+  { type: 'wow', icon: SmileyMeh, label: 'مثير' },
+  { type: 'sad', icon: SmileySad, label: 'حزن' },
+  { type: 'angry', icon: SmileyAngry, label: 'غضب' },
 ];
 
 function timeAgo(date: string | Date) {
@@ -62,16 +63,19 @@ function ReactionPicker({ onSelect, onClose }: { onSelect: (type: string) => voi
   return (
     <div className="absolute bottom-full mb-2 left-0 bg-[#FDFAF5] rounded-2xl shadow-lg border border-[#C8D8DF]/60 p-3 z-20">
       <div className="flex gap-1">
-        {REACTIONS.map((r) => (
-          <button
-            key={r.type}
-            onClick={() => { onSelect(r.type); onClose(); }}
-            className="text-2xl p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125"
-            title={r.label}
-          >
-            {r.icon}
-          </button>
-        ))}
+        {REACTIONS.map((r) => {
+          const Icon = r.icon;
+          return (
+            <button
+              key={r.type}
+              onClick={() => { onSelect(r.type); onClose(); }}
+              className="p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125"
+              title={r.label}
+            >
+              <Icon size={24} weight="fill" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -150,7 +154,7 @@ function CommentItem({
             <>
               <div className="flex items-center gap-2">
                 <p className="text-xs font-bold text-[#213448]">{comment.user.profile?.fullName || comment.user.email?.split('@')[0] || 'مستخدم'}</p>
-                {comment.isPinned && <span className="text-[10px] text-[#547792]">📌</span>}
+                {comment.isPinned && <MapPin size={12} className="text-[#547792]" />}
                 <span className="text-[10px] text-[#547792]">{timeAgo(comment.createdAt)}</span>
                 {comment.editedAt && <span className="text-[10px] text-[#547792]">(معدل)</span>}
               </div>
@@ -163,9 +167,10 @@ function CommentItem({
           <div className="relative">
             <button 
               onClick={() => setShowReactions(!showReactions)}
-              className="text-xs text-[#547792] hover:underline"
+              className="text-xs text-[#547792] hover:underline flex items-center gap-1"
             >
-              👍 إعجاب
+              <ThumbsUp size={14} weight="fill" />
+              إعجاب
             </button>
             {showReactions && (
               <ReactionPicker 
@@ -183,20 +188,30 @@ function CommentItem({
 
           {(isOwnComment || isAuthor) && (
             <div className="relative">
-              <button onClick={() => setShowMenu(!showMenu)} className="text-xs text-[#547792]">⋮</button>
+              <button onClick={() => setShowMenu(!showMenu)} className="text-xs text-[#547792]">
+                <DotsThree size={16} />
+              </button>
               {showMenu && (
                 <div className="absolute left-0 top-full mt-1 bg-[#FDFAF5] rounded-lg shadow-lg border border-[#C8D8DF]/60 py-1 z-10 min-w-[120px]">
                   {isOwnComment && (
                     <>
-                      <button onClick={() => { setIsEditing(true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50">تعديل</button>
-                      <button onClick={() => { onDelete(comment.id); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm text-red-500 hover:bg-[#EAE0CF]/50">حذف</button>
+                      <button onClick={() => { setIsEditing(true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50 flex items-center gap-2">
+                        <Pencil size={14} /> تعديل
+                      </button>
+                      <button onClick={() => { onDelete(comment.id); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm text-red-500 hover:bg-[#EAE0CF]/50 flex items-center gap-2">
+                        <Trash size={14} /> حذف
+                      </button>
                     </>
                   )}
                   {isAuthor && !comment.isPinned && (
-                    <button onClick={() => { onPin(comment.id, true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50">تثبيت</button>
+                    <button onClick={() => { onPin(comment.id, true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50 flex items-center gap-2">
+                      <MapPin size={14} /> تثبيت
+                    </button>
                   )}
                   {isAuthor && comment.isPinned && (
-                    <button onClick={() => { onPin(comment.id, false); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50">إلغاء التثبيت</button>
+                    <button onClick={() => { onPin(comment.id, false); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50 flex items-center gap-2">
+                      <CaretRight size={14} /> إلغاء التثبيت
+                    </button>
                   )}
                 </div>
               )}
@@ -248,7 +263,7 @@ export function CommentList({ comments, postId, currentUserId, onReply, onEdit, 
   if (!comments || comments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-4">
-        <p className="text-2xl mb-1">💬</p>
+        <ChatCircle size={32} className="text-[#94B4C1] mb-1" />
         <p className="text-xs text-[#547792]">لا توجد تعليقات بعد — كن أول من يعلق</p>
       </div>
     );

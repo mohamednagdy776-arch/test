@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { User, CheckCircle, ThumbsUp, ChatCircle, Tag, ShareNetwork, Megaphone, Cake, Users, Bell, X } from '@phosphor-icons/react';
 
 interface Notification {
   id: string;
@@ -23,16 +24,16 @@ interface NotificationListProps {
 
 function getNotificationIcon(type: string) {
   switch (type) {
-    case 'friend_request': return '👤';
-    case 'friend_accepted': return '✅';
-    case 'like': return '👍';
-    case 'comment': return '💬';
-    case 'tag': return '🏷️';
-    case 'share': return '📤';
-    case 'mention': return '📢';
-    case 'birthday': return '🎂';
-    case 'group_invite': return '👥';
-    default: return '🔔';
+    case 'friend_request': return <User size={20} />;
+    case 'friend_accepted': return <CheckCircle size={20} weight="fill" />;
+    case 'like': return <ThumbsUp size={20} weight="fill" />;
+    case 'comment': return <ChatCircle size={20} />;
+    case 'tag': return <Tag size={20} />;
+    case 'share': return <ShareNetwork size={20} />;
+    case 'mention': return <Megaphone size={20} />;
+    case 'birthday': return <Cake size={20} />;
+    case 'group_invite': return <Users size={20} />;
+    default: return <Bell size={20} />;
   }
 }
 
@@ -65,7 +66,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
 
       {notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8">
-          <p className="text-4xl mb-2">🔔</p>
+          <Bell size={32} className="text-[#94B4C1] mb-2" />
           <p className="text-sm text-[#547792]">لا توجد إشعارات</p>
         </div>
       ) : (
@@ -86,7 +87,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
                   : "bg-[#D4E8EE]/50 hover:bg-[#D4E8EE]"
               )}
             >
-              <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl bg-[#EAE0CF] shrink-0">
+              <div className="h-10 w-10 rounded-full flex items-center justify-center bg-[#EAE0CF] shrink-0 text-[#547792]">
                 {getNotificationIcon(notification.type)}
               </div>
               <div className="flex-1 min-w-0">
@@ -106,9 +107,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
                   onClick={(e) => { e.stopPropagation(); onDelete(notification.id); }}
                   className="text-[#547792] hover:text-red-500 p-1"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <X size={16} />
                 </button>
               </div>
             </div>

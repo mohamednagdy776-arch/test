@@ -3,14 +3,15 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
 import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
+import { ThumbsUp, Heart, Smiley, SmileyMeh, SmileySad, SmileyAngry, ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt, XCircle, CaretLeft } from '@phosphor-icons/react';
 
 const REACTIONS = [
-  { type: 'like', icon: '👍', label: 'إعجاب', activeBg: 'bg-[#D4E8EE]', activeText: 'text-[#213448]' },
-  { type: 'love', icon: '❤️', label: 'حب', activeBg: 'bg-[#B05252]/15', activeText: 'text-[#B05252]' },
-  { type: 'haha', icon: '😂', label: 'ضحك', activeBg: 'bg-[#F9D71C]/20', activeText: 'text-[#F9D71C]' },
-  { type: 'wow', icon: '😮', label: 'مثير', activeBg: 'bg-[#F9A825]/20', activeText: 'text-[#F9A825]' },
-  { type: 'sad', icon: '😢', label: 'حزن', activeBg: 'bg-[#5C6BC0]/20', activeText: 'text-[#5C6BC0]' },
-  { type: 'angry', icon: '😠', label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
+  { type: 'like', icon: ThumbsUp, label: 'إعجاب', activeBg: 'bg-[#D4E8EE]', activeText: 'text-[#213448]' },
+  { type: 'love', icon: Heart, label: 'حب', activeBg: 'bg-[#B05252]/15', activeText: 'text-[#B05252]' },
+  { type: 'haha', icon: Smiley, label: 'ضحك', activeBg: 'bg-[#F9D71C]/20', activeText: 'text-[#F9D71C]' },
+  { type: 'wow', icon: SmileyMeh, label: 'مثير', activeBg: 'bg-[#F9A825]/20', activeText: 'text-[#F9A825]' },
+  { type: 'sad', icon: SmileySad, label: 'حزن', activeBg: 'bg-[#5C6BC0]/20', activeText: 'text-[#5C6BC0]' },
+  { type: 'angry', icon: SmileyAngry, label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
 ];
 
 function timeAgo(date: string | Date) {
@@ -29,16 +30,19 @@ function ReactionPicker({ onSelect, onClose }: { onSelect: (type: string) => voi
   return (
     <div className="absolute bottom-full mb-2 left-0 bg-[#FDFAF5] rounded-2xl shadow-glow-lg border border-[#C8D8DF]/60 p-3 animate-scale-in z-20">
       <div className="flex gap-1">
-        {REACTIONS.map((r) => (
-          <button
-            key={r.type}
-            onClick={() => { onSelect(r.type); onClose(); }}
-            className="text-2xl p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125 hover:shadow-soft"
-            title={r.label}
-          >
-            {r.icon}
-          </button>
-        ))}
+        {REACTIONS.map((r) => {
+          const Icon = r.icon;
+          return (
+            <button
+              key={r.type}
+              onClick={() => { onSelect(r.type); onClose(); }}
+              className="p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125 hover:shadow-soft"
+              title={r.label}
+            >
+              <Icon size={24} weight="fill" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -64,6 +68,7 @@ function ReactionDisplay({ postId }: { postId: string }) {
   }, []);
 
   const currentReaction = REACTIONS.find(r => r.type === userReaction);
+  const DefaultIcon = ThumbsUp;
 
   return (
     <div className="relative" ref={pickerRef}>
@@ -76,7 +81,7 @@ function ReactionDisplay({ postId }: { postId: string }) {
             currentReaction ? `${currentReaction.activeBg} ${currentReaction.activeText}` : 'bg-[#EAE0CF]/60 text-[#547792] hover:bg-[#EAE0CF] hover:text-[#213448]'
           )}
         >
-          <span className="text-sm">{currentReaction?.icon || '👍'}</span>
+          <span className="text-sm">{currentReaction ? <currentReaction.icon size={16} weight="fill" /> : <DefaultIcon size={16} weight="fill" />}</span>
           <span>{currentReaction?.label || 'إعجاب'}</span>
         </button>
         {total > 0 && <span className="text-xs text-[#547792] font-medium shadow-soft rounded-full px-2 py-0.5">{total}</span>}
@@ -122,7 +127,7 @@ function CommentSection({ postId }: { postId: string }) {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-4 mb-3">
-          <p className="text-2xl mb-1">💬</p>
+          <ChatCircle size={32} className="text-[#94B4C1] mb-1" />
           <p className="text-xs text-[#547792]">لا توجد تعليقات بعد — كن أول من يعلق</p>
         </div>
       )}
@@ -133,7 +138,7 @@ function CommentSection({ postId }: { postId: string }) {
         <button type="submit" disabled={!text.trim() || addComment.isPending}
           className="h-9 w-9 rounded-full text-[#FDFAF5] flex items-center justify-center hover:shadow-glow-lg disabled:opacity-40 transition-all duration-300 active:scale-95 hover:-translate-y-0.5"
           style={{ background: 'linear-gradient(135deg, #213448 0%, #547792 100%)' }}>
-          <svg className="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" /></svg>
+          <PaperPlaneTilt size={18} />
         </button>
       </form>
     </div>
@@ -153,7 +158,7 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-[#213448]">مشاركة المنشور</h3>
           <button onClick={onClose} className="text-[#547792] hover:text-[#213448] hover:scale-110 transition-transform">
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            <X size={24} />
           </button>
         </div>
         <textarea
@@ -189,27 +194,30 @@ function PostMenu({ postId, post, onClose }: { postId: string; post: any; onClos
   const pinPost = useUpdatePost();
 
   const menuItems = [
-    { label: 'حفظ المنشور', icon: '🔖', action: () => savePost.mutate(postId) },
-    { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: '📌', action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
-    { label: 'أرشفة المنشور', icon: '📦', action: () => {} },
-    { label: 'إخفاء المنشور', icon: '🙈', action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
-    { label: 'عدم الاهتمام', icon: '😕', action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
-    { label: 'إيقاف مؤقت 30 يوم', icon: '⏸️', action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }) },
-    { label: 'حذف المنشور', icon: '🗑️', action: () => deletePost.mutate(postId), danger: true },
+    { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId) },
+    { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
+    { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => {} },
+    { label: 'إخفاء المنشور', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
+    { label: 'عدم الاهتمام', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
+    { label: 'إيقاف مؤقت 30 يوم', icon: Clock, action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }) },
+    { label: 'حذف المنشور', icon: Trash, action: () => deletePost.mutate(postId), danger: true },
   ];
 
   return (
     <div className="absolute right-0 top-full mt-2 w-56 bg-[#FDFAF5] rounded-xl shadow-glow-lg border border-[#C8D8DF]/60 py-2 animate-scale-in z-30">
-      {menuItems.map((item, i) => (
-        <button
-          key={i}
-          onClick={() => { item.action(); onClose(); }}
-          className={cn('w-full px-4 py-2.5 text-right text-sm hover:bg-[#EAE0CF]/50 flex items-center gap-3 hover:shadow-soft transition-all duration-200', item.danger ? 'text-red-500' : 'text-[#213448]')}
-        >
-          <span>{item.icon}</span>
-          {item.label}
-        </button>
-      ))}
+      {menuItems.map((item, i) => {
+        const Icon = item.icon;
+        return (
+          <button
+            key={i}
+            onClick={() => { item.action(); onClose(); }}
+            className={cn('w-full px-4 py-2.5 text-right text-sm hover:bg-[#EAE0CF]/50 flex items-center gap-3 hover:shadow-soft transition-all duration-200', item.danger ? 'text-red-500' : 'text-[#213448]')}
+          >
+            <Icon size={18} weight={item.danger ? 'fill' : 'regular'} />
+            {item.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -309,12 +317,12 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
           <p className="text-[11px] text-[#BFB9AD]">
             {timeAgo(post.createdAt)}
             {post.editedAt && <span className="mr-1">(تم التعديل)</span>}
-            {post.location && <> · 📍 {post.location}</>}
+            {post.location && <> · <MapPin size={12} className="inline" /> {post.location}</>}
           </p>
         </div>
         <div className="relative">
           <button onClick={() => setShowMenu(!showMenu)} className="rounded-lg p-1.5 text-[#547792] hover:bg-[#D4E8EE] hover:shadow-soft transition-all duration-200 hover:scale-110">
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM18.75 12a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" /></svg>
+            <DotsThreeVertical size={20} />
           </button>
           {showMenu && <PostMenu postId={post.id} post={post} onClose={() => setShowMenu(false)} />}
         </div>
@@ -368,11 +376,11 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
             'hover:-translate-y-0.5 hover:shadow-soft',
             showComments ? 'bg-[#D4E8EE] text-[#213448] shadow-soft' : 'text-[#547792] hover:bg-[#EAE0CF]/50'
           )}>
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" /></svg>
+            <ChatCircle size={18} />
             تعليقات
           </button>
           <button onClick={() => setShowShareModal(true)} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-[#547792] hover:bg-[#EAE0CF]/50 hover:-translate-y-0.5 hover:shadow-soft transition-all duration-300 flex-1 justify-center">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M7.217 10.907a2.25 2.25 0 100 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186l9.566-5.314m-9.566 7.5l9.566 5.314m0 0a2.25 2.25 0 103.935 2.186 2.25 2.25 0 00-3.935-2.186zm0-12.814a2.25 2.25 0 103.933-2.185 2.25 2.25 0 00-3.933 2.185z" /></svg>
+            <ShareNetwork size={18} />
             مشاركة
           </button>
         </div>

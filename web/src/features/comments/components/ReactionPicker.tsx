@@ -1,14 +1,15 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { ThumbsUp, Heart, Smiley, SmileyMeh, SmileySad, SmileyAngry } from '@phosphor-icons/react';
 
 const REACTIONS = [
-  { type: 'like', icon: '👍', label: 'إعجاب', activeBg: 'bg-[#D4E8EE]', activeText: 'text-[#213448]' },
-  { type: 'love', icon: '❤️', label: 'حب', activeBg: 'bg-[#B05252]/15', activeText: 'text-[#B05252]' },
-  { type: 'haha', icon: '😂', label: 'ضحك', activeBg: 'bg-[#F9D71C]/20', activeText: 'text-[#F9D71C]' },
-  { type: 'wow', icon: '😮', label: 'مثير', activeBg: 'bg-[#F9A825]/20', activeText: 'text-[#F9A825]' },
-  { type: 'sad', icon: '😢', label: 'حزن', activeBg: 'bg-[#5C6BC0]/20', activeText: 'text-[#5C6BC0]' },
-  { type: 'angry', icon: '😠', label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
+  { type: 'like', icon: ThumbsUp, label: 'إعجاب', activeBg: 'bg-[#D4E8EE]', activeText: 'text-[#213448]' },
+  { type: 'love', icon: Heart, label: 'حب', activeBg: 'bg-[#B05252]/15', activeText: 'text-[#B05252]' },
+  { type: 'haha', icon: Smiley, label: 'ضحك', activeBg: 'bg-[#F9D71C]/20', activeText: 'text-[#F9D71C]' },
+  { type: 'wow', icon: SmileyMeh, label: 'مثير', activeBg: 'bg-[#F9A825]/20', activeText: 'text-[#F9A825]' },
+  { type: 'sad', icon: SmileySad, label: 'حزن', activeBg: 'bg-[#5C6BC0]/20', activeText: 'text-[#5C6BC0]' },
+  { type: 'angry', icon: SmileyAngry, label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
 ];
 
 interface ReactionPickerProps {
@@ -25,16 +26,19 @@ export function ReactionPicker({ onSelect, position = 'bottom' }: ReactionPicker
       )}
     >
       <div className="flex gap-1">
-        {REACTIONS.map((r) => (
-          <button
-            key={r.type}
-            onClick={() => onSelect(r.type)}
-            className="text-2xl p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125"
-            title={r.label}
-          >
-            {r.icon}
-          </button>
-        ))}
+        {REACTIONS.map((r) => {
+          const Icon = r.icon;
+          return (
+            <button
+              key={r.type}
+              onClick={() => onSelect(r.type)}
+              className="p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125"
+              title={r.label}
+            >
+              <Icon size={24} weight="fill" />
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -67,14 +71,16 @@ export function ReactionDisplay({ reactions = [], totalCount = 0, userReaction, 
 
   if (totalCount === 0) {
     return (
-      <button onClick={onClick} className="text-sm text-[#547792] hover:underline">
-        👍 إعجاب
+      <button onClick={onClick} className="text-sm text-[#547792] hover:underline flex items-center gap-1">
+        <ThumbsUp size={16} weight="fill" />
+        إعجاب
       </button>
     );
   }
 
   const mainReaction = reactions.find(r => r.type === userReaction) || reactions[0];
-  const mainEmoji = REACTIONS.find(r => r.type === mainReaction?.type)?.icon || '👍';
+  const mainReactionIcon = REACTIONS.find(r => r.type === mainReaction?.type)?.icon || ThumbsUp;
+  const MainIcon = mainReactionIcon;
 
   return (
     <div className="relative" ref={pickerRef}>
@@ -87,7 +93,7 @@ export function ReactionDisplay({ reactions = [], totalCount = 0, userReaction, 
             : "hover:bg-[#EAE0CF]/50 text-[#547792]"
         )}
       >
-        <span>{mainEmoji}</span>
+        <MainIcon size={16} weight="fill" />
         <span>{totalCount}</span>
       </button>
       
