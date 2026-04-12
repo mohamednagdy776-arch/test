@@ -12,7 +12,7 @@ const Icons = {
   chat: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>,
   user: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>,
   star: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z"/></svg>,
-  users: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.367 9.337 9.337 0 001.867-.184m3.691-.207a9.337 9.337 0 011.867.184m-3.691-.207a9.38 9.38 0 01-2.625-.367m-1.292 7.696a4.5 4.5 0 01-1.248-3.205m0 0a4.5 4.5 0 011.248-3.204m-1.248 7.696a9.38 9.38 0 002.625-.367m-1.292-7.696a9.337 9.337 0 011.867.184M4.5 19.128a9.38 9.38 0 002.625.367M3.375 17.625a9.337 9.337 0 011.867-.184M12 12.75a4.5 4.5 0 01-1.248-3.205m0 0A4.5 4.5 0 0112 12.75m0-4.5a4.5 4.5 0 011.248-3.205m-1.248 7.696a9.38 9.38 0 002.625-.367m-1.292-7.696a9.337 9.337 0 011.867.184"/></svg>,
+  users: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.367 9.337 9.337 0 001.867-.184m3.691-.207a9.337 9.337 0 011.867.184M12 21.75a9.38 9.38 0 01-2.625-.367m-1.292 7.696a4.5 4.5 0 01-1.248-3.205m0 0a4.5 4.5 0 011.248-3.204m-1.248 7.696a9.38 9.38 0 002.625-.367m-1.292-7.696a9.337 9.337 0 011.867.184M4.5 19.128a9.38 9.38 0 002.625.367M3.375 17.625a9.337 9.337 0 011.867-.184M12 12.75a4.5 4.5 0 01-1.248-3.205m0 0A4.5 4.5 0 0112 12.75m0-4.5a4.5 4.5 0 011.248-3.205m-1.248 7.696a9.38 9.38 0 002.625-.367m-1.292-7.696a9.337 9.337 0 011.867.184"/></svg>,
   flag: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 3v18h18a2 2 0 002-2V8.342a2 2 0 00-.602-1.43l-7.19-5.342a2 2 0 00-1.795 0L3 12.865V3z"/></svg>,
   calendar: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>,
   settings: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/></svg>,
@@ -40,13 +40,13 @@ export const Sidebar = () => {
   const router = useRouter();
 
   return (
-    <div className="rounded-2xl bg-[#FDFAF5] shadow-card border border-[#C8D8DF]/60 overflow-hidden">
-      <div className="p-5 border-b border-[#C8D8DF]/40">
+    <div className="rounded-2xl bg-[#FDFAF5] shadow-card-hover border border-[#C8D8DF]/60 overflow-hidden transition-all duration-300 hover:shadow-glow-lg">
+      <div className="p-5 border-b border-[#C8D8DF]/40 bg-gradient-to-r from-[#D4E8EE]/30 to-transparent">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl text-[#FDFAF5] font-bold" style={{ background: 'linear-gradient(135deg, #213448, #547792)' }}>ط</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl text-[#FDFAF5] font-bold shadow-glow-primary" style={{ background: 'linear-gradient(135deg, #213448 0%, #547792 100%)' }}>ط</div>
           <div>
             <p className="text-sm font-bold text-[#213448]">لوحة التحكم</p>
-            <p className="text-xs text-[#547792]">مرحباً بك في طيبت</p>
+            <p className="text-xs text-[#547792] font-medium">مرحباً بك في طيبت</p>
           </div>
         </div>
       </div>
@@ -56,24 +56,30 @@ export const Sidebar = () => {
           return (
             <Link key={item.href} href={item.href} className={cn(
               'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
-              isActive ? 'bg-[#D4E8EE] text-[#213448] shadow-sm' : 'text-[#547792] hover:bg-[#D4E8EE]/50 hover:text-[#213448]'
+              'hover:-translate-y-0.5 hover:shadow-soft',
+              isActive 
+                ? 'bg-gradient-to-r from-[#D4E8EE] to-[#94B4C1]/30 text-[#213448] shadow-soft border border-[#547792]/20' 
+                : 'text-[#547792] hover:bg-[#D4E8EE]/50 hover:text-[#213448]'
             )}>
-              <span className={cn(isActive ? 'text-[#213448]' : 'text-[#94B4C1]')}>{item.icon}</span>
+              <span className={cn(
+                'transition-all duration-200',
+                isActive ? 'text-[#213448] shadow-glow rounded-lg p-1 bg-[#D4E8EE]/50' : 'text-[#94B4C1]'
+              )}>{item.icon}</span>
               {item.label}
             </Link>
           );
         })}
       </nav>
       <div className="p-4 border-t border-[#C8D8DF]/40">
-        <div className="rounded-xl p-4" style={{ background: 'linear-gradient(135deg, #D4E8EE, #94B4C1)' }}>
+        <div className="rounded-xl p-4 shadow-card-hover border border-[#94B4C1]/20 transition-all duration-300 hover:shadow-glow-lg hover:border-[#547792]/30" style={{ background: 'linear-gradient(135deg, #D4E8EE 0%, #94B4C1 50%, #547792 100%)' }}>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[#213448]">{Icons.star}</span>
+            <span className="text-[#213448] shadow-soft rounded-lg p-1 bg-[#FDFAF5]/50">{Icons.star}</span>
             <p className="text-sm font-bold text-[#213448]">ترقية الحساب</p>
           </div>
-          <p className="text-xs text-[#213448]/70 mt-1">احصل على ميزات حصرية للتوافق المتقدم</p>
+          <p className="text-xs text-[#213448]/70 mt-1 font-medium">احصل على ميزات حصرية للتوافق المتقدم</p>
           <button
             onClick={() => router.push('/upgrade')}
-            className="mt-3 w-full rounded-lg bg-[#213448] px-3 py-2 text-xs font-medium text-[#FDFAF5] shadow-sm hover:bg-[#131F2E] transition-all duration-200"
+            className="mt-3 w-full rounded-lg bg-gradient-to-r from-[#213448] to-[#547792] px-3 py-2 text-xs font-medium text-[#FDFAF5] shadow-soft hover:shadow-glow-primary hover:-translate-y-0.5 transition-all duration-200"
           >
             ترقية الآن
           </button>
@@ -82,3 +88,5 @@ export const Sidebar = () => {
     </div>
   );
 };
+
+

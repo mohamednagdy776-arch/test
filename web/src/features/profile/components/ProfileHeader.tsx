@@ -53,19 +53,26 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
   };
 
   return (
-    <div className="rounded-xl bg-white shadow-sm overflow-hidden">
-      {/* Cover Photo */}
-      <div className="relative h-52 bg-gray-200">
+    <div className="rounded-2xl bg-[#FDFAF5] shadow-card-hover border border-[#C8D8DF]/60 overflow-hidden transition-all duration-300 hover:shadow-glow-lg">
+      {/* Cover Photo with enhanced styling */}
+      <div className="relative h-56 bg-gradient-to-br from-[#D4E8EE] via-[#94B4C1] to-[#547792] overflow-hidden group">
         {profile.coverUrl ? (
-          <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover" />
+          <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
-            <span>أضف صورة غلاف</span>
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-2xl bg-[#FDFAF5]/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
+                <span className="text-2xl">🏔️</span>
+              </div>
+              <p className="text-sm text-[#FDFAF5]/70 font-medium">أضف صورة غلاف</p>
+            </div>
           </div>
         )}
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#131F2E]/30 to-transparent pointer-events-none" />
         <button
           onClick={() => coverRef.current?.click()}
-          className="absolute bottom-4 left-4 px-4 py-2 bg-black/50 hover:bg-black/70 text-white rounded-lg text-sm flex items-center gap-2 transition-colors"
+          className="absolute bottom-4 left-4 px-4 py-2 bg-[#131F2E]/70 hover:bg-[#131F2E]/90 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105"
         >
           <span>📷</span>
           <span>تعديل غلاف</span>
@@ -79,28 +86,30 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
         />
       </div>
 
-      <div className="px-6 pb-6">
-        <div className="flex items-start gap-5 -mt-12 relative">
-          {/* Avatar */}
-          <div className="relative shrink-0">
+      <div className="px-6 pb-6 relative">
+        <div className="flex items-start gap-5 -mt-14 relative">
+          {/* Avatar with enhanced styling */}
+          <div className="relative shrink-0 group">
             <div
-              className="h-28 w-28 rounded-full overflow-hidden bg-primary/20 flex items-center justify-center cursor-pointer ring-4 ring-white shadow-md"
+              className="h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center cursor-pointer ring-4 ring-[#FDFAF5] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary"
               onClick={() => avatarRef.current?.click()}
             >
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
               ) : (
-                <span className="text-4xl font-bold text-primary">
+                <span className="text-4xl font-bold text-gradient">
                   {profile.fullName?.charAt(0)?.toUpperCase() ?? '?'}
                 </span>
               )}
             </div>
             <button
               onClick={() => avatarRef.current?.click()}
-              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-primary text-white text-xs flex items-center justify-center shadow hover:bg-blue-700"
+              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gradient-to-r from-[#213448] to-[#547792] text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft hover:shadow-glow hover:scale-110 transition-all duration-200"
             >
               {uploading ? '…' : '📷'}
             </button>
+            {/* Status indicator */}
+            <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-[#4A8C6F] ring-2 ring-[#FDFAF5] shadow-[0_0_8px_rgba(74,140,111,0.5)]" />
             <input
               ref={avatarRef}
               type="file"
@@ -111,27 +120,27 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
           </div>
 
           {/* Info */}
-          <div className="flex-1 min-w-0 pt-14">
-            <h2 className="text-2xl font-bold text-gray-900">{profile.fullName}</h2>
-            <p className="mt-1 text-sm text-gray-500">
+          <div className="flex-1 min-w-0 pt-16">
+            <h2 className="text-2xl font-bold text-gradient">{profile.fullName}</h2>
+            <p className="mt-1 text-sm text-[#547792] font-medium">
               @{profile.username || profile.userId}
             </p>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-[#547792]">
               {[profile.location, profile.city, profile.country].filter(Boolean).join('، ')}
             </p>
             {profile.workplace && (
-              <p className="mt-1 text-sm text-gray-500">💼 {profile.workplace}</p>
+              <p className="mt-1 text-sm text-[#547792] font-medium">💼 {profile.workplace}</p>
             )}
             {profile.relationshipStatus && (
-              <p className="mt-1 text-sm text-gray-500">💕 {profile.relationshipStatus}</p>
+              <p className="mt-1 text-sm text-[#547792] font-medium">💕 {profile.relationshipStatus}</p>
             )}
             {profile.bio && (
-              <p className="mt-2 text-sm text-gray-600 line-clamp-2">{profile.bio}</p>
+              <p className="mt-2 text-sm text-[#131F2E]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
             )}
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-[#BFB9AD]">
               انضم في {formatDate(profile.joinDate || profile.createdAt)}
               {profile.mutualFriends !== undefined && profile.mutualFriends > 0 && (
-                <span className="mr-2">• {profile.mutualFriends}صدقاء مشترك</span>
+                <span className="mr-2">• {profile.mutualFriends} أصدقاء مشترك</span>
               )}
             </p>
           </div>
@@ -140,7 +149,7 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
           {profile.isSelf && (
             <button
               onClick={onEdit}
-              className="shrink-0 mt-14 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="shrink-0 mt-16 rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-[#D4E8EE] hover:border-[#547792] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
             >
               تعديل الملف
             </button>
@@ -159,13 +168,16 @@ const ProfileCompletion = ({ profile }: { profile: any }) => {
   const filled = fields.filter((f) => profile[f] != null && profile[f] !== '').length;
   const pct = Math.round((filled / fields.length) * 100);
   return (
-    <div className="mt-4 border-t pt-4">
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-xs text-gray-500">اكتمال الملف الشخصي</span>
-        <span className="text-xs font-semibold text-primary">{pct}%</span>
+    <div className="mt-6 border-t border-[#C8D8DF]/40 pt-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-[#547792] font-medium">اكتمال الملف الشخصي</span>
+        <span className="text-xs font-bold text-gradient">{pct}%</span>
       </div>
-      <div className="h-2 rounded-full bg-gray-100">
-        <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+      <div className="h-2 rounded-full bg-[#EAE0CF] overflow-hidden">
+        <div 
+          className="h-2 rounded-full bg-gradient-to-r from-[#213448] to-[#547792] transition-all duration-500 shadow-soft" 
+          style={{ width: `${pct}%` }} 
+        />
       </div>
     </div>
   );
