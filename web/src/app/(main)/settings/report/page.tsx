@@ -7,11 +7,11 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 
 const ISSUE_TYPES = [
-  { value: 'bug', label: 'خطأ تقني' },
-  { value: 'feature', label: 'اقتراح ميزة' },
-  { value: 'account', label: 'مشكلة في الحساب' },
-  { value: 'privacy', label: 'مشكلة في الخصوصية' },
-  { value: 'other', label: 'أخرى' },
+  { value: 'bug', label: 'خطأ تقني', icon: '🐛', color: 'bg-red-100' },
+  { value: 'feature', label: 'اقتراح ميزة', icon: '💡', color: 'bg-amber-100' },
+  { value: 'account', label: 'مشكلة في الحساب', icon: '👤', color: 'bg-blue-100' },
+  { value: 'privacy', label: 'مشكلة في الخصوصية', icon: '🔒', color: 'bg-purple-100' },
+  { value: 'other', label: 'أخرى', icon: '📝', color: 'bg-emerald-100' },
 ];
 
 export default function ReportPage() {
@@ -31,104 +31,109 @@ export default function ReportPage() {
 
   if (submitted) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6">
-        <div className="flex items-center gap-2 mb-6">
-          <Link href="/settings" className="text-[#547792] hover:text-[#213448]">
-            ← الإعدادات
+      <div className="min-h-screen bg-gradient-to-br from-sage-50 via-sage-100/50 to-sage-50 px-4 py-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
+            <span>←</span> <span>العودة للإعدادات</span>
           </Link>
-        </div>
 
-        <Card variant="warm">
-          <CardContent className="py-12 text-center">
-            <div className="text-5xl mb-4">✅</div>
-            <h2 className="text-xl font-bold text-[#213448] mb-2">تم إرسال البلاغ بنجاح</h2>
-            <p className="text-[#547792] mb-6">شكراً لك، سنراجع البلاغ ونعود إليك قريباً</p>
-            <Button variant="primary" onClick={() => { setSubmitted(false); setIssueType(''); setDescription(''); setEmail(''); }}>
-              إرسال بلاغ جديد
-            </Button>
-          </CardContent>
-        </Card>
+          <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+            <CardContent className="py-12 text-center">
+              <div className="text-5xl mb-4">✅</div>
+              <h2 className="text-xl font-bold text-emerald-900 mb-2">تم إرسال البلاغ بنجاح</h2>
+              <p className="text-emerald-700/70 mb-6">شكراً لك، سنراجع البلاغ ونعود إليك قريباً</p>
+              <Button variant="primary" onClick={() => { setSubmitted(false); setIssueType(''); setDescription(''); setEmail(''); }} className="bg-emerald-600 hover:bg-emerald-700">
+                إرسال بلاغ جديد
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Link href="/settings" className="text-[#547792] hover:text-[#213448]">
-          ← الإعدادات
+    <div className="min-h-screen bg-gradient-to-br from-sage-50 via-sage-100/50 to-sage-50 px-4 py-8">
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
+          <span>←</span> <span>العودة للإعدادات</span>
         </Link>
-      </div>
 
-      <div>
-        <h1 className="text-2xl font-bold text-[#213448]">الإبلاغ عن مشكلة</h1>
-        <p className="text-sm text-[#547792] mt-1">أخبرنا عن المشكلة التي تواجهها</p>
-      </div>
+        <div>
+          <h1 className="text-3xl font-bold text-emerald-900">الإبلاغ عن مشكلة</h1>
+          <p className="text-emerald-700/70 mt-2">أخبرنا عن المشكلة التي تواجهها</p>
+        </div>
 
-      <Card variant="warm">
-        <CardHeader>
-          <CardTitle className="text-[#213448] flex items-center gap-2">
-            <span>🐛</span> نوع المشكلة
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {ISSUE_TYPES.map((type) => (
-              <button
-                key={type.value}
-                onClick={() => setIssueType(type.value)}
-                className={`p-3 rounded-xl border-2 transition-all ${
-                  issueType === type.value
-                    ? 'border-[#4A8C6F] bg-[#4A8C6F]/10'
-                    : 'border-[#C8D8DF]/60 bg-[#FDFAF5] hover:border-[#547792]/40'
-                }`}
+        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+          <CardHeader>
+            <CardTitle className="text-emerald-900 flex items-center gap-2">
+              <span>🐛</span> نوع المشكلة
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {ISSUE_TYPES.map((type) => (
+                <button
+                  key={type.value}
+                  onClick={() => setIssueType(type.value)}
+                  className={`p-4 rounded-xl border-2 transition-all duration-300 ${
+                    issueType === type.value
+                      ? 'border-emerald-500 bg-emerald-50/80 shadow-lg shadow-emerald-100'
+                      : 'border-emerald-200/50 bg-white/50 hover:border-emerald-300 hover:shadow-md'
+                  }`}
+                >
+                  <div className="flex flex-col items-center gap-2">
+                    <span className={`w-10 h-10 rounded-xl ${type.color} flex items-center justify-center text-xl`}>
+                      {type.icon}
+                    </span>
+                    <span className="font-semibold text-emerald-900">{type.label}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+          <CardHeader>
+            <CardTitle className="text-emerald-900 flex items-center gap-2">
+              <span>📝</span> التفاصيل
+            </CardTitle>
+            <CardDescription>اشرح المشكلة بالتفصيل</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-emerald-800 mb-1">البريد الإلكتروني (اختياري)</label>
+                <Input
+                  placeholder="أدخل بريدك الإلكتروني"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-emerald-800 mb-1">وصف المشكلة</label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={6}
+                  className="w-full px-4 py-3 rounded-xl border border-emerald-200 bg-white/80 text-emerald-900 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
+                  placeholder="اشرح بالتفصيل ما المشكلة التي تواجهها..."
+                />
+              </div>
+              <Button
+                variant="primary"
+                onClick={handleSubmit}
+                loading={sending}
+                disabled={!issueType || !description.trim()}
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
               >
-                <span className="font-semibold text-[#213448]">{type.label}</span>
-              </button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card variant="warm">
-        <CardHeader>
-          <CardTitle className="text-[#213448] flex items-center gap-2">
-            <span>📝</span> التفاصيل
-          </CardTitle>
-          <CardDescription>اشرح المشكلة بالتفصيل</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#213448] mb-1">البريد الإلكتروني (اختياري)</label>
-              <Input
-                placeholder="أدخل بريدك الإلكتروني إذا كنت تريد أن نعود إليك"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+                إرسال البلاغ
+              </Button>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-[#213448] mb-1">وصف المشكلة</label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={6}
-                className="w-full px-4 py-3 rounded-xl border border-[#C8D8DF] bg-white text-[#213448] focus:outline-none focus:border-[#547792]"
-                placeholder="اشرح بالتفصيل ما المشكلة التي تواجهها..."
-              />
-            </div>
-            <Button
-              variant="primary"
-              onClick={handleSubmit}
-              loading={sending}
-              disabled={!issueType || !description.trim()}
-              className="w-full"
-            >
-              إرسال البلاغ
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
