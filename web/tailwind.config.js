@@ -43,6 +43,14 @@ module.exports = {
           DEFAULT: '#B05252',
           foreground: '#FDFAF5',
         },
+        // Soft Dreamy Theme
+        dreamy: {
+          sage: '#F0FDF4',
+          mint: '#DCFCE7',
+          ivory: '#FFFBEB',
+          emerald: '#10B981',
+          gold: '#F59E0B',
+        },
       },
       fontFamily: {
         sans: ['Noto Sans Arabic', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],

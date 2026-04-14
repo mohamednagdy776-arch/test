@@ -4,7 +4,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-// ─── SVG Icons (Heroicons, strokeWidth 1.5 — same as Sidebar) ─
 const Icons = {
   home: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>,
   search: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>,
@@ -25,7 +24,6 @@ const navLinks = [
   { href: '/chat', label: 'المحادثات', icon: Icons.chat },
 ];
 
-// ─── Notification Dropdown ────────────────────────────────────
 function NotificationDropdown({ onClose }: { onClose: () => void }) {
   const notifications = [
     { id: 1, type: 'match', icon: '💖', text: 'توافق جديد مع سارة أحمد', time: 'منذ 5 دقائق' },
@@ -35,28 +33,28 @@ function NotificationDropdown({ onClose }: { onClose: () => void }) {
   ];
 
   return (
-    <div className="absolute left-0 top-full mt-2 w-80 rounded-2xl bg-[#FDFAF5] shadow-elevated border border-[#C8D8DF]/60 overflow-hidden animate-slide-down z-50">
-      <div className="px-4 py-3 border-b border-[#C8D8DF]/40 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-[#213448]">الإشعارات</h3>
-        <button onClick={onClose} className="text-[#547792] hover:text-[#213448]">
+    <div className="absolute left-0 top-full mt-2 w-80 rounded-2xl bg-[#FFFBEB] shadow-soft border border-[#DCFCE7]/60 overflow-hidden animate-slide-down z-50">
+      <div className="px-4 py-3 border-b border-[#DCFCE7]/40 flex items-center justify-between">
+        <h3 className="text-sm font-bold text-[#10B981]">الإشعارات</h3>
+        <button onClick={onClose} className="text-[#10B981] hover:text-[#059669]">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
         </button>
       </div>
       <div className="max-h-80 overflow-y-auto scrollbar-thin">
         {notifications.map((n) => (
-          <button key={n.id} className="w-full text-right flex items-start gap-3 px-4 py-3 hover:bg-[#D4E8EE]/50 transition-colors border-b border-[#C8D8DF]/20 last:border-0">
-            <div className="h-9 w-9 shrink-0 rounded-full bg-[#D4E8EE] flex items-center justify-center text-lg">
+          <button key={n.id} className="w-full text-right flex items-start gap-3 px-4 py-3 hover:bg-[#DCFCE7]/50 transition-colors border-b border-[#DCFCE7]/20 last:border-0">
+            <div className="h-9 w-9 shrink-0 rounded-full bg-[#DCFCE7] flex items-center justify-center text-lg">
               {n.type === 'match' ? Icons.heart : n.type === 'message' ? Icons.chat : n.type === 'like' ? Icons.user : Icons.bell}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-[#131F2E] leading-relaxed">{n.text}</p>
-              <p className="text-[11px] text-[#BFB9AD] mt-0.5">{n.time}</p>
+              <p className="text-sm text-[#064E3B] leading-relaxed">{n.text}</p>
+              <p className="text-[11px] text-[#6EE7B7] mt-0.5">{n.time}</p>
             </div>
           </button>
         ))}
       </div>
-      <div className="px-4 py-3 border-t border-[#C8D8DF]/40">
-        <button className="w-full text-center text-xs font-semibold text-[#547792] hover:text-[#213448] transition-colors">
+      <div className="px-4 py-3 border-t border-[#DCFCE7]/40">
+        <button className="w-full text-center text-xs font-semibold text-[#10B981] hover:text-[#059669] transition-colors">
           عرض جميع الإشعارات
         </button>
       </div>
@@ -72,20 +70,18 @@ export const Navbar = () => {
   const logout = () => { localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token'); router.push('/login'); };
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-[#C8D8DF]/60 bg-[#213448]/95 backdrop-blur-xl">
+    <nav className="sticky top-0 z-40 border-b border-[#DCFCE7]/60 bg-[#FFFBEB]/95 backdrop-blur-xl shadow-soft">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Brand */}
         <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl text-[#FDFAF5] font-bold text-sm" style={{ background: 'linear-gradient(135deg, #213448, #547792)' }}>ط</div>
-          <span className="text-xl font-bold text-[#FDFAF5] group-hover:text-[#94B4C1] transition-colors">طيبت</span>
+          <div className="flex h-9 w-9 items-center justify-center rounded-2xl text-[#FFFBEB] font-bold text-sm shadow-soft" style={{ background: 'linear-gradient(135deg, #10B981, #34D399)' }}>ط</div>
+          <span className="text-xl font-bold text-[#10B981] group-hover:text-[#059669] transition-colors">طيبت</span>
         </Link>
 
-        {/* Desktop nav links */}
         <div className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className={cn(
-              'flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200',
-              pathname === link.href ? 'bg-[#547792]/30 text-[#EAE0CF]' : 'text-[#94B4C1] hover:text-[#EAE0CF] hover:bg-[#547792]/20'
+              'flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200',
+              pathname === link.href ? 'bg-[#DCFCE7]/50 text-[#059669]' : 'text-[#6EE7B7] hover:text-[#059669] hover:bg-[#DCFCE7]/30'
             )}>
               <span>{link.icon}</span>
               {link.label}
@@ -93,61 +89,55 @@ export const Navbar = () => {
           ))}
         </div>
 
-        {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-2">
-          {/* Notification bell */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative rounded-lg p-2 text-[#94B4C1] hover:text-[#EAE0CF] hover:bg-[#547792]/20 transition-all duration-200"
+              className="relative rounded-xl p-2 text-[#6EE7B7] hover:text-[#059669] hover:bg-[#DCFCE7]/30 transition-all duration-200"
             >
               {Icons.bell}
-              <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-[#B05252] ring-2 ring-[#213448]" />
+              <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-[#F59E0B] ring-2 ring-[#FFFBEB]" />
             </button>
             {showNotifications && <NotificationDropdown onClose={() => setShowNotifications(false)} />}
           </div>
 
-          {/* Profile icon */}
           <Link href="/profile" className={cn(
-            'rounded-lg p-2 transition-all duration-200',
-            pathname === '/profile' ? 'text-[#EAE0CF] bg-[#547792]/30' : 'text-[#94B4C1] hover:text-[#EAE0CF] hover:bg-[#547792]/20'
+            'rounded-xl p-2 transition-all duration-200',
+            pathname === '/profile' ? 'text-[#059669] bg-[#DCFCE7]/50' : 'text-[#6EE7B7] hover:text-[#059669] hover:bg-[#DCFCE7]/30'
           )}>
             {Icons.user}
           </Link>
 
-          {/* Logout */}
-          <button onClick={logout} className="flex items-center gap-1.5 rounded-lg border border-[#547792]/30 px-3 py-2 text-sm font-medium text-[#94B4C1] hover:bg-[#547792]/20 hover:text-[#EAE0CF] transition-all duration-200">
+          <button onClick={logout} className="flex items-center gap-1.5 rounded-xl border border-[#DCFCE7]/30 px-3 py-2 text-sm font-medium text-[#6EE7B7] hover:bg-[#DCFCE7]/30 hover:text-[#059669] transition-all duration-200">
             {Icons.logout}
             <span className="hidden lg:inline">خروج</span>
           </button>
         </div>
 
-        {/* Mobile menu button */}
-        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden rounded-lg p-2 text-[#94B4C1] hover:bg-[#547792]/20 transition-colors">
+        <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden rounded-xl p-2 text-[#10B981] hover:bg-[#DCFCE7]/30 transition-colors">
           {mobileOpen ? Icons.close : Icons.menu}
         </button>
       </div>
 
-      {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-[#547792]/30 bg-[#131F2E] animate-slide-down">
+        <div className="md:hidden border-t border-[#DCFCE7]/30 bg-[#FFFBEB] animate-slide-down">
           <div className="space-y-1 px-4 py-3">
             {navLinks.map((link) => (
               <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} className={cn(
-                'flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-                pathname === link.href ? 'bg-[#547792]/30 text-[#EAE0CF]' : 'text-[#94B4C1] hover:bg-[#547792]/20'
+                'flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+                pathname === link.href ? 'bg-[#DCFCE7]/50 text-[#059669]' : 'text-[#10B981] hover:bg-[#DCFCE7]/30'
               )}>
                 <span>{link.icon}</span>
                 {link.label}
               </Link>
             ))}
             <Link href="/profile" onClick={() => setMobileOpen(false)} className={cn(
-              'flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
-              pathname === '/profile' ? 'bg-[#547792]/30 text-[#EAE0CF]' : 'text-[#94B4C1] hover:bg-[#547792]/20'
+              'flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+              pathname === '/profile' ? 'bg-[#DCFCE7]/50 text-[#059669]' : 'text-[#10B981] hover:bg-[#DCFCE7]/30'
             )}>
               {Icons.user} الملف الشخصي
             </Link>
-            <button onClick={logout} className="w-full flex items-center gap-2 text-right px-3 py-2.5 rounded-lg text-sm font-medium text-[#B05252] hover:bg-[#B05252]/10 transition-colors">
+            <button onClick={logout} className="w-full flex items-center gap-2 text-right px-3 py-2.5 rounded-xl text-sm font-medium text-[#F59E0B] hover:bg-[#FEF3C7]/50 transition-colors">
               {Icons.logout} خروج
             </button>
           </div>
