@@ -21,7 +21,7 @@ Comprehensive guide for deploying the Tayyibt platform on Hostinger VPS using Do
 
 - **Hostinger VPS** - KVM 4GB+ plan (recommended for production)
 - **Domain Name** - Registered and pointing to Hostinger DNS
-- **GitHub Repository** - Where your project code resides
+- **GitHub Repository** - https://github.com/mohamednagdy776-arch/test
 - **Let’s Encrypt Account** - Free SSL (or purchased SSL certificate)
 
 ### 1.2 Project Architecture
@@ -144,10 +144,10 @@ cd /root
 mkdir -p tayyibt && cd tayyibt
 
 # Clone your repository
-git clone https://github.com/yourusername/tayyibt.git .
+git clone https://github.com/mohamednagdy776-arch/test.git .
 
 # Or if using SSH deploy key
-git clone git@github.com:yourusername/tayyibt.git .
+git clone git@github.com:mohamednagdy776-arch/test.git .
 ```
 
 ### 3.2 Configure Environment Files
@@ -214,7 +214,7 @@ Host github.com
 3. Select "Compose from URL"
 4. Enter your GitHub raw docker-compose URL:
    ```
-   https://raw.githubusercontent.com/yourusername/tayyibt/main/docker-compose.prod.yml
+   https://raw.githubusercontent.com/mohamednagdy776-arch/test/main/docker-compose.prod.yml
    ```
 5. Configure environment variables
 6. Deploy

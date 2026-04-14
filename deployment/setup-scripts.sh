@@ -55,7 +55,7 @@ ufw allow 443/tcp   # HTTPS
 # Clone repository (optional - can be done manually)
 echo "[7/8] Repository setup..."
 echo "Cloning from GitHub..."
-git clone https://github.com/yourusername/tayyibt.git . || echo "Repository will be cloned manually"
+git clone https://github.com/mohamednagdy776-arch/test.git . || echo "Repository will be cloned manually"
 
 # Create environment file
 echo "[8/8] Creating environment configuration..."
