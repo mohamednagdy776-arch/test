@@ -1,0 +1,44 @@
+name: Security Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  security-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 2
+
+      - name: Run Security Review
+        uses: anthropics/claude-code-security-review@main
+        with:
+          comment-pr: true
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+          # Exclude test files and documentation
+          exclude-directories: "tests,docs,.git"
+          # Use Opus model for thorough analysis
+          claude-model: claude-opus-4-1-20250805
+          # 15 minute timeout
+          claudecode-timeout: 15
+          # Custom security focus for Tayyibt
+          custom-security-scan-instructions: |
+            Focus security analysis on:
+            - User authentication and JWT token handling
+            - Profile data protection and encryption
+            - API endpoint authorization
+            - Input validation for all user inputs
+            - SQL injection prevention
+            - XSS prevention in React components
+            - Payment integration security
+            - Content moderation endpoints
+            - Rate limiting implementation
+            - Session management security

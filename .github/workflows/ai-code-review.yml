@@ -1,0 +1,58 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-agent:
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request') ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@CodiumAI-Agent'))
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run PR Agent
+        uses: Codium-ai/pr-agent@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_KEY: ${{ secrets.OPENAI_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Configuration
+          CONFIGURATION.toml: |
+            [github]
+            pr_title_prefix = "[Tayyibt]"
+
+            [pr_description]
+            add_original_description = true
+            generate_title_from_commit = true
+
+            [pr_review]
+            extra_instructions = """
+            Focus on:
+            - TypeScript/Next.js best practices
+            - NestJS backend patterns
+            - Security vulnerabilities (SQL injection, XSS, auth issues)
+            - Performance implications
+            - Islamic content moderation requirements
+            - Tailwind CSS best practices
+            """
+
+            [pr_improve]
+            accept_suggestions = true
+            extra_instructions = """
+            Prioritize:
+            - Type safety improvements
+            - Security hardening
+            - Code readability
+            """

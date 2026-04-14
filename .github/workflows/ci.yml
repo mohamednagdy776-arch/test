@@ -1,0 +1,151 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ========== Backend Tests ==========
+  backend-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Type check
+        run: npm run type-check
+      
+      - name: Run tests
+        run: npm test
+
+  # ========== Frontend Tests ==========
+  web-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Type check
+        run: npm run type-check
+      
+      - name: Build Next.js
+        run: npm run build
+      
+      - name: Lint
+        run: npm run lint
+
+  # ========== Admin Tests ==========
+  admin-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: admin/package-lock.json
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Type check
+        run: npm run type-check
+      
+      - name: Build Next.js
+        run: npm run build
+
+  # ========== Docker Build ==========
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [backend-test, web-test, admin-test]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build backend
+        run: docker build -f docker/backend/Dockerfile -t tayyibt-backend:latest ./backend
+      
+      - name: Build web
+        run: docker build -f docker/web/Dockerfile -t tayyibt-web:latest ./web
+      
+      - name: Build admin
+        run: docker build -f docker/admin/Dockerfile -t tayyibt-admin:latest ./admin
+
+  # ========== Security Scan ==========
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Security Review
+        uses: anthropics/claude-code-security-review@main
+        with:
+          comment-pr: true
+          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
+
+  # ========== Lint & Format ==========
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: ESLint
+        run: |
+          cd web && npm ci && npm run lint
+          cd ../admin && npm ci && npm run lint
+          cd ../backend && npm ci && npm run lint
+
+  # ========== Build Status ==========
+  build-complete:
+    runs-on: ubuntu-latest
+    needs: [backend-test, web-test, admin-test, docker-build]
+    if: always()
+    steps:
+      - name: Check build status
+        run: |
+          if [ "${{ needs.backend-test.result }}" != "success" ]; then
+            echo "Backend tests failed"
+            exit 1
+          fi
+          if [ "${{ needs.web-test.result }}" != "success" ]; then
+            echo "Web tests failed"
+            exit 1
+          fi
+          if [ "${{ needs.admin-test.result }}" != "success" ]; then
+            echo "Admin tests failed"
+            exit 1
+          fi
+          echo "All tests passed!"

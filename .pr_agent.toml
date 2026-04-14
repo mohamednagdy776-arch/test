@@ -1,0 +1,113 @@
+# PR Agent Configuration for Tayyibt
+
+[github]
+# Repository settings
+pr_title_prefix = "[Tayyibt]"
+# Auto-label PRs with relevant labels
+auto_ labelling = true
+
+[pr_description]
+# Generate description from commit messages
+generate_title_from_commit = true
+# Include original description
+add_original_description = true
+# Template for PR description
+description_template = """
+## Summary
+{{description}}
+
+## Changes Made
+{{changes_summary}}
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests pass
+- [ ] Manual testing completed
+
+## Checklist
+- [ ] Code follows project standards
+- [ ] Security considerations reviewed
+- [ ] Documentation updated
+- [ ] No console errors
+"""
+
+[pr_review]
+# Enable review
+enable = true
+# Inline comments
+inline_comments = true
+# Extra instructions for review focus
+extra_instructions = """
+You are reviewing a Muslim matchmaking platform (Tayyibt).
+Focus on:
+
+## Security (Critical)
+- SQL injection vulnerabilities
+- XSS in React components
+- Authentication/authorization issues
+- Hardcoded secrets or API keys
+- JWT token handling
+- Input validation
+
+## Code Quality
+- TypeScript strict mode compliance
+- NestJS best practices
+- React/Next.js patterns
+- Error handling
+- Performance implications
+
+## Islamic Content Moderation
+- Content filtering for appropriateness
+- Profile data protection
+- Privacy considerations
+
+## Frontend
+- Tailwind CSS best practices
+- Responsive design
+- Accessibility
+- Component reusability
+"""
+
+[pr_improve]
+# Enable improvement suggestions
+enable = true
+# Automatically apply simple fixes
+auto_apply = false
+# Extra instructions
+extra_instructions = """
+Prioritize improvements for:
+
+1. **Type Safety**
+   - Add proper TypeScript types
+   - Fix 'any' types
+   - Add null checks
+
+2. **Security**
+   - Sanitize user inputs
+   - Add authorization checks
+   - Fix potential vulnerabilities
+
+3. **Code Quality**
+   - Extract reusable components
+   - Add proper error handling
+   - Improve readability
+
+4. **Performance**
+   - Memoization opportunities
+   - Lazy loading
+   - API call optimization
+"""
+
+[pr_ask]
+# Enable ask mode
+enable = true
+
+[pr_update_changelog]
+# Enable auto-update changelog
+enable = false
+
+[common]
+# AI model to use
+model = "gpt-4"
+# Language
+language = "en"
