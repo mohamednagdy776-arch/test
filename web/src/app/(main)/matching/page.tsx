@@ -50,51 +50,51 @@ export default function MatchingPage() {
     router.push(`/chat?user=${userId}`);
   };
 
-  const scoreColor = (score: number) => score >= 80 ? 'text-green-600' : score >= 60 ? 'text-yellow-600' : 'text-red-500';
+  const scoreColor = (score: number) => score >= 80 ? 'text-emerald-600' : score >= 60 ? 'text-amber-600' : 'text-rose-500';
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">التوافق</h1>
+        <h1 className="text-xl font-bold text-emerald-900">التوافق</h1>
       </div>
 
-      <div className="rounded-xl bg-white p-4 shadow-sm">
+      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">العمر</label>
+            <label className="block text-sm font-semibold text-emerald-800 mb-2">العمر</label>
             <div className="flex gap-2">
               <input
                 type="number"
                 value={ageRange[0]}
                 onChange={(e) => setAgeRange([parseInt(e.target.value) || 18, ageRange[1]])}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="w-full px-4 py-3 rounded-xl border border-emerald-200/50 text-sm bg-white/80 text-emerald-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 placeholder="من"
               />
               <input
                 type="number"
                 value={ageRange[1]}
                 onChange={(e) => setAgeRange([ageRange[0], parseInt(e.target.value) || 35])}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                className="w-full px-4 py-3 rounded-xl border border-emerald-200/50 text-sm bg-white/80 text-emerald-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
                 placeholder="إلى"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">الموقع</label>
+            <label className="block text-sm font-semibold text-emerald-800 mb-2">الموقع</label>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              className="w-full px-4 py-3 rounded-xl border border-emerald-200/50 text-sm bg-white/80 text-emerald-900 placeholder-emerald-400/50 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
               placeholder="المدينة"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">مستوى الالتزام الديني</label>
+            <label className="block text-sm font-semibold text-emerald-800 mb-2">مستوى الالتزام الديني</label>
             <select
               value={prayerLevel}
               onChange={(e) => setPrayerLevel(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              className="w-full px-4 py-3 rounded-xl border border-emerald-200/50 text-sm bg-white/80 text-emerald-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
             >
               <option value="">الكل</option>
               <option value="high">عالي</option>
@@ -112,18 +112,18 @@ export default function MatchingPage() {
         {isLoading ? (
           <>
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-64 rounded-xl bg-white animate-pulse" />
+              <div key={i} className="h-64 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse shadow-lg shadow-emerald-500/10 border border-emerald-100" />
             ))}
           </>
         ) : matches.length === 0 ? (
-          <div className="col-span-3 rounded-xl bg-white p-8 text-center text-gray-400">
+          <div className="col-span-3 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-8 text-center text-emerald-600/60 shadow-lg shadow-emerald-500/10 border border-emerald-100">
             لا توجد توافقات
           </div>
         ) : (
           matches.map((match) => (
-            <div key={match.id} className="rounded-xl bg-white p-5 shadow-sm">
+            <div key={match.id} className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
               <div className="mb-4 flex items-center justify-between">
-                <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
+                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-emerald-400 to-amber-400 flex items-center justify-center text-white font-bold text-xl">
                   {match.user?.avatarUrl ? (
                     <img src={match.user.avatarUrl} alt="" className="h-full w-full object-cover rounded-full" />
                   ) : (
@@ -132,18 +132,18 @@ export default function MatchingPage() {
                 </div>
                 <div className="text-center">
                   <p className={`text-3xl font-bold ${scoreColor(match.score)}`}>{match.score}%</p>
-                  <p className="text-xs text-gray-400">توافق</p>
+                  <p className="text-xs text-emerald-500/60">توافق</p>
                 </div>
               </div>
               
               <div className="mb-3 text-center">
-                <p className="font-semibold text-gray-800">{match.user?.fullName || 'مستخدم'}</p>
-                <p className="text-xs text-gray-500">
+                <p className="font-semibold text-emerald-900">{match.user?.fullName || 'مستخدم'}</p>
+                <p className="text-xs text-emerald-600/60">
                   {match.user?.age && `العمر: ${match.user.age} · `}
                   {match.user?.location || 'غير محدد'}
                 </p>
                 {match.user?.prayerLevel && (
-                  <p className="text-xs text-gray-400">الالتزام: {match.user.prayerLevel}</p>
+                  <p className="text-xs text-amber-600 font-medium">الالتزام: {match.user.prayerLevel}</p>
                 )}
               </div>
 
@@ -152,13 +152,13 @@ export default function MatchingPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => apiClient.patch(`/matches/${match.id}/accept`).then(() => refetch())}
-                      className="flex-1 rounded-lg bg-primary py-2 text-sm font-medium text-white hover:bg-blue-700"
+                      className="flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all"
                     >
                       قبول
                     </button>
                     <button
                       onClick={() => apiClient.patch(`/matches/${match.id}/reject`).then(() => refetch())}
-                      className="flex-1 rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                      className="flex-1 rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors"
                     >
                       رفض
                     </button>
@@ -166,7 +166,7 @@ export default function MatchingPage() {
                   {match.user?.username && (
                     <button
                       onClick={() => handleViewProfile(match.user!.username)}
-                      className="w-full rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                      className="w-full rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors"
                     >
                       عرض الملف
                     </button>
@@ -174,7 +174,7 @@ export default function MatchingPage() {
                   {match.user?.id && (
                     <button
                       onClick={() => handleSendMessage(match.user!.id)}
-                      className="w-full rounded-lg bg-green-600 py-2 text-sm font-medium text-white hover:bg-green-700"
+                      className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all"
                     >
                       إرسال رسالة
                     </button>
@@ -182,20 +182,20 @@ export default function MatchingPage() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <div className={`rounded-lg py-2 text-center text-sm font-medium ${match.status === 'accepted' ? 'bg-green-50 text-green-700' : 'bg-gray-50 text-gray-500'}`}>
+                  <div className={`rounded-xl py-2.5 text-center text-sm font-medium ${match.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                     {match.status === 'accepted' ? '✓ تم القبول' : '✗ تم الرفض'}
                   </div>
                   {match.status === 'accepted' && match.user?.username && (
                     <>
                       <button
                         onClick={() => handleViewProfile(match.user!.username)}
-                        className="w-full rounded-lg border border-gray-200 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                        className="w-full rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors"
                       >
                         عرض الملف
                       </button>
                       <button
                         onClick={() => handleSendMessage(match.user!.id)}
-                        className="w-full rounded-lg bg-green-600 py-2 text-sm font-medium text-white hover:bg-green-700"
+                        className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all"
                       >
                         إرسال رسالة
                       </button>

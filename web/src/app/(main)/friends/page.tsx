@@ -11,14 +11,14 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
   const isFriend = user.friendshipStatus === 'friends' || user.isFriend;
 
   return (
-    <div className="bg-[#FDFAF5] rounded-xl p-4 border border-[#C8D8DF]/60">
+    <div className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-4 border border-emerald-100 shadow-lg shadow-emerald-500/10">
       <div className="flex items-center gap-3 mb-3">
-        <div className="h-12 w-12 rounded-full text-[#FDFAF5] font-bold flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #213448, #547792)' }}>
+        <div className="h-12 w-12 rounded-full text-white font-bold flex items-center justify-center bg-gradient-to-br from-emerald-500 to-amber-500">
           {initial}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-[#213448] truncate">{name}</p>
-          <p className="text-xs text-[#547792] truncate">{user.profile?.bio || ''}</p>
+          <p className="text-sm font-bold text-emerald-900 truncate">{name}</p>
+          <p className="text-xs text-emerald-600/70 truncate">{user.profile?.bio || ''}</p>
         </div>
         <div className="relative">
           <button onClick={() => setShowMenu(!showMenu)} className="p-1 hover:bg-[#EAE0CF] rounded-full">
@@ -74,7 +74,7 @@ function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept:
   const mutualCount = request.mutualFriends || 0;
 
   return (
-    <div className="bg-[#FDFAF5] rounded-xl p-4 border border-[#C8D8DF]/60">
+    <div className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-4 border border-emerald-100 shadow-lg shadow-emerald-500/10">
       <div className="flex items-center gap-3 mb-3">
         <div className="h-12 w-12 rounded-full text-[#FDFAF5] font-bold flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #213448, #547792)' }}>
           {initial}
@@ -102,7 +102,7 @@ function SuggestionCard({ user, onAdd, onFollow }: { user: any; onAdd: () => voi
   const mutual = user.mutual || 0;
 
   return (
-    <div className="bg-[#FDFAF5] rounded-xl p-4 border border-[#C8D8DF]/60">
+    <div className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-4 border border-emerald-100 shadow-lg shadow-emerald-500/10">
       <div className="flex items-center gap-3 mb-3">
         <div className="h-12 w-12 rounded-full text-[#FDFAF5] font-bold flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #213448, #547792)' }}>
           {initial}
@@ -287,9 +287,9 @@ export default function FriendsPage() {
   ] as const;
 
   return (
-    <div className="min-h-screen bg-[#EAE0CF]/30 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[#ECFDF5] via-[#F0FDF4] to-amber-50/30 p-4 md:p-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-[#213448] mb-6">الأصدقاء</h1>
+        <h1 className="text-2xl font-bold text-emerald-900 mb-6">الأصدقاء</h1>
 
         {activeTab === 'friends' && birthdays.length > 0 && (
           <div className="mb-6 bg-gradient-to-r from-pink-50 to-orange-50 rounded-xl p-4 border border-pink-200">
