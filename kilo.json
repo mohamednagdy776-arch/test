@@ -1,0 +1,77 @@
+{
+  "model": "anthropic/claude-sonnet-4-20250514",
+  "small_model": "anthropic/claude-haiku-3-20240307",
+  "default_agent": "orchestrator",
+  "instructions": [
+    "AGENTS.md"
+  ],
+  "plugin": [
+    "file:./.kilo"
+  ],
+  "autoupdate": "notify",
+  "snapshot": true,
+  "provider": {
+    "anthropic": {
+      "options": {
+        "apiKey": "$ANTHROPIC_API_KEY"
+      }
+    }
+  },
+  "permission": {
+    "bash": "allow",
+    "edit": {
+      "src/**": "allow",
+      ".kilo/**": "allow",
+      ".github/**": "allow",
+      "deployment/**": "allow",
+      "docs/**": "allow",
+      "*.lock": "deny",
+      "*": "ask"
+    },
+    "read": "allow",
+    "skill": "allow",
+    "external_directory": "deny"
+  },
+  "agents": {
+    "orchestrator": {
+      "description": "Main orchestrator agent - coordinates all AI tools and workflows",
+      "mode": "primary",
+      "steps": 50,
+      "color": "#10B981"
+    },
+    "backend": {
+      "description": "NestJS backend specialist - API development, database, authentication",
+      "mode": "subagent",
+      "color": "#6366F1"
+    },
+    "frontend": {
+      "description": "Next.js frontend specialist - React, Tailwind, UI development",
+      "mode": "subagent", 
+      "color": "#14B8A6"
+    },
+    "security": {
+      "description": "Security specialist - runs security audits and reviews",
+      "mode": "subagent",
+      "color": "#EF4444"
+    },
+    "qa": {
+      "description": "QA specialist - testing, browser automation, verification",
+      "mode": "subagent",
+      "color": "#F59E0B"
+    },
+    "deploy": {
+      "description": "Deployment specialist - Docker, CI/CD, production",
+      "mode": "subagent",
+      "color": "#8B5CF6"
+    }
+  },
+  "mcp": {},
+  "skills": {
+    "paths": [
+      "./.kilo/skills"
+    ],
+    "urls": [
+      "https://raw.githubusercontent.com/obra/superpowers/main/skills/"
+    ]
+  }
+}
