@@ -45,8 +45,8 @@ export default function PaymentsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Payments</h1>
-        <span className="text-sm text-gray-500">{data?.meta.total ?? 0} total transactions</span>
+        <h1 className="text-2xl font-bold text-slate-900">Payments</h1>
+        <span className="text-sm text-slate-500">{data?.meta.total ?? 0} total transactions</span>
       </div>
 
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">

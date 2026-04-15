@@ -59,8 +59,8 @@ export default function PostsPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Posts</h1>
-        <span className="text-sm text-gray-500">{data?.meta.total ?? 0} total</span>
+        <h1 className="text-2xl font-bold text-slate-900">Posts</h1>
+        <span className="text-sm text-slate-500">{data?.meta.total ?? 0} total</span>
       </div>
       <div className="mb-4 w-64">
         <SearchInput value={search} onChange={setSearch} placeholder="Search content..." />

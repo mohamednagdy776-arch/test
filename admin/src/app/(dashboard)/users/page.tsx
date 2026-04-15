@@ -219,8 +219,8 @@ export default function UsersPage() {
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        <span className="text-sm text-gray-500">{data?.meta?.total ?? 0} total</span>
+        <h1 className="text-2xl font-bold text-slate-900">Users</h1>
+        <span className="text-sm text-slate-500">{data?.meta?.total ?? 0} total</span>
       </div>
 
       {/* Basic Filters */}

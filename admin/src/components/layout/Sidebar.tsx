@@ -16,13 +16,13 @@ const navItems = [
 export const Sidebar = () => {
   const pathname = usePathname();
   return (
-    <aside className="w-64 bg-[#FDFAF5] border-r border-[#C8D8DF]/60 flex flex-col h-full">
-      <div className="p-6 border-b border-[#C8D8DF]/40">
+    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-full">
+      <div className="p-6 border-b border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl text-[#FDFAF5] font-bold text-sm" style={{ background: 'linear-gradient(135deg, #213448, #547792)' }}>T</div>
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-600 font-bold text-sm text-white">T</div>
           <div>
-            <h2 className="text-base font-bold text-[#213448]">Tayyibt</h2>
-            <p className="text-[10px] text-[#547792] uppercase tracking-wider">Admin Panel</p>
+            <h2 className="text-base font-bold text-white">Tayyibt</h2>
+            <p className="text-[10px] text-slate-400 uppercase tracking-wider">Admin Panel</p>
           </div>
         </div>
       </div>
@@ -32,16 +32,16 @@ export const Sidebar = () => {
           return (
             <Link key={item.href} href={item.href} className={clsx(
               'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200',
-              isActive ? 'bg-[#D4E8EE] text-[#213448] shadow-sm' : 'text-[#547792] hover:bg-[#D4E8EE]/50 hover:text-[#213448]'
+              isActive ? 'bg-emerald-600/20 text-emerald-400 border-l-2 border-emerald-500' : 'text-slate-400 hover:bg-slate-800 hover:text-white'
             )}>
-              <span className={clsx(isActive ? 'text-[#213448]' : 'text-[#94B4C1]')}>{item.icon}</span>
+              <span className={clsx(isActive ? 'text-emerald-400' : 'text-slate-500')}>{item.icon}</span>
               {item.label}
             </Link>
           );
         })}
       </nav>
-      <div className="p-4 border-t border-[#C8D8DF]/40">
-        <p className="text-[10px] text-[#BFB9AD] text-center">v1.0.0 — Tayyibt Platform</p>
+      <div className="p-4 border-t border-slate-800">
+        <p className="text-[10px] text-slate-600 text-center">v1.0.0 — Tayyibt Platform</p>
       </div>
     </aside>
   );
