@@ -51,6 +51,12 @@ module.exports = {
           emerald: '#10B981',
           gold: '#F59E0B',
         },
+        sage: {
+          50: '#F0FDF4',
+          100: '#DCFCE7',
+          200: '#BBF7D0',
+          300: '#86EFAC',
+        },
       },
       fontFamily: {
         sans: ['Noto Sans Arabic', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],

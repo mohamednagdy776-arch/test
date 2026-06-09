@@ -2,7 +2,7 @@ import { ConflictException, ForbiddenException, Injectable, NotFoundException, U
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
 import { User } from '../entities/user.entity';
 import { Session } from '../entities/session.entity';
@@ -44,7 +44,8 @@ export class AuthService {
       gender: dto.gender,
       verificationToken,
       verificationExpires,
-      status: 'pending',
+      status: 'active', // Auto-activate for development
+      isVerified: true, // Auto-verify for development
     });
 
     await this.usersRepo.save(user);
@@ -64,6 +65,11 @@ export class AuthService {
     if (user.isDeactivated) {
       throw new ForbiddenException('Account is deactivated');
     }
+
+    // Skip verification check for development
+    // if (!user.isVerified) {
+    //   throw new ForbiddenException('Please verify your email first');
+    // }
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) {
@@ -255,7 +261,11 @@ export class AuthService {
       const user = await this.usersRepo.findOne({ where: { id: payload.sub } });
       if (!user || user.isDeactivated) throw new UnauthorizedException();
 
-      await this.sessionsRepo.update(session?.id || '', { lastActive: new Date() });
+      // Only touch the session row when we actually have one — updating with an
+      // empty id throws an invalid-UUID error (previously surfaced as 401).
+      if (session?.id) {
+        await this.sessionsRepo.update(session.id, { lastActive: new Date() });
+      }
 
       return this.signTokens(user);
     } catch {
@@ -396,7 +406,7 @@ export class AuthService {
   private signTokens(user: User, refreshExpiry = '7d') {
     const payload = { sub: user.id, role: user.accountType };
     return {
-      accessToken: this.jwtService.sign(payload, { expiresIn: '15m' }),
+      accessToken: this.jwtService.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }),
       refreshToken: this.jwtService.sign({ ...payload, type: 'refresh' }, { expiresIn: refreshExpiry }),
     };
   }

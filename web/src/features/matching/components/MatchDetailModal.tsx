@@ -32,10 +32,13 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
         {/* Score header */}
         <div className={`p-6 text-center ${match.score >= 80 ? 'bg-green-50' : match.score >= 60 ? 'bg-yellow-50' : 'bg-red-50'}`}>
           <button onClick={onClose} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 text-xl">×</button>
-          <div className="h-20 w-20 rounded-full bg-white mx-auto mb-3 flex items-center justify-center text-primary font-black text-2xl shadow-md">
-            {match.user2Id?.slice(0, 2).toUpperCase()}
+          <div className="h-20 w-20 rounded-full bg-white mx-auto mb-3 flex items-center justify-center text-primary font-black text-2xl shadow-md overflow-hidden">
+            {(match as any).otherUserAvatar
+              ? <img src={(match as any).otherUserAvatar} alt="" className="h-full w-full object-cover" />
+              : ((match as any).otherUserName || 'مستخدم').trim().slice(0, 2).toUpperCase()}
           </div>
-          <p className={`text-5xl font-black ${scoreColor(match.score)}`}>{match.score}%</p>
+          <p className="text-lg font-bold text-gray-900">{(match as any).otherUserName || 'مستخدم طيبت'}</p>
+          <p className={`text-5xl font-black mt-1 ${scoreColor(match.score)}`}>{match.score}%</p>
           <p className="text-sm text-gray-500 mt-1">نسبة التوافق</p>
           {match.status !== 'pending' && (
             <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${

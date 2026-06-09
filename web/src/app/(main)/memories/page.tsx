@@ -28,10 +28,24 @@ export default function MemoriesPage() {
     return d.toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
-  const getYearDiff = (date: string) => {
-    const postYear = new Date(date).getFullYear();
-    const currentYear = new Date().getFullYear();
-    return currentYear - postYear;
+  // Human-readable relative label that doesn't say "0 years ago" (M-15).
+  const getRelativeLabel = (date: string) => {
+    const then = new Date(date).getTime();
+    const now = Date.now();
+    const days = Math.floor((now - then) / 86_400_000);
+    if (days < 1) return 'اليوم';
+    if (days === 1) return 'منذ يوم';
+    if (days < 7) return `منذ ${days} أيام`;
+    if (days < 30) {
+      const w = Math.floor(days / 7);
+      return w === 1 ? 'منذ أسبوع' : `منذ ${w} أسابيع`;
+    }
+    if (days < 365) {
+      const m = Math.floor(days / 30);
+      return m === 1 ? 'منذ شهر' : `منذ ${m} أشهر`;
+    }
+    const years = Math.floor(days / 365);
+    return years === 1 ? 'منذ سنة' : `منذ ${years} سنوات`;
   };
 
   return (
@@ -84,7 +98,7 @@ export default function MemoriesPage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-emerald-900">
                     <span>📅</span>
-                    <span className="text-amber-600 font-semibold">منذ {getYearDiff(memory.createdAt)} سنوات</span>
+                    <span className="text-amber-600 font-semibold">{getRelativeLabel(memory.createdAt)}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>

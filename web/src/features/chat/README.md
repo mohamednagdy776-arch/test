@@ -15,16 +15,12 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 7: Messaging
 
 ### Hooks
 - `useChat` ✅ — Implemented in `web/src/features/chat/hooks.ts`
+- `useConversations` ✅ — Hook for fetching conversations
+- `useMessages` ✅ — Hook for fetching messages
+- `useSendMessage` ✅ — Hook for sending message
 
 ### API
 - `chatApi` ✅ — Implemented in `web/src/features/chat/api.ts`
 
-## Needs Implementation
-
-### Components
-- `MessageInput.tsx` — Input component for sending messages
-- `MessageBubble.tsx` — Bubble component for individual messages
-- `ConversationHeader.tsx` — Header showing conversation info
-
-### Pages
-- None
+## Backend
+- Backend exists: `backend/src/chat/`

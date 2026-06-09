@@ -19,14 +19,12 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 1: Authentication 
 ### Hooks
 - `useAuth` ✅ — Implemented in `web/src/features/auth/hooks.ts`
 - `useSessions` ✅ — Implemented in `web/src/features/auth/hooks.ts`
+- `useLogin` ✅ — Hook for login
+- `useRegister` ✅ — Hook for registration
+- `useLogout` ✅ — Hook for logout
 
 ### API
 - `authApi` ✅ — Implemented in `web/src/features/auth/api.ts`
 
-## Needs Implementation
-
-### Components
-- None
-
-### Pages
-- None
+## Backend
+- Backend exists: `backend/src/auth/`

@@ -12,15 +12,18 @@ const set = (filters: SearchFiltersState, onChange: Props['onChange']) =>
   (k: keyof SearchFiltersState) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     onChange({ ...filters, [k]: e.target.value });
 
+// Defined at module scope so it is a STABLE component reference.
+// (Defining components inside render remounts them on every keystroke,
+// which causes inputs to lose focus — H-08.)
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div>
+    <label className="mb-1 block text-xs font-medium text-gray-500">{label}</label>
+    {children}
+  </div>
+);
+
 export const SearchFilters = ({ filters, onChange, onReset, onSearch }: Props) => {
   const s = set(filters, onChange);
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <label className="mb-1 block text-xs font-medium text-gray-500">{label}</label>
-      {children}
-    </div>
-  );
 
   const inp = (k: keyof SearchFiltersState, label: string, ph = '') => (
     <Field label={label}>

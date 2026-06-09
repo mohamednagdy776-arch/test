@@ -1,0 +1,30 @@
+# Development override - runs in development mode with hot reload
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    volumes:
+      - ./backend/src:/app/backend/src
+    environment:
+      - NODE_ENV=development
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    volumes:
+      - ./web/src:/app/web/src
+      - /app/node_modules
+      - /app/.next
+
+  admin:
+    build:
+      context: .
+      dockerfile: docker/admin/Dockerfile
+    volumes:
+      - ./admin/src:/app/admin/src
+      - /app/node_modules
+      - /app/.next

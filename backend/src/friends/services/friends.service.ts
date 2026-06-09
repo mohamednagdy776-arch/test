@@ -119,6 +119,12 @@ export class FriendsService {
     const friends = await this.getFriends(userId, 1, 500);
     const friendIds = friends.data.map(f => f.id);
 
+    // No friends yet → cannot compute mutual-friend suggestions.
+    // Empty arrays would produce invalid SQL `IN ()`, so guard explicitly.
+    if (friendIds.length === 0) {
+      return [];
+    }
+
     const suggestions = await this.friendshipsRepo
       .createQueryBuilder('f')
       .select('f.addresseeId', 'userId')
@@ -232,5 +238,38 @@ export class FriendsService {
 
     if (!friendship) return { status: 'none' };
     return { status: friendship.status, id: friendship.id };
+  }
+
+  async getBirthdays(userId: string) {
+    const { data: friends } = await this.getFriends(userId, 1, 500);
+
+    const today = new Date();
+    const inThirtyDays = new Date(today);
+    inThirtyDays.setDate(today.getDate() + 30);
+
+    const upcoming = friends
+      .filter((friend: any) => !!friend.dateOfBirth)
+      .map((friend: any) => {
+        const dob = new Date(friend.dateOfBirth);
+        const thisYear = new Date(today.getFullYear(), dob.getMonth(), dob.getDate());
+        const nextBirthday = thisYear < today
+          ? new Date(today.getFullYear() + 1, dob.getMonth(), dob.getDate())
+          : thisYear;
+
+        const diffMs = nextBirthday.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+        return {
+          id: friend.id,
+          name: friend.fullName || `${friend.firstName || ''} ${friend.lastName || ''}`.trim() || friend.email?.split('@')[0] || 'مستخدم',
+          date: nextBirthday.toISOString().split('T')[0],
+          avatar: friend.profile?.avatarUrl || null,
+          daysUntil: diffDays,
+        };
+      })
+      .filter((b) => b.daysUntil <= 30)
+      .sort((a, b) => a.daysUntil - b.daysUntil);
+
+    return upcoming;
   }
 }

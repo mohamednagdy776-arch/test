@@ -14,5 +14,6 @@ import { UploadController } from './controllers/upload.controller';
   imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost])],
   providers: [PostsService, StoriesService],
   controllers: [PostsController, AdminPostsController, FeedController, StoriesController, UploadController],
+  exports: [PostsService],
 })
 export class PostsModule {}

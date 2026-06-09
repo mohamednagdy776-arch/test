@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
+import { SavedCollection } from './saved-collection.entity';
 
 export type SavedEntityType = 'post' | 'comment' | 'video' | 'story';
 
@@ -18,6 +19,13 @@ export class SavedItem {
 
   @Column({ name: 'entity_id' })
   entityId: string;
+
+  @Column({ name: 'collection_id', nullable: true })
+  collectionId: string;
+
+  @ManyToOne(() => SavedCollection, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'collection_id' })
+  collection: SavedCollection;
 
   @CreateDateColumn({ name: 'saved_at' })
   savedAt: Date;

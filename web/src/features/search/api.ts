@@ -70,11 +70,13 @@ export const clearRecentSearches = () => {
 };
 
 export const POPULAR_SEARCHES = [
-  'مسلم ملتزم',
-  'أخوة إسلامية',
-  'مجتمع المسلمين',
-  'تعارف وزواج',
-  'شباب مسلم',
+  'egypt',
+  'saudi',
+  'doctor',
+  'engineer',
+  'london',
+  'conservative',
+  'moderate',
 ];
 
 export const searchApi = {

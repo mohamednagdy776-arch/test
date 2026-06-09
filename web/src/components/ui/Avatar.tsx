@@ -1,4 +1,5 @@
 'use client';
+
 import { cn } from '@/lib/utils';
 
 interface AvatarProps {
@@ -35,8 +36,8 @@ export function Avatar({ src, name, size = 'md', className, online }: AvatarProp
           src={src} 
           alt={name || 'صورة شخصية'} 
           className={cn(
-            'rounded-full object-cover ring-2 ring-[#FDFAF5] shadow-soft',
-            'ring-[#D4E8EE] ring-offset-2 ring-offset-[#FDFAF5]',
+            'rounded-full object-cover ring-2 ring-[var(--card-foreground)] shadow-soft',
+            'ring-[var(--highlight)] ring-offset-2 ring-offset-[var(--card)]',
             'transition-all duration-300 hover:scale-105 hover:shadow-glow',
             sizes[size]
           )} 
@@ -44,9 +45,9 @@ export function Avatar({ src, name, size = 'md', className, online }: AvatarProp
       ) : (
         <div 
           className={cn(
-            'rounded-full flex items-center justify-center ring-2 ring-[#FDFAF5] font-bold shadow-soft',
-            'bg-gradient-to-br from-[#D4E8EE] via-[#94B4C1] to-[#547792]',
-            'text-[#213448] transition-all duration-300 hover:scale-105 hover:shadow-glow',
+            'rounded-full flex items-center justify-center ring-2 ring-[var(--card-foreground)] font-bold shadow-soft',
+            'avatar-theme',
+            'transition-all duration-300 hover:scale-105 hover:shadow-glow',
             sizes[size]
           )}
         >
@@ -55,11 +56,11 @@ export function Avatar({ src, name, size = 'md', className, online }: AvatarProp
       )}
       {online !== undefined && (
         <span className={cn(
-          'absolute rounded-full ring-2 ring-[#FDFAF5] shadow-soft',
+          'absolute rounded-full ring-2 ring-[var(--card-foreground)] shadow-soft',
           statusSizes[size], 
           online 
-            ? 'bg-[#4A8C6F] shadow-[0_0_8px_rgba(74,140,111,0.5)] animate-pulse-online' 
-            : 'bg-[#BFB9AD]'
+            ? 'avatar-status-theme-online animate-pulse-online' 
+            : 'avatar-status-theme-offline'
         )} />
       )}
     </div>

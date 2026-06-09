@@ -1,14 +1,15 @@
 'use client';
+import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { PostFeed } from '@/features/posts/components/PostFeed';
+import { useSuggestions } from '@/features/friends/hooks';
+import { apiClient } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 
 function SuggestedConnections() {
-  const suggestions = [
-    { name: 'سارة أحمد', age: 25, city: 'القاهرة', emoji: '👩‍🎓', match: 92 },
-    { name: 'يوسف محمد', age: 28, city: 'جدة', emoji: '👨‍💼', match: 87 },
-    { name: 'هدى علي', age: 24, city: 'دبي', emoji: '👩‍⚕️', match: 85 },
-    { name: 'عمر خالد', age: 30, city: 'الرياض', emoji: '👨‍💻', match: 81 },
-  ];
+  const router = useRouter();
+  const { data, isLoading } = useSuggestions(4);
+  const suggestions: any[] = data?.data ?? [];
 
   return (
     <div className="rounded-3xl bg-[#FFFBEB] shadow-soft border border-[#DCFCE7]/60 overflow-hidden">
@@ -16,31 +17,55 @@ function SuggestedConnections() {
         <h3 className="text-sm font-bold text-[#059669]">أشخاص قد تعرفهم</h3>
       </div>
       <div className="p-3 space-y-1">
-        {suggestions.map((s) => (
-          <div key={s.name} className="flex items-center gap-3 rounded-2xl p-2.5 hover:bg-[#DCFCE7]/50 transition-colors group cursor-pointer">
-            <div className="h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center text-xl shadow-soft" style={{ background: 'linear-gradient(135deg, #DCFCE7, #A7F3D0)' }}>
-              {s.emoji}
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-2xl p-2.5 animate-pulse">
+              <div className="h-10 w-10 rounded-2xl bg-[#DCFCE7]" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 bg-[#DCFCE7] rounded w-24" />
+                <div className="h-2.5 bg-[#DCFCE7] rounded w-16" />
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#065F46] truncate">{s.name}</p>
-              <p className="text-[11px] text-[#10B981]">{s.age} سنة · {s.city}</p>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className={cn(
-                'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
-                s.match >= 90 ? 'bg-[#10B981]/15 text-[#059669]' : s.match >= 85 ? 'bg-[#DCFCE7] text-[#10B981]' : 'bg-[#FEF3C7] text-[#D97706]'
-              )}>
-                {s.match}%
-              </span>
-              <button className="text-[10px] font-semibold text-[#10B981] hover:text-[#059669] hover:underline opacity-0 group-hover:opacity-100 transition-opacity">
-                عرض
-              </button>
-            </div>
-          </div>
-        ))}
+          ))
+        ) : suggestions.length === 0 ? (
+          <p className="text-center text-xs text-[#10B981] py-4">لا توجد اقتراحات حالياً</p>
+        ) : (
+          suggestions.map((s: any) => {
+            const user = s.userId ?? s;
+            const name = user?.profile?.fullName || user?.email?.split('@')[0] || 'مستخدم';
+            const city = user?.profile?.city || '';
+            const age = user?.profile?.age;
+            const initial = name.charAt(0).toUpperCase();
+            const mutual = s.mutual ?? 0;
+            return (
+              <div
+                key={user?.id ?? name}
+                onClick={() => user?.username && router.push(`/${user.username}`)}
+                className="flex items-center gap-3 rounded-2xl p-2.5 hover:bg-[#DCFCE7]/50 transition-colors group cursor-pointer"
+              >
+                <div className="h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center text-base font-bold text-white shadow-soft bg-gradient-to-br from-emerald-400 to-emerald-600">
+                  {initial}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#065F46] truncate">{name}</p>
+                  <p className="text-[11px] text-[#10B981]">
+                    {age ? `${age} سنة` : ''}{age && city ? ' · ' : ''}{city}
+                    {mutual > 0 ? ` · ${mutual} مشترك` : ''}
+                  </p>
+                </div>
+                <button className="text-[10px] font-semibold text-[#10B981] hover:text-[#059669] hover:underline opacity-0 group-hover:opacity-100 transition-opacity">
+                  عرض
+                </button>
+              </div>
+            );
+          })
+        )}
       </div>
       <div className="px-4 py-3 border-t border-[#DCFCE7]/40">
-        <button className="w-full rounded-2xl border border-[#DCFCE7] py-2 text-xs font-semibold text-[#10B981] hover:bg-[#DCFCE7]/50 hover:text-[#059669] transition-colors">
+        <button
+          onClick={() => router.push('/friends')}
+          className="w-full rounded-2xl border border-[#DCFCE7] py-2 text-xs font-semibold text-[#10B981] hover:bg-[#DCFCE7]/50 hover:text-[#059669] transition-colors"
+        >
           عرض المزيد
         </button>
       </div>
@@ -87,21 +112,41 @@ function TrendingTopics() {
 }
 
 function QuickStats() {
+  // Real counts — no fabricated activity (L-05).
+  const { data: matchesData } = useQuery({
+    queryKey: ['dashboard-matches-count'],
+    queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 100 } }).then((r) => r.data),
+    staleTime: 60_000,
+  });
+  const { data: friendsData } = useQuery({
+    queryKey: ['dashboard-friends-count'],
+    queryFn: () => apiClient.get('/friends', { params: { page: 1, limit: 100 } }).then((r) => r.data),
+    staleTime: 60_000,
+  });
+
+  const matchesArr = matchesData?.data?.data ?? matchesData?.data ?? [];
+  const friendsArr = friendsData?.data?.data ?? friendsData?.data ?? [];
+  const matchesCount = Array.isArray(matchesArr) ? matchesArr.length : 0;
+  const friendsCount = Array.isArray(friendsArr) ? friendsArr.length : 0;
+  const acceptedCount = Array.isArray(matchesArr)
+    ? matchesArr.filter((m: any) => m.status === 'accepted').length
+    : 0;
+
   return (
     <div className="rounded-3xl p-5 text-[#FFFBEB] shadow-lg" style={{ background: 'linear-gradient(135deg, #10B981, #34D399)' }}>
-      <p className="text-sm font-bold opacity-90 mb-3">نشاطك اليوم</p>
+      <p className="text-sm font-bold opacity-90 mb-3">نشاطك</p>
       <div className="grid grid-cols-3 gap-4">
         <div className="text-center">
-          <p className="text-2xl font-bold">12</p>
-          <p className="text-[10px] opacity-70">مشاهدات</p>
+          <p className="text-2xl font-bold">{matchesCount}</p>
+          <p className="text-[10px] opacity-70">توافقات</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold">3</p>
-          <p className="text-[10px] opacity-70">إعجابات</p>
+          <p className="text-2xl font-bold">{acceptedCount}</p>
+          <p className="text-[10px] opacity-70">مقبولة</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold">1</p>
-          <p className="text-[10px] opacity-70">توافق</p>
+          <p className="text-2xl font-bold">{friendsCount}</p>
+          <p className="text-[10px] opacity-70">أصدقاء</p>
         </div>
       </div>
     </div>

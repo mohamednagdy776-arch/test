@@ -13,8 +13,8 @@ export class PostsController {
   constructor(private postsService: PostsService) {}
 
   @Get(':postId')
-  async getPost(@Param('postId') postId: string) {
-    const post = await this.postsService.findById(postId);
+  async getPost(@Param('postId') postId: string, @CurrentUser() user: User) {
+    const post = await this.postsService.findById(postId, user.id);
     return ok(post);
   }
 

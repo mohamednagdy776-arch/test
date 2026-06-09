@@ -16,14 +16,10 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 12: Search
 
 ### Hooks
 - `useSearch` ✅ — Implemented in `web/src/features/search/hooks.ts`
+- `useSearchFilters` ✅ — Hook for managing search filters
 
 ### API
-- `searchApi` — Backend exists in `backend/src/search/`
+- `searchApi` ✅ — API for search
 
-## Needs Implementation
-
-### Components
-- None
-
-### Pages
-- None
+## Backend
+- Backend exists: `backend/src/search/`

@@ -66,6 +66,12 @@ export class FriendsController {
     return ok(suggestions);
   }
 
+  @Get('birthdays')
+  async getBirthdays(@CurrentUser() user: User) {
+    const birthdays = await this.friendsService.getBirthdays(user.id);
+    return ok(birthdays);
+  }
+
   @Get('status/:userId')
   async getFriendshipStatus(@CurrentUser() user: User, @Param('userId') otherUserId: string) {
     const status = await this.friendsService.getFriendshipStatus(user.id, otherUserId);

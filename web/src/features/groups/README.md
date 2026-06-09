@@ -14,17 +14,13 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 9: Groups
 
 ### Hooks
 - `useGroups` ✅ — Implemented in `web/src/features/groups/hooks.ts`
+- `useGroup` ✅ — Hook for fetching single group
+- `useCreateGroup` ✅ — Hook for creating group
+- `useJoinGroup` ✅ — Hook for joining group
+- `useLeaveGroup` ✅ — Hook for leaving group
 
 ### API
-- `groupsApi` — Backend exists in `backend/src/groups/`
+- `groupsApi` ✅ — API for groups
 
-## Needs Implementation
-
-### Components
-- `GroupCard.tsx` — Card component for displaying a group
-- `GroupHeader.tsx` — Header for group detail page
-- `GroupMembers.tsx` — List of group members
-- `GroupPosts.tsx` — Posts within a group
-
-### Pages
-- None
+## Backend
+- Backend exists: `backend/src/groups/`

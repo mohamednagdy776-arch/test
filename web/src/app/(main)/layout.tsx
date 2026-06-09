@@ -5,7 +5,7 @@ import { AuthGuard } from '@/components/auth/AuthGuard';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div className="min-h-screen bg-gradient-to-br from-dreamy-sage via-dreamy-mint to-dreamy-sage">
+      <div className="min-h-screen" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)', transition: 'background-color 0.3s ease, color 0.3s ease' }}>
         <Navbar />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
           <div className="flex gap-6">

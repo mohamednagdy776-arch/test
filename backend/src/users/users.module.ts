@@ -13,7 +13,7 @@ import { FriendsModule } from '../friends/friends.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Profile, ProfileWork, ProfileEducation, ActivityLog, User]),
+    TypeOrmModule.forFeature([User, Profile, ProfileWork, ProfileEducation, ActivityLog]),
     MulterModule.register({}),
     FriendsModule,
   ],
@@ -22,3 +22,4 @@ import { FriendsModule } from '../friends/friends.module';
   exports: [UsersService],
 })
 export class UsersModule {}
+

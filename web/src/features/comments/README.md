@@ -6,21 +6,20 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 5: Comments & Reac
 ## Implemented
 
 ### Components
-- None yet
+- `CommentList.tsx` ✅ — List of comments on a post
+- `CommentForm.tsx` ✅ — Form to add a new comment
+- `ReactionPicker.tsx` ✅ — Picker for reactions (like, love, haha, etc.)
+
+### Hooks
+- `useComments` ✅ — Hook for fetching comments
+- `useAddComment` ✅ — Hook for adding comment
+- `useDeleteComment` ✅ — Hook for deleting comment
 
 ### API
-- Implemented in backend: `web/src/features/comments/` needs to be created
-
-## Needs Implementation
-
-### Components
-- `CommentList.tsx` — List of comments on a post
-- `CommentForm.tsx` — Form to add a new comment
-- `ReactionPicker.tsx` — Picker for reactions (like, love, haha, etc.)
-
-### API
-- `commentsApi` — API for comments CRUD
-- `reactionsApi` — API for reactions
+- `commentsApi` ✅ — API for comments CRUD
 
 ### Pages
 - Integrated into PostCard (existing)
+
+## Backend
+- Backend exists: `backend/src/comments/`

@@ -1,0 +1,15 @@
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /register
+Allow: /terms
+Allow: /privacy
+Disallow: /dashboard
+Disallow: /chat
+Disallow: /matching
+Disallow: /settings
+Disallow: /friends
+Disallow: /notifications
+Disallow: /api/
+
+Sitemap: https://145-14-158-100.sslip.io/sitemap.xml

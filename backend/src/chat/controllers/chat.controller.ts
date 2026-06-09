@@ -19,6 +19,18 @@ export class ChatController {
     return ok(conversations);
   }
 
+  @Post('conversations')
+  async createConversation(
+    @Body() dto: { targetUserId: string },
+    @CurrentUser() user: User,
+  ) {
+    const conversation = await this.chatService.getOrCreateDirectConversation(
+      user.id,
+      dto.targetUserId,
+    );
+    return ok(conversation, 'Conversation ready');
+  }
+
   @Get('conversations/:conversationId/messages')
   async getMessages(
     @Param('conversationId') conversationId: string,

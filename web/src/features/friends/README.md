@@ -10,16 +10,14 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 6: Friends & Conne
 
 ### Hooks
 - `useFriends` ✅ — Implemented in `web/src/features/friends/hooks.ts`
+- `useFriendRequests` ✅ — Hook for fetching friend requests
+- `useSendFriendRequest` ✅ — Hook for sending friend request
+- `useAcceptFriendRequest` ✅ — Hook for accepting friend request
+- `useRejectFriendRequest` ✅ — Hook for rejecting friend request
+- `useRemoveFriend` ✅ — Hook for removing friend
 
 ### API
 - `friendsApi` ✅ — Implemented in `web/src/features/friends/api.ts`
 
-## Needs Implementation
-
-### Components
-- `FriendCard.tsx` — Card component for displaying a friend
-- `FriendRequestList.tsx` — List of incoming/outgoing friend requests
-- `FriendsSuggestions.tsx` — Suggestions for new friends
-
-### Pages
-- None
+## Backend
+- Backend exists: `backend/src/friends/`

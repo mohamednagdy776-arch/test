@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { authApi } from '@/features/auth/api';
 import { profileApi } from '@/features/profile/api';
 import { Button } from '@/components/ui/Button';
@@ -31,7 +32,9 @@ export default function SecurityPage() {
   const [verifyCode, setVerifyCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const [error, setError] = useState('');
+  const [alerts, setAlerts] = useState<Array<{ id: string; type: 'success' | 'error'; message: string }>>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [currentSession, setCurrentSession] = useState<Session | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -39,15 +42,20 @@ export default function SecurityPage() {
 
   const fetchData = async () => {
     setLoading(true);
+    setError('');
     try {
       const [sessionsRes, profileRes] = await Promise.all([
         authApi.getSessions(),
         profileApi.getMyProfile().catch(() => null),
       ]);
-      setSessions(sessionsRes.data || []);
+      const sessionsData = sessionsRes.data || [];
+      setSessions(sessionsData);
+      setCurrentSession(sessionsData.find(s => s.isActive) || sessionsData[0] || null);
       setTwoFactorEnabled(profileRes?.data?.twoFactorEnabled || false);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'حدث خطأ');
+      const message = err.response?.data?.message || 'حدث خطأ';
+      setError(message);
+      setAlerts(prev => [...prev, { id: Date.now().toString(), type: 'error', message }]);
     } finally {
       setLoading(false);
     }
@@ -146,14 +154,14 @@ export default function SecurityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-sage-50 via-sage-100/50 to-sage-50 flex justify-center items-center">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 flex justify-center items-center">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sage-50 via-sage-100/50 to-sage-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
           <span>←</span> <span>العودة للإعدادات</span>
@@ -167,6 +175,29 @@ export default function SecurityPage() {
         {error && (
           <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
             {error}
+          </div>
+        )}
+
+        {alerts.length > 0 && (
+          <div className="space-y-2">
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                className={`p-3 rounded-xl border flex items-center justify-between ${
+                  alert.type === 'success'
+                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                    : 'bg-red-50 border-red-200 text-red-700'
+                }`}
+              >
+                <span className="text-sm">{alert.message}</span>
+                <button
+                  onClick={() => setAlerts(prev => prev.filter(a => a.id !== alert.id))}
+                  className="text-emerald-700/50 hover:text-emerald-900 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
         )}
 

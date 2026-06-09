@@ -35,7 +35,7 @@ export default function LanguagePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sage-50 via-sage-100/50 to-sage-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
           <span>←</span> <span>العودة للإعدادات</span>

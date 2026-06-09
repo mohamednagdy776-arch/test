@@ -1,7 +1,9 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { GroupsService } from '../services/groups.service';
+import { PostsService } from '../../posts/services/posts.service';
 import { CreateGroupDto } from '../dto/create-group.dto';
+import { CreatePostDto } from '../../posts/dto/create-post.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -12,7 +14,10 @@ import { User } from '../../auth/entities/user.entity';
 @UseGuards(AuthGuard('jwt'))
 @Controller('groups')
 export class GroupsController {
-  constructor(private groupsService: GroupsService) {}
+  constructor(
+    private groupsService: GroupsService,
+    private postsService: PostsService,
+  ) {}
 
   @Post()
   async create(@Body() dto: CreateGroupDto, @CurrentUser() user: User) {
@@ -66,6 +71,28 @@ export class GroupsController {
   async getMembers(@Param('id') id: string, @Query() query: PaginationDto) {
     const members = await this.groupsService.getMembers(id, query.page!, query.limit!);
     return ok(members);
+  }
+
+  // ── Group posts (H-09) ────────────────────────────────────────
+
+  @Get(':id/posts')
+  async getGroupPosts(@Param('id') id: string, @Query() query: PaginationDto) {
+    const { data, total } = await this.postsService.findByGroup(
+      id,
+      query.page || 1,
+      query.limit || 20,
+    );
+    return paginated(data, total, query.page || 1, query.limit || 20);
+  }
+
+  @Post(':id/posts')
+  async createGroupPost(
+    @Param('id') id: string,
+    @Body() dto: CreatePostDto,
+    @CurrentUser() user: User,
+  ) {
+    const post = await this.postsService.create(id, dto, user);
+    return ok(post, 'Post created');
   }
 
   @Delete(':id')

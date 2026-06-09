@@ -63,7 +63,7 @@ export default function Home() {
             <div className="text-center lg:text-right">
               <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-semibold mb-8" style={{ background: '#DCFCE7', color: '#059669' }}>
                 <span className="flex h-2 w-2 rounded-full animate-pulse" style={{ background: '#10B981' }} />
-                +10,000 مستخدم نشط الآن
+                منصة التعارف والزواج الإسلامي
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.15] mb-6 text-[#059669]">
@@ -133,8 +133,8 @@ export default function Home() {
                       <span className="text-[#10B981]">{Icons.chat}</span>
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-[#059669]">+5000</p>
-                      <p className="text-[10px] text-[#10B981]">زواج ناجح</p>
+                      <p className="text-xs font-bold text-[#059669]">حلال</p>
+                      <p className="text-[10px] text-[#10B981]">بيئة آمنة</p>
                     </div>
                   </div>
                 </div>
@@ -148,9 +148,9 @@ export default function Home() {
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
             {[
-              { value: '+10,000', label: 'مستخدم مسجل', icon: Icons.users },
-              { value: '+5,000', label: 'توافق ناجح', icon: Icons.heart },
-              { value: '95%', label: 'نسبة الرضا', icon: Icons.sparkles },
+              { value: 'مجاني', label: 'إنشاء حساب', icon: Icons.users },
+              { value: 'ذكاء اصطناعي', label: 'مطابقة ذكية', icon: Icons.heart },
+              { value: 'حلال', label: 'وفق الضوابط الشرعية', icon: Icons.sparkles },
               { value: '24/7', label: 'دعم متواصل', icon: Icons.shield },
             ].map((s) => (
               <div key={s.label} className="text-center group">

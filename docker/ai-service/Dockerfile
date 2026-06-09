@@ -1,26 +1,26 @@
 # ── Stage 1: Build ──────────────────────────────────────────────
 FROM python:3.11 AS builder
 
-WORKDIR /app
+WORKDIR /app/ai-service
 
 # Install deps into a virtual env to keep the final image clean
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY requirements.txt ./
+COPY ai-service/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Stage 2: Production image ────────────────────────────────────
 FROM python:3.11 AS runner
 
-WORKDIR /app
+WORKDIR /app/ai-service
 
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 COPY --from=builder /opt/venv /opt/venv
-COPY . .
+COPY ai-service/ .
 
 EXPOSE 5000
 

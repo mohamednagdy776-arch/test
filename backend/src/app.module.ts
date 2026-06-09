@@ -36,7 +36,7 @@ import { SeedModule } from './seed/seed.module';
       type: 'postgres',
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: process.env.NODE_ENV !== 'production' || process.env.TYPEORM_SYNCHRONIZE === 'true',
     }),
 
     // Rate limiting
