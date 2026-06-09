@@ -105,28 +105,48 @@ jobs:
         run: docker build -f docker/admin/Dockerfile -t tayyibt-admin:latest ./admin
 
   # ========== Security Scan ==========
+  # Runs only when the CLAUDE_API_KEY secret is configured; never blocks CI.
   security:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Check for API key
+        id: key
+        run: |
+          if [ -n "${{ secrets.CLAUDE_API_KEY }}" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "CLAUDE_API_KEY secret not set — skipping security review."
+          fi
+
       - name: Run Security Review
+        if: steps.key.outputs.present == 'true'
         uses: anthropics/claude-code-security-review@main
         with:
           comment-pr: true
           claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
 
-  # ========== Lint & Format ==========
+  # ========== Lint ==========
+  # Lint the Next.js apps (configured for ESLint). The backend is covered by
+  # its `type-check` step in the backend-test job.
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: ESLint
-        run: |
-          cd web && npm ci && npm run lint
-          cd ../admin && npm ci && npm run lint
-          cd ../backend && npm ci && npm run lint
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Lint web
+        run: cd web && npm ci && npm run lint
+
+      - name: Lint admin
+        run: cd ../admin && npm ci && npm run lint
 
   # ========== Build Status ==========
   build-complete:

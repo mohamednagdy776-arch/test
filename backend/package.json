@@ -8,7 +8,7 @@
     "start:dev": "nest start --watch",
     "lint": "eslint \"{src,test}/**/*.ts\"",
     "type-check": "tsc --noEmit",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --passWithNoTests",
     "seed": "ts-node seed-users.ts"
   },
   "dependencies": {

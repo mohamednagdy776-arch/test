@@ -38,6 +38,7 @@ export const SearchPage = () => {
   const [suggestions,    setSuggestions]    = useState<SuggestionItem[]>([]);
   const searchRef  = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { setRecentSearches(getRecentSearches()); }, []);
 
@@ -49,17 +50,6 @@ export const SearchPage = () => {
       searchApi.searchSuggestions(query).then(setSuggestions);
     }, 300);
   }, [query]);
-
-  // Auto-search after 600ms of no typing
-  const autoSearchRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (autoSearchRef.current) clearTimeout(autoSearchRef.current);
-    if (!query.trim()) return;
-    autoSearchRef.current = setTimeout(() => {
-      runSearch(query, activeTab, applied);
-    }, 600);
-    return () => { if (autoSearchRef.current) clearTimeout(autoSearchRef.current); };
-  }, [query, activeTab, applied, runSearch]);
 
   // Close suggestion dropdown on outside click
   useEffect(() => {
@@ -102,6 +92,16 @@ export const SearchPage = () => {
       setIsLoading(false);
     }
   }, []);
+
+  // Auto-search after 600ms of no typing (declared after runSearch so it is defined)
+  useEffect(() => {
+    if (autoSearchRef.current) clearTimeout(autoSearchRef.current);
+    if (!query.trim()) return;
+    autoSearchRef.current = setTimeout(() => {
+      runSearch(query, activeTab, applied);
+    }, 600);
+    return () => { if (autoSearchRef.current) clearTimeout(autoSearchRef.current); };
+  }, [query, activeTab, applied, runSearch]);
 
   const handleSearch = (searchQuery?: string) => {
     const q = (searchQuery ?? query).trim();
