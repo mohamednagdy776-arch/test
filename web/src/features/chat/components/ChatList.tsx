@@ -40,14 +40,48 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
     <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">فشل تحميل المحادثات</div>
   );
 
-  const conversations: Conversation[] = convData?.data || [];
-  const matches: Match[] = (matchData?.data ?? []).filter((m: Match) => m.status === 'accepted' || m.status === 'chat');
+  const conversations: any[] = convData?.data || [];
+  const allMatches: any[] = (matchData?.data ?? []).filter((m: Match) => m.status === 'accepted' || m.status === 'chat');
 
-  const sortedItems = [...conversations, ...matches].sort((a: any, b: any) => {
+  // Hide matches that already have a conversation (avoid duplicate rows).
+  const convOtherIds = new Set(conversations.map((c: any) => c.otherUserId).filter(Boolean));
+  const matches = allMatches.filter((m: any) => !convOtherIds.has(m.otherUserId));
+
+  const sortedItems = [
+    ...conversations.map((c: any) => ({ ...c, _kind: 'conversation' })),
+    ...matches.map((m: any) => ({ ...m, _kind: 'match' })),
+  ].sort((a: any, b: any) => {
     const dateA = a.lastMessage?.createdAt || a.createdAt;
     const dateB = b.lastMessage?.createdAt || b.createdAt;
     return new Date(dateB).getTime() - new Date(dateA).getTime();
   });
+
+  // Normalize any selected item to a real conversation before opening the window.
+  const handleSelect = async (item: any, isConversation: boolean) => {
+    if (isConversation) {
+      onSelect({
+        id: item.id,
+        user2Id: item.otherUserId,
+        otherUserName: item.otherUserName || item.name,
+        otherUserAvatar: item.otherUserAvatar || item.avatar,
+      } as any);
+      return;
+    }
+    // It's a match — get/create the underlying conversation first.
+    const otherId = item.otherUserId || item.user2Id;
+    try {
+      const { data } = await apiClient.post('/chat/conversations', { targetUserId: otherId });
+      const conv = data.data;
+      onSelect({
+        id: conv.id,
+        user2Id: conv.otherUserId || otherId,
+        otherUserName: conv.otherUserName || item.otherUserName,
+        otherUserAvatar: conv.otherUserAvatar || item.otherUserAvatar,
+      } as any);
+    } catch (e) {
+      console.error('Failed to open conversation:', e);
+    }
+  };
 
   if (sortedItems.length === 0) return (
     <div className="rounded-xl bg-white p-8 text-center text-gray-400">
@@ -78,13 +112,13 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
   return (
     <div className="space-y-1 overflow-y-auto">
       {sortedItems.map((item: any) => {
-        const isConversation = !!item.lastMessage || item.isGroup;
+        const isConversation = item._kind === 'conversation';
         const match = isConversation ? null : item;
         
         return (
           <button
             key={item.id}
-            onClick={() => onSelect(item)}
+            onClick={() => handleSelect(item, isConversation)}
             className={clsx(
               'w-full flex items-center gap-3 rounded-xl p-3 text-right transition-colors',
               activeMatchId === item.id ? 'bg-primary/10' : 'bg-white hover:bg-gray-50'

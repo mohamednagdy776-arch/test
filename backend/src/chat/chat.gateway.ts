@@ -86,6 +86,23 @@ export class ChatGateway {
     return message;
   }
 
+  /**
+   * Broadcast an already-persisted message to the OTHER participants.
+   * The REST endpoint (POST /chat/messages) is the single source of truth for
+   * persistence; this only relays in real time and uses `client.to` so the
+   * sender never receives a duplicate of their own message.
+   */
+  @SubscribeMessage('relayMessage')
+  handleRelay(
+    @MessageBody() payload: { conversationId: string; message: any },
+    @ConnectedSocket() client: Socket,
+  ) {
+    client.to(`conversation:${payload.conversationId}`).emit('newMessage', {
+      ...payload.message,
+      conversationId: payload.conversationId,
+    });
+  }
+
   @SubscribeMessage('typing')
   handleTyping(
     @MessageBody() payload: { conversationId: string; userId: string; isTyping: boolean },

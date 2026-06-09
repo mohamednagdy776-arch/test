@@ -6,6 +6,7 @@ import { Conversation } from '../entities/conversation.entity';
 import { ConversationParticipant } from '../entities/conversation-participant.entity';
 import { MessageReaction } from '../entities/message-reaction.entity';
 import { User } from '../../auth/entities/user.entity';
+import { Profile } from '../../users/entities/profile.entity';
 
 @Injectable()
 export class ChatService {
@@ -14,38 +15,75 @@ export class ChatService {
     @InjectRepository(Conversation) private conversationRepo: Repository<Conversation>,
     @InjectRepository(ConversationParticipant) private participantRepo: Repository<ConversationParticipant>,
     @InjectRepository(MessageReaction) private reactionRepo: Repository<MessageReaction>,
+    @InjectRepository(User) private usersRepo: Repository<User>,
+    @InjectRepository(Profile) private profilesRepo: Repository<Profile>,
   ) {}
 
-  async getConversations(userId: string) {
-    const participants = await this.participantRepo.find({
-      where: { userId },
-      relations: ['conversation', 'conversation.messages', 'conversation.participants'],
-    });
-
-    const conversations = participants.map(p => p.conversation);
-    const sorted = conversations.sort((a, b) => {
-      const aMsg = a.messages?.[a.messages.length - 1]?.createdAt;
-      const bMsg = b.messages?.[b.messages.length - 1]?.createdAt;
-      return new Date(bMsg).getTime() - new Date(aMsg).getTime();
-    });
-
-    return sorted.map(conv => this.formatConversation(conv, userId));
+  /**
+   * Resolve display info for the "other" participant of a 1:1 conversation.
+   * NOTE: the ConversationParticipant relations cannot be used because the
+   * join columns (user_id/conversation_id) are unpopulated in the current
+   * schema — we rely on the scalar userId/conversationId columns instead.
+   */
+  private async resolveOtherUser(conversationId: string, userId: string) {
+    const parts = await this.participantRepo.find({ where: { conversationId } });
+    const other = parts.find(p => p.userId !== userId);
+    if (!other) return null;
+    const user = await this.usersRepo.findOne({ where: { id: other.userId } });
+    if (!user) return { id: other.userId, name: null, avatar: null };
+    const profile = await this.profilesRepo.findOne({ where: { user: { id: user.id } } });
+    const name =
+      `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
+      profile?.fullName || user.fullName || null;
+    return { id: user.id, name, avatar: profile?.avatarUrl ?? null };
   }
 
-  private formatConversation(conv: Conversation, userId: string) {
-    const lastMessage = conv.messages?.[conv.messages.length - 1];
+  private buildConversationDto(
+    conv: Conversation,
+    userId: string,
+    other: { id: string; name: string | null; avatar: string | null } | null,
+  ) {
+    const lastMessage = conv.messages?.length ? conv.messages[conv.messages.length - 1] : null;
     return {
       id: conv.id,
-      name: conv.name,
-      avatar: conv.avatar,
+      name: conv.isGroup ? conv.name : (other?.name || 'محادثة'),
+      avatar: conv.isGroup ? conv.avatar : (other?.avatar ?? null),
       isGroup: conv.isGroup,
+      otherUserId: other?.id ?? null,
+      otherUserName: other?.name ?? null,
+      otherUserAvatar: other?.avatar ?? null,
       lastMessage: lastMessage ? {
         content: lastMessage.contentEncrypted,
         createdAt: lastMessage.createdAt,
-        senderId: lastMessage.sender?.id,
       } : null,
       createdAt: conv.createdAt,
     };
+  }
+
+  async getConversations(userId: string) {
+    // Use scalar columns (relations on ConversationParticipant join on
+    // unpopulated FK columns in the current schema).
+    const myParts = await this.participantRepo.find({ where: { userId } });
+    const convIds = myParts.map(p => p.conversationId);
+    if (convIds.length === 0) return [];
+
+    const conversations = await this.conversationRepo.find({
+      where: { id: In(convIds) },
+      relations: ['messages'],
+    });
+
+    const sorted = conversations.sort((a, b) => {
+      const aMsg = a.messages?.[a.messages.length - 1]?.createdAt ?? a.createdAt;
+      const bMsg = b.messages?.[b.messages.length - 1]?.createdAt ?? b.createdAt;
+      return new Date(bMsg).getTime() - new Date(aMsg).getTime();
+    });
+
+    const out = [];
+    for (const conv of sorted) {
+      const other = conv.isGroup ? null : await this.resolveOtherUser(conv.id, userId);
+      out.push(this.buildConversationDto(conv, userId, other));
+    }
+    return out;
   }
 
   async getMessages(conversationId: string, userId: string, page: number = 1, limit: number = 50) {
@@ -62,7 +100,7 @@ export class ChatService {
       .leftJoinAndSelect('reactions.user', 'reactionUser')
       .where('message.conversation_id = :conversationId', { conversationId })
       .andWhere('message.deleted_at IS NULL')
-      .orderBy('message.created_at', 'ASC')
+      .orderBy('message.createdAt', 'ASC')
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
@@ -191,7 +229,7 @@ export class ChatService {
       .where('message.conversation_id = :conversationId', { conversationId })
       .andWhere('message.content_encrypted ILIKE :query', { query: `%${query}%` })
       .andWhere('message.deleted_at IS NULL')
-      .orderBy('message.created_at', 'DESC')
+      .orderBy('message.createdAt', 'DESC')
       .getMany();
   }
 
@@ -205,23 +243,23 @@ export class ChatService {
       throw new ForbiddenException('Cannot start a conversation with yourself');
     }
 
-    // Find a non-group conversation in which both users participate.
+    // Find an existing 1:1 conversation containing both users (scalar columns).
     const mine = await this.participantRepo.find({ where: { userId } });
     const myConvIds = mine.map(p => p.conversationId);
 
     if (myConvIds.length > 0) {
-      const shared = await this.participantRepo.findOne({
+      const sharedParts = await this.participantRepo.find({
         where: { userId: targetUserId, conversationId: In(myConvIds) },
-        relations: ['conversation'],
       });
-      if (shared && shared.conversation && !shared.conversation.isGroup) {
-        return this.formatConversation(
-          await this.conversationRepo.findOne({
-            where: { id: shared.conversationId },
-            relations: ['messages', 'participants'],
-          }) as Conversation,
-          userId,
-        );
+      for (const sp of sharedParts) {
+        const conv = await this.conversationRepo.findOne({
+          where: { id: sp.conversationId },
+          relations: ['messages'],
+        });
+        if (conv && !conv.isGroup) {
+          const other = await this.resolveOtherUser(conv.id, userId);
+          return this.buildConversationDto(conv, userId, other);
+        }
       }
     }
 
@@ -234,13 +272,12 @@ export class ChatService {
       { conversationId: conversation.id, userId: targetUserId, role: 'member' as any },
     ]);
 
-    return this.formatConversation(
-      await this.conversationRepo.findOne({
-        where: { id: conversation.id },
-        relations: ['messages', 'participants'],
-      }) as Conversation,
-      userId,
-    );
+    const conv = await this.conversationRepo.findOne({
+      where: { id: conversation.id },
+      relations: ['messages'],
+    }) as Conversation;
+    const other = await this.resolveOtherUser(conversation.id, userId);
+    return this.buildConversationDto(conv, userId, other);
   }
 
   async createGroup(name: string, createdBy: string, participantIds: string[]): Promise<Conversation> {

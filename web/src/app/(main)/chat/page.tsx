@@ -26,26 +26,17 @@ export default function ChatPage() {
       setLoading(true);
       try {
         const response = await apiClient.post('/chat/conversations', { targetUserId: userId });
-        const { matchId } = response.data.data;
-        
-        let otherUserName: string | null = null;
-        let otherUserAvatar: string | null = null;
-        try {
-          const profileRes = await apiClient.get(`/matches/profile/${userId}`);
-          otherUserName = profileRes.data?.data?.user?.firstName || profileRes.data?.data?.user?.fullName || null;
-          otherUserAvatar = profileRes.data?.data?.user?.avatarUrl || null;
-        } catch {
-        }
-        
+        const conv = response.data.data;
+
         const mockMatch: DirectMatch = {
-          id: matchId,
+          id: conv.id,                              // real conversation id
           user1Id: '',
-          user2Id: userId,
+          user2Id: conv.otherUserId || userId,
           score: 0,
           status: 'chat',
-          createdAt: new Date().toISOString(),
-          otherUserName,
-          otherUserAvatar,
+          createdAt: conv.createdAt || new Date().toISOString(),
+          otherUserName: conv.otherUserName ?? null,
+          otherUserAvatar: conv.otherUserAvatar ?? null,
         };
         setActiveMatch(mockMatch);
       } catch (error) {

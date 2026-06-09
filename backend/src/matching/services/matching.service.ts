@@ -46,14 +46,19 @@ export class MatchingService {
           where: { user: { id: otherUserId } },
         });
 
+        const otherUserName =
+          `${otherUser?.firstName ?? ''} ${otherUser?.lastName ?? ''}`.trim() ||
+          profile?.fullName || otherUser?.fullName || null;
+
         return {
           id: match.id,
           user1Id: match.user1.id,
           user2Id: match.user2.id,
+          otherUserId,
           score: match.score,
           status: match.status,
           createdAt: match.createdAt,
-          otherUserName: profile?.fullName || null,
+          otherUserName,
           otherUserAvatar: profile?.avatarUrl || null,
         };
       })

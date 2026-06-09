@@ -8,6 +8,8 @@ import { ChatGateway } from './chat.gateway';
 import { ChatController } from './controllers/chat.controller';
 import { ChatService } from './services/chat.service';
 import { Match } from '../matching/entities/match.entity';
+import { User } from '../auth/entities/user.entity';
+import { Profile } from '../users/entities/profile.entity';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { Match } from '../matching/entities/match.entity';
       ConversationParticipant,
       MessageReaction,
       Match,
+      User,
+      Profile,
     ]),
   ],
   providers: [ChatGateway, ChatService],

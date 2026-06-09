@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { getSocket } from '@/lib/socket-client';
+import { getSocket, getCurrentUserId } from '@/lib/socket-client';
 import type { Match } from '@/types';
 
 interface Message {
@@ -29,6 +29,7 @@ interface Props {
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 export const ChatWindow = ({ match, onBack }: Props) => {
+  const myUserId = getCurrentUserId();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -51,7 +52,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
         content: m.content,
         senderId: m.senderId,
         timestamp: m.createdAt,
-        isOwn: m.senderId === match.user2Id || m.senderId === match.user1Id,
+        isOwn: m.senderId === myUserId,
         type: m.type || 'text',
         mediaUrl: m.mediaUrl,
         replyToId: m.replyToId,
@@ -62,39 +63,45 @@ export const ChatWindow = ({ match, onBack }: Props) => {
         reactions: m.reactions,
       })));
     }
-  }, [data, match.user2Id, match.user1Id]);
+  }, [data, myUserId]);
 
   useEffect(() => {
+    if (!match.id) return;
     const socket = getSocket();
-    socket.emit('joinConversation', { conversationId: match.id, userId: match.user1Id });
+    socket.emit('joinConversation', { conversationId: match.id, userId: myUserId });
 
     socket.on('newMessage', (msg: any) => {
-      if (msg.conversationId === match.id) {
-        setMessages((prev) => [...prev, {
+      if (msg.conversationId !== match.id) return;
+      setMessages((prev) => {
+        // Ignore our own echoes and duplicates by id.
+        if (msg.senderId === myUserId) return prev;
+        if (prev.some(m => m.id === msg.id)) return prev;
+        return [...prev, {
           id: msg.id,
           content: msg.content,
+          senderId: msg.senderId,
           timestamp: msg.createdAt,
-          isOwn: msg.senderId === match.user1Id,
+          isOwn: false,
           type: msg.type || 'text',
           mediaUrl: msg.mediaUrl,
           replyToId: msg.replyToId,
-        }]);
-      }
+        }];
+      });
     });
 
-    socket.on('userTyping', (data: { conversationId: string; userId: string; isTyping: boolean }) => {
-      if (data.conversationId === match.id && data.userId !== match.user1Id) {
-        setTypingUsers(prev => data.isTyping 
-          ? [...prev.filter(id => id !== data.userId), data.userId]
-          : prev.filter(id => id !== data.userId)
+    socket.on('userTyping', (d: { conversationId: string; userId: string; isTyping: boolean }) => {
+      if (d.conversationId === match.id && d.userId !== myUserId) {
+        setTypingUsers(prev => d.isTyping
+          ? [...prev.filter(id => id !== d.userId), d.userId]
+          : prev.filter(id => id !== d.userId)
         );
       }
     });
 
-    socket.on('messageSeen', (data: { conversationId: string; userId: string; messageId: string; seenAt: string }) => {
-      if (data.conversationId === match.id) {
-        setMessages(prev => prev.map(m => 
-          m.id === data.messageId ? { ...m, seenAt: data.seenAt } : m
+    socket.on('messageSeen', (d: { conversationId: string; userId: string; messageId: string; seenAt: string }) => {
+      if (d.conversationId === match.id) {
+        setMessages(prev => prev.map(m =>
+          m.id === d.messageId ? { ...m, seenAt: d.seenAt } : m
         ));
       }
     });
@@ -105,7 +112,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       socket.off('userTyping');
       socket.off('messageSeen');
     };
-  }, [match.id, match.user1Id]);
+  }, [match.id, myUserId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -113,13 +120,13 @@ export const ChatWindow = ({ match, onBack }: Props) => {
 
   const sendTypingIndicator = useCallback(() => {
     const socket = getSocket();
-    socket.emit('typing', { conversationId: match.id, userId: match.user1Id, isTyping: true });
-    
+    socket.emit('typing', { conversationId: match.id, userId: myUserId, isTyping: true });
+
     if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
-      socket.emit('typing', { conversationId: match.id, userId: match.user1Id, isTyping: false });
+      socket.emit('typing', { conversationId: match.id, userId: myUserId, isTyping: false });
     }, 2000);
-  }, [match.id, match.user1Id]);
+  }, [match.id, myUserId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -133,40 +140,49 @@ export const ChatWindow = ({ match, onBack }: Props) => {
     setSending(true);
 
     const tempId = `temp-${Date.now()}`;
+    const replyId = replyTo?.id;
     setMessages((prev) => [...prev, {
       id: tempId,
       content,
+      senderId: myUserId ?? undefined,
       timestamp: new Date().toISOString(),
       isOwn: true,
       type: 'text',
-      replyToId: replyTo?.id,
+      replyToId: replyId,
     }]);
     setReplyTo(null);
 
     try {
+      // REST persists the message (single source of truth).
       const { data } = await apiClient.post('/chat/messages', {
         conversationId: match.id,
         content,
         type: 'text',
-        replyToId: replyTo?.id,
-      });
-      
-      setMessages((prev) => prev.map(m => 
-        m.id === tempId ? { ...m, id: data.data.id } : m
-      ));
-      
-      const socket = getSocket();
-      socket.emit('sendMessage', {
-        conversationId: match.id,
-        senderId: match.user1Id,
-        content,
-        type: 'text',
-        replyToId: replyTo?.id,
+        replyToId: replyId,
       });
 
-      socket.emit('typing', { conversationId: match.id, userId: match.user1Id, isTyping: false });
+      const saved = data.data;
+      setMessages((prev) => prev.map(m =>
+        m.id === tempId ? { ...m, id: saved.id } : m
+      ));
+
+      // Relay to the other participant in real time (does NOT re-persist).
+      const socket = getSocket();
+      socket.emit('relayMessage', {
+        conversationId: match.id,
+        message: {
+          id: saved.id,
+          content,
+          senderId: myUserId,
+          type: 'text',
+          replyToId: replyId,
+          createdAt: saved.createdAt ?? new Date().toISOString(),
+        },
+      });
+      socket.emit('typing', { conversationId: match.id, userId: myUserId, isTyping: false });
     } catch {
       setMessages((prev) => prev.filter(m => m.id !== tempId));
+      setInput(content); // restore so the user doesn't lose their text
     } finally {
       setSending(false);
     }
@@ -175,13 +191,13 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   const handleReaction = async (messageId: string, emoji: string) => {
     try {
       await apiClient.post(`/chat/messages/${messageId}/reactions`, { emoji });
-      setMessages(prev => prev.map(m => 
-        m.id === messageId 
-          ? { ...m, reactions: [...(m.reactions || []), { emoji, userId: match.user1Id }] }
+      setMessages(prev => prev.map(m =>
+        m.id === messageId
+          ? { ...m, reactions: [...(m.reactions || []), { emoji, userId: myUserId ?? '' }] }
           : m
       ));
       const socket = getSocket();
-      socket.emit('addReaction', { messageId, userId: match.user1Id, emoji });
+      socket.emit('addReaction', { messageId, userId: myUserId, emoji });
     } catch (e) { console.error(e); }
     setShowReactions(null);
   };
