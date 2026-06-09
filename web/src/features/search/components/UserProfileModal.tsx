@@ -24,24 +24,27 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
   const router = useRouter();
   const [tab, setTab] = useState<'profile' | 'match'>('profile');
 
+  // Search results expose the user id as `id`; other shapes use `userId`.
+  const targetId = user.userId ?? user.id;
+
   // Create conversation mutation
   const createConversation = useMutation({
-    mutationFn: () => apiClient.post('/chat/conversations', { targetUserId: user.userId }),
+    mutationFn: () => apiClient.post('/chat/conversations', { targetUserId: targetId }),
     onSuccess: (response) => {
-      const { matchId } = response.data.data;
+      const conv = response.data.data;
       onClose();
-      router.push(`/chat?conversation=${matchId}&user=${user.userId}`);
+      router.push(`/chat?conversation=${conv.id}&user=${conv.otherUserId || targetId}`);
     },
     onError: () => {
-      alert('Failed to start chat. Please try again.');
+      alert('تعذّر بدء المحادثة، حاول مرة أخرى.');
     },
   });
 
   // Fetch full profile
   const { data: profileData } = useQuery({
-    queryKey: ['public-profile', user.userId],
-    queryFn: () => apiClient.get(`/users/${user.userId}/profile`).then((r) => r.data),
-    enabled: !!user.userId,
+    queryKey: ['public-profile', targetId],
+    queryFn: () => apiClient.get(`/users/${targetId}/profile`).then((r) => r.data),
+    enabled: !!targetId,
   });
 
   // Fetch AI compatibility score
@@ -58,7 +61,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
     setLoadingScore(true);
     try {
       // Call backend endpoint instead of AI service directly
-      const res = await apiClient.get(`/matches/profile/${user.userId}`);
+      const res = await apiClient.get(`/matches/profile/${targetId}`);
       const data = res.data?.data;
       setAiScore({
         matchScore: data?.matchScore ?? 0,

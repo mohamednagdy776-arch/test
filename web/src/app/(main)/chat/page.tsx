@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ChatList } from '@/features/chat/components/ChatList';
 import { ChatWindow } from '@/features/chat/components/ChatWindow';
@@ -17,18 +17,21 @@ export default function ChatPage() {
   const [activeMatch, setActiveMatch] = useState<DirectMatch | null>(null);
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
-  const conversationId = searchParams?.get('conversation');
   const userId = searchParams?.get('user');
+  const handledRef = useRef<string | null>(null);
 
   useEffect(() => {
-    const createConversation = async () => {
-      if (!conversationId || !userId || loading) return;
+    // Open/create a conversation when arriving with ?user=<id>.
+    // POST /chat/conversations is idempotent (returns the existing 1:1 chat).
+    if (!userId || handledRef.current === userId) return;
+    handledRef.current = userId;
+
+    (async () => {
       setLoading(true);
       try {
         const response = await apiClient.post('/chat/conversations', { targetUserId: userId });
         const conv = response.data.data;
-
-        const mockMatch: DirectMatch = {
+        setActiveMatch({
           id: conv.id,                              // real conversation id
           user1Id: '',
           user2Id: conv.otherUserId || userId,
@@ -37,19 +40,15 @@ export default function ChatPage() {
           createdAt: conv.createdAt || new Date().toISOString(),
           otherUserName: conv.otherUserName ?? null,
           otherUserAvatar: conv.otherUserAvatar ?? null,
-        };
-        setActiveMatch(mockMatch);
+        });
       } catch (error) {
         console.error('Failed to create conversation:', error);
+        handledRef.current = null; // allow retry on next navigation
       } finally {
         setLoading(false);
       }
-    };
-    
-    if (conversationId && userId) {
-      createConversation();
-    }
-  }, [conversationId, userId, loading]);
+    })();
+  }, [userId]);
 
   return (
     <div className="flex gap-4 h-[calc(100vh-8rem)]">
