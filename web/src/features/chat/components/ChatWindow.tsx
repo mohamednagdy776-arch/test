@@ -46,23 +46,28 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   });
 
   useEffect(() => {
-    if (data?.data) {
-      setMessages(data.data.map((m: any) => ({
-        id: m.id,
-        content: m.content,
-        senderId: m.senderId,
-        timestamp: m.createdAt,
-        isOwn: m.senderId === myUserId,
-        type: m.type || 'text',
-        mediaUrl: m.mediaUrl,
-        replyToId: m.replyToId,
-        isEdited: m.isEdited,
-        editedAt: m.editedAt,
-        isDeletedForEveryone: m.isDeletedForEveryone,
-        isStarred: m.isStarred,
-        reactions: m.reactions,
-      })));
-    }
+    // Response shape: { success, message, data: { data: [...], total } }.
+    // So the message array lives at data.data.data; fall back gracefully.
+    const list: any[] = Array.isArray(data?.data?.data)
+      ? data.data.data
+      : Array.isArray(data?.data)
+        ? data.data
+        : [];
+    setMessages(list.map((m: any) => ({
+      id: m.id,
+      content: m.content,
+      senderId: m.senderId,
+      timestamp: m.createdAt,
+      isOwn: m.senderId === myUserId,
+      type: m.type || 'text',
+      mediaUrl: m.mediaUrl,
+      replyToId: m.replyToId,
+      isEdited: m.isEdited,
+      editedAt: m.editedAt,
+      isDeletedForEveryone: m.isDeletedForEveryone,
+      isStarred: m.isStarred,
+      reactions: m.reactions,
+    })));
   }, [data, myUserId]);
 
   useEffect(() => {
