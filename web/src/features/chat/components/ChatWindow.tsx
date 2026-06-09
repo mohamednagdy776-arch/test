@@ -36,6 +36,9 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [showReactions, setShowReactions] = useState<string | null>(null);
+  const [isOnline, setIsOnline] = useState(false);
+  // ISO timestamp up to which the other user has seen my messages (read receipts).
+  const [otherSeenAt, setOtherSeenAt] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -70,10 +73,33 @@ export const ChatWindow = ({ match, onBack }: Props) => {
     })));
   }, [data, myUserId]);
 
+  // Tell the other side I've seen the conversation (drives their read receipts).
+  const markSeen = useCallback(() => {
+    if (!match.id) return;
+    getSocket().emit('markSeen', {
+      conversationId: match.id,
+      userId: myUserId,
+      messageId: null,
+    });
+  }, [match.id, myUserId]);
+
   useEffect(() => {
     if (!match.id) return;
     const socket = getSocket();
     socket.emit('joinConversation', { conversationId: match.id, userId: myUserId });
+
+    // Live presence of the other participant.
+    setOtherSeenAt(null);
+    setIsOnline(false);
+    if (match.user2Id) {
+      socket.emit('getPresence', { userId: match.user2Id }, (res: any) => {
+        if (res && res.userId === match.user2Id) setIsOnline(!!res.online);
+      });
+    }
+    const onPresence = (p: { userId: string; online: boolean }) => {
+      if (p.userId === match.user2Id) setIsOnline(p.online);
+    };
+    socket.on('presence', onPresence);
 
     socket.on('newMessage', (msg: any) => {
       if (msg.conversationId !== match.id) return;
@@ -92,6 +118,8 @@ export const ChatWindow = ({ match, onBack }: Props) => {
           replyToId: msg.replyToId,
         }];
       });
+      // I'm viewing this conversation → acknowledge the incoming message as seen.
+      markSeen();
     });
 
     socket.on('userTyping', (d: { conversationId: string; userId: string; isTyping: boolean }) => {
@@ -103,21 +131,29 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       }
     });
 
-    socket.on('messageSeen', (d: { conversationId: string; userId: string; messageId: string; seenAt: string }) => {
-      if (d.conversationId === match.id) {
-        setMessages(prev => prev.map(m =>
-          m.id === d.messageId ? { ...m, seenAt: d.seenAt } : m
-        ));
+    socket.on('messageSeen', (d: { conversationId: string; userId: string; seenAt: string }) => {
+      // The OTHER user reports they've seen the conversation → mark my sent
+      // messages (up to seenAt) as read (blue double tick).
+      if (d.conversationId === match.id && d.userId === match.user2Id) {
+        setOtherSeenAt(d.seenAt || new Date().toISOString());
       }
     });
 
     return () => {
       socket.emit('leaveConversation', { conversationId: match.id });
+      socket.off('presence', onPresence);
       socket.off('newMessage');
       socket.off('userTyping');
       socket.off('messageSeen');
     };
-  }, [match.id, myUserId]);
+  }, [match.id, myUserId, match.user2Id, markSeen]);
+
+  // When messages first load and the latest is from the other user, mark seen.
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last && !last.isOwn) markSeen();
+  }, [messages, markSeen]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -235,7 +271,14 @@ export const ChatWindow = ({ match, onBack }: Props) => {
           <p className="text-sm font-semibold text-gray-900">
             {match.otherUserName || `مستخدم ${match.user2Id?.slice(0, 8)}`}
           </p>
-          <p className="text-xs text-green-500">متصل</p>
+          {typingUsers.length > 0 ? (
+            <p className="text-xs text-primary">يكتب الآن...</p>
+          ) : (
+            <p className={`text-xs flex items-center gap-1 ${isOnline ? 'text-green-500' : 'text-gray-400'}`}>
+              <span className={`inline-block h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
+              {isOnline ? 'متصل' : 'غير متصل'}
+            </p>
+          )}
         </div>
         <div className="mr-auto flex items-center gap-2">
           <button className="p-2 hover:bg-gray-100 rounded-full" title="مكالمة صوتية">📞</button>
@@ -271,7 +314,19 @@ export const ChatWindow = ({ match, onBack }: Props) => {
               )}
               <div className={`mt-1 flex items-center justify-between gap-2 text-xs ${msg.isOwn ? 'text-blue-200' : 'text-gray-400'}`}>
                 <span>{formatTime(msg.timestamp)}</span>
-                {msg.isOwn && <span>✓✓</span>}
+                {msg.isOwn && !String(msg.id).startsWith('temp-') && (() => {
+                  // Read receipt: blue ✓✓ once the other user has seen it,
+                  // single ✓ (sent) otherwise.
+                  const seen = !!otherSeenAt && new Date(msg.timestamp).getTime() <= new Date(otherSeenAt).getTime();
+                  return (
+                    <span className={seen ? 'text-sky-300' : 'text-blue-200'} title={seen ? 'تمت القراءة' : 'تم الإرسال'}>
+                      {seen ? '✓✓' : '✓'}
+                    </span>
+                  );
+                })()}
+                {msg.isOwn && String(msg.id).startsWith('temp-') && (
+                  <span className="opacity-60" title="جارٍ الإرسال">🕓</span>
+                )}
               </div>
               {msg.reactions && msg.reactions.length > 0 && (
                 <div className="absolute -bottom-2 flex gap-1">

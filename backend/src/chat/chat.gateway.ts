@@ -13,24 +13,43 @@ export class ChatGateway {
   @WebSocketServer()
   server: Server;
 
-  private userSockets: Map<string, string> = new Map();
+  // userId -> set of socket ids (supports multiple tabs/devices)
+  private userSockets: Map<string, Set<string>> = new Map();
 
   constructor(private chatService: ChatService) {}
 
+  private isOnline(userId: string): boolean {
+    return (this.userSockets.get(userId)?.size ?? 0) > 0;
+  }
+
   handleConnection(client: Socket) {
     const userId = client.handshake.query.userId as string;
-    if (userId) {
-      this.userSockets.set(userId, client.id);
+    if (!userId) return;
+    if (!this.userSockets.has(userId)) this.userSockets.set(userId, new Set());
+    const wasOffline = this.userSockets.get(userId)!.size === 0;
+    this.userSockets.get(userId)!.add(client.id);
+    if (wasOffline) {
+      this.server.emit('presence', { userId, online: true });
     }
   }
 
   handleDisconnect(client: Socket) {
-    for (const [userId, socketId] of this.userSockets.entries()) {
-      if (socketId === client.id) {
-        this.userSockets.delete(userId);
+    for (const [userId, set] of this.userSockets.entries()) {
+      if (set.has(client.id)) {
+        set.delete(client.id);
+        if (set.size === 0) {
+          this.userSockets.delete(userId);
+          this.server.emit('presence', { userId, online: false });
+        }
         break;
       }
     }
+  }
+
+  /** Client asks whether a given user is currently online (ack response). */
+  @SubscribeMessage('getPresence')
+  handleGetPresence(@MessageBody() payload: { userId: string }) {
+    return { userId: payload.userId, online: this.isOnline(payload.userId) };
   }
 
   @SubscribeMessage('joinConversation')
@@ -158,9 +177,11 @@ export class ChatGateway {
   }
 
   emitToUser(userId: string, event: string, data: any) {
-    const socketId = this.userSockets.get(userId);
-    if (socketId) {
-      this.server.to(socketId).emit(event, data);
+    const sockets = this.userSockets.get(userId);
+    if (sockets) {
+      for (const socketId of sockets) {
+        this.server.to(socketId).emit(event, data);
+      }
     }
   }
 }
