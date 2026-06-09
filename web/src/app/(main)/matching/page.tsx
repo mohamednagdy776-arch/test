@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { MatchingStats } from '@/features/matching/components/MatchingStats';
 import { MatchingTabs } from '@/features/matching/components/MatchingTabs';
+import { useGenerateMatches } from '@/features/matching/hooks';
 import type { Match } from '@/types';
 
 interface MatchWithUser extends Match {
@@ -25,6 +26,8 @@ export default function MatchingPage() {
   const [ageRange, setAgeRange] = useState<[number, number]>([18, 35]);
   const [location, setLocation] = useState('');
   const [prayerLevel, setPrayerLevel] = useState('');
+
+  const generateMatches = useGenerateMatches();
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['matches-web', ageRange, location, prayerLevel],
@@ -56,6 +59,23 @@ export default function MatchingPage() {
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-emerald-900">التوافق</h1>
+        <button
+          onClick={() => generateMatches.mutate()}
+          disabled={generateMatches.isPending}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all disabled:opacity-60"
+        >
+          {generateMatches.isPending ? (
+            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+          ) : (
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          )}
+          {generateMatches.isPending ? 'جاري البحث...' : 'إيجاد توافقات جديدة'}
+        </button>
       </div>
 
       <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">

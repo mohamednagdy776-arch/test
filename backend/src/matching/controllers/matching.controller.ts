@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Patch, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { MatchingService } from '../services/matching.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -10,6 +10,12 @@ import { User } from '../../auth/entities/user.entity';
 @Controller('matches')
 export class MatchingController {
   constructor(private matchingService: MatchingService) {}
+
+  @Post('generate')
+  async generateMatches(@CurrentUser() user: User) {
+    const matches = await this.matchingService.generateMatchesForUser(user.id);
+    return ok(matches, `${matches.length} new matches generated`);
+  }
 
   @Get()
   async getMatches(@CurrentUser() user: User, @Query() query: PaginationDto) {

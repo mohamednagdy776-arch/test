@@ -11,6 +11,16 @@ env/
 .env
 .env.local
 .env.*.local
+.env.production
+.env.staging
+
+# Secrets / credentials / SSL — never commit
+certs/
+*.pem
+*.key
+cookies.txt
+token*.json
+secrets/
 
 # Build outputs
 dist/

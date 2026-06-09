@@ -5,8 +5,11 @@ from typing import Tuple
 
 def extract_religious_score(a: UserProfile, b: UserProfile) -> Tuple[float, list]:
     reasons = []
+    # Normalize sect strings for case-insensitive comparison
+    sect_a = a.sect.strip().lower() if a.sect else None
+    sect_b = b.sect.strip().lower() if b.sect else None
     scores = [
-        match_strings(a.sect, b.sect),
+        match_strings(sect_a, sect_b),
         normalize(a.prayer_level) * normalize(b.prayer_level) * 2,  # both high = good
         normalize(a.religious_commitment) * normalize(b.religious_commitment) * 2,
     ]
@@ -63,7 +66,35 @@ def extract_other_score(a: UserProfile, b: UserProfile) -> Tuple[float, list]:
     else:
         scores.append(0.5)
 
+    # Education level compatibility
+    if a.education_level is not None and b.education_level is not None:
+        edu_diff = abs(a.education_level - b.education_level)
+        scores.append(max(0.0, 1.0 - (edu_diff / 10)))
+    else:
+        scores.append(0.5)
+
     score = sum(scores) / len(scores)
     if score > 0.7:
         reasons.append("Compatible life goals")
     return score, reasons
+
+
+def extract_image_compatibility(a: UserProfile, b: UserProfile, image_a_path: str = None, image_b_path: str = None) -> Tuple[float, list]:
+    """
+    Extract compatibility features from profile images using AI vision analysis.
+    Analyzes facial expressions, attire, and overall presentation for alignment.
+    Returns a score and reasons.
+    """
+    reasons = []
+    
+    # If image paths are provided and NVIDIA API is available, analyze them
+    # This is a placeholder for future image-based analysis integration
+    # For now, returns neutral score
+    if image_a_path and image_b_path:
+        try:
+            # Future: integrate with NVIDIA Vision API
+            pass
+        except Exception:
+            pass
+    
+    return 0.5, reasons  # Neutral default

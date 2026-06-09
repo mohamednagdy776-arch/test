@@ -5,10 +5,35 @@
  */
 
 import { DataSource } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 // Sample users data
 const sampleUsers = [
+  {
+    email: 'user1@tayyibt.com',
+    phone: '+201001000000',
+    password: 'Test1234',
+    fullName: 'User One',
+    age: 28,
+    gender: 'male',
+    country: 'Egypt',
+    city: 'Cairo',
+    sect: 'Sunni',
+    education: 'Bachelor\'s',
+    prayerLevel: 'regular',
+    lifestyle: 'moderate',
+    jobTitle: 'Developer',
+    financialLevel: 'middle',
+    culturalLevel: 'moderate',
+    religiousCommitment: 'moderate',
+    bio: 'Test user for Tayyibt.',
+    socialStatus: 'single',
+    minAge: 22,
+    maxAge: 35,
+    preferredCountry: 'Egypt',
+    relocateWilling: true,
+    wantsChildren: true,
+  },
   {
     email: 'ahmed.hassan@test.com',
     phone: '+201001000001',

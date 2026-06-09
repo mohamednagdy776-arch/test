@@ -21,6 +21,15 @@ const empty = {
 
 const tabs = ['الأساسية', 'التعليم والعمل', 'الدين', 'التفضيلات'];
 
+// Module-scope stable component — defining it inside render would remount
+// inputs every keystroke and drop focus (H-08).
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div>
+    <label className="mb-1 block text-xs font-medium text-gray-600">{label}</label>
+    {children}
+  </div>
+);
+
 export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const [tab, setTab] = useState(0);
   const [form, setForm] = useState({ ...empty, ...(initial ?? {}) });
@@ -36,13 +45,6 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
     setForm((f: typeof form) => ({ ...f, [k]: Number(e.target.value) }));
   const bool = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLSelectElement>) =>
     setForm((f: typeof form) => ({ ...f, [k]: e.target.value === 'true' }));
-
-  const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div>
-      <label className="mb-1 block text-xs font-medium text-gray-600">{label}</label>
-      {children}
-    </div>
-  );
 
   const inp = (k: keyof typeof form, label: string, type = 'text', ph = '') => (
     <Field label={label}>

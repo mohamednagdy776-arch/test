@@ -3,11 +3,22 @@ import './globals.css';
 import { Providers } from '@/store/providers';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://145-14-158-100.sslip.io'),
   title: {
-    default: 'طيبت — منصة التوافق الذكي',
+    default: 'طيبت — منصة التوافق الذكي والزواج الإسلامي',
     template: '%s | طيبت',
   },
-  description: 'منصة طيبت للتوافق الذكي والزواج الإسلامي',
+  description:
+    'طيبت منصة ذكية للتعارف والزواج للمسلمين حول العالم، تعتمد على الذكاء الاصطناعي لإيجاد التوافق الديني والحياتي بطريقة حلال وآمنة. Tayyibt is an AI-powered Muslim matchmaking platform.',
+  keywords: ['زواج', 'تعارف', 'مسلمين', 'توافق', 'Muslim matchmaking', 'marriage', 'Tayyibt', 'طيبت'],
+  openGraph: {
+    title: 'طيبت — منصة التوافق الذكي والزواج الإسلامي',
+    description: 'منصة ذكية للتعارف والزواج للمسلمين تعتمد على الذكاء الاصطناعي.',
+    type: 'website',
+    locale: 'ar_AR',
+    siteName: 'طيبت',
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

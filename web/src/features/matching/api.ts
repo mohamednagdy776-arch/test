@@ -15,4 +15,7 @@ export const matchingApi = {
 
   rejectMatch: (id: string) =>
     apiClient.patch(`/matches/${id}/reject`).then((r) => r.data),
+
+  generateMatches: () =>
+    apiClient.post('/matches/generate').then((r) => r.data),
 };

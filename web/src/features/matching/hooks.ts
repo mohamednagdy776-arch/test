@@ -40,3 +40,11 @@ export function useRejectMatch() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['matches'] }),
   });
 }
+
+export function useGenerateMatches() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => matchingApi.generateMatches(),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['matches'] }),
+  });
+}

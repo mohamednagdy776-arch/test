@@ -97,11 +97,18 @@ export class PostsService {
     await this.postsRepo.delete(postId);
   }
 
-  async findById(postId: string) {
-    return this.postsRepo.findOne({
+  async findById(postId: string, viewerId?: string) {
+    const post = await this.postsRepo.findOne({
       where: { id: postId },
       relations: ['user', 'group', 'originalPost', 'originalPost.user'],
     });
+    if (!post) throw new NotFoundException('Post not found');
+
+    // Audience enforcement: only_me posts are visible only to their author (5.11).
+    if (post.audience === 'only_me' && post.userId !== viewerId) {
+      throw new NotFoundException('Post not found');
+    }
+    return post;
   }
 
   async update(postId: string, dto: CreatePostDto, userId: string) {
@@ -140,8 +147,15 @@ export class PostsService {
   }
 
   async saveForLater(postId: string, userId: string) {
-    const saved = await this.postsRepo.manager.query(
-      `INSERT INTO saved_posts (user_id, post_id, created_at) VALUES ($1, $2, NOW()) ON CONFLICT DO NOTHING`,
+    // saved_posts columns: id (uuid PK), user_id, post_id, saved_at.
+    // Insert only if not already saved (no composite unique constraint exists).
+    await this.postsRepo.manager.query(
+      `INSERT INTO saved_posts (id, user_id, post_id, saved_at)
+       SELECT gen_random_uuid(), $1, $2, NOW()
+       WHERE NOT EXISTS (
+         SELECT 1 FROM saved_posts
+         WHERE user_id = $1 AND post_id = $2 AND deleted_at IS NULL
+       )`,
       [userId, postId],
     );
     return { saved: true };
@@ -150,9 +164,9 @@ export class PostsService {
   async getSavedPosts(userId: string, page: number, limit: number) {
     const [data, total] = await this.postsRepo
       .createQueryBuilder('post')
-      .innerJoin('saved_posts', 'sp', 'sp.post_id = post.id')
+      .innerJoin('saved_posts', 'sp', 'sp.post_id = post.id AND sp.deleted_at IS NULL')
       .where('sp.user_id = :userId', { userId })
-      .orderBy('sp.created_at', 'DESC')
+      .orderBy('sp.saved_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();

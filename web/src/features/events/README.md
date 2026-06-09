@@ -13,17 +13,11 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 11: Events
 
 ### Hooks
 - `useEvents` ✅ — Implemented in `web/src/features/events/hooks.ts`
+- `useCreateEvent` ✅ — Hook for creating event
+- `useRSVPEvent` ✅ — Hook for RSVP to event
 
 ### API
 - `eventsApi` — Backend exists in `backend/src/events/`
 
-## Needs Implementation
-
-### Components
-- `EventCard.tsx` — Card component for displaying an event
-- `EventHeader.tsx` — Header for event detail
-- `EventDetails.tsx` — Event details (date, location, attendees)
-- `EventRSVP.tsx` — RSVP buttons (Interested, Going, Maybe)
-
-### Pages
-- `/events/[id]` — Individual event detail page
+## Backend
+- Backend exists: `backend/src/events/`

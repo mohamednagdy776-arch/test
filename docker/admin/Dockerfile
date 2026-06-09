@@ -3,13 +3,16 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copy package files from admin directory
+COPY admin/package*.json ./admin/
+WORKDIR /app/admin
 RUN npm ci
 
-COPY . .
+# Copy source code from admin directory
+COPY admin/ ./
 
-# Build-time env — override at runtime via NEXT_PUBLIC_* vars
-ARG NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
+# Build arguments
+ARG NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
 RUN npm run build
@@ -20,14 +23,15 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV PORT=3001
 
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Copy built application
+COPY --from=builder /app/admin/.next/standalone ./
+COPY --from=builder /app/admin/.next/static ./.next/static
 
 EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3001 || exit 1
 
-ENV PORT=3001
 CMD ["node", "server.js"]

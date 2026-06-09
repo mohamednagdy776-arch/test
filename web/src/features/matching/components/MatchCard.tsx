@@ -21,6 +21,9 @@ const scoreLabel = (s: number) =>
 
 export const MatchCard = ({ match, onView, onAccept, onReject, accepting, rejecting }: Props) => {
   const isPending = match.status === 'pending';
+  const displayName = (match as any).otherUserName || 'مستخدم طيبت';
+  const avatar = (match as any).otherUserAvatar as string | undefined;
+  const initials = displayName.trim().slice(0, 2).toUpperCase();
 
   return (
     <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
@@ -30,8 +33,8 @@ export const MatchCard = ({ match, onView, onAccept, onReject, accepting, reject
       <div className="p-5">
         {/* Avatar + score */}
         <div className="flex items-center justify-between mb-4">
-          <div className={`h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xl ring-4 ${scoreRing(match.score)}`}>
-            {match.user2Id?.slice(0, 2).toUpperCase()}
+          <div className={`h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xl ring-4 overflow-hidden ${scoreRing(match.score)}`}>
+            {avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : initials}
           </div>
           <div className="text-center">
             <p className={`text-4xl font-black ${scoreColor(match.score)}`}>{match.score}%</p>
@@ -39,9 +42,8 @@ export const MatchCard = ({ match, onView, onAccept, onReject, accepting, reject
           </div>
         </div>
 
-        {/* ID */}
-        <p className="text-xs text-gray-400 mb-1">معرّف المستخدم</p>
-        <p className="text-sm font-mono text-gray-700 mb-4 truncate">{match.user2Id}</p>
+        {/* Name */}
+        <p className="text-base font-semibold text-gray-900 mb-1 truncate">{displayName}</p>
 
         {/* Score breakdown bars */}
         <ScoreBreakdown score={match.score} />

@@ -6,6 +6,7 @@ import { CreateCommentDto, UpdateCommentDto, ReactToCommentDto, PinCommentDto } 
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ok } from '../../common/response.helper';
 import { User } from '../../auth/entities/user.entity';
+import { sanitizeUserContent } from '../../common/utils/sanitize';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('posts/:postId/comments')
@@ -18,6 +19,8 @@ export class CommentsController {
     @Body() dto: CreateCommentDto,
     @CurrentUser() user: User,
   ) {
+    // Sanitize user content against stored XSS (C-05)
+    if (dto.content) dto.content = sanitizeUserContent(dto.content);
     const comment = await this.commentsService.create(postId, dto, user);
     return ok(comment, 'Comment added');
   }

@@ -100,7 +100,7 @@ export class ChatService {
   }
 
   async editMessage(messageId: string, userId: string, content: string) {
-    const msg = await this.messagesRepo.findOne({ where: { id: messageId } });
+    const msg = await this.messagesRepo.findOne({ where: { id: messageId }, relations: ['sender'] });
     if (!msg) throw new NotFoundException('Message not found');
     if (msg.sender?.id !== userId) throw new ForbiddenException('Not your message');
 
@@ -114,7 +114,7 @@ export class ChatService {
   }
 
   async deleteMessage(messageId: string, userId: string, deleteForEveryone: boolean = false) {
-    const msg = await this.messagesRepo.findOne({ where: { id: messageId } });
+    const msg = await this.messagesRepo.findOne({ where: { id: messageId }, relations: ['sender'] });
     if (!msg) throw new NotFoundException('Message not found');
 
     if (deleteForEveryone) {
@@ -193,6 +193,54 @@ export class ChatService {
       .andWhere('message.deleted_at IS NULL')
       .orderBy('message.created_at', 'DESC')
       .getMany();
+  }
+
+  /**
+   * Get the existing 1:1 conversation between two users, or create one.
+   * Used by POST /chat/conversations so that direct messaging works without
+   * pre-existing group membership (fixes "GET messages → 403").
+   */
+  async getOrCreateDirectConversation(userId: string, targetUserId: string) {
+    if (userId === targetUserId) {
+      throw new ForbiddenException('Cannot start a conversation with yourself');
+    }
+
+    // Find a non-group conversation in which both users participate.
+    const mine = await this.participantRepo.find({ where: { userId } });
+    const myConvIds = mine.map(p => p.conversationId);
+
+    if (myConvIds.length > 0) {
+      const shared = await this.participantRepo.findOne({
+        where: { userId: targetUserId, conversationId: In(myConvIds) },
+        relations: ['conversation'],
+      });
+      if (shared && shared.conversation && !shared.conversation.isGroup) {
+        return this.formatConversation(
+          await this.conversationRepo.findOne({
+            where: { id: shared.conversationId },
+            relations: ['messages', 'participants'],
+          }) as Conversation,
+          userId,
+        );
+      }
+    }
+
+    // None exists → create a fresh 1:1 conversation.
+    const conversation = await this.conversationRepo.save(
+      this.conversationRepo.create({ isGroup: false, createdBy: { id: userId } as any }),
+    );
+    await this.participantRepo.save([
+      { conversationId: conversation.id, userId, role: 'member' as any },
+      { conversationId: conversation.id, userId: targetUserId, role: 'member' as any },
+    ]);
+
+    return this.formatConversation(
+      await this.conversationRepo.findOne({
+        where: { id: conversation.id },
+        relations: ['messages', 'participants'],
+      }) as Conversation,
+      userId,
+    );
   }
 
   async createGroup(name: string, createdBy: string, participantIds: string[]): Promise<Conversation> {

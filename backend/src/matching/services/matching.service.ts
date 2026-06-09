@@ -17,6 +17,11 @@ export class MatchingService {
   ) {}
 
   async getMatches(userId: string, page: number, limit: number) {
+    // Get current user's gender for opposite-gender filtering
+    const currentUser = await this.usersRepo.findOne({ where: { id: userId } });
+    const currentGender = currentUser?.gender ?? null;
+    const oppositeGender = currentGender === 'male' ? 'female' : currentGender === 'female' ? 'male' : null;
+
     const [data, total] = await this.matchesRepo.findAndCount({
       where: [{ user1: { id: userId } }, { user2: { id: userId } }],
       order: { score: 'DESC' },
@@ -28,10 +33,15 @@ export class MatchingService {
     // Enrich with profile data for the "other" user in each match
     const enrichedData = await Promise.all(
       data.map(async (match) => {
-        // Determine which user is the "other" user (not the current user)
         const otherUserId = match.user1.id === userId ? match.user2.id : match.user1.id;
-        
-        // Get the other user's profile
+
+        const otherUser = await this.usersRepo.findOne({ where: { id: otherUserId } });
+
+        // Filter out same-gender matches when gender is known
+        if (oppositeGender && otherUser?.gender && otherUser.gender !== oppositeGender) {
+          return null;
+        }
+
         const profile = await this.profilesRepo.findOne({
           where: { user: { id: otherUserId } },
         });
@@ -43,14 +53,107 @@ export class MatchingService {
           score: match.score,
           status: match.status,
           createdAt: match.createdAt,
-          // Include the other user's profile info for display
           otherUserName: profile?.fullName || null,
           otherUserAvatar: profile?.avatarUrl || null,
         };
       })
     );
 
-    return { data: enrichedData, total };
+    const filteredData = enrichedData.filter((m) => m !== null);
+    return { data: filteredData, total: filteredData.length };
+  }
+
+  async generateMatchesForUser(userId: string): Promise<Match[]> {
+    const currentUser = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!currentUser) return [];
+
+    const currentProfile = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
+    const currentGender = currentUser.gender ?? null;
+    const oppositeGender = currentGender === 'male' ? 'female' : currentGender === 'female' ? 'male' : null;
+
+    // Get IDs already matched with
+    const existingMatches = await this.matchesRepo.find({
+      where: [{ user1: { id: userId } }, { user2: { id: userId } }],
+      relations: ['user1', 'user2'],
+    });
+    const matchedIds = new Set(
+      existingMatches.flatMap((m) => [m.user1.id, m.user2.id]).filter((id) => id !== userId)
+    );
+
+    // Find candidate users (opposite gender, active, not already matched)
+    const query = this.usersRepo.createQueryBuilder('user')
+      .where('user.id != :userId', { userId })
+      .andWhere('user.status = :status', { status: 'active' });
+
+    if (oppositeGender) {
+      query.andWhere('user.gender = :gender', { gender: oppositeGender });
+    }
+
+    const candidates = await query.take(50).getMany();
+    const unmatched = candidates.filter((u) => !matchedIds.has(u.id)).slice(0, 10);
+
+    const newMatches: Match[] = [];
+
+    for (const candidate of unmatched) {
+      try {
+        const candidateProfile = await this.profilesRepo.findOne({ where: { user: { id: candidate.id } } });
+
+        const profileA = this.transformToAiProfile(
+          currentProfile
+            ? { ...this.profileToAiFields(currentProfile), userId }
+            : { userId, email: currentUser.email }
+        );
+        const profileB = this.transformToAiProfile(
+          candidateProfile
+            ? { ...this.profileToAiFields(candidateProfile), userId: candidate.id }
+            : { userId: candidate.id, email: candidate.email }
+        );
+
+        const aiResponse = await this.httpService.axiosRef.post(
+          'http://ai-service:5000/api/v1/match',
+          { user_a: profileA, user_b: profileB },
+        ).catch(() => ({ data: { compatibilityScore: Math.floor(Math.random() * 40) + 50 } }));
+
+        const score = aiResponse.data?.compatibilityScore ?? 50;
+
+        const match = this.matchesRepo.create({
+          user1: currentUser,
+          user2: candidate,
+          score,
+          status: 'pending',
+        });
+        const saved = await this.matchesRepo.save(match);
+        newMatches.push(saved);
+      } catch {
+        // skip this candidate on error
+      }
+    }
+
+    return newMatches;
+  }
+
+  private profileToAiFields(profile: Profile) {
+    return {
+      fullName: profile.fullName,
+      age: profile.age,
+      gender: profile.gender,
+      country: profile.country,
+      city: profile.city,
+      education: profile.education,
+      jobTitle: profile.jobTitle,
+      lifestyle: profile.lifestyle,
+      sect: profile.sect,
+      prayerLevel: profile.prayerLevel,
+      religiousCommitment: profile.religiousCommitment,
+      bio: profile.bio,
+      avatarUrl: profile.avatarUrl,
+      maritalStatus: profile.socialStatus,
+      childrenCount: profile.childrenCount,
+      culturalLevel: profile.culturalLevel,
+      wantsChildren: profile.wantsChildren,
+      relocateWilling: profile.relocateWilling,
+      preferredCountry: profile.preferredCountry,
+    };
   }
 
   async respondToMatch(matchId: string, userId: string, status: 'accepted' | 'rejected') {

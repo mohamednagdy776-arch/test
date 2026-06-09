@@ -13,6 +13,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { ok, paginated } from '../../common/response.helper';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { User } from '../../auth/entities/user.entity';
+import { sanitizeUserContent } from '../../common/utils/sanitize';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -28,6 +29,8 @@ export class UsersController {
 
   @Patch('me')
   async updateProfile(@CurrentUser() user: User, @Body() dto: UpdateProfileWithEntriesDto) {
+    // Sanitize free-text fields against stored XSS (C-05)
+    if ((dto as any).bio) (dto as any).bio = sanitizeUserContent((dto as any).bio);
     return ok(await this.usersService.updateProfile(user.id, dto), 'Profile updated');
   }
 

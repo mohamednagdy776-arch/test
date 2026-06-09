@@ -19,8 +19,8 @@ export function useSavedItems() {
 export function useSaveItem() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ entityType, entityId }: { entityType: string; entityId: string }) =>
-      savedPostsApi.saveItem(entityType, entityId),
+    mutationFn: ({ entityType, entityId, collectionId }: { entityType: string; entityId: string; collectionId?: string }) =>
+      savedPostsApi.saveItem(entityType, entityId, collectionId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['saved-items'] });
     },
@@ -34,5 +34,54 @@ export function useRemoveSaved() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['saved-items'] });
     },
+  });
+}
+
+// Collections
+export function useSavedCollections() {
+  return useQuery({
+    queryKey: ['saved-collections'],
+    queryFn: () => savedPostsApi.getCollections(),
+  });
+}
+
+export function useCreateCollection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ name, coverImage }: { name: string; coverImage?: string }) =>
+      savedPostsApi.createCollection(name, coverImage),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['saved-collections'] });
+    },
+  });
+}
+
+export function useUpdateCollection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; coverImage?: string } }) =>
+      savedPostsApi.updateCollection(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['saved-collections'] });
+    },
+  });
+}
+
+export function useDeleteCollection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => savedPostsApi.deleteCollection(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['saved-collections'] });
+      qc.invalidateQueries({ queryKey: ['saved-items'] });
+    },
+  });
+}
+
+export function useCollectionItems(collectionId: string) {
+  return useQuery({
+    queryKey: ['collection-items', collectionId],
+    queryFn: () => savedPostsApi.getCollectionItems(collectionId),
+    enabled: !!collectionId,
   });
 }

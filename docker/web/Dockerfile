@@ -6,13 +6,17 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copy package files from web directory
+COPY web/package*.json ./web/
+WORKDIR /app/web
 RUN npm ci
 
-COPY . .
+# Copy source code from web directory
+COPY web/ ./
 
-ARG NEXT_PUBLIC_API_URL=http://localhost:3000/api/v1
-ARG NEXT_PUBLIC_WS_URL=http://localhost:3000
+# Build arguments - defaults will be overridden by docker-compose build args
+ARG NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
+ARG NEXT_PUBLIC_WS_URL=http://localhost:3003
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 
@@ -27,14 +31,15 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 ENV NODE_ENV=production
-ENV PORT=3002
+ENV PORT=3000
 
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+# Copy built application
+COPY --from=builder /app/web/.next/standalone ./
+COPY --from=builder /app/web/.next/static ./.next/static
 
-EXPOSE 3002
+EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:3002 || exit 1
+  CMD wget -qO- http://127.0.0.1:3000 || exit 1
 
 CMD ["node", "server.js"]

@@ -66,4 +66,7 @@ export const friendsApi = {
 
   removeFromFriendList: (listId: string, memberId: string) =>
     apiClient.delete(`/friends/lists/${listId}/members/${memberId}`).then(r => r.data),
+
+  getBirthdays: () =>
+    apiClient.get('/friends/birthdays').then(r => r.data).catch(() => ({ data: [] })),
 };

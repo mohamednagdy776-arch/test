@@ -132,7 +132,6 @@ export const RegisterForm = () => {
             className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200">
             <option value="male">ذكر</option>
             <option value="female">أنثى</option>
-            <option value="custom">مخصص</option>
           </select>
         </div>
       </div>

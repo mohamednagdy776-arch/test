@@ -20,14 +20,12 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 3: News Feed, Modu
 - `useFeed` ✅ — Implemented in `web/src/features/posts/hooks.ts`
 - `useRecentFeed` ✅ — Implemented in `web/src/features/posts/hooks.ts`
 - `useStoryViewers` ✅ — Implemented in `web/src/features/posts/hooks.ts`
+- `useCreatePost` ✅ — Hook for creating posts
+- `useDeletePost` ✅ — Hook for deleting posts
+- `useLikePost` ✅ — Hook for liking posts
 
 ### API
 - `postsApi` ✅ — Implemented in `web/src/features/posts/api.ts`
 
-## Needs Implementation
-
-### Components
-- None
-
-### Pages
-- None
+## Backend
+- Backend exists: `backend/src/posts/`

@@ -19,14 +19,11 @@ Reference: `.kiro/agents/fb-clone-frontend.agent.md` - Module 2: User Profile
 
 ### Hooks
 - `useProfile` ✅ — Implemented in `web/src/features/profile/hooks.ts`
+- `useUpdateProfile` ✅ — Hook for updating profile
+- `useUploadAvatar` ✅ — Hook for uploading avatar
 
 ### API
 - `profileApi` ✅ — Implemented in `web/src/features/profile/api.ts`
 
-## Needs Implementation
-
-### Components
-- None
-
-### Pages
-- None
+## Backend
+- Backend exists: `backend/src/users/`

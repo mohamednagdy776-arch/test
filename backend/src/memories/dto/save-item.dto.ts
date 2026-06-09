@@ -6,4 +6,27 @@ export class SaveItemDto {
 
   @IsString()
   entityId: string;
+
+  @IsOptional()
+  @IsString()
+  collectionId?: string;
+}
+
+export class CreateCollectionDto {
+  @IsString()
+  name: string;
+
+  @IsOptional()
+  @IsString()
+  coverImage?: string;
+}
+
+export class UpdateCollectionDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  coverImage?: string;
 }

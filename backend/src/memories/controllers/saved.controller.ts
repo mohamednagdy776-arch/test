@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Patch, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { SavedService } from '../services/saved.service';
-import { SaveItemDto } from '../dto/save-item.dto';
+import { SaveItemDto, CreateCollectionDto, UpdateCollectionDto } from '../dto/save-item.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ok } from '../../common/response.helper';
 import { User } from '../../auth/entities/user.entity';
@@ -19,7 +19,7 @@ export class SavedController {
 
   @Post()
   async save(@CurrentUser() user: User, @Body() dto: SaveItemDto) {
-    const saved = await this.savedService.save(user.id, dto.entityType, dto.entityId);
+    const saved = await this.savedService.save(user.id, dto.entityType, dto.entityId, dto.collectionId);
     return ok(saved, 'Item saved');
   }
 
@@ -27,5 +27,36 @@ export class SavedController {
   async unsave(@CurrentUser() user: User, @Param('id') id: string) {
     await this.savedService.unsave(user.id, id);
     return ok(null, 'Item removed from saved');
+  }
+
+  // Collections
+  @Get('collections')
+  async getCollections(@CurrentUser() user: User) {
+    const collections = await this.savedService.getCollections(user.id);
+    return ok(collections);
+  }
+
+  @Post('collections')
+  async createCollection(@CurrentUser() user: User, @Body() dto: CreateCollectionDto) {
+    const collection = await this.savedService.createCollection(user.id, dto.name, dto.coverImage);
+    return ok(collection, 'Collection created');
+  }
+
+  @Patch('collections/:id')
+  async updateCollection(@CurrentUser() user: User, @Param('id') id: string, @Body() dto: UpdateCollectionDto) {
+    const collection = await this.savedService.updateCollection(user.id, id, dto.name, dto.coverImage);
+    return ok(collection, 'Collection updated');
+  }
+
+  @Delete('collections/:id')
+  async deleteCollection(@CurrentUser() user: User, @Param('id') id: string) {
+    await this.savedService.deleteCollection(user.id, id);
+    return ok(null, 'Collection deleted');
+  }
+
+  @Get('collections/:id')
+  async getCollectionItems(@CurrentUser() user: User, @Param('id') id: string) {
+    const items = await this.savedService.getCollectionItems(user.id, id);
+    return ok(items);
   }
 }

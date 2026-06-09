@@ -19,15 +19,17 @@ const MatchCard = ({ match }: { match: Match }) => {
   return (
     <div className="rounded-xl bg-white p-5 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-          {match.user2Id?.slice(0, 2).toUpperCase()}
+        <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden">
+          {(match as any).otherUserAvatar
+            ? <img src={(match as any).otherUserAvatar} alt="" className="h-full w-full object-cover" />
+            : ((match as any).otherUserName || 'مستخدم').trim().slice(0, 2).toUpperCase()}
         </div>
         <div className="text-center">
           <p className={`text-3xl font-bold ${scoreColor(match.score)}`}>{match.score}%</p>
           <p className="text-xs text-gray-400">توافق</p>
         </div>
       </div>
-      <p className="mb-4 text-sm text-gray-500 text-center font-mono">{match.user2Id?.slice(0, 12)}…</p>
+      <p className="mb-4 text-sm font-semibold text-gray-900 text-center">{(match as any).otherUserName || 'مستخدم طيبت'}</p>
       {match.status === 'pending' ? (
         <div className="flex gap-2">
           <button onClick={() => accept.mutate()} disabled={accept.isPending}

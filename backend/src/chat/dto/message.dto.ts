@@ -21,40 +21,47 @@ export class SendMessageDto {
 }
 
 export class EditMessageDto {
+  // messageId comes from the path param — optional in the body.
+  @IsOptional()
   @IsUUID()
-  messageId: string;
+  messageId?: string;
 
   @IsString()
   content: string;
 }
 
 export class DeleteMessageDto {
+  @IsOptional()
   @IsUUID()
-  messageId: string;
+  messageId?: string;
 
   @IsOptional()
   deleteForEveryone?: boolean;
 }
 
 export class ReactMessageDto {
+  @IsOptional()
   @IsUUID()
-  messageId: string;
+  messageId?: string;
 
   @IsString()
   emoji: string;
 }
 
 export class ForwardMessageDto {
+  @IsOptional()
   @IsUUID()
-  messageId: string;
+  messageId?: string;
 
   @IsUUID()
   targetConversationId: string;
 }
 
 export class SearchMessageDto {
+  // conversationId comes from the path param — optional in the query.
+  @IsOptional()
   @IsUUID()
-  conversationId: string;
+  conversationId?: string;
 
   @IsString()
   query: string;

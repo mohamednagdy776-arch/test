@@ -9,7 +9,7 @@
 # - nginx (port 80, 443)     : Reverse proxy with SSL
 # - backend (port 3000)      : NestJS API + WebSocket
 # - admin (port 3001)        : Admin dashboard
-# - web (port 3002)          : User-facing web app
+# - web (port 3000)          : User-facing web app
 # - ai-service (port 5000)   : FastAPI matching algorithm
 # - postgres (port 5432)      : PostgreSQL database
 # - redis (port 6379)        : Redis cache
@@ -56,8 +56,8 @@ services:
   # -------------------------------------------------------------------------
   backend:
     build:
-      context: ./backend
-      dockerfile: ../docker/backend/Dockerfile
+      context: .
+      dockerfile: docker/backend/Dockerfile
     container_name: tayyibt-backend
     env_file: .env.production
     environment:
@@ -84,8 +84,8 @@ services:
   # -------------------------------------------------------------------------
   admin:
     build:
-      context: ./admin
-      dockerfile: ../docker/admin/Dockerfile
+      context: .
+      dockerfile: docker/admin/Dockerfile
     container_name: tayyibt-admin
     env_file: .env.production
     args:
@@ -103,8 +103,8 @@ services:
   # -------------------------------------------------------------------------
   web:
     build:
-      context: ./web
-      dockerfile: ../docker/web/Dockerfile
+      context: .
+      dockerfile: docker/web/Dockerfile
     container_name: tayyibt-web
     env_file: .env.production
     args:
@@ -123,8 +123,8 @@ services:
   # -------------------------------------------------------------------------
   ai-service:
     build:
-      context: ./ai-service
-      dockerfile: ../docker/ai-service/Dockerfile
+      context: .
+      dockerfile: docker/ai-service/Dockerfile
     container_name: tayyibt-ai-service
     env_file: .env.production
     environment:

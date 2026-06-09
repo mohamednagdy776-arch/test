@@ -5,6 +5,7 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../../auth/entities/user.entity';
 import { ok, paginated } from '../../common/response.helper';
 import { CreatePostDto } from '../dto/create-post.dto';
+import { sanitizeUserContent } from '../../common/utils/sanitize';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller()
@@ -13,6 +14,8 @@ export class StoriesController {
 
   @Post('posts')
   async createPost(@CurrentUser() user: User, @Body() dto: CreatePostDto) {
+    // Sanitize user content against stored XSS (C-05)
+    if (dto.content) dto.content = sanitizeUserContent(dto.content);
     const post = await this.storiesService.createPost(user.id, dto);
     return ok(post, 'Post created');
   }
