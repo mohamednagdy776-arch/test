@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, displayName } from '@/lib/utils';
 import { ThumbsUp, Heart, Smiley, SmileyMeh, SmileySad, SmileyAngry, MapPin, ChatCircle, DotsThree, Pencil, Trash, CaretRight } from '@phosphor-icons/react';
 
 interface Comment {
@@ -56,7 +56,7 @@ function timeAgo(date: string | Date) {
 }
 
 function getInitials(user: Comment['user']) {
-  return (user.profile?.fullName || user.email || '?').charAt(0).toUpperCase();
+  return displayName(user).charAt(0).toUpperCase();
 }
 
 function ReactionPicker({ onSelect, onClose }: { onSelect: (type: string) => void; onClose: () => void }) {
@@ -153,7 +153,7 @@ function CommentItem({
           ) : (
             <>
               <div className="flex items-center gap-2">
-                <p className="text-xs font-bold text-[#213448]">{comment.user.profile?.fullName || comment.user.email?.split('@')[0] || 'مستخدم'}</p>
+                <p className="text-xs font-bold text-[#213448]">{displayName(comment.user)}</p>
                 {comment.isPinned && <MapPin size={12} className="text-[#547792]" />}
                 <span className="text-[10px] text-[#547792]">{timeAgo(comment.createdAt)}</span>
                 {comment.editedAt && <span className="text-[10px] text-[#547792]">(معدل)</span>}

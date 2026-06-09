@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { PostFeed } from '@/features/posts/components/PostFeed';
 import { useSuggestions } from '@/features/friends/hooks';
 import { apiClient } from '@/lib/api-client';
-import { cn } from '@/lib/utils';
+import { cn, displayName } from '@/lib/utils';
 
 function SuggestedConnections() {
   const router = useRouter();
@@ -32,7 +32,7 @@ function SuggestedConnections() {
         ) : (
           suggestions.map((s: any) => {
             const user = s.userId ?? s;
-            const name = user?.profile?.fullName || user?.email?.split('@')[0] || 'مستخدم';
+            const name = displayName(s);
             const city = user?.profile?.city || '';
             const age = user?.profile?.age;
             const initial = name.charAt(0).toUpperCase();

@@ -2,10 +2,10 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useFriends, usePendingRequests, useSuggestions, useAcceptFriendRequest, useDeclineFriendRequest, useSendFriendRequest, useUnfriend, useFollowUser, useBlockUser, useFriendBirthdays, useFriendLists, useCreateFriendList, useUpdateFriendList, useDeleteFriendList } from '@/features/friends/hooks';
-import { cn } from '@/lib/utils';
+import { cn, displayName } from '@/lib/utils';
 
 function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: any; onUnfriend?: () => void; onMessage?: () => void; onBlock?: () => void; onFollow?: () => void }) {
-  const name = user.profile?.fullName || user.email?.split('@')[0] || 'مستخدم';
+  const name = displayName(user);
   const initial = name.charAt(0).toUpperCase();
   const [showMenu, setShowMenu] = useState(false);
   const isFriend = user.friendshipStatus === 'friends' || user.isFriend;
@@ -69,7 +69,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
 }
 
 function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept: () => void; onDecline: () => void }) {
-  const name = request.requester?.profile?.fullName || request.requester?.email?.split('@')[0] || 'مستخدم';
+  const name = displayName(request.requester);
   const initial = name.charAt(0).toUpperCase();
   const mutualCount = request.mutualFriends || 0;
 
@@ -97,7 +97,7 @@ function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept:
 }
 
 function SuggestionCard({ user, onAdd, onFollow }: { user: any; onAdd: () => void; onFollow: () => void }) {
-  const name = user.userId?.profile?.fullName || user.userId?.email?.split('@')[0] || 'مستخدم';
+  const name = displayName(user);
   const initial = name.charAt(0).toUpperCase();
   const mutual = user.mutual || 0;
 
@@ -172,7 +172,7 @@ function FriendListCard({ list, onEdit, onDelete, members }: { list: any; onEdit
       <p className="text-xs text-[#547792] mb-2">{members.length} أعضاء</p>
       <div className="flex -space-x-2">
         {members.slice(0, 5).map((member: any, idx: number) => {
-          const name = member.profile?.fullName || member.email?.split('@')[0] || 'م';
+          const name = displayName(member);
           return (
             <div key={idx} className="h-8 w-8 rounded-full bg-[#547792] text-[#FDFAF5] text-xs font-bold flex items-center justify-center border-2 border-[#FDFAF5]">
               {name.charAt(0).toUpperCase()}
@@ -224,15 +224,15 @@ export default function FriendsPage() {
     
     if (searchQuery) {
       result = result.filter((user: any) => {
-        const name = user.profile?.fullName || user.email?.split('@')[0] || '';
+        const name = displayName(user);
         return name.toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
-    
+
     if (sortBy === 'name') {
       result.sort((a: any, b: any) => {
-        const nameA = a.profile?.fullName || a.email?.split('@')[0] || '';
-        const nameB = b.profile?.fullName || b.email?.split('@')[0] || '';
+        const nameA = displayName(a);
+        const nameB = displayName(b);
         return nameA.localeCompare(nameB, 'ar');
       });
     } else {

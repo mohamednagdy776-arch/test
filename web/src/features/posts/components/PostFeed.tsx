@@ -5,7 +5,7 @@ import { PostCard } from './PostCard';
 import { PostComposer } from './PostComposer';
 import { StoryViewer } from './StoryViewer';
 import { StoryCreator } from './StoryCreator';
-import { cn } from '@/lib/utils';
+import { cn, displayName } from '@/lib/utils';
 
 function StoriesBar() {
   const [activeStory, setActiveStory] = useState<number | null>(null);
@@ -43,11 +43,11 @@ function StoriesBar() {
                 style={{ background: 'linear-gradient(135deg, #547792, #94B4C1)' }}
               >
                 <div className="h-full w-full rounded-full bg-[#FDFAF5] flex items-center justify-center">
-                  <span className="text-2xl">{(group.user?.profile?.fullName || group.user?.email || '?').charAt(0)}</span>
+                  <span className="text-2xl">{displayName(group.user).charAt(0)}</span>
                 </div>
               </div>
               <span className="text-[11px] font-medium text-[#547792] group-hover:text-[#213448] transition-colors truncate w-16 text-center">
-                {group.user?.profile?.fullName || group.user?.email?.split('@')[0] || 'مستخدم'}
+                {displayName(group.user)}
               </span>
             </button>
           ))}

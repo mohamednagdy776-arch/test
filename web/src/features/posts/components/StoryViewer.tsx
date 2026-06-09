@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useViewStory, useStoryViewers, useAddToHighlight } from '../hooks';
-import { cn } from '@/lib/utils';
+import { cn, displayName } from '@/lib/utils';
 
 interface StoryItem {
   id: string;
@@ -92,7 +92,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     return () => document.removeEventListener('keydown', handler);
   }, [onClose, goNext, goPrev]);
 
-  const userName = currentUser?.user?.profile?.fullName || currentUser?.user?.email?.split('@')[0] || 'مستخدم';
+  const userName = displayName(currentUser?.user);
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in">
@@ -156,9 +156,9 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                   viewers.map((viewer: any, i: number) => (
                     <div key={i} className="flex items-center gap-3 p-3 hover:bg-[#EAE0CF]/30">
                       <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-[#FDFAF5]" style={{ background: 'linear-gradient(135deg, #547792, #94B4C1)' }}>
-                        {(viewer.user?.profile?.fullName || viewer.user?.email || '?').charAt(0)}
+                        {displayName(viewer.user).charAt(0)}
                       </div>
-                      <span className="text-sm text-[#213448]">{viewer.user?.profile?.fullName || viewer.user?.email?.split('@')[0] || 'مستخدم'}</span>
+                      <span className="text-sm text-[#213448]">{displayName(viewer.user)}</span>
                     </div>
                   ))
                 )}

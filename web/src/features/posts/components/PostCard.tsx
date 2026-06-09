@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
 import { apiClient } from '@/lib/api-client';
-import { cn } from '@/lib/utils';
+import { cn, displayName } from '@/lib/utils';
 import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt } from '@phosphor-icons/react';
 
 const REACTIONS = [
@@ -114,7 +114,7 @@ function CommentSection({ postId }: { postId: string }) {
               </div>
               <div className="flex-1 rounded-2xl px-4 py-2.5 shadow-card-hover group-hover:shadow-glow transition-all duration-300" style={{ backgroundColor: '#D4E8EE' }}>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-bold text-[#213448]">{c.user?.profile?.fullName || c.user?.email?.split('@')[0] || 'مستخدم'}</p>
+                  <p className="text-xs font-bold text-[#213448]">{displayName(c.user)}</p>
                   <span className="text-[10px] text-[#547792]">{timeAgo(c.createdAt)}</span>
                 </div>
                 <p className="text-sm text-[#131F2E] mt-0.5 leading-relaxed">{c.content}</p>
@@ -291,7 +291,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   
-  const userName = post.user?.profile?.fullName || post.user?.email?.split('@')[0] || 'مستخدم';
+  const userName = displayName(post.user);
   const userInitial = userName.charAt(0).toUpperCase();
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3000';
   
@@ -337,9 +337,9 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
               <div className="mt-3 p-3 rounded-xl bg-[#EAE0CF]/40 border border-[#C8D8DF]/40 shadow-card-hover transition-all duration-300 hover:shadow-glow">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#547792] to-[#94B4C1] text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft">
-                    {(post.originalPost.user?.profile?.fullName || '?').charAt(0)}
+                    {displayName(post.originalPost.user).charAt(0)}
                   </div>
-                  <span className="text-xs font-medium text-[#213448]">{post.originalPost.user?.profile?.fullName || 'مستخدم'}</span>
+                  <span className="text-xs font-medium text-[#213448]">{displayName(post.originalPost.user)}</span>
                 </div>
                 <p className="text-sm text-[#547792] line-clamp-2">{post.originalPost.content}</p>
               </div>

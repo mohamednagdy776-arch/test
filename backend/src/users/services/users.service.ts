@@ -25,17 +25,32 @@ export class UsersService {
   async getProfile(userId: string) {
     let profile = await this.profilesRepo.findOne({
       where: { user: { id: userId } },
-      relations: ['workEntries', 'educationEntries'],
+      relations: ['user', 'workEntries', 'educationEntries'],
     });
     if (!profile) {
       profile = await this.profilesRepo
         .createQueryBuilder('p')
         .where('p.user_id = :userId', { userId })
+        .leftJoinAndSelect('p.user', 'user')
         .leftJoinAndSelect('p.workEntries', 'work')
         .leftJoinAndSelect('p.educationEntries', 'education')
         .getOne();
     }
-    if (!profile) return null;
+    if (!profile) {
+      // No profile row yet (e.g. just registered) — synthesize a name from the user.
+      const user = await this.usersRepo.findOne({ where: { id: userId } });
+      if (!user) return null;
+      const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.fullName || '';
+      return {
+        id: null,
+        userId: user.id,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null,
+        username: user.username ?? null,
+        fullName: name,
+        gender: user.gender ?? null,
+      } as any;
+    }
     return this.formatProfile(profile, userId);
   }
 
@@ -123,10 +138,17 @@ export class UsersService {
   }
 
   private formatProfile(profile: Profile, userId?: string) {
+    const u = profile.user;
+    const nameFromUser = `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim();
+    // Prefer the user's first + last name; fall back to the stored profile name.
+    const displayName = nameFromUser || profile.fullName || u?.fullName || '';
     return {
       id: profile.id,
       userId: profile.user?.id,
-      fullName: profile.fullName,
+      firstName: u?.firstName ?? null,
+      lastName: u?.lastName ?? null,
+      username: u?.username ?? null,
+      fullName: displayName,
       age: profile.age,
       gender: profile.gender,
       country: profile.country,
