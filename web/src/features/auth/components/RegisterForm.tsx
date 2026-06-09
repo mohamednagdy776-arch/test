@@ -4,6 +4,30 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '../api';
 
+// Translate / format backend errors so the user always sees a clear reason.
+// NestJS validation errors arrive as `message: string[]`; other errors as a string.
+const AR_MESSAGES: Record<string, string> = {
+  'Email already registered': 'البريد الإلكتروني مسجّل بالفعل',
+  'Username already taken': 'اسم المستخدم مُستخدم بالفعل',
+  'Resource already exists': 'هذا الحساب موجود بالفعل (بريد أو هاتف مكرر)',
+  'email must be an email': 'صيغة البريد الإلكتروني غير صحيحة',
+  'password must be longer than or equal to 8 characters': 'كلمة المرور يجب أن تكون 8 أحرف على الأقل',
+  'Password must be at least 8 characters with uppercase, lowercase, number, and special character':
+    'كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل مع حرف كبير وصغير ورقم ورمز خاص',
+  'phone must be a valid phone number': 'رقم الهاتف غير صحيح',
+  'Referenced record does not exist': 'تعذّر إكمال الطلب، تحقّق من البيانات',
+};
+const translate = (m: string) => AR_MESSAGES[m] ?? m;
+
+function formatAuthError(err: any): string {
+  const m = err?.response?.data?.message;
+  if (Array.isArray(m)) return m.map(translate).join('، ');
+  if (typeof m === 'string' && m.trim()) return translate(m);
+  if (err?.response?.status === 409) return 'هذا الحساب موجود بالفعل';
+  if (err?.code === 'ERR_NETWORK' || !err?.response) return 'تعذّر الاتصال بالخادم، تحقّق من اتصالك بالإنترنت';
+  return 'فشل إنشاء الحساب. يرجى المحاولة مرة أخرى.';
+}
+
 interface FormData {
   email: string;
   phone: string;
@@ -53,6 +77,10 @@ export const RegisterForm = () => {
     if (!agreedToTerms) { setError('يرجى الموافقة على الشروط والأحكام'); return; }
     if (form.password !== form.confirm) { setError('كلمتا المرور غير متطابقتين'); return; }
     if (form.password.length < 8) { setError('كلمة المرور يجب أن تكون 8 أحرف على الأقل'); return; }
+    // Match the backend complexity rule so the user knows immediately
+    const strong = /[a-z]/.test(form.password) && /[A-Z]/.test(form.password)
+      && /\d/.test(form.password) && /[^a-zA-Z0-9]/.test(form.password);
+    if (!strong) { setError('كلمة المرور يجب أن تحتوي على حرف كبير وحرف صغير ورقم ورمز خاص'); return; }
     setLoading(true);
     try {
       const res = await authApi.register({
@@ -68,8 +96,8 @@ export const RegisterForm = () => {
       localStorage.setItem('access_token', res.data.accessToken);
       localStorage.setItem('refresh_token', res.data.refreshToken);
       router.push('/dashboard');
-    } catch (err: any) { 
-      setError(err.response?.data?.message ?? 'فشل إنشاء الحساب'); 
+    } catch (err: any) {
+      setError(formatAuthError(err));
     }
     finally { setLoading(false); }
   };

@@ -4,6 +4,20 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '../api';
 
+const AR_MESSAGES: Record<string, string> = {
+  'Invalid credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+  'Account locked due to too many failed attempts': 'تم قفل الحساب مؤقتاً بسبب محاولات دخول كثيرة',
+  'Account is deactivated': 'هذا الحساب معطّل',
+  'email must be an email': 'صيغة البريد الإلكتروني غير صحيحة',
+};
+function formatAuthError(err: any): string {
+  const m = err?.response?.data?.message;
+  if (Array.isArray(m)) return m.map((x: string) => AR_MESSAGES[x] ?? x).join('، ');
+  if (typeof m === 'string' && m.trim()) return AR_MESSAGES[m] ?? m;
+  if (err?.code === 'ERR_NETWORK' || !err?.response) return 'تعذّر الاتصال بالخادم، تحقّق من اتصالك بالإنترنت';
+  return 'بيانات الدخول غير صحيحة';
+}
+
 export const LoginForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,8 +50,8 @@ export const LoginForm = () => {
       localStorage.setItem('access_token', res.data.accessToken);
       localStorage.setItem('refresh_token', res.data.refreshToken);
       router.push('/dashboard');
-    } catch (err: any) { 
-      setError(err.response?.data?.message ?? 'بيانات الدخول غير صحيحة'); 
+    } catch (err: any) {
+      setError(formatAuthError(err));
     }
     finally { setLoading(false); }
   };
