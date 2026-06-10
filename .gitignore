@@ -79,3 +79,6 @@ models/
 *.h5
 *.pkl
 *.joblib
+
+# Deploy build artifact
+app.tar.gz

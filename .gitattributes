@@ -1,0 +1,9 @@
+# Shell scripts MUST use LF line endings. They run under bash on the Linux VPS;
+# a stray CRLF makes bash read `set -euo pipefail\r` and abort with exit 2,
+# which silently breaks deploys. Enforce LF everywhere regardless of OS.
+*.sh   text eol=lf
+*.bash text eol=lf
+
+# Windows batch files are the opposite — they need CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf

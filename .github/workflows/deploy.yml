@@ -64,10 +64,22 @@ jobs:
             # for the VPS-only state we must never touch (.env.production, certs/).
             command -v rsync >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rsync)
 
+            # Fail loudly if the upload didn't arrive, instead of a cryptic
+            # "tar: Cannot open" further down.
+            if [ ! -s /tmp/app.tar.gz ]; then
+              echo "ERROR: /tmp/app.tar.gz missing or empty — upload step did not deliver the archive." >&2
+              exit 1
+            fi
+
             rm -rf /tmp/tayyibt_new
             mkdir -p /tmp/tayyibt_new
             tar xzf /tmp/app.tar.gz -C /tmp/tayyibt_new
             rm -f /tmp/app.tar.gz
+
+            # Guard: bash scripts must be LF. A stray CRLF (e.g. authored on
+            # Windows) makes bash abort with "set: pipefail: invalid option".
+            # .gitattributes enforces LF, but normalise here too as a backstop.
+            find /tmp/tayyibt_new/scripts -name '*.sh' -exec sed -i 's/\r$//' {} + 2>/dev/null || true
 
             rsync -a --delete \
               --exclude='.env.production' \
