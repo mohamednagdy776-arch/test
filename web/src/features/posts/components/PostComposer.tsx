@@ -64,9 +64,11 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
     if (!content.trim() && !mediaFile && !pollQuestion.trim()) return;
 
     let mediaUrl: string | undefined;
+    let mediaType: string | undefined;
     if (mediaFile) {
       const uploadResult = await uploadMedia.mutateAsync(mediaFile);
       mediaUrl = uploadResult.data?.url;
+      mediaType = uploadResult.data?.type;
     }
 
     const scheduledAt = scheduleDate && scheduleTime 
@@ -82,6 +84,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
       groupId: groupId || '',
       content: content.trim(),
       mediaUrl,
+      mediaType,
       bgColor: bgColor || undefined,
       feeling: feeling?.label || undefined,
       location: location || undefined,
