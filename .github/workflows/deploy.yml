@@ -20,18 +20,17 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Package the application
+        # Use `git archive`, not `tar`, so the package is built from COMMITTED
+        # state — not the working tree. This makes local and CI behaviour
+        # identical and guarantees only tracked files ship (untracked/ignored
+        # files like node_modules, .next, dist can never sneak in or, worse,
+        # cause "Cannot stat" failures when they exist locally but not on CI).
         run: |
-          tar czf app.tar.gz \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='**/node_modules' \
-            --exclude='.next' \
-            --exclude='**/.next' \
-            --exclude='dist' \
-            --exclude='**/dist' \
+          git archive --format=tar.gz -o app.tar.gz HEAD \
             backend web admin ai-service docker scripts \
             docker-compose.vps.yml docker-compose.prod.yml docker-compose.yml \
             .dockerignore README.md CLAUDE.md
+          echo "Archive size: $(stat -c%s app.tar.gz) bytes"
 
       - name: Upload package to VPS
         uses: appleboy/scp-action@v0.1.7

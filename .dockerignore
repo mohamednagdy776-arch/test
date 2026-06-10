@@ -1,0 +1,61 @@
+# Root .dockerignore — keeps build context lean
+node_modules
+**/node_modules
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/.venv
+**/venv
+**/env
+
+# Build outputs
+**/dist
+**/.next
+**/build
+**/*.tsbuildinfo
+
+# Dev/local env files
+.env
+.env.local
+**/.env.local
+**/.env.*.local
+.env.example
+.env.production.example
+
+# IDE / OS
+.vscode
+.idea
+**/.DS_Store
+**/Thumbs.db
+**/*.swp
+**/*.swo
+
+# Logs
+**/logs
+**/*.log
+
+# Coverage / tests artifacts
+**/coverage
+**/.nyc_output
+
+# Git
+.git
+.gitignore
+
+# Docker tooling
+**/docker-compose*.yml
+
+# Mobile app (not deployed to VPS)
+mobile/
+
+# CI
+.github/
+
+# Misc
+tmp/
+temp/
+**/.cache
+models/
+*.h5
+*.pkl
+*.joblib
