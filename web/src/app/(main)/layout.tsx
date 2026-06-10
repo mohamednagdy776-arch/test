@@ -1,13 +1,11 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { AuthGuard } from '@/components/auth/AuthGuard';
-import { UnderConstructionBanner } from '@/components/layout/underconstarctionsbanner';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <div className="min-h-screen" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)', transition: 'background-color 0.3s ease, color 0.3s ease' }}>
-        <UnderConstructionBanner />
         <Navbar />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
           <div className="flex gap-6">
