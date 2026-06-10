@@ -8,7 +8,6 @@ import { ActivityLog } from './entities/activity-log.entity';
 import { User } from '../auth/entities/user.entity';
 import { UsersService } from './services/users.service';
 import { UsersController } from './controllers/users.controller';
-import { AvatarController } from './controllers/avatar.controller';
 import { FriendsModule } from '../friends/friends.module';
 
 @Module({
@@ -18,8 +17,7 @@ import { FriendsModule } from '../friends/friends.module';
     FriendsModule,
   ],
   providers: [UsersService],
-  controllers: [UsersController, AvatarController],
+  controllers: [UsersController],
   exports: [UsersService],
 })
 export class UsersModule {}
-
