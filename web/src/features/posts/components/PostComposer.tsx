@@ -64,9 +64,11 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
     if (!content.trim() && !mediaFile && !pollQuestion.trim()) return;
 
     let mediaUrl: string | undefined;
+    let mediaType: string | undefined;
     if (mediaFile) {
       const uploadResult = await uploadMedia.mutateAsync(mediaFile);
       mediaUrl = uploadResult.data?.url;
+      mediaType = uploadResult.data?.type;
     }
 
     const scheduledAt = scheduleDate && scheduleTime 
@@ -82,6 +84,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
       groupId: groupId || '',
       content: content.trim(),
       mediaUrl,
+      mediaType,
       bgColor: bgColor || undefined,
       feeling: feeling?.label || undefined,
       location: location || undefined,
@@ -165,7 +168,11 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
 
         {mediaPreview && (
           <div className="mt-3 relative">
-            <img src={mediaPreview} alt="Preview" className="max-h-48 rounded-xl" />
+            {mediaFile?.type.startsWith('video/') ? (
+              <video src={mediaPreview} controls className="max-h-48 rounded-xl w-full" />
+            ) : (
+              <img src={mediaPreview} alt="Preview" className="max-h-48 rounded-xl" />
+            )}
             <button type="button" onClick={() => { setMediaPreview(null); setMediaFile(null); }} className="absolute top-2 right-2 h-8 w-8 rounded-full bg-[#131F2E]/60 text-[#FDFAF5] flex items-center justify-center">
               <X size={18} />
             </button>

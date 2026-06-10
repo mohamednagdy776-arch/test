@@ -20,8 +20,6 @@ import { sanitizeUserContent } from '../../common/utils/sanitize';
 export class UsersController {
   constructor(private usersService: UsersService) {}
 
-  // ── Current user ──────────────────────────────────────────────
-
   @Get('me')
   async getProfile(@CurrentUser() user: User) {
     return ok(await this.usersService.getProfile(user.id));
@@ -29,7 +27,6 @@ export class UsersController {
 
   @Patch('me')
   async updateProfile(@CurrentUser() user: User, @Body() dto: UpdateProfileWithEntriesDto) {
-    // Sanitize free-text fields against stored XSS (C-05)
     if ((dto as any).bio) (dto as any).bio = sanitizeUserContent((dto as any).bio);
     return ok(await this.usersService.updateProfile(user.id, dto), 'Profile updated');
   }
@@ -43,6 +40,7 @@ export class UsersController {
         cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
       },
     }),
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
         return cb(new BadRequestException('Only image files are allowed'), false);
@@ -51,6 +49,7 @@ export class UsersController {
     },
   }))
   async uploadAvatar(@CurrentUser() user: User, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
     const avatarUrl = `/uploads/avatars/${file.filename}`;
     return ok(await this.usersService.updateAvatar(user.id, avatarUrl), 'Avatar uploaded');
   }
@@ -64,6 +63,7 @@ export class UsersController {
         cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
       },
     }),
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
       if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
         return cb(new BadRequestException('Only image files are allowed'), false);
@@ -72,32 +72,25 @@ export class UsersController {
     },
   }))
   async uploadCover(@CurrentUser() user: User, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No file uploaded');
     const coverUrl = `/uploads/covers/${file.filename}`;
     return ok(await this.usersService.updateCover(user.id, coverUrl), 'Cover uploaded');
   }
-
-  // ── Search (must be before :id routes) ───────────────────────
 
   @Get('search')
   async search(@Query() dto: SearchUsersDto) {
     return ok(await this.usersService.searchUsers(dto));
   }
 
-  // ── Public profile ────────────────────────────────────────────
-
   @Get(':id/profile')
   async getPublicProfile(@Param('id') id: string) {
     return ok(await this.usersService.getPublicProfile(id));
   }
 
-  // ── Full profile with tabs ─────────────────────────────────────
-
   @Get(':id')
   async getFullProfile(@Param('id') id: string, @CurrentUser() user?: User) {
     return ok(await this.usersService.getFullProfile(id, user?.id));
   }
-
-  // ── Profile tabs ───────────────────────────────────────────────
 
   @Get(':id/friends')
   async getFriends(@Param('id') id: string, @Query() query: PaginationDto) {
@@ -118,8 +111,6 @@ export class UsersController {
   async getActivityLog(@Param('id') id: string, @Query() dto: ActivityLogQueryDto) {
     return ok(await this.usersService.getActivityLog(id, dto));
   }
-
-  // ── Admin ─────────────────────────────────────────────────────
 
   @Get()
   @UseGuards(RolesGuard)
