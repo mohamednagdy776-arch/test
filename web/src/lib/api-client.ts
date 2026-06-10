@@ -8,6 +8,11 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use((config) => {
   const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
   if (token) config.headers.Authorization = `Bearer ${token}`;
+  // For file uploads, remove the default JSON Content-Type so the browser/axios
+  // sets multipart/form-data WITH the required boundary.
+  if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+    delete (config.headers as any)['Content-Type'];
+  }
   return config;
 });
 

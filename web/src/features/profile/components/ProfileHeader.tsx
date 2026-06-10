@@ -16,14 +16,14 @@ export const ProfileHeader = ({ profile, onEdit, isSelf = false }: Props) => {
   const coverRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
+  // NOTE: do not set Content-Type manually — axios must add the multipart
+  // boundary itself, otherwise the server cannot parse the uploaded file.
   const uploadAvatar = async (file: File) => {
     setUploading(true);
     try {
       const form = new FormData();
       form.append('file', file);
-      await apiClient.post('/users/me/avatar', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await apiClient.post('/users/me/avatar', form);
       qc.invalidateQueries({ queryKey: ['my-profile'] });
     } catch {
       alert('فشل رفع الصورة');
@@ -37,9 +37,7 @@ export const ProfileHeader = ({ profile, onEdit, isSelf = false }: Props) => {
     try {
       const form = new FormData();
       form.append('file', file);
-      await apiClient.post('/users/me/cover', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await apiClient.post('/users/me/cover', form);
       qc.invalidateQueries({ queryKey: ['my-profile'] });
     } catch {
       alert('فشل رفع الصورة');
