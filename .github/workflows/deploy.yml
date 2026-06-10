@@ -31,7 +31,7 @@ jobs:
             --exclude='**/dist' \
             backend web admin ai-service docker scripts \
             docker-compose.vps.yml docker-compose.prod.yml docker-compose.yml \
-            README.md CLAUDE.md
+            .dockerignore README.md CLAUDE.md
 
       - name: Upload package to VPS
         uses: appleboy/scp-action@v0.1.7
@@ -54,10 +54,29 @@ jobs:
           script: |
             set -e
             mkdir -p /opt/tayyibt
-            # Extract over the existing checkout. Untracked files NOT in the
-            # archive (.env.production, certs/, Docker volumes) are preserved.
-            tar xzf /tmp/app.tar.gz -C /opt/tayyibt
+
+            # --- Clean-mirror deploy ------------------------------------------
+            # The old approach (tar-extract over the live dir) only ADDED/updated
+            # files; anything deleted or renamed in the repo lingered on disk and
+            # could mask repo changes (e.g. a dead duplicate component still being
+            # edited or imported). We now mirror the repo onto the VPS with
+            # `rsync --delete`, so /opt/tayyibt is byte-for-byte the repo EXCEPT
+            # for the VPS-only state we must never touch (.env.production, certs/).
+            command -v rsync >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rsync)
+
+            rm -rf /tmp/tayyibt_new
+            mkdir -p /tmp/tayyibt_new
+            tar xzf /tmp/app.tar.gz -C /tmp/tayyibt_new
             rm -f /tmp/app.tar.gz
+
+            rsync -a --delete \
+              --exclude='.env.production' \
+              --exclude='.env' \
+              --exclude='certs/' \
+              --exclude='.git/' \
+              /tmp/tayyibt_new/ /opt/tayyibt/
+            rm -rf /tmp/tayyibt_new
+
             chmod +x /opt/tayyibt/scripts/cd-deploy.sh || true
             bash /opt/tayyibt/scripts/cd-deploy.sh
 

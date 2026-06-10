@@ -106,6 +106,26 @@ jobs:
       - name: Build admin
         run: docker build -f docker/admin/Dockerfile -t tayyibt-admin:latest .
 
+  # ========== Dead / Duplicate Component Guard ==========
+  # Fails if any component under web/src/components is never referenced — catches
+  # orphan/duplicate files (e.g. a misspelled duplicate banner) before they ship
+  # and cause "my change had no effect" confusion.
+  dead-components:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check for dead/duplicate components (web)
+        run: node scripts/check-dead-components.mjs web
+
+      - name: Check for dead/duplicate components (admin)
+        run: node scripts/check-dead-components.mjs admin
+
   # ========== Security Scan ==========
   # Runs only when the CLAUDE_API_KEY secret is configured; never blocks CI.
   security:
