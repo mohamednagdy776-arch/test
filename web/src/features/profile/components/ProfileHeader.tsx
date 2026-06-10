@@ -7,9 +7,10 @@ import { Camera, PencilSimple, Briefcase, Heart } from '@phosphor-icons/react';
 interface Props {
   profile: any;
   onEdit: () => void;
+  isSelf?: boolean;
 }
 
-export const ProfileHeader = ({ profile, onEdit }: Props) => {
+export const ProfileHeader = ({ profile, onEdit, isSelf = false }: Props) => {
   const qc = useQueryClient();
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
@@ -71,20 +72,24 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
         )}
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#131F2E]/30 to-transparent pointer-events-none" />
-        <button
-          onClick={() => coverRef.current?.click()}
-          className="absolute bottom-4 left-4 px-4 py-2 bg-[#131F2E]/70 hover:bg-[#131F2E]/90 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105"
-        >
-          <Camera size={18} />
-          <span>تعديل غلاف</span>
-        </button>
-        <input
-          ref={coverRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCover(f); }}
-        />
+        {isSelf && (
+          <>
+            <button
+              onClick={() => coverRef.current?.click()}
+              className="absolute bottom-4 left-4 px-4 py-2 bg-[#131F2E]/70 hover:bg-[#131F2E]/90 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105"
+            >
+              <Camera size={18} />
+              <span>تعديل غلاف</span>
+            </button>
+            <input
+              ref={coverRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCover(f); }}
+            />
+          </>
+        )}
       </div>
 
       <div className="px-6 pb-6 relative">
@@ -92,8 +97,8 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
           {/* Avatar with enhanced styling */}
           <div className="relative shrink-0 group">
             <div
-              className="h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center cursor-pointer ring-4 ring-[#FDFAF5] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary"
-              onClick={() => avatarRef.current?.click()}
+              className={`h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center ring-4 ring-[#FDFAF5] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${isSelf ? 'cursor-pointer' : ''}`}
+              onClick={() => { if (isSelf) avatarRef.current?.click(); }}
             >
               {profile.avatarUrl ? (
                 <img src={profile.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
@@ -103,21 +108,23 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
                 </span>
               )}
             </div>
-            <button
-              onClick={() => avatarRef.current?.click()}
-              className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gradient-to-r from-[#213448] to-[#547792] text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft hover:shadow-glow hover:scale-110 transition-all duration-200"
-            >
-              {uploading ? '...' : <Camera size={14} />}
-            </button>
-            {/* Status indicator */}
-            <div className="absolute bottom-1 right-1 h-4 w-4 rounded-full bg-[#4A8C6F] ring-2 ring-[#FDFAF5] shadow-[0_0_8px_rgba(74,140,111,0.5)]" />
-            <input
-              ref={avatarRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); }}
-            />
+            {isSelf && (
+              <>
+                <button
+                  onClick={() => avatarRef.current?.click()}
+                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gradient-to-r from-[#213448] to-[#547792] text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft hover:shadow-glow hover:scale-110 transition-all duration-200"
+                >
+                  {uploading ? '...' : <Camera size={14} />}
+                </button>
+                <input
+                  ref={avatarRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); }}
+                />
+              </>
+            )}
           </div>
 
           {/* Info */}
@@ -147,7 +154,7 @@ export const ProfileHeader = ({ profile, onEdit }: Props) => {
           </div>
 
           {/* Edit button */}
-          {profile.isSelf && (
+          {isSelf && (
             <button
               onClick={onEdit}
               className="shrink-0 mt-16 rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-[#D4E8EE] hover:border-[#547792] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"

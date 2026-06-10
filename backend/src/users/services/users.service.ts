@@ -140,8 +140,9 @@ export class UsersService {
   private formatProfile(profile: Profile, userId?: string) {
     const u = profile.user;
     const nameFromUser = `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim();
-    // Prefer the user's first + last name; fall back to the stored profile name.
-    const displayName = nameFromUser || profile.fullName || u?.fullName || '';
+    // Prefer an explicitly edited profile name; otherwise use first + last name.
+    const displayName = (profile.fullName && profile.fullName.trim())
+      || nameFromUser || u?.fullName || '';
     return {
       id: profile.id,
       userId: profile.user?.id,

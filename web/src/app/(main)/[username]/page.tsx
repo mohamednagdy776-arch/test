@@ -1,5 +1,5 @@
 'use client';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -13,6 +13,7 @@ type Tab = 'posts' | 'about' | 'friends' | 'photos' | 'videos' | 'activity';
 
 export default function UserProfilePage() {
   const params = useParams();
+  const router = useRouter();
   const username = params.username as string;
   const [activeTab, setActiveTab] = useState<Tab>('posts');
 
@@ -39,7 +40,7 @@ export default function UserProfilePage() {
 
   return (
     <div className="space-y-4">
-      <ProfileHeader profile={profile} onEdit={() => {}} />
+      <ProfileHeader profile={profile} isSelf={!!profile.isSelf} onEdit={() => router.push('/profile')} />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="min-h-[400px]">
         {activeTab === 'posts' && <PostsTab userId={profile.userId} />}

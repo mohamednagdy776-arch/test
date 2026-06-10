@@ -5,10 +5,10 @@ import Link from 'next/link';
 export default function SettingsPage() {
   const settingsSections = [
     {
-      title: 'معلومات الحساب',
+      title: 'الملف الشخصي',
       icon: '👤',
-      description: 'عرض وتعديل معلومات حسابك',
-      href: '/settings/account',
+      description: 'عرض وتعديل ملفك الشخصي',
+      href: '/profile',
       color: 'bg-emerald-50',
     },
     {

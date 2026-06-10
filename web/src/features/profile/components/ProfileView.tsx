@@ -38,7 +38,7 @@ export const ProfileView = () => {
 
   return (
     <div className="space-y-4">
-      <ProfileHeader profile={profile} onEdit={() => setEditing(true)} />
+      <ProfileHeader profile={profile} isSelf onEdit={() => setEditing(true)} />
 
       <ProfileSection title="المعلومات الأساسية" icon="👤">
         <Grid items={[
