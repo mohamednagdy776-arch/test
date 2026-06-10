@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from '@/store/providers';
+import { UnderConstructionBanner } from '@/components/layout/UnderConstructionBanner';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://145-14-158-100.sslip.io'),
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body className="min-h-screen font-sans antialiased">
+        <UnderConstructionBanner />
         <Providers>{children}</Providers>
       </body>
     </html>
