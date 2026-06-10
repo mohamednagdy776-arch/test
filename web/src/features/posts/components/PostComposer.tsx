@@ -168,7 +168,11 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
 
         {mediaPreview && (
           <div className="mt-3 relative">
-            <img src={mediaPreview} alt="Preview" className="max-h-48 rounded-xl" />
+            {mediaFile?.type.startsWith('video/') ? (
+              <video src={mediaPreview} controls className="max-h-48 rounded-xl w-full" />
+            ) : (
+              <img src={mediaPreview} alt="Preview" className="max-h-48 rounded-xl" />
+            )}
             <button type="button" onClick={() => { setMediaPreview(null); setMediaFile(null); }} className="absolute top-2 right-2 h-8 w-8 rounded-full bg-[#131F2E]/60 text-[#FDFAF5] flex items-center justify-center">
               <X size={18} />
             </button>
