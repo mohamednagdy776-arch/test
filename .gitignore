@@ -66,6 +66,13 @@ Thumbs.db
 .DS_Store
 nul
 
+# Per-service .dockerignore files are unused — every service builds with the
+# repo root as context, so Docker only reads the root .dockerignore (tracked).
+/admin/.dockerignore
+/ai-service/.dockerignore
+/backend/.dockerignore
+/web/.dockerignore
+
 # Database
 *.sqlite
 *.sqlite3
