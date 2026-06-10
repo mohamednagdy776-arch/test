@@ -95,14 +95,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       
+      # The Dockerfiles copy from sub-dirs (e.g. COPY backend/package*.json),
+      # so the build context must be the repo root, not ./backend.
       - name: Build backend
-        run: docker build -f docker/backend/Dockerfile -t tayyibt-backend:latest ./backend
-      
+        run: docker build -f docker/backend/Dockerfile -t tayyibt-backend:latest .
+
       - name: Build web
-        run: docker build -f docker/web/Dockerfile -t tayyibt-web:latest ./web
-      
+        run: docker build -f docker/web/Dockerfile -t tayyibt-web:latest .
+
       - name: Build admin
-        run: docker build -f docker/admin/Dockerfile -t tayyibt-admin:latest ./admin
+        run: docker build -f docker/admin/Dockerfile -t tayyibt-admin:latest .
 
   # ========== Security Scan ==========
   # Runs only when the CLAUDE_API_KEY secret is configured; never blocks CI.
@@ -142,11 +144,12 @@ jobs:
         with:
           node-version: '20'
 
+      # Each step starts at the repo root, so cd into each app directly.
       - name: Lint web
         run: cd web && npm ci && npm run lint
 
       - name: Lint admin
-        run: cd ../admin && npm ci && npm run lint
+        run: cd admin && npm ci && npm run lint
 
   # ========== Build Status ==========
   build-complete:
