@@ -17,7 +17,7 @@ export const UnderConstructionBanner = () => {
   return (
     <div
       role="status"
-      className="relative z-[100] w-full bg-red-600 text-white text-center text-xs sm:text-sm font-semibold py-2 px-8 shadow-sm"
+      className="relative z-[100] w-full bg-blue-600 text-white text-center text-xs sm:text-sm font-semibold py-2 px-8 shadow-sm"
     >
       🚧 هذا الموقع قيد الإنشاء حالياً — قد تواجه بعض الميزات غير المكتملة · Website under construction 🚧
       <button
@@ -26,7 +26,7 @@ export const UnderConstructionBanner = () => {
           setHidden(true);
           try { sessionStorage.setItem('uc-banner-hidden', '1'); } catch {}
         }}
-        className="absolute top-1/2 -translate-y-1/2 right-3 h-6 w-6 rounded-full hover:bg-red-700/60 transition-colors flex items-center justify-center"
+        className="absolute top-1/2 -translate-y-1/2 right-3 h-6 w-6 rounded-full hover:bg-blue-700/60 transition-colors flex items-center justify-center"
       >
         ✕
       </button>
