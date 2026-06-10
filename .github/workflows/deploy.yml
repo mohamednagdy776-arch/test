@@ -1,174 +1,69 @@
-name: Build & Deploy
+name: Deploy to VPS
 
+# Continuous deployment: every push to `main` ships the code to the VPS,
+# rebuilds the Docker stack, and restarts it. Can also be run manually.
 on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-          - staging
-          - production
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+# Never run two deploys at once.
+concurrency:
+  group: vps-deploy
+  cancel-in-progress: false
 
 jobs:
-  # ========== Build & Test ==========
-  build:
+  deploy:
     runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Generate version
-        id: version
-        run: echo "version=$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Build backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          file: ./docker/backend/Dockerfile
-          push: false
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ steps.version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build web
-        uses: docker/build-push-action@v5
-        with:
-          context: ./web
-          file: ./docker/web/Dockerfile
-          push: false
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:${{ steps.version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build admin
-        uses: docker/build-push-action@v5
-        with:
-          context: ./admin
-          file: ./docker/admin/Dockerfile
-          push: false
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/admin:${{ steps.version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build ai-service
-        uses: docker/build-push-action@v5
-        with:
-          context: ./ai-service
-          file: ./docker/ai-service/Dockerfile
-          push: false
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/ai-service:${{ steps.version.outputs.version }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ========== Security Scan ==========
-  security:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-      
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-  # ========== Push to Registry ==========
-  push:
-    runs-on: ubuntu-latest
-    needs: [build, security]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Login to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=branch
-            type=sha,prefix=
-            type=raw,value=latest,enable={{is_default_branch}}
-      
-      - name: Push backend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend
-          file: ./docker/backend/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-      
-      - name: Push web
-        uses: docker/build-push-action@v5
-        with:
-          context: ./web
-          file: ./docker/web/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/web:${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-      
-      - name: Push admin
-        uses: docker/build-push-action@v5
-        with:
-          context: ./admin
-          file: ./docker/admin/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/admin:${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-      
-      - name: Push ai-service
-        uses: docker/build-push-action@v5
-        with:
-          context: ./ai-service
-          file: ./docker/ai-service/Dockerfile
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/ai-service:${{ github.sha }}
-          labels: ${{ steps.meta.outputs.labels }}
-
-  # ========== Deploy Notification ==========
-  notify:
-    runs-on: ubuntu-latest
-    needs: push
-    if: always()
-    steps:
-      - name: Notify deployment
+      - name: Package the application
         run: |
-          echo "Build completed"
-          echo "Version: ${{ github.sha }}"
-          echo "Repository: ${{ github.repository }}"
+          tar czf app.tar.gz \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='**/node_modules' \
+            --exclude='.next' \
+            --exclude='**/.next' \
+            --exclude='dist' \
+            --exclude='**/dist' \
+            backend web admin ai-service docker scripts \
+            docker-compose.vps.yml docker-compose.prod.yml docker-compose.yml \
+            README.md CLAUDE.md
+
+      - name: Upload package to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          source: app.tar.gz
+          target: /tmp
+
+      - name: Extract, build and restart on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 40m
+          script: |
+            set -e
+            mkdir -p /opt/tayyibt
+            # Extract over the existing checkout. Untracked files NOT in the
+            # archive (.env.production, certs/, Docker volumes) are preserved.
+            tar xzf /tmp/app.tar.gz -C /opt/tayyibt
+            rm -f /tmp/app.tar.gz
+            chmod +x /opt/tayyibt/scripts/cd-deploy.sh || true
+            bash /opt/tayyibt/scripts/cd-deploy.sh
+
+      - name: Health check
+        run: |
+          sleep 5
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://145-14-158-100.sslip.io/api/v1/health || echo 000)
+          echo "Backend health: $code"
+          test "$code" = "200"
