@@ -30,10 +30,28 @@ export class PagesController {
     return ok(pages);
   }
 
+  // Static segments MUST precede @Get(':id') or they get captured by :id and
+  // rejected as a non-UUID ("Invalid identifier format").
+  @Get('created')
+  async created(@CurrentUser() user: User) {
+    return ok(await this.pagesService.getCreated(user.id));
+  }
+
+  @Get('suggested')
+  async suggested(@Query('limit') limit: string, @CurrentUser() user: User) {
+    return ok(await this.pagesService.getSuggested(user.id, limit ? Number(limit) : 5));
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user?: User) {
     const page = await this.pagesService.findOne(id, user?.id);
     return ok(page);
+  }
+
+  @Get(':id/posts')
+  async pagePosts(@Param('id') id: string, @Query() query: PaginationDto) {
+    const { data, total } = await this.pagesService.getPosts(id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
   }
 
   @Post(':id/follow')

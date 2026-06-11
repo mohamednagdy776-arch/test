@@ -49,6 +49,31 @@ export class GroupsController {
     return ok(groups);
   }
 
+  // Static segments MUST be declared before @Get(':id'); otherwise they are
+  // captured by the :id param and rejected as a non-UUID ("Invalid identifier
+  // format").
+  @Get('public')
+  async findPublic(@Query() query: PaginationDto) {
+    const { data, total } = await this.groupsService.findByPrivacy('public', query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Get('private')
+  async findPrivate(@Query() query: PaginationDto) {
+    const { data, total } = await this.groupsService.findByPrivacy('private', query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Get('suggested')
+  async suggested(@Query('limit') limit: string, @CurrentUser() user: User) {
+    return ok(await this.groupsService.getSuggested(user.id, limit ? Number(limit) : 5));
+  }
+
+  @Get('pending')
+  async pending(@CurrentUser() user: User) {
+    return ok(await this.groupsService.getPendingRequests(user.id));
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string, @CurrentUser() user: User) {
     const group = await this.groupsService.findOne(id, user.id);

@@ -122,6 +122,38 @@ export class PagesService {
     return count > 0;
   }
 
+  // Pages created by the user (the FE "created" tab).
+  async getCreated(userId: string) {
+    return this.pagesRepo.find({
+      where: { createdBy: { id: userId } },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  // Public pages the user does not already follow.
+  async getSuggested(userId: string, limit: number) {
+    const follows = await this.followerRepo.find({
+      where: { user: { id: userId } },
+      relations: ['page'],
+    });
+    const followed = new Set(follows.map((f) => f.page.id));
+    const pages = await this.pagesRepo.find({
+      where: { privacy: 'public' },
+      order: { createdAt: 'DESC' },
+      take: limit + followed.size,
+    });
+    return pages.filter((p) => !followed.has(p.id)).slice(0, limit);
+  }
+
+  // Posts are not associated to pages in the current schema (posts belong to a
+  // user/group only). Return an empty page rather than a 404 so the client
+  // renders an empty feed. Validates the page exists first.
+  async getPosts(pageId: string, _page: number, _limit: number) {
+    const exists = await this.pagesRepo.count({ where: { id: pageId } });
+    if (!exists) throw new NotFoundException('Page not found');
+    return { data: [] as unknown[], total: 0 };
+  }
+
   async getFollowerCount(pageId: string): Promise<number> {
     return this.followerRepo.count({ where: { page: { id: pageId } } });
   }

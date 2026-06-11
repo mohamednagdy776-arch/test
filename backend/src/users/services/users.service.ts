@@ -99,7 +99,19 @@ export class UsersService {
     return this.createProfile(userId, dto);
   }
 
-  async getFullProfile(userId: string, viewerId?: string) {
+  // Accepts either a user UUID or a username. The web app links to profiles by
+  // username (/[username] → GET /users/{username}); a raw username hitting a
+  // UUID column otherwise throws "invalid input syntax for type uuid" → 400.
+  private async resolveUserId(idOrUsername: string): Promise<string | null> {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(idOrUsername);
+    if (isUuid) return idOrUsername;
+    const user = await this.usersRepo.findOne({ where: { username: idOrUsername } });
+    return user?.id ?? null;
+  }
+
+  async getFullProfile(idOrUsername: string, viewerId?: string) {
+    const userId = await this.resolveUserId(idOrUsername);
+    if (!userId) return null;
     let profile = await this.profilesRepo.findOne({
       where: { user: { id: userId } },
       relations: ['user', 'workEntries', 'educationEntries'],
@@ -224,7 +236,9 @@ export class UsersService {
     };
   }
 
-  async getPublicProfile(userId: string) {
+  async getPublicProfile(idOrUsername: string) {
+    const userId = await this.resolveUserId(idOrUsername);
+    if (!userId) return null;
     let profile = await this.profilesRepo.findOne({
       where: { user: { id: userId } },
       relations: ['user', 'workEntries', 'educationEntries'],

@@ -1,7 +1,7 @@
 import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like } from 'typeorm';
-import { Group } from '../entities/group.entity';
+import { Group, GroupPrivacy } from '../entities/group.entity';
 import { GroupMember } from '../entities/group-member.entity';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { User } from '../../auth/entities/user.entity';
@@ -185,5 +185,37 @@ export class GroupsService {
       where: { group: { id: groupId }, user: { id: userId } },
     });
     return member?.role || 'none';
+  }
+
+  // Paginated list of groups by privacy ('public' | 'private').
+  async findByPrivacy(privacy: GroupPrivacy, page: number, limit: number) {
+    const [data, total] = await this.groupsRepo.findAndCount({
+      where: { privacy },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+    });
+    return { data, total };
+  }
+
+  // Public groups the user has not joined yet.
+  async getSuggested(userId: string, limit: number) {
+    const memberships = await this.memberRepo.find({
+      where: { user: { id: userId } },
+      relations: ['group'],
+    });
+    const joined = new Set(memberships.map((m) => m.group.id));
+    const groups = await this.groupsRepo.find({
+      where: { privacy: 'public' },
+      order: { createdAt: 'DESC' },
+      take: limit + joined.size,
+    });
+    return groups.filter((g) => !joined.has(g.id)).slice(0, limit);
+  }
+
+  // No join-request model exists in the schema yet, so there are no pending
+  // requests to return. Kept as an endpoint so the client gets a clean [].
+  async getPendingRequests(_userId: string) {
+    return [];
   }
 }
