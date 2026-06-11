@@ -30,12 +30,12 @@ export class StoriesService {
   }
 
   async getStories(userId: string) {
-    const thirtyHoursAgo = new Date(Date.now() - 30 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const stories = await this.storyRepo
       .createQueryBuilder('story')
       .leftJoinAndSelect('story.user', 'user')
       .leftJoinAndSelect('user.profile', 'profile')
-      .where('story.createdAt > :thirtyHoursAgo', { thirtyHoursAgo })
+      .where('story.createdAt > :twentyFourHoursAgo', { twentyFourHoursAgo })
       .andWhere('story.isArchived = :isArchived', { isArchived: false })
       .andWhere('story.userId = :userId', { userId })
       .orderBy('story.createdAt', 'DESC')
@@ -44,12 +44,12 @@ export class StoriesService {
   }
 
   async getAllStories(userId: string) {
-    const thirtyHoursAgo = new Date(Date.now() - 30 * 60 * 60 * 1000);
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const stories = await this.storyRepo
       .createQueryBuilder('story')
       .leftJoinAndSelect('story.user', 'user')
       .leftJoinAndSelect('user.profile', 'profile')
-      .where('story.createdAt > :thirtyHoursAgo', { thirtyHoursAgo })
+      .where('story.createdAt > :twentyFourHoursAgo', { twentyFourHoursAgo })
       .andWhere('story.isArchived = :isArchived', { isArchived: false })
       .andWhere('story.userId != :userId', { userId })
       .orderBy('story.createdAt', 'DESC')
@@ -75,6 +75,8 @@ export class StoriesService {
   }
 
   async viewStory(storyId: string, viewerId: string) {
+    const existing = await this.viewRepo.findOne({ where: { storyId, userId: viewerId } });
+    if (existing) return { success: true };
     const view = new StoryView();
     view.storyId = storyId;
     view.userId = viewerId;

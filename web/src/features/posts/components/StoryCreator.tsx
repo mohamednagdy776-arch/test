@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef } from 'react';
 import { useCreateStory } from '../hooks';
+import { postsApi } from '../api';
 import { cn } from '@/lib/utils';
 
 const COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#131F2E', '#213448', '#547792', '#FDFAF5'];
@@ -16,6 +17,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
   const [bgColor, setBgColor] = useState('#131F2E');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const createStory = useCreateStory();
 
@@ -31,16 +33,19 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
 
   const handleSubmit = async () => {
     const data: any = {};
-    
+
     if (mediaType === 'text') {
       data.text = text;
       data.bgColor = bgColor;
-    } else if (mediaType === 'image') {
-      data.mediaUrl = mediaPreview;
-      data.mediaType = 'image';
-    } else if (mediaType === 'video') {
-      data.mediaUrl = mediaPreview;
-      data.mediaType = 'video';
+    } else if (mediaFile) {
+      setIsUploading(true);
+      try {
+        const uploaded = await postsApi.uploadMedia(mediaFile);
+        data.mediaUrl = uploaded.url;
+        data.mediaType = mediaType;
+      } finally {
+        setIsUploading(false);
+      }
     }
 
     await createStory.mutateAsync(data);
@@ -124,11 +129,11 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
 
         <button
           onClick={handleSubmit}
-          disabled={createStory.isPending || (mediaType === 'text' && !text)}
+          disabled={isUploading || createStory.isPending || (mediaType === 'text' && !text)}
           className="w-full mt-4 py-3 rounded-xl text-[#FDFAF5] font-medium hover:shadow-md disabled:opacity-40 transition-all"
           style={{ background: 'linear-gradient(to right, #213448, #547792)' }}
         >
-          {createStory.isPending ? 'جاري النشر...' : 'إضافة للقصة'}
+          {isUploading ? 'جاري رفع الملف...' : createStory.isPending ? 'جاري النشر...' : 'إضافة للقصة'}
         </button>
       </div>
     </div>
