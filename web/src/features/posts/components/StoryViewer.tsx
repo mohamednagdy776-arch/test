@@ -3,11 +3,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { useViewStory, useStoryViewers, useAddToHighlight } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
 
-const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1').replace('/api/v1', '');
-
-function resolveMedia(url?: string) {
-  if (!url) return url;
-  return url.startsWith('/uploads/') ? `${API_ORIGIN}${url}` : url;
+function resolveMedia(url?: string): string | undefined {
+  if (!url) return undefined;
+  if (url.startsWith('http') || url.startsWith('blob:')) return url;
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1')
+    .replace(/\/api\/v1\/?$/, '');
+  return `${base}${url}`;
 }
 
 interface StoryItem {
@@ -116,6 +117,10 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     : `منذ ${Math.floor(minutesAgo / 1440)} يوم`;
 
   const mediaUrl = resolveMedia(currentStory?.mediaUrl);
+  const [mediaError, setMediaError] = useState(false);
+
+  // Reset error state when story changes
+  useEffect(() => { setMediaError(false); }, [currentStory?.id]);
 
   return (
     <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" dir="rtl">
@@ -138,10 +143,31 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                 {currentStory.text}
               </p>
             </div>
+          ) : mediaError ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#131F2E] gap-3 p-10">
+              <svg className="h-12 w-12 text-white/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+              </svg>
+              <p className="text-sm text-white/40 text-center">تعذّر تحميل الوسائط</p>
+            </div>
           ) : currentStory?.mediaType === 'video' ? (
-            <video src={mediaUrl} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline />
+            <video
+              src={mediaUrl}
+              className="absolute inset-0 w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              onError={() => setMediaError(true)}
+            />
           ) : mediaUrl ? (
-            <img src={mediaUrl} alt="Story" className="absolute inset-0 w-full h-full object-cover" />
+            <img
+              src={mediaUrl}
+              alt="Story"
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={() => setMediaError(true)}
+            />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-[#131F2E] p-10">
               <p className="text-xl font-bold text-white text-center drop-shadow-lg">{currentStory?.text}</p>

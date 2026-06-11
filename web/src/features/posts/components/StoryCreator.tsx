@@ -44,7 +44,9 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
       setIsUploading(true);
       try {
         const uploaded = await postsApi.uploadMedia(mediaFile);
-        data.mediaUrl = uploaded.data?.url;
+        const url = uploaded.data?.url ?? uploaded.url;
+        if (!url) throw new Error('Upload failed: no URL returned');
+        data.mediaUrl = url;
         data.mediaType = mediaType;
       } finally {
         setIsUploading(false);
