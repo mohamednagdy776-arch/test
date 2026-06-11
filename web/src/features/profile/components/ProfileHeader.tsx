@@ -1,16 +1,34 @@
 'use client';
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Camera, PencilSimple, Briefcase, Heart } from '@phosphor-icons/react';
+import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users } from '@phosphor-icons/react';
+
+interface FriendshipStatus {
+  status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
+  id?: string;
+  isRequester?: boolean;
+}
 
 interface Props {
   profile: any;
-  onEdit: () => void;
+  onEdit?: () => void;
   isSelf?: boolean;
+  friendshipStatus?: FriendshipStatus;
+  onAddFriend?: () => void;
+  onCancelRequest?: () => void;
+  onAcceptRequest?: () => void;
+  onUnfriend?: () => void;
+  friendActionPending?: boolean;
 }
 
-export const ProfileHeader = ({ profile, onEdit, isSelf = false }: Props) => {
+export const ProfileHeader = ({
+  profile, onEdit, isSelf = false,
+  friendshipStatus, onAddFriend, onCancelRequest, onAcceptRequest, onUnfriend,
+  friendActionPending = false,
+}: Props) => {
+  const router = useRouter();
   const qc = useQueryClient();
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
@@ -145,14 +163,17 @@ export const ProfileHeader = ({ profile, onEdit, isSelf = false }: Props) => {
             )}
             <p className="mt-2 text-xs text-[#BFB9AD]">
               انضم في {formatDate(profile.joinDate || profile.createdAt)}
-              {profile.mutualFriends !== undefined && profile.mutualFriends > 0 && (
+              {!!profile.friendCount && (
+                <span className="mr-2">• {profile.friendCount} صديق</span>
+              )}
+              {!!profile.mutualFriends && profile.mutualFriends > 0 && (
                 <span className="mr-2">• {profile.mutualFriends} أصدقاء مشترك</span>
               )}
             </p>
           </div>
 
-          {/* Edit button */}
-          {isSelf && (
+          {/* Self: edit button */}
+          {isSelf && onEdit && (
             <button
               onClick={onEdit}
               className="shrink-0 mt-16 rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-[#D4E8EE] hover:border-[#547792] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
@@ -160,6 +181,69 @@ export const ProfileHeader = ({ profile, onEdit, isSelf = false }: Props) => {
               <PencilSimple size={16} className="inline mr-1" />
               تعديل الملف
             </button>
+          )}
+
+          {/* Viewer: friend action + message */}
+          {!isSelf && (
+            <div className="shrink-0 mt-16 flex gap-2 flex-wrap">
+
+              {/* No relationship → Add Friend */}
+              {(!friendshipStatus || friendshipStatus.status === 'none') && (
+                <button
+                  onClick={onAddFriend}
+                  disabled={friendActionPending}
+                  className="rounded-xl bg-gradient-to-r from-[#213448] to-[#547792] px-4 py-2 text-sm font-medium text-[#FDFAF5] hover:shadow-glow hover:scale-105 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <UserPlus size={16} />
+                  {friendActionPending ? '...' : 'إضافة صديق'}
+                </button>
+              )}
+
+              {/* Pending — I sent the request → Cancel */}
+              {friendshipStatus?.status === 'pending' && friendshipStatus?.isRequester && (
+                <button
+                  onClick={onCancelRequest}
+                  disabled={friendActionPending}
+                  className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#547792] hover:bg-[#EAE0CF] hover:border-[#547792] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Clock size={16} />
+                  {friendActionPending ? '...' : 'تم الإرسال'}
+                </button>
+              )}
+
+              {/* Pending — they sent the request → Accept */}
+              {friendshipStatus?.status === 'pending' && !friendshipStatus?.isRequester && (
+                <button
+                  onClick={onAcceptRequest}
+                  disabled={friendActionPending}
+                  className="rounded-xl bg-gradient-to-r from-[#213448] to-[#547792] px-4 py-2 text-sm font-medium text-[#FDFAF5] hover:shadow-glow transition-all duration-300 flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <CheckCircle size={16} />
+                  {friendActionPending ? '...' : 'قبول الطلب'}
+                </button>
+              )}
+
+              {/* Already friends → Unfriend */}
+              {friendshipStatus?.status === 'accepted' && (
+                <button
+                  onClick={onUnfriend}
+                  disabled={friendActionPending}
+                  className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Users size={16} />
+                  {friendActionPending ? '...' : 'أصدقاء'}
+                </button>
+              )}
+
+              {/* Message — always visible */}
+              <button
+                onClick={() => router.push('/chat')}
+                className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-[#D4E8EE] hover:border-[#547792] transition-all duration-300 flex items-center gap-1.5"
+              >
+                <ChatCircle size={16} />
+                رسالة
+              </button>
+            </div>
           )}
         </div>
 

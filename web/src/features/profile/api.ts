@@ -37,4 +37,19 @@ export const profileApi = {
 
   getActivityLog: (userId: string, params: Record<string, any> = {}) =>
     apiClient.get(`/users/${userId}/activity`, { params }).then((r) => r.data),
+
+  getFriendshipStatus: (userId: string) =>
+    apiClient.get(`/friends/status/${userId}`).then((r) => r.data),
+
+  sendFriendRequest: (userId: string) =>
+    apiClient.post('/friends/request', { userId }).then((r) => r.data),
+
+  cancelFriendRequest: (requestId: string) =>
+    apiClient.delete(`/friends/request/${requestId}`).then((r) => r.data),
+
+  acceptFriendRequest: (requestId: string) =>
+    apiClient.post(`/friends/request/${requestId}/accept`).then((r) => r.data),
+
+  unfriend: (userId: string) =>
+    apiClient.delete(`/friends/${userId}`).then((r) => r.data),
 };

@@ -117,12 +117,14 @@ export class UsersService {
 
     const isSelf = viewerId === userId;
     const mutualFriends = isSelf ? 0 : await this.getMutualFriendsCount(userId, viewerId ?? '');
+    const { total: friendCount } = await this.friendsService.getFriends(userId, 1, 1);
 
     return {
       ...this.formatProfile(profile, userId),
       username: profile.user?.username || profile.user?.email?.split('@')[0],
       joinDate: profile.createdAt,
       mutualFriends,
+      friendCount,
       isSelf,
     };
   }

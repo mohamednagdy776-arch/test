@@ -237,7 +237,11 @@ export class FriendsService {
     });
 
     if (!friendship) return { status: 'none' };
-    return { status: friendship.status, id: friendship.id };
+    return {
+      status: friendship.status,
+      id: friendship.id,
+      isRequester: friendship.requesterId === userId,
+    };
   }
 
   async getBirthdays(userId: string) {
