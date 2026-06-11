@@ -92,6 +92,12 @@ export class UsersController {
     return ok(await this.usersService.getFullProfile(id, user?.id));
   }
 
+  @Get(':id/posts')
+  async getUserPosts(@Param('id') id: string, @Query() query: PaginationDto) {
+    const { data, total } = await this.usersService.getUserPosts(id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
   @Get(':id/friends')
   async getFriends(@Param('id') id: string, @Query() query: PaginationDto) {
     return ok(await this.usersService.getFriends(id, query.page!, query.limit!));

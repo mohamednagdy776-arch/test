@@ -6,13 +6,14 @@ import { ProfileWork } from './entities/profile-work.entity';
 import { ProfileEducation } from './entities/profile-education.entity';
 import { ActivityLog } from './entities/activity-log.entity';
 import { User } from '../auth/entities/user.entity';
+import { Post } from '../posts/entities/post.entity';
 import { UsersService } from './services/users.service';
 import { UsersController } from './controllers/users.controller';
 import { FriendsModule } from '../friends/friends.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Profile, ProfileWork, ProfileEducation, ActivityLog]),
+    TypeOrmModule.forFeature([User, Profile, ProfileWork, ProfileEducation, ActivityLog, Post]),
     MulterModule.register({}),
     FriendsModule,
   ],

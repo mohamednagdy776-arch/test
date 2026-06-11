@@ -6,6 +6,7 @@ import { ProfileWork } from '../entities/profile-work.entity';
 import { ProfileEducation } from '../entities/profile-education.entity';
 import { ActivityLog } from '../entities/activity-log.entity';
 import { User } from '../../auth/entities/user.entity';
+import { Post } from '../../posts/entities/post.entity';
 import { UpdateProfileWithEntriesDto } from '../dto/update-profile.dto';
 import { SearchUsersDto } from '../dto/search-users.dto';
 import { ActivityLogQueryDto } from '../dto/activity-log.dto';
@@ -19,8 +20,23 @@ export class UsersService {
     @InjectRepository(ProfileEducation) private eduRepo: Repository<ProfileEducation>,
     @InjectRepository(ActivityLog) private activityRepo: Repository<ActivityLog>,
     @InjectRepository(User) private usersRepo: Repository<User>,
+    @InjectRepository(Post) private postsRepo: Repository<Post>,
     private friendsService: FriendsService,
   ) {}
+
+  // A user's own posts (the profile "posts" tab). Accepts a UUID or username.
+  async getUserPosts(idOrUsername: string, page: number, limit: number) {
+    const userId = await this.resolveUserId(idOrUsername);
+    if (!userId) return { data: [] as Post[], total: 0 };
+    const [data, total] = await this.postsRepo.findAndCount({
+      where: { user: { id: userId } },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['user', 'group'],
+    });
+    return { data, total };
+  }
 
   async getProfile(userId: string) {
     let profile = await this.profilesRepo.findOne({
