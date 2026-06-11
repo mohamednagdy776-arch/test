@@ -29,14 +29,15 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  
+  const [isPaused, setIsPaused] = useState(false);
+  const [showViewers, setShowViewers] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
   const currentUser = stories[userIndex];
   const currentStory = currentUser?.stories[storyIndex];
   const viewStory = useViewStory();
   const { data: viewersData } = useStoryViewers(currentStory?.id || '');
   const addToHighlight = useAddToHighlight();
-  const [showViewers, setShowViewers] = useState(false);
-  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
   const viewers = viewersData?.data || [];
 
   const goNext = useCallback(() => {
@@ -64,23 +65,23 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   }, [storyIndex, userIndex, stories]);
 
   useEffect(() => {
-    if (currentStory?.id) {
-      viewStory.mutate(currentStory.id);
-    }
+    if (currentStory?.id) viewStory.mutate(currentStory.id);
   }, [currentStory?.id]);
 
   useEffect(() => {
+    setIsPaused(showViewers || showMenu);
+  }, [showViewers, showMenu]);
+
+  useEffect(() => {
+    if (isPaused) return;
     const timer = setInterval(() => {
       setProgress(p => {
-        if (p >= 100) {
-          goNext();
-          return 0;
-        }
+        if (p >= 100) { goNext(); return 0; }
         return p + 100 / 50;
       });
     }, 100);
     return () => clearInterval(timer);
-  }, [goNext]);
+  }, [goNext, isPaused]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -93,105 +94,159 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   }, [onClose, goNext, goPrev]);
 
   const userName = displayName(currentUser?.user);
+  const minutesAgo = Math.floor((Date.now() - new Date(currentStory?.createdAt).getTime()) / 60000);
+  const timeLabel = minutesAgo < 60
+    ? `منذ ${minutesAgo} دقيقة`
+    : minutesAgo < 1440
+    ? `منذ ${Math.floor(minutesAgo / 60)} ساعة`
+    : `منذ ${Math.floor(minutesAgo / 1440)} يوم`;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in">
-      <div className="absolute inset-0 bg-[#131F2E]/90" onClick={onClose} />
-      <div className="relative w-full max-w-sm mx-4">
-        <div className="flex gap-1 mb-3">
-          {currentUser?.stories.map((_, i) => (
-            <div key={i} className="flex-1 h-1 rounded-full overflow-hidden bg-white/30">
-              <div
-                className={cn('h-full rounded-full transition-all duration-100', i <= storyIndex ? 'bg-white' : 'bg-white/30')}
-                style={{ width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%' }}
-              />
-            </div>
-          ))}
-        </div>
+    <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" dir="rtl">
+      <div className="absolute inset-0" onClick={onClose} />
 
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl ring-2 ring-white" style={{ background: 'linear-gradient(135deg, #D4E8EE, #94B4C1)' }}>
-            {userName.charAt(0)}
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-white">{userName}</p>
-            <p className="text-[11px] text-white/70">منذ {Math.floor((Date.now() - new Date(currentStory?.createdAt).getTime()) / 60000)} دقيقة</p>
-          </div>
-          <div className="flex gap-2">
-            <button onClick={() => setShowViewers(!showViewers)} className="text-white/70 hover:text-white">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-            </button>
-            <button onClick={() => setShowHighlightMenu(!showHighlightMenu)} className="text-white/70 hover:text-white">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>
-            </button>
-            <button onClick={onClose} className="text-white/70 hover:text-white">
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-          </div>
-        </div>
+      <div className="relative w-full max-w-[420px] h-full flex items-center mx-auto">
+        <div className="relative w-full aspect-[9/16] max-h-screen overflow-hidden sm:rounded-2xl bg-black">
 
-        {showHighlightMenu && (
-          <div className="absolute right-4 top-16 w-48 bg-white rounded-xl shadow-lg py-2 z-10">
-            <button onClick={() => { addToHighlight.mutate({ storyId: currentStory.id, name: 'الأهم' }); setShowHighlightMenu(false); }} className="w-full px-4 py-2 text-right text-sm text-[#213448] hover:bg-[#EAE0CF]/50">
-              إضافة لأهم اللحظات
-            </button>
-            <button onClick={() => setShowHighlightMenu(false)} className="w-full px-4 py-2 text-right text-sm text-[#213448] hover:bg-[#EAE0CF]/50">
-              إنشاء مجموعة جديدة
-            </button>
-          </div>
-        )}
-
-        {showViewers && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={() => setShowViewers(false)} />
-            <div className="relative w-72 max-h-80 bg-[#FDFAF5] rounded-xl shadow-lg overflow-hidden">
-              <div className="p-3 border-b border-[#C8D8DF]/40 flex items-center justify-between">
-                <h3 className="text-sm font-bold text-[#213448]">المشاهدون</h3>
-                <button onClick={() => setShowViewers(false)} className="text-[#547792]">✕</button>
-              </div>
-              <div className="overflow-y-auto max-h-60">
-                {viewers.length === 0 ? (
-                  <p className="p-4 text-sm text-[#547792] text-center">لا يوجد مشاهدون بعد</p>
-                ) : (
-                  viewers.map((viewer: any, i: number) => (
-                    <div key={i} className="flex items-center gap-3 p-3 hover:bg-[#EAE0CF]/30">
-                      <div className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-[#FDFAF5]" style={{ background: 'linear-gradient(135deg, #547792, #94B4C1)' }}>
-                        {displayName(viewer.user).charAt(0)}
-                      </div>
-                      <span className="text-sm text-[#213448]">{displayName(viewer.user)}</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="rounded-2xl overflow-hidden aspect-[9/16] max-h-[70vh] flex items-center justify-center">
+          {/* Story content */}
           {currentStory?.bgColor ? (
-            <div className="w-full h-full flex items-center justify-center p-8" style={{ backgroundColor: currentStory.bgColor }}>
-              <p className="text-2xl font-bold text-white text-center">{currentStory.text}</p>
+            <div className="absolute inset-0 flex items-center justify-center p-10" style={{ backgroundColor: currentStory.bgColor }}>
+              <p
+                className="font-bold text-center drop-shadow-lg leading-snug"
+                style={{
+                  color: currentStory.bgColor === '#FDFAF5' ? '#131F2E' : 'white',
+                  fontSize: `clamp(1.1rem, ${Math.max(1.5, 3 - (currentStory.text?.length || 0) / 40)}rem, 2.25rem)`,
+                }}
+              >
+                {currentStory.text}
+              </p>
             </div>
           ) : currentStory?.mediaType === 'video' ? (
-            <video src={currentStory.mediaUrl} controls className="w-full h-full object-contain" />
+            <video src={currentStory.mediaUrl} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline />
           ) : currentStory?.mediaUrl ? (
-            <img src={currentStory.mediaUrl} alt="Story" className="w-full h-full object-contain" />
+            <img src={currentStory.mediaUrl} alt="Story" className="absolute inset-0 w-full h-full object-cover" />
           ) : (
-            <div className="text-center p-8">
-              <p className="text-xl font-bold text-white mb-2">{currentStory?.text}</p>
+            <div className="absolute inset-0 flex items-center justify-center bg-[#131F2E] p-10">
+              <p className="text-xl font-bold text-white text-center drop-shadow-lg">{currentStory?.text}</p>
             </div>
           )}
-        </div>
 
-        <div className="flex gap-3 mt-3">
-          <button onClick={goPrev} disabled={storyIndex === 0 && userIndex === 0} className="flex-1 rounded-xl py-2.5 text-sm font-medium text-white/70 bg-white/10 hover:bg-white/20 disabled:opacity-30">
-            السابق
-          </button>
-          <button onClick={goNext} className="flex-1 rounded-xl py-2.5 text-sm font-medium text-white bg-[#547792] hover:bg-[#213448]">
-            {storyIndex < currentUser.stories.length - 1 || userIndex < stories.length - 1 ? 'التالي' : 'إغلاق'}
-          </button>
+          {/* Top gradient */}
+          <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
+          {/* Bottom gradient */}
+          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+
+          {/* Progress bars */}
+          <div className="absolute top-4 inset-x-3 flex gap-[3px] z-10">
+            {currentUser?.stories.map((_, i) => (
+              <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/30">
+                <div
+                  className="h-full rounded-full bg-white"
+                  style={{ width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%', transition: i === storyIndex ? 'none' : undefined }}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Header */}
+          <div className="absolute top-9 inset-x-3 flex items-center gap-2.5 z-10">
+            <div
+              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ring-2 ring-white/70"
+              style={{ background: 'linear-gradient(135deg, #547792, #213448)' }}
+            >
+              {userName.charAt(0)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-white leading-tight truncate">{userName}</p>
+              <p className="text-[11px] text-white/60 leading-tight">{timeLabel}</p>
+            </div>
+            <span className="text-[11px] text-white/50 tabular-nums flex-shrink-0">
+              {storyIndex + 1} / {currentUser.stories.length}
+            </span>
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setShowMenu(v => !v)}
+                className="p-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              >
+                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                  <circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" />
+                </svg>
+              </button>
+              {showMenu && (
+                <div className="absolute left-0 top-9 w-44 bg-[#1a2a3a] rounded-xl shadow-2xl border border-white/10 py-1 z-20">
+                  <button
+                    onClick={() => { setShowViewers(true); setShowMenu(false); }}
+                    className="w-full px-4 py-2.5 text-right text-sm text-white/90 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                  >
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    المشاهدون
+                  </button>
+                  <button
+                    onClick={() => { addToHighlight.mutate({ storyId: currentStory.id, name: 'الأهم' }); setShowMenu(false); }}
+                    className="w-full px-4 py-2.5 text-right text-sm text-white/90 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                  >
+                    <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                    إضافة للأهم
+                  </button>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Tap zones */}
+          <button className="absolute left-0 top-0 w-[40%] h-full z-10" onClick={goPrev} aria-label="السابق" />
+          <button className="absolute right-0 top-0 w-[40%] h-full z-10" onClick={goNext} aria-label="التالي" />
         </div>
       </div>
+
+      {/* Viewers bottom sheet */}
+      {showViewers && (
+        <div className="absolute inset-0 z-30 flex items-end justify-center" dir="rtl">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowViewers(false)} />
+          <div className="relative w-full max-w-[420px] bg-[#1a2a3a] rounded-t-2xl border-t border-white/10 shadow-2xl">
+            <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10">
+              <h3 className="text-sm font-bold text-white">
+                المشاهدون {viewers.length > 0 && <span className="text-white/50 font-normal">({viewers.length})</span>}
+              </h3>
+              <button onClick={() => setShowViewers(false)} className="p-1 text-white/50 hover:text-white transition-colors">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-60 pb-6">
+              {viewers.length === 0 ? (
+                <p className="py-8 text-sm text-white/30 text-center">لا يوجد مشاهدون بعد</p>
+              ) : (
+                viewers.map((viewer: any, i: number) => (
+                  <div key={i} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors">
+                    <div
+                      className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #547792, #94B4C1)' }}
+                    >
+                      {displayName(viewer.user).charAt(0)}
+                    </div>
+                    <span className="text-sm text-white/80">{displayName(viewer.user)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

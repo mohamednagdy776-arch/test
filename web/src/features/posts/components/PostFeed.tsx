@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useFeed, useRecentFeed, useStories, useCreateStory } from '../hooks';
+import { useFeed, useRecentFeed, useStories } from '../hooks';
 import { PostCard } from './PostCard';
 import { PostComposer } from './PostComposer';
 import { StoryViewer } from './StoryViewer';
@@ -11,42 +11,57 @@ function StoriesBar() {
   const [activeStory, setActiveStory] = useState<number | null>(null);
   const [showCreator, setShowCreator] = useState(false);
   const { data: storiesData } = useStories();
-  const createStory = useCreateStory();
   const stories = storiesData?.data || [];
 
   return (
     <>
       <div className="mb-6 rounded-2xl bg-[#FDFAF5] shadow-card border border-[#C8D8DF]/60 p-4">
-        <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          {/* Add story */}
           <button
             onClick={() => setShowCreator(true)}
             className="flex flex-col items-center gap-1.5 shrink-0 group"
           >
-            <div className="relative h-16 w-16 rounded-full bg-[#EAE0CF] border-2 border-dashed border-[#C8D8DF] flex items-center justify-center transition-all duration-300 group-hover:border-[#547792] group-hover:bg-[#D4E8EE]">
-              <svg className="h-6 w-6 text-[#547792]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
+            <div className="relative h-16 w-16">
+              <div className="h-full w-full rounded-full bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
+                <svg className="h-7 w-7 text-[#213448]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </div>
+              <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-[#547792] border-2 border-[#FDFAF5] flex items-center justify-center">
+                <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+              </div>
             </div>
-            <span className="text-[11px] font-medium text-[#547792] group-hover:text-[#213448] transition-colors truncate w-16 text-center">
+            <span className="text-[11px] font-medium text-[#547792] group-hover:text-[#213448] transition-colors w-16 text-center truncate">
               إضافة قصة
             </span>
           </button>
 
+          {/* Story groups */}
           {stories.map((group: any, i: number) => (
             <button
               key={group.user?.id || i}
               onClick={() => setActiveStory(i)}
               className="flex flex-col items-center gap-1.5 shrink-0 group"
             >
-              <div
-                className="relative h-16 w-16 rounded-full flex items-center justify-center text-2xl transition-all duration-300 group-hover:scale-105 p-[3px]"
-                style={{ background: 'linear-gradient(135deg, #547792, #94B4C1)' }}
-              >
-                <div className="h-full w-full rounded-full bg-[#FDFAF5] flex items-center justify-center">
-                  <span className="text-2xl">{displayName(group.user).charAt(0)}</span>
+              <div className="relative h-16 w-16">
+                <div
+                  className="absolute inset-0 rounded-full p-[2.5px] transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, #547792, #94B4C1, #D4E8EE)' }}
+                >
+                  <div className="h-full w-full rounded-full bg-[#FDFAF5] flex items-center justify-center">
+                    <span className="text-xl font-bold text-[#213448]">{displayName(group.user).charAt(0)}</span>
+                  </div>
                 </div>
+                {group.stories?.length > 1 && (
+                  <div className="absolute bottom-0 right-0 h-5 min-w-[20px] px-1 rounded-full bg-[#213448] border-2 border-[#FDFAF5] flex items-center justify-center">
+                    <span className="text-[9px] font-bold text-white tabular-nums">{group.stories.length}</span>
+                  </div>
+                )}
               </div>
-              <span className="text-[11px] font-medium text-[#547792] group-hover:text-[#213448] transition-colors truncate w-16 text-center">
+              <span className="text-[11px] font-medium text-[#547792] group-hover:text-[#213448] transition-colors w-16 text-center truncate">
                 {displayName(group.user)}
               </span>
             </button>
