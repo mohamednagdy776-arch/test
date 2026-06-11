@@ -3,6 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useViewStory, useStoryViewers, useAddToHighlight } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
 
+const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1').replace('/api/v1', '');
+
+function resolveMedia(url?: string) {
+  if (!url) return url;
+  return url.startsWith('/uploads/') ? `${API_ORIGIN}${url}` : url;
+}
+
 interface StoryItem {
   id: string;
   user: { id: string; profile?: { fullName?: string }; email?: string };
@@ -64,6 +71,13 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     }
   }, [storyIndex, userIndex, stories]);
 
+  // Body scroll lock
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   useEffect(() => {
     if (currentStory?.id) viewStory.mutate(currentStory.id);
   }, [currentStory?.id]);
@@ -95,26 +109,29 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
 
   const userName = displayName(currentUser?.user);
   const minutesAgo = Math.floor((Date.now() - new Date(currentStory?.createdAt).getTime()) / 60000);
-  const timeLabel = minutesAgo < 60
-    ? `منذ ${minutesAgo} دقيقة`
-    : minutesAgo < 1440
-    ? `منذ ${Math.floor(minutesAgo / 60)} ساعة`
+  const timeLabel =
+    minutesAgo < 1    ? 'الآن'
+    : minutesAgo < 60 ? `منذ ${minutesAgo} دقيقة`
+    : minutesAgo < 1440 ? `منذ ${Math.floor(minutesAgo / 60)} ساعة`
     : `منذ ${Math.floor(minutesAgo / 1440)} يوم`;
+
+  const mediaUrl = resolveMedia(currentStory?.mediaUrl);
 
   return (
     <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" dir="rtl">
+      {/* Backdrop — closes viewer when clicking outside the 9:16 frame */}
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-[420px] h-full flex items-center mx-auto">
         <div className="relative w-full aspect-[9/16] max-h-screen overflow-hidden sm:rounded-2xl bg-black">
 
-          {/* Story content */}
+          {/* ── Story content ── */}
           {currentStory?.bgColor ? (
             <div className="absolute inset-0 flex items-center justify-center p-10" style={{ backgroundColor: currentStory.bgColor }}>
               <p
                 className="font-bold text-center drop-shadow-lg leading-snug"
                 style={{
-                  color: currentStory.bgColor === '#FDFAF5' ? '#131F2E' : 'white',
+                  color: currentStory.bgColor === '#FDFAF5' || currentStory.bgColor === '#FFEAA7' ? '#131F2E' : 'white',
                   fontSize: `clamp(1.1rem, ${Math.max(1.5, 3 - (currentStory.text?.length || 0) / 40)}rem, 2.25rem)`,
                 }}
               >
@@ -122,9 +139,9 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
               </p>
             </div>
           ) : currentStory?.mediaType === 'video' ? (
-            <video src={currentStory.mediaUrl} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline />
-          ) : currentStory?.mediaUrl ? (
-            <img src={currentStory.mediaUrl} alt="Story" className="absolute inset-0 w-full h-full object-cover" />
+            <video src={mediaUrl} className="absolute inset-0 w-full h-full object-cover" autoPlay muted loop playsInline />
+          ) : mediaUrl ? (
+            <img src={mediaUrl} alt="Story" className="absolute inset-0 w-full h-full object-cover" />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center bg-[#131F2E] p-10">
               <p className="text-xl font-bold text-white text-center drop-shadow-lg">{currentStory?.text}</p>
@@ -136,20 +153,20 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
           {/* Bottom gradient */}
           <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
 
-          {/* Progress bars */}
+          {/* Progress bars — z-10 */}
           <div className="absolute top-4 inset-x-3 flex gap-[3px] z-10">
             {currentUser?.stories.map((_, i) => (
               <div key={i} className="flex-1 h-[3px] rounded-full overflow-hidden bg-white/30">
                 <div
                   className="h-full rounded-full bg-white"
-                  style={{ width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%', transition: i === storyIndex ? 'none' : undefined }}
+                  style={{ width: i < storyIndex ? '100%' : i === storyIndex ? `${progress}%` : '0%' }}
                 />
               </div>
             ))}
           </div>
 
-          {/* Header */}
-          <div className="absolute top-9 inset-x-3 flex items-center gap-2.5 z-10">
+          {/* Header — z-20 so it sits above the tap zones (z-10) */}
+          <div className="absolute top-9 inset-x-3 flex items-center gap-2.5 z-20">
             <div
               className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ring-2 ring-white/70"
               style={{ background: 'linear-gradient(135deg, #547792, #213448)' }}
@@ -163,6 +180,8 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
             <span className="text-[11px] text-white/50 tabular-nums flex-shrink-0">
               {storyIndex + 1} / {currentUser.stories.length}
             </span>
+
+            {/* 3-dot menu — anchored right-0 to stay on-screen in RTL */}
             <div className="relative flex-shrink-0">
               <button
                 onClick={() => setShowMenu(v => !v)}
@@ -173,7 +192,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                 </svg>
               </button>
               {showMenu && (
-                <div className="absolute left-0 top-9 w-44 bg-[#1a2a3a] rounded-xl shadow-2xl border border-white/10 py-1 z-20">
+                <div className="absolute right-0 top-9 w-44 bg-[#1a2a3a] rounded-xl shadow-2xl border border-white/10 py-1 z-30">
                   <button
                     onClick={() => { setShowViewers(true); setShowMenu(false); }}
                     className="w-full px-4 py-2.5 text-right text-sm text-white/90 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
@@ -185,7 +204,10 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                     المشاهدون
                   </button>
                   <button
-                    onClick={() => { addToHighlight.mutate({ storyId: currentStory.id, name: 'الأهم' }); setShowMenu(false); }}
+                    onClick={() => {
+                      if (currentStory?.id) addToHighlight.mutate({ storyId: currentStory.id, name: 'الأهم' });
+                      setShowMenu(false);
+                    }}
                     className="w-full px-4 py-2.5 text-right text-sm text-white/90 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
                   >
                     <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -196,6 +218,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                 </div>
               )}
             </div>
+
             <button
               onClick={onClose}
               className="p-1.5 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
@@ -206,7 +229,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
             </button>
           </div>
 
-          {/* Tap zones */}
+          {/* Tap zones — z-10, below header (z-20) */}
           <button className="absolute left-0 top-0 w-[40%] h-full z-10" onClick={goPrev} aria-label="السابق" />
           <button className="absolute right-0 top-0 w-[40%] h-full z-10" onClick={goNext} aria-label="التالي" />
         </div>
@@ -219,7 +242,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
           <div className="relative w-full max-w-[420px] bg-[#1a2a3a] rounded-t-2xl border-t border-white/10 shadow-2xl">
             <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-white/10">
               <h3 className="text-sm font-bold text-white">
-                المشاهدون {viewers.length > 0 && <span className="text-white/50 font-normal">({viewers.length})</span>}
+                المشاهدون{viewers.length > 0 && <span className="text-white/50 font-normal mr-1">({viewers.length})</span>}
               </h3>
               <button onClick={() => setShowViewers(false)} className="p-1 text-white/50 hover:text-white transition-colors">
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

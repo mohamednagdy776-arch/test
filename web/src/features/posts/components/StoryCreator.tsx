@@ -44,7 +44,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
       setIsUploading(true);
       try {
         const uploaded = await postsApi.uploadMedia(mediaFile);
-        data.mediaUrl = uploaded.url;
+        data.mediaUrl = uploaded.data?.url;
         data.mediaType = mediaType;
       } finally {
         setIsUploading(false);
@@ -144,9 +144,9 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
                 </div>
               </div>
 
-              {/* Live preview */}
+              {/* Live preview — 3:4 ratio keeps the modal compact */}
               <div
-                className="w-full aspect-[9/16] rounded-xl flex items-center justify-center p-8 shadow-inner"
+                className="w-full aspect-[3/4] rounded-xl flex items-center justify-center p-8 shadow-inner"
                 style={{ backgroundColor: bgColor }}
               >
                 <p
@@ -172,7 +172,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
               {!mediaPreview ? (
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="w-full aspect-[9/16] rounded-xl bg-[#EAE0CF] flex flex-col items-center justify-center gap-4 text-[#547792] hover:bg-[#D4E8EE] transition-colors border-2 border-dashed border-[#C8D8DF] hover:border-[#547792]"
+                  className="w-full aspect-[3/4] rounded-xl bg-[#EAE0CF] flex flex-col items-center justify-center gap-4 text-[#547792] hover:bg-[#D4E8EE] transition-colors border-2 border-dashed border-[#C8D8DF] hover:border-[#547792]"
                 >
                   <div className="h-16 w-16 rounded-2xl bg-white/70 flex items-center justify-center shadow-sm">
                     {mediaType === 'video' ? (
@@ -195,7 +195,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
                   </div>
                 </button>
               ) : (
-                <div className="w-full aspect-[9/16] rounded-xl overflow-hidden relative">
+                <div className="w-full aspect-[3/4] rounded-xl overflow-hidden relative">
                   {mediaType === 'video' ? (
                     <video src={mediaPreview} className="w-full h-full object-cover" />
                   ) : (
@@ -219,7 +219,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
         <div className="px-4 pb-4 pt-2 flex-shrink-0">
           <button
             onClick={handleSubmit}
-            disabled={isUploading || createStory.isPending || (mediaType === 'text' && !text)}
+            disabled={isUploading || createStory.isPending || (mediaType === 'text' && !text) || (mediaType !== 'text' && !mediaFile)}
             className="w-full py-3 rounded-xl text-[#FDFAF5] font-semibold disabled:opacity-40 transition-all flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98]"
             style={{ background: 'linear-gradient(to right, #213448, #547792)' }}
           >
