@@ -1,0 +1,14 @@
+{
+  "name": "tayyibt-web-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Playwright E2E test suite covering every page of the Tayyibt web app.",
+  "scripts": {
+    "test": "playwright test",
+    "report:issues": "node gen-issues.mjs",
+    "test:and-report": "playwright test ; node gen-issues.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.1"
+  }
+}
