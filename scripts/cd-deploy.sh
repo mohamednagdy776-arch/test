@@ -45,6 +45,24 @@ else
 fi
 docker exec tayyibt-nginx-1 nginx -s reload 2>/dev/null || true
 
+# Authoritative health gate — runs HERE on the VPS (localhost), where the result
+# is deterministic. The GitHub runner often can't reach the public endpoint
+# (sslip.io DNS / provider firewall on 443), so the workflow's external probe is
+# only informational; THIS is what actually decides if the deploy is healthy.
+echo "==> Waiting for the stack to report healthy…"
+health_ok=0
+for i in $(seq 1 30); do
+  code="$(curl -s -o /dev/null -w '%{http_code}' -k https://localhost/api/v1/health || echo 000)"
+  echo "   health attempt $i/30 -> $code"
+  if [ "$code" = "200" ]; then health_ok=1; break; fi
+  sleep 5
+done
+if [ "$health_ok" != "1" ]; then
+  echo "ERROR: backend did not become healthy on the VPS within ~150s." >&2
+  exit 1
+fi
+echo "==> Stack healthy ✅"
+
 echo "==> Pruning dangling images…"
 docker image prune -f >/dev/null 2>&1 || true
 
