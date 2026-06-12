@@ -37,12 +37,12 @@ export default function MockupsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <header className="bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h1 className="text-xl font-bold text-slate-800">Tayyibt Mockups</h1>
               <p className="text-xs text-slate-500">Soft Pastels Theme • Emerald #10B981 • Gold #F59E0B</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {variants.map((v) => (
                 <button
                   key={v.id}
@@ -62,9 +62,9 @@ export default function MockupsPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex gap-6">
-          <nav className="w-48 shrink-0">
-            <div className="bg-white rounded-xl shadow-sm p-2 sticky top-20">
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <nav className="w-full shrink-0 lg:w-48">
+            <div className="bg-white rounded-xl shadow-sm p-2 lg:sticky lg:top-20">
               <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 py-2">Pages</h3>
               {pages.map((page) => (
                 <button
@@ -159,7 +159,7 @@ function HomeMockup({ variant }: { variant: MockupVariant }) {
         <h2 className="text-2xl font-bold text-center mb-8" style={{ color: colors.textPrimary }}>
           مميزات منصة طيبة
         </h2>
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           {[
             { icon: '🔍', title: 'Smart Matching', desc: 'Advanced AI algorithm finds compatible partners' },
             { icon: '🛡️', title: 'Verified Profiles', desc: 'All profiles manually verified for authenticity' },
