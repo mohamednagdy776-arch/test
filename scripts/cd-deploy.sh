@@ -22,9 +22,20 @@ $COMPOSE up -d --remove-orphans
 echo "==> Applying nginx config…"
 # nginx.conf is a single-file bind mount. rsync/clean-mirror replaces the file
 # (new inode), but the running container still points at the OLD inode, so
-# `nginx -s reload` would re-read stale config. Force-recreate the nginx
-# container so it re-binds the current file, then reload as a no-op safety net.
-$COMPOSE up -d --force-recreate --no-deps nginx
+# `nginx -s reload` would re-read stale config. We must force-recreate the nginx
+# container so it re-binds the current file. But EVERYTHING is behind this nginx,
+# so first validate the new config in a throwaway container — only recreate if it
+# passes, otherwise keep the running nginx so a bad config can't take the site down.
+if docker run --rm \
+     -v /opt/tayyibt/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+     -v /opt/tayyibt/certs:/etc/nginx/certs:ro \
+     nginx:1.25-alpine nginx -t >/dev/null 2>&1; then
+  $COMPOSE up -d --force-recreate --no-deps nginx
+else
+  echo "WARNING: new nginx.conf failed 'nginx -t' validation — keeping the running nginx." >&2
+  docker run --rm -v /opt/tayyibt/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+    -v /opt/tayyibt/certs:/etc/nginx/certs:ro nginx:1.25-alpine nginx -t || true
+fi
 docker exec tayyibt-nginx-1 nginx -s reload 2>/dev/null || true
 
 echo "==> Pruning dangling images…"
