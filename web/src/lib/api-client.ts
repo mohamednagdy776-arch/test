@@ -19,7 +19,12 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
+    // A 401 on the login/auth endpoints means "bad credentials", not "session
+    // expired". Let those propagate so the form can show an inline error
+    // instead of forcing a full-page redirect that wipes the message.
+    const url: string = error.config?.url ?? '';
+    const isAuthAttempt = /\/auth\/(login|register|reactivate|2fa\/verify-login)/.test(url);
+    if (error.response?.status === 401 && typeof window !== 'undefined' && !isAuthAttempt) {
       localStorage.removeItem('access_token');
       window.location.href = '/login';
     }
