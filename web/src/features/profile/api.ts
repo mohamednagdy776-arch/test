@@ -10,17 +10,13 @@ export const profileApi = {
   uploadAvatar: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return apiClient.post('/users/me/avatar', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => r.data);
+    return apiClient.post('/users/me/avatar', formData).then((r) => r.data);
   },
 
   uploadCover: (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
-    return apiClient.post('/users/me/cover', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => r.data);
+    return apiClient.post('/users/me/cover', formData).then((r) => r.data);
   },
 
   getUserProfile: (userId: string) =>

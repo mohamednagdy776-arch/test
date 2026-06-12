@@ -11,6 +11,13 @@ interface FriendshipStatus {
   isRequester?: boolean;
 }
 
+const BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1').replace('/api/v1', '');
+
+const mediaUrl = (url: string | null | undefined) => {
+  if (!url) return null;
+  return url.startsWith('http') ? url : `${BACKEND_ORIGIN}${url}`;
+};
+
 interface Props {
   profile: any;
   onEdit?: () => void;
@@ -74,8 +81,8 @@ export const ProfileHeader = ({
     <div className="rounded-2xl bg-[#FDFAF5] shadow-card-hover border border-[#C8D8DF]/60 overflow-hidden transition-all duration-300 hover:shadow-glow-lg">
       {/* Cover Photo with enhanced styling */}
       <div className="relative h-56 bg-gradient-to-br from-[#D4E8EE] via-[#94B4C1] to-[#547792] overflow-hidden group">
-        {profile.coverUrl ? (
-          <img src={profile.coverUrl} alt="cover" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        {mediaUrl(profile.coverUrl) ? (
+          <img src={mediaUrl(profile.coverUrl)!} alt="cover" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
@@ -116,8 +123,8 @@ export const ProfileHeader = ({
               className={`h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center ring-4 ring-[#FDFAF5] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${isSelf ? 'cursor-pointer' : ''}`}
               onClick={() => { if (isSelf) avatarRef.current?.click(); }}
             >
-              {profile.avatarUrl ? (
-                <img src={profile.avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+              {mediaUrl(profile.avatarUrl) ? (
+                <img src={mediaUrl(profile.avatarUrl)!} alt="avatar" className="h-full w-full object-cover" />
               ) : (
                 <span className="text-4xl font-bold text-gradient">
                   {profile.fullName?.charAt(0)?.toUpperCase() ?? '?'}
