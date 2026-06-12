@@ -31,7 +31,8 @@ COPY --from=builder /app/admin/.next/static ./.next/static
 
 EXPOSE 3001
 
+# App is built with basePath '/admin', so root returns 404 — probe /admin instead.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:3001 || exit 1
+  CMD wget -qO- http://127.0.0.1:3001/admin || exit 1
 
 CMD ["node", "server.js"]
