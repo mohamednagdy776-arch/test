@@ -26,14 +26,21 @@ echo "==> Applying nginx config…"
 # container so it re-binds the current file. But EVERYTHING is behind this nginx,
 # so first validate the new config in a throwaway container — only recreate if it
 # passes, otherwise keep the running nginx so a bad config can't take the site down.
-if docker run --rm \
+# The validation container MUST join the compose network, otherwise `nginx -t`
+# cannot resolve the upstream service names (backend/web/admin/ai-service) and
+# fails with a false "host not found in upstream" — which previously made us skip
+# EVERY nginx update (force-recreate never ran).
+NET="$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' tayyibt-backend-1 2>/dev/null)"
+NET="${NET:-tayyibt_tayyibt-network}"
+if docker run --rm --network "$NET" \
      -v /opt/tayyibt/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
      -v /opt/tayyibt/certs:/etc/nginx/certs:ro \
      nginx:1.25-alpine nginx -t >/dev/null 2>&1; then
   $COMPOSE up -d --force-recreate --no-deps nginx
 else
   echo "WARNING: new nginx.conf failed 'nginx -t' validation — keeping the running nginx." >&2
-  docker run --rm -v /opt/tayyibt/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+  docker run --rm --network "$NET" \
+    -v /opt/tayyibt/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
     -v /opt/tayyibt/certs:/etc/nginx/certs:ro nginx:1.25-alpine nginx -t || true
 fi
 docker exec tayyibt-nginx-1 nginx -s reload 2>/dev/null || true
