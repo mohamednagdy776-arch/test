@@ -1,6 +1,27 @@
 # Investigation — "Invalid identifier format" 400s (GQA-001/002/003/004)
 
-**Status:** Root cause found. **No code changed** (report-only, per request).
+**Status:** Root cause found, **FIX APPLIED AND VERIFIED** (live).
+
+## Resolution (deployed)
+Commits `302eaef` + `87ef3ae` on `main`:
+- groups: added `GET /groups/{public,private,suggested,pending}` before `:id`.
+- pages: added `GET /pages/{created,suggested}` before `:id`, and `GET /pages/:id/posts`.
+- users: `GET /users/:id` now resolves a **username or UUID** (`resolveUserId`),
+  and added the missing `GET /users/:id/posts` (profile posts tab).
+
+Verified live (valid Bearer token) — all return **200** (were 400/404):
+`/groups/{public,private,suggested,pending}`, `/pages/{created,suggested}`,
+`/pages/:id/posts`, `/users/tamerfarouk21`, `/users/:id/posts`.
+Playwright re-run: **200 passed**, groups/pages/`/tamerfarouk21` profile all green.
+
+### Note on `/admin`
+`/admin` is NOT a user profile — nginx routes `location /admin/ -> http://admin/`
+(the admin dashboard app), so the username "admin" collides with that route. Its
+remaining chunk-404s are the admin app's own build (separate from this fix; see
+GQA-007). The web test fixture was updated to stop testing `/admin` as a profile.
+
+---
+**Original investigation (root cause) below.**
 
 ## Symptom
 ```

@@ -1,8 +1,11 @@
 import { PageMeta } from './helpers';
 
 // Real fixture values pulled from the live database for dynamic routes.
+// NOTE: do not use the username "admin" — nginx routes /admin/ to the admin
+// dashboard app (location /admin/ -> http://admin/), so it never reaches the
+// web /[username] page. The logged-in user's own profile is covered by the
+// static /profile route instead.
 export const FIX = {
-  selfUsername: 'admin',
   otherUsername: 'tamerfarouk21',
   pageId: '110e2521-454e-4008-8af9-d89882dc3070',
   groupId: '8990be98-fb6a-43c1-aabd-c85b11c8c7e6',
@@ -59,8 +62,7 @@ export const SETTINGS_PAGES: PageMeta[] = [
 
 // ---- Dynamic routes (authenticated) ----------------------------------------
 export const DYNAMIC_PAGES: PageMeta[] = [
-  { name: 'User Profile (self)', path: `/${FIX.selfUsername}`, auth: 'user' },
-  { name: 'User Profile (other)', path: `/${FIX.otherUsername}`, auth: 'user' },
+  { name: 'User Profile (by username)', path: `/${FIX.otherUsername}`, auth: 'user' },
   { name: 'Page detail', path: `/pages/${FIX.pageId}`, auth: 'user' },
   { name: 'Group detail', path: `/groups/${FIX.groupId}`, auth: 'user' },
 ];
