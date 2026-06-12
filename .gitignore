@@ -78,8 +78,13 @@ nul
 *.sqlite3
 *.db
 
-# Model files
+# Model files (trained ML artifacts). NOTE: this must not swallow the
+# ai-service Python package `app/models/` — without it the service crashes with
+# `ModuleNotFoundError: No module named 'app.models'` once only tracked files
+# ship (git archive). Re-include that source package explicitly.
 models/
+!ai-service/app/models/
+!ai-service/app/models/**
 *.h5
 *.pkl
 *.joblib
