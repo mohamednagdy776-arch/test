@@ -427,7 +427,15 @@ export default function SecurityPage() {
               <Button variant="ghost" onClick={() => setShowDeleteModal(false)} className="flex-1 text-emerald-700">
                 إلغاء
               </Button>
-              <Button variant="danger" onClick={() => alert('تم إرسال طلب حذف الحساب')} className="flex-1">
+              <Button variant="danger" onClick={async () => {
+                try {
+                  await authApi.deleteAccount();
+                  await authApi.logout().catch(() => {});
+                  window.location.href = '/login';
+                } catch {
+                  alert('فشل حذف الحساب، حاول مرة أخرى');
+                }
+              }} className="flex-1">
                 تأكيد الحذف
               </Button>
             </div>

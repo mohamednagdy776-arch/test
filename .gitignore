@@ -92,3 +92,5 @@ models/
 # Deploy build artifact
 app.tar.gz
 .gstack/
+token2.json
+token*.json

@@ -52,8 +52,8 @@ export default function UsersPage() {
 
     // Only add non-empty values
     if (search) params.name = search;
-    if (statusFilter) params.gender = statusFilter; // Reusing for status if needed
-    if (roleFilter) params.education = roleFilter; // Reusing for role if needed
+    // status/role are filtered client-side below (matchStatus/matchRole); the
+    // old code mis-mapped them onto gender/education, returning wrong results.
     if (advancedFilters.gender) params.gender = advancedFilters.gender;
     if (advancedFilters.country) params.country = advancedFilters.country;
     if (advancedFilters.city) params.city = advancedFilters.city;

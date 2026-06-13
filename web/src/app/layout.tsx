@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from '@/store/providers';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://145-14-158-100.sslip.io'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1\/?$/, '') || 'http://localhost:3000'),
   title: {
     default: 'طيبت — منصة التوافق الذكي والزواج الإسلامي',
     template: '%s | طيبت',

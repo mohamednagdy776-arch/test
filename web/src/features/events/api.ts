@@ -30,16 +30,7 @@ export const eventsApi = {
 
   createEvent: (title: string, description?: string, location?: string, startDate?: string, privacy?: string) => {
     const isoDate = startDate ? new Date(startDate).toISOString() : undefined;
-    console.log('[createEvent] Sending:', { title, description, location, startDate: isoDate, privacy });
-    return apiClient.post('/events', { title, description, location, startDate: isoDate, privacy }).then((r) => {
-      console.log('[createEvent] Raw response:', r.data);
-      const result = r.data.data;
-      console.log('[createEvent] Extracted data:', result);
-      return result;
-    }).catch((err) => {
-      console.error('[createEvent] Error:', err.response?.data || err.message);
-      throw err;
-    });
+    return apiClient.post('/events', { title, description, location, startDate: isoDate, privacy }).then((r) => r.data.data);
   },
 
   createEventWithCover: (title: string, description: string, location: string, startDate: string, privacy: string, coverPhoto: File) => {
@@ -50,16 +41,9 @@ export const eventsApi = {
     formData.append('startDate', new Date(startDate).toISOString());
     formData.append('privacy', privacy);
     formData.append('coverPhoto', coverPhoto);
-    console.log('[createEventWithCover] Sending:', { title, description, location, startDate: new Date(startDate).toISOString(), privacy });
     return apiClient.post('/events', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => {
-      console.log('[createEventWithCover] Raw response:', r.data);
-      return r.data.data;
-    }).catch((err) => {
-      console.error('[createEventWithCover] Error:', err.response?.data || err.message);
-      throw err;
-    });
+    }).then((r) => r.data.data);
   },
 
   rsvpEvent: (id: string, status: 'going' | 'interested' | 'not_going') =>

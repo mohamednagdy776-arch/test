@@ -41,6 +41,13 @@ function ResetPasswordForm() {
       setError('يجب أن تكون كلمة المرور 8 أحرف على الأقل');
       return;
     }
+    // Match the same complexity rule as registration (and the backend).
+    const strong = /[a-z]/.test(password) && /[A-Z]/.test(password)
+      && /\d/.test(password) && /[^a-zA-Z0-9]/.test(password);
+    if (!strong) {
+      setError('كلمة المرور يجب أن تحتوي على حرف كبير وحرف صغير ورقم ورمز خاص');
+      return;
+    }
 
     setLoading(true);
     try {
