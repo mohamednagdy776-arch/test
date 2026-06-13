@@ -26,7 +26,7 @@ def _get_redis():
 
 
 def _key(prefix: str, text: str) -> str:
-    return f"llm:{prefix}:{hashlib.md5(text.encode()).hexdigest()}"
+    return f"llm:{prefix}:{hashlib.sha256(text.encode()).hexdigest()}"
 
 
 def ask(prompt: str, cache_prefix: str = "gen", max_tokens: int | None = None) -> str | None:

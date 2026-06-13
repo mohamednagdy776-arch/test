@@ -25,7 +25,7 @@ def rank_candidates(
     scored: List[Tuple[UserProfile, MatchResponse]] = []
 
     for candidate in candidates:
-        if candidate.user_id == target.user_id:
+        if str(candidate.user_id) == str(target.user_id):
             continue
 
         result = calculate_compatibility(target, candidate)

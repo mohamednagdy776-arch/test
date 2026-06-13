@@ -37,7 +37,7 @@ def moderate_content(req: ModerateRequest) -> ModerateResponse:
         )
 
     # LLM check — cached by content hash so same content is only checked once
-    content_hash = hashlib.md5(req.content.encode()).hexdigest()[:16]
+    content_hash = hashlib.sha256(req.content.encode()).hexdigest()[:32]
     cache_prefix = f"mod:{req.content_type}:{content_hash}"
 
     prompt = (

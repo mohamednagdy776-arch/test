@@ -6,7 +6,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     DEBUG: bool = False
     REDIS_URL: str = "redis://localhost:6379"
-    ALLOWED_ORIGINS: List[str] = ["*"]
+    # Deny browser cross-origin by default. The AI service is internal
+    # (backend calls it server-to-server, which CORS doesn't gate); set
+    # explicit origins via env only if it is ever exposed to a browser.
+    ALLOWED_ORIGINS: List[str] = []
 
     # Scoring weights — religious compatibility is highest priority in Islamic matchmaking
     WEIGHT_RELIGIOUS: float = 0.35
@@ -18,8 +21,8 @@ class Settings(BaseSettings):
     # Local LLM — Ollama + Gemma 3 4B
     OLLAMA_URL: str = "http://ollama:11434"
     OLLAMA_MODEL: str = "gemma3:4b"
-    # Keep tokens low: reasons need ~120, bio ~180, icebreaker ~150, moderation ~60
-    LLM_MAX_TOKENS: int = 150
+    # Arabic is token-dense; 150 truncated 2-sentence reasons mid-word.
+    LLM_MAX_TOKENS: int = 400
     LLM_TEMPERATURE: float = 0.3   # low = consistent, focused output
     LLM_CACHE_TTL: int = 604800    # 7 days — match reasons rarely change
 
