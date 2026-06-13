@@ -13,7 +13,13 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   imports: [
     TypeOrmModule.forFeature([User, Session]),
     PassportModule,
-    JwtModule.register({ secret: process.env.JWT_SECRET }),
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      // Default token expiry so no code path can ever mint a non-expiring
+      // token. Explicit expiresIn at sign() time (access 7d / refresh 30d)
+      // still overrides this default.
+      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
+    }),
   ],
   providers: [AuthService, MailService, JwtStrategy],
   controllers: [AuthController],
