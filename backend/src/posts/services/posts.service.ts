@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository, LessThan, MoreThan } from 'typeorm';
 import { Post, PostType } from '../entities/post.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { User } from '../../auth/entities/user.entity';
@@ -93,6 +93,8 @@ export class PostsService {
     return { data: results, nextCursor, hasMore };
   }
 
+  // Admin-only hard delete (route is guarded by @Roles('admin')). User-facing
+  // deletion goes through softDelete(), which enforces ownership.
   async delete(postId: string) {
     await this.postsRepo.delete(postId);
   }
@@ -175,7 +177,9 @@ export class PostsService {
 
   async getScheduledPosts(userId: string, page: number, limit: number) {
     const [data, total] = await this.postsRepo.findAndCount({
-      where: { userId, scheduledAt: LessThan(new Date()) },
+      // Scheduled = still in the future. The old `LessThan(now)` returned
+      // already-published posts.
+      where: { userId, scheduledAt: MoreThan(new Date()) },
       order: { scheduledAt: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -187,6 +191,10 @@ export class PostsService {
   async share(postId: string, content: string, userId: string) {
     const original = await this.postsRepo.findOne({ where: { id: postId } });
     if (!original) throw new NotFoundException('Post not found');
+    // Don't let a private (only_me) post be re-shared into a visible post.
+    if (original.audience === 'only_me') {
+      throw new ForbiddenException('Private posts cannot be shared');
+    }
 
     const shared = this.postsRepo.create({
       content: content || '',
