@@ -6,13 +6,18 @@
 
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
+import { randomBytes } from 'crypto';
+
+// Don't commit plaintext passwords. Use SEED_USER_PASSWORD from the env, or a
+// random one-off password if unset (printed below so a dev can use it).
+const SEED_PASSWORD = process.env.SEED_USER_PASSWORD || randomBytes(9).toString('base64');
 
 // Sample users data
 const sampleUsers = [
   {
     email: 'user1@tayyibt.com',
     phone: '+201001000000',
-    password: 'Test1234',
+    password: SEED_PASSWORD,
     fullName: 'User One',
     age: 28,
     gender: 'male',
@@ -37,7 +42,7 @@ const sampleUsers = [
   {
     email: 'ahmed.hassan@test.com',
     phone: '+201001000001',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Ahmed Hassan',
     age: 28,
     gender: 'male',
@@ -62,7 +67,7 @@ const sampleUsers = [
   {
     email: 'fatima.ali@test.com',
     phone: '+201001000002',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Fatima Ali',
     age: 25,
     gender: 'female',
@@ -87,7 +92,7 @@ const sampleUsers = [
   {
     email: 'omar.khalid@test.com',
     phone: '+201001000003',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Omar Khalid',
     age: 32,
     gender: 'male',
@@ -112,7 +117,7 @@ const sampleUsers = [
   {
     email: 'aisha.mohammed@test.com',
     phone: '+201001000004',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Aisha Mohammed',
     age: 24,
     gender: 'female',
@@ -137,7 +142,7 @@ const sampleUsers = [
   {
     email: 'youssef.ibrahim@test.com',
     phone: '+201001000005',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Youssef Ibrahim',
     age: 30,
     gender: 'male',
@@ -162,7 +167,7 @@ const sampleUsers = [
   {
     email: 'mariam.saad@test.com',
     phone: '+201001000006',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Mariam Saad',
     age: 27,
     gender: 'female',
@@ -187,7 +192,7 @@ const sampleUsers = [
   {
     email: 'karim.nasser@test.com',
     phone: '+201001000007',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Karim Nasser',
     age: 29,
     gender: 'male',
@@ -212,7 +217,7 @@ const sampleUsers = [
   {
     email: 'layla.ahmad@test.com',
     phone: '+201001000008',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Layla Ahmad',
     age: 26,
     gender: 'female',
@@ -237,7 +242,7 @@ const sampleUsers = [
   {
     email: 'tariq.mahmoud@test.com',
     phone: '+201001000009',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Tariq Mahmoud',
     age: 31,
     gender: 'male',
@@ -262,7 +267,7 @@ const sampleUsers = [
   {
     email: 'nour.hussein@test.com',
     phone: '+201001000010',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Nour Hussein',
     age: 23,
     gender: 'female',
@@ -287,7 +292,7 @@ const sampleUsers = [
   {
     email: 'hassan.ali@test.com',
     phone: '+201001000011',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Hassan Ali',
     age: 27,
     gender: 'male',
@@ -312,7 +317,7 @@ const sampleUsers = [
   {
     email: 'sara.khalid@test.com',
     phone: '+201001000012',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Sara Khalid',
     age: 29,
     gender: 'female',
@@ -337,7 +342,7 @@ const sampleUsers = [
   {
     email: 'mohamed.rashid@test.com',
     phone: '+201001000013',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Mohamed Rashid',
     age: 33,
     gender: 'male',
@@ -362,7 +367,7 @@ const sampleUsers = [
   {
     email: 'huda.saleh@test.com',
     phone: '+201001000014',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Huda Saleh',
     age: 25,
     gender: 'female',
@@ -387,7 +392,7 @@ const sampleUsers = [
   {
     email: 'ali.hassan@test.com',
     phone: '+201001000015',
-    password: 'password123',
+    password: SEED_PASSWORD,
     fullName: 'Ali Hassan',
     age: 30,
     gender: 'male',

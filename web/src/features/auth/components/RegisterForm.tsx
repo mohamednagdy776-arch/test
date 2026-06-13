@@ -44,7 +44,7 @@ export const RegisterForm = () => {
   const [form, setForm] = useState<FormData>({
     email: '', phone: '', password: '', confirm: '',
     firstName: '', lastName: '', username: '',
-    dateOfBirth: '', gender: 'male'
+    dateOfBirth: '', gender: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -98,10 +98,10 @@ export const RegisterForm = () => {
         password: form.password,
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
-        gender: form.gender,
       };
       if (form.username.trim()) payload.username = form.username.trim();
       if (form.dateOfBirth) payload.dateOfBirth = form.dateOfBirth;
+      if (form.gender) payload.gender = form.gender;
       // Tokens are set as HttpOnly cookies by the backend — nothing to store
       // client-side (avoids XSS token theft from localStorage).
       await authApi.register(payload);
@@ -166,8 +166,9 @@ export const RegisterForm = () => {
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-[#374151]">الجنس</label>
-          <select value={form.gender} onChange={set('gender')}
+          <select required value={form.gender} onChange={set('gender')}
             className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200">
+            <option value="" disabled>اختر...</option>
             <option value="male">ذكر</option>
             <option value="female">أنثى</option>
           </select>
