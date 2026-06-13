@@ -36,8 +36,9 @@ export class NotificationsService {
     return this.notificationRepo.save(notification);
   }
 
-  async markAsRead(id: string) {
-    const notification = await this.notificationRepo.findOne({ where: { id } });
+  async markAsRead(id: string, userId: string) {
+    // Scope by owner so a user can't read-mark another user's notification.
+    const notification = await this.notificationRepo.findOne({ where: { id, user: { id: userId } } });
     if (!notification) throw new NotFoundException('Notification not found');
     notification.readStatus = true;
     return this.notificationRepo.save(notification);
@@ -50,7 +51,9 @@ export class NotificationsService {
     );
   }
 
-  async delete(id: string) {
-    await this.notificationRepo.delete(id);
+  async delete(id: string, userId: string) {
+    // Scope by owner so a user can't delete another user's notification.
+    const result = await this.notificationRepo.delete({ id, user: { id: userId } as any });
+    if (!result.affected) throw new NotFoundException('Notification not found');
   }
 }

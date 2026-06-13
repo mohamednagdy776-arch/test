@@ -31,8 +31,8 @@ export class NotificationsController {
   }
 
   @Patch(':id/read')
-  async markAsRead(@Param('id') id: string) {
-    const notification = await this.notificationsService.markAsRead(id);
+  async markAsRead(@Param('id') id: string, @CurrentUser() user: User) {
+    const notification = await this.notificationsService.markAsRead(id, user.id);
     return ok(notification, 'Notification marked as read');
   }
 
@@ -43,8 +43,8 @@ export class NotificationsController {
   }
 
   @Delete(':id')
-  async delete(@Param('id') id: string) {
-    await this.notificationsService.delete(id);
+  async delete(@Param('id') id: string, @CurrentUser() user: User) {
+    await this.notificationsService.delete(id, user.id);
     return ok(null, 'Notification deleted');
   }
 }
