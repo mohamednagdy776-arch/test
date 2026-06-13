@@ -131,9 +131,9 @@ export class AuthController {
 
   @Post('2fa/verify-login')
   @HttpCode(200)
-  async verifyLogin2FA(@Body() body: { userId: string; code: string }, @Res({ passthrough: true }) res: Response) {
+  async verifyLogin2FA(@Body() body: { preAuthToken: string; code: string }, @Res({ passthrough: true }) res: Response) {
     const deviceInfo = { browser: 'Unknown', ip: '0.0.0.0', deviceName: 'Unknown device' };
-    const result = await this.authService.verifyTwoFactor(body.userId, body.code, deviceInfo);
+    const result = await this.authService.verifyTwoFactor(body.preAuthToken, body.code, deviceInfo);
     setAuthCookies(res, result as any);
     return ok(result);
   }

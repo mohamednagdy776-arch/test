@@ -9,6 +9,7 @@ interface AuthResponse {
     user?: any;
     requiresTwoFactor?: boolean;
     userId?: string;
+    preAuthToken?: string;
     qrCode?: string;
     secret?: string;
     twoFactorEnabled?: boolean;
@@ -112,8 +113,8 @@ export const authApi = {
     return res.data;
   },
 
-  verifyLogin2FA: async (userId: string, code: string): Promise<AuthResponse> => {
-    const res = await apiClient.post('/auth/2fa/verify-login', { userId, code });
+  verifyLogin2FA: async (preAuthToken: string, code: string): Promise<AuthResponse> => {
+    const res = await apiClient.post('/auth/2fa/verify-login', { preAuthToken, code });
     return res.data;
   },
 

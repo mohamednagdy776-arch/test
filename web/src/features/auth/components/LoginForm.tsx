@@ -26,7 +26,7 @@ export const LoginForm = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [requires2FA, setRequires2FA] = useState(false);
-  const [userId, setUserId] = useState('');
+  const [preAuthToken, setPreAuthToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const router = useRouter();
 
@@ -36,14 +36,14 @@ export const LoginForm = () => {
       // Tokens are set as HttpOnly cookies by the backend — nothing to store
       // client-side (avoids XSS token theft from localStorage).
       if (requires2FA) {
-        await authApi.verifyLogin2FA(userId, twoFactorCode);
+        await authApi.verifyLogin2FA(preAuthToken, twoFactorCode);
         router.push('/dashboard');
         return;
       }
       const res = await authApi.login(email, password, rememberMe);
       if (res.data.requiresTwoFactor) {
         setRequires2FA(true);
-        setUserId(res.data.userId || '');
+        setPreAuthToken(res.data.preAuthToken || '');
         setLoading(false);
         return;
       }

@@ -83,7 +83,13 @@ export class AuthService {
     }
 
     if (user.twoFactorEnabled && !user.twoFactorVerified) {
-      return { requiresTwoFactor: true, userId: user.id };
+      // Issue a short-lived pre-auth token (bound to this password-verified
+      // user) instead of returning a raw userId the client could swap out.
+      const preAuthToken = this.jwtService.sign(
+        { sub: user.id, type: 'pre-auth' },
+        { expiresIn: '5m' },
+      );
+      return { requiresTwoFactor: true, preAuthToken };
     }
 
     await this.handleSuccessfulLogin(user, dto.rememberMe, deviceInfo);
@@ -94,7 +100,17 @@ export class AuthService {
     };
   }
 
-  async verifyTwoFactor(userId: string, code: string, deviceInfo?: { browser?: string; ip?: string; deviceName?: string }) {
+  async verifyTwoFactor(preAuthToken: string, code: string, deviceInfo?: { browser?: string; ip?: string; deviceName?: string }) {
+    // Derive the user from the signed pre-auth token, NOT from a client field —
+    // closes the bypass where any UUID could be submitted with a TOTP code.
+    let userId: string;
+    try {
+      const payload: any = this.jwtService.verify(preAuthToken, { secret: process.env.JWT_SECRET });
+      if (payload.type !== 'pre-auth') throw new UnauthorizedException();
+      userId = payload.sub;
+    } catch {
+      throw new UnauthorizedException('Invalid or expired 2FA session');
+    }
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user || !user.twoFactorEnabled) throw new UnauthorizedException();
 
