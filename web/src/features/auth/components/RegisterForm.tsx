@@ -102,9 +102,9 @@ export const RegisterForm = () => {
       };
       if (form.username.trim()) payload.username = form.username.trim();
       if (form.dateOfBirth) payload.dateOfBirth = form.dateOfBirth;
-      const res = await authApi.register(payload);
-      localStorage.setItem('access_token', res.data.accessToken);
-      localStorage.setItem('refresh_token', res.data.refreshToken);
+      // Tokens are set as HttpOnly cookies by the backend — nothing to store
+      // client-side (avoids XSS token theft from localStorage).
+      await authApi.register(payload);
       router.push('/dashboard');
     } catch (err: any) {
       setError(formatAuthError(err));

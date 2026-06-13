@@ -47,6 +47,11 @@ export const authApi = {
     return res.data;
   },
 
+  logout: async (): Promise<void> => {
+    // Backend clears the HttpOnly auth cookies.
+    await apiClient.post('/auth/logout');
+  },
+
   register: async (data: RegisterData): Promise<AuthResponse> => {
     const res = await apiClient.post('/auth/register', data);
     return res.data;

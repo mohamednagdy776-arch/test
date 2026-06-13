@@ -33,10 +33,10 @@ export const LoginForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true);
     try {
+      // Tokens are set as HttpOnly cookies by the backend — nothing to store
+      // client-side (avoids XSS token theft from localStorage).
       if (requires2FA) {
-        const res = await authApi.verifyLogin2FA(userId, twoFactorCode);
-        localStorage.setItem('access_token', res.data.accessToken);
-        localStorage.setItem('refresh_token', res.data.refreshToken);
+        await authApi.verifyLogin2FA(userId, twoFactorCode);
         router.push('/dashboard');
         return;
       }
@@ -47,8 +47,6 @@ export const LoginForm = () => {
         setLoading(false);
         return;
       }
-      localStorage.setItem('access_token', res.data.accessToken);
-      localStorage.setItem('refresh_token', res.data.refreshToken);
       router.push('/dashboard');
     } catch (err: any) {
       setError(formatAuthError(err));

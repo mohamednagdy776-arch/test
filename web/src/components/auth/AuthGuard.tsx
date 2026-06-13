@@ -8,8 +8,14 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
+    // The JWT is in an HttpOnly cookie (unreadable here). The backend also sets
+    // a readable `uid` cookie on login, so its presence signals an active
+    // session. Server-side middleware is the real gate; this avoids a flash of
+    // protected UI for logged-out users.
+    const hasSession = document.cookie
+      .split('; ')
+      .some((row) => row.startsWith('uid='));
+    if (!hasSession) {
       router.replace('/login');
     } else {
       setChecked(true);

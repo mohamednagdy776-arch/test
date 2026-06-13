@@ -2,26 +2,28 @@ import { io, Socket } from 'socket.io-client';
 
 let socket: Socket | null = null;
 
-/** Decode the `sub` (user id) claim from the stored JWT, without verifying it. */
-export const getCurrentUserId = (): string | null => {
-  if (typeof window === 'undefined') return null;
-  const token = localStorage.getItem('access_token');
-  if (!token) return null;
-  try {
-    const payload = token.split('.')[1];
-    const json = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
-    return json.sub ?? null;
-  } catch {
-    return null;
-  }
+/** Read a cookie value by name (browser only). */
+const readBrowserCookie = (name: string): string | null => {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie
+    .split('; ')
+    .find((row) => row.startsWith(name + '='));
+  return match ? decodeURIComponent(match.slice(name.length + 1)) : null;
 };
+
+/**
+ * Current user id. The JWT now lives in an HttpOnly cookie (unreadable by JS),
+ * so we read the non-sensitive `uid` cookie the backend sets alongside it.
+ */
+export const getCurrentUserId = (): string | null => readBrowserCookie('uid');
 
 export const getSocket = (): Socket => {
   if (!socket) {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     const userId = getCurrentUserId();
     socket = io(process.env.NEXT_PUBLIC_WS_URL ?? 'http://localhost:3000', {
-      auth: { token },
+      // The auth cookie is sent with the handshake; the gateway reads the JWT
+      // from it. We no longer have the token in JS to put in `auth`.
+      withCredentials: true,
       query: userId ? { userId } : {},
       transports: ['websocket'],
       autoConnect: true,

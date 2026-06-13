@@ -3,11 +3,12 @@ import axios from 'axios';
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1',
   headers: { 'Content-Type': 'application/json' },
+  // Send the HttpOnly auth cookies with every request (same-origin). Tokens are
+  // no longer kept in localStorage, so this is how the browser authenticates.
+  withCredentials: true,
 });
 
 apiClient.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
   // For file uploads, remove the default JSON Content-Type so the browser/axios
   // sets multipart/form-data WITH the required boundary.
   if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
