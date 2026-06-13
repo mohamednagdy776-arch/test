@@ -52,8 +52,9 @@ export class SubscriptionsService {
     return this.subscriptionRepo.save(subscription);
   }
 
-  async cancel(id: string) {
-    const subscription = await this.subscriptionRepo.findOne({ where: { id } });
+  async cancel(id: string, userId: string) {
+    // Scope by owner so a user can't cancel another user's subscription.
+    const subscription = await this.subscriptionRepo.findOne({ where: { id, user: { id: userId } } });
     if (!subscription) throw new NotFoundException('Subscription not found');
     subscription.status = 'cancelled';
     return this.subscriptionRepo.save(subscription);

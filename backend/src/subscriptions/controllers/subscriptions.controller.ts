@@ -34,8 +34,8 @@ export class SubscriptionsController {
   }
 
   @Patch(':id/cancel')
-  async cancel(@Param('id') id: string) {
-    const subscription = await this.subscriptionsService.cancel(id);
+  async cancel(@Param('id') id: string, @CurrentUser() user: User) {
+    const subscription = await this.subscriptionsService.cancel(id, user.id);
     return ok(subscription, 'Subscription cancelled');
   }
 
