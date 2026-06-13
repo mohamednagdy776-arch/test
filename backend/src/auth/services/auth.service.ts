@@ -42,7 +42,7 @@ export class AuthService {
       fullName,
       dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
       gender: dto.gender,
-      verificationToken,
+      verificationToken: this.hashToken(verificationToken),
       verificationExpires,
       status: 'active', // Auto-activate for development
       isVerified: true, // Auto-verify for development
@@ -161,9 +161,15 @@ export class AuthService {
     );
   }
 
+  // Store only a SHA-256 hash of email/reset tokens. The raw token goes in the
+  // email; a DB read alone can no longer be used to verify or reset any account.
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
+  }
+
   async verifyEmail(token: string) {
     const user = await this.usersRepo.findOne({
-      where: { verificationToken: token },
+      where: { verificationToken: this.hashToken(token) },
     });
     if (!user) throw new NotFoundException('Invalid verification token');
 
@@ -193,7 +199,7 @@ export class AuthService {
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await this.usersRepo.update(user.id, {
-      verificationToken,
+      verificationToken: this.hashToken(verificationToken),
       verificationExpires,
     });
 
@@ -209,7 +215,7 @@ export class AuthService {
     const resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000);
 
     await this.usersRepo.update(user.id, {
-      resetToken,
+      resetToken: this.hashToken(resetToken),
       resetTokenExpires,
     });
 
@@ -219,7 +225,7 @@ export class AuthService {
 
   async resetPassword(token: string, newPassword: string) {
     const user = await this.usersRepo.findOne({
-      where: { resetToken: token },
+      where: { resetToken: this.hashToken(token) },
     });
     if (!user) throw new NotFoundException('Invalid reset token');
 
