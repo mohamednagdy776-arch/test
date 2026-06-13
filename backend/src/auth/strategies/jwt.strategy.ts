@@ -4,6 +4,12 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { readCookie } from '../cookie.util';
+
+// Pull the JWT from the HttpOnly `access_token` cookie first (browser), then
+// fall back to the Authorization: Bearer header (mobile / API clients).
+const fromCookie = (req: any): string | null =>
+  readCookie(req?.headers?.cookie, 'access_token') ?? null;
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -11,7 +17,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     @InjectRepository(User) private usersRepo: Repository<User>,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        fromCookie,
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       secretOrKey: process.env.JWT_SECRET,
     });
   }

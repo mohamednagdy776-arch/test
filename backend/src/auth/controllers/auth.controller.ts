@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Headers, Post, Put, UseGuards, Req, HttpCode, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Put, UseGuards, Req, Res, HttpCode, Query } from '@nestjs/common';
+import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../services/auth.service';
+import { setAuthCookies, clearAuthCookies } from '../cookie.util';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { ForgotPasswordDto } from '../dto/forgot-password.dto';
@@ -15,19 +17,22 @@ export class AuthController {
   constructor(private authService: AuthService) {}
 
   @Post('register')
-  async register(@Body() dto: RegisterDto) {
+  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
     const tokens = await this.authService.register(dto);
+    setAuthCookies(res, tokens as any);
     return ok(tokens, 'Registered successfully. Please verify your email.');
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto) {
+  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const deviceInfo = {
       browser: 'Unknown',
       ip: '0.0.0.0',
       deviceName: 'Unknown device',
     };
     const result = await this.authService.login(dto, deviceInfo);
+    // Sets cookies only when tokens are present (skipped when 2FA is required).
+    setAuthCookies(res, result as any);
     return ok(result, 'Login successful');
   }
 
@@ -63,14 +68,16 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(200)
-  async refresh(@Body() dto: RefreshTokenDto) {
+  async refresh(@Body() dto: RefreshTokenDto, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.refreshTokens(dto.refreshToken);
+    setAuthCookies(res, result as any);
     return ok(result);
   }
 
   @Post('logout')
   @UseGuards(AuthGuard('jwt'))
-  async logout(@Req() req: any) {
+  async logout(@Req() req: any, @Res({ passthrough: true }) res: Response) {
+    clearAuthCookies(res);
     return ok(null, 'Logged out');
   }
 
@@ -116,29 +123,33 @@ export class AuthController {
 
   @Post('2fa/verify-login')
   @HttpCode(200)
-  async verifyLogin2FA(@Body() body: { userId: string; code: string }) {
+  async verifyLogin2FA(@Body() body: { userId: string; code: string }, @Res({ passthrough: true }) res: Response) {
     const deviceInfo = { browser: 'Unknown', ip: '0.0.0.0', deviceName: 'Unknown device' };
     const result = await this.authService.verifyTwoFactor(body.userId, body.code, deviceInfo);
+    setAuthCookies(res, result as any);
     return ok(result);
   }
 
   @Post('deactivate')
   @UseGuards(AuthGuard('jwt'))
-  async deactivate(@Req() req: any) {
+  async deactivate(@Req() req: any, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.deactivateAccount(req.user.id);
+    clearAuthCookies(res);
     return ok(result);
   }
 
   @Post('reactivate')
-  async reactivate(@Body() body: { email: string; password: string }) {
+  async reactivate(@Body() body: { email: string; password: string }, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.reactivateAccount(body.email, body.password);
+    setAuthCookies(res, result as any);
     return ok(result, 'Account reactivated');
   }
 
   @Post('delete')
   @UseGuards(AuthGuard('jwt'))
-  async deleteAccount(@Req() req: any) {
+  async deleteAccount(@Req() req: any, @Res({ passthrough: true }) res: Response) {
     const result = await this.authService.deleteAccount(req.user.id);
+    clearAuthCookies(res);
     return ok(result, 'Account scheduled for deletion');
   }
 
@@ -157,16 +168,18 @@ export class AuthController {
   }
 
   @Get('oauth/google')
-  async oauthGoogle(@Req() req: any) {
+  async oauthGoogle(@Req() req: any, @Res({ passthrough: true }) res: Response) {
     const code = req.query.code as string;
     const result = await this.authService.handleOAuthCallback('google', code);
+    setAuthCookies(res, result as any);
     return ok(result, 'Google login successful');
   }
 
   @Get('oauth/github')
-  async oauthGithub(@Req() req: any) {
+  async oauthGithub(@Req() req: any, @Res({ passthrough: true }) res: Response) {
     const code = req.query.code as string;
     const result = await this.authService.handleOAuthCallback('github', code);
+    setAuthCookies(res, result as any);
     return ok(result, 'GitHub login successful');
   }
 }

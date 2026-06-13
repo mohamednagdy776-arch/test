@@ -9,6 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './services/chat.service';
+import { readCookie } from '../auth/cookie.util';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayConnection {
@@ -34,7 +35,12 @@ export class ChatGateway implements OnGatewayConnection {
     // client could connect, join rooms, and read/send messages.
     const token =
       (client.handshake.auth?.token as string) ||
-      (client.handshake.query?.token as string);
+      (client.handshake.query?.token as string) ||
+      readCookie(client.handshake.headers?.cookie, 'access_token');
+    if (!token) {
+      client.disconnect(true);
+      return;
+    }
     let userId: string;
     try {
       const payload: any = this.jwtService.verify(token, {
