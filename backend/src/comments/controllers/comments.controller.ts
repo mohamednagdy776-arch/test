@@ -38,6 +38,9 @@ export class CommentsController {
     @Body() dto: UpdateCommentDto,
     @CurrentUser() user: User,
   ) {
+    // Sanitize on edit too — create() sanitized but update() didn't, letting a
+    // benign comment be edited into a stored-XSS payload.
+    if (dto.content) dto.content = sanitizeUserContent(dto.content);
     const comment = await this.commentsService.update(commentId, dto, user.id);
     return ok(comment, 'Comment updated');
   }

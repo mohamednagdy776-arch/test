@@ -55,7 +55,9 @@ export class CommentsService {
   }
 
   async update(commentId: string, dto: UpdateCommentDto, userId: string) {
-    const comment = await this.commentsRepo.findOne({ where: { id: commentId } });
+    // Load the user relation — without it comment.user is undefined and the
+    // ownership check below throws a 500 instead of enforcing authorization.
+    const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user'] });
     if (!comment) throw new NotFoundException('Comment not found');
     if (comment.user.id !== userId) throw new ForbiddenException('Not authorized');
 
@@ -65,7 +67,7 @@ export class CommentsService {
   }
 
   async delete(commentId: string, userId: string) {
-    const comment = await this.commentsRepo.findOne({ where: { id: commentId } });
+    const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user'] });
     if (!comment) throw new NotFoundException('Comment not found');
     if (comment.user.id !== userId) throw new ForbiddenException('Not authorized');
 
