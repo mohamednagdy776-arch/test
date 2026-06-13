@@ -4,27 +4,52 @@ import {
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
+  OnGatewayConnection,
 } from '@nestjs/websockets';
+import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './services/chat.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
-export class ChatGateway {
+export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
 
   // userId -> set of socket ids (supports multiple tabs/devices)
   private userSockets: Map<string, Set<string>> = new Map();
 
-  constructor(private chatService: ChatService) {}
+  constructor(
+    private chatService: ChatService,
+    private jwtService: JwtService,
+  ) {}
 
   private isOnline(userId: string): boolean {
     return (this.userSockets.get(userId)?.size ?? 0) > 0;
   }
 
   handleConnection(client: Socket) {
-    const userId = client.handshake.query.userId as string;
-    if (!userId) return;
+    // Authenticate the socket. The client sends its JWT in handshake.auth.token
+    // (see web/src/lib/socket-client.ts). Reject anyone without a valid token
+    // instead of trusting a client-supplied userId — previously any anonymous
+    // client could connect, join rooms, and read/send messages.
+    const token =
+      (client.handshake.auth?.token as string) ||
+      (client.handshake.query?.token as string);
+    let userId: string;
+    try {
+      const payload: any = this.jwtService.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+      userId = payload?.sub;
+    } catch {
+      client.disconnect(true);
+      return;
+    }
+    if (!userId) {
+      client.disconnect(true);
+      return;
+    }
+    client.data.userId = userId;
     if (!this.userSockets.has(userId)) this.userSockets.set(userId, new Set());
     const wasOffline = this.userSockets.get(userId)!.size === 0;
     this.userSockets.get(userId)!.add(client.id);

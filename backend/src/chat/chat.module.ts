@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Message } from './entities/message.entity';
 import { Conversation } from './entities/conversation.entity';
@@ -22,6 +23,7 @@ import { Profile } from '../users/entities/profile.entity';
       User,
       Profile,
     ]),
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
   ],
   providers: [ChatGateway, ChatService],
   controllers: [ChatController],
