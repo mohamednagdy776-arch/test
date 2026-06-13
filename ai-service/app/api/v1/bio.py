@@ -14,16 +14,21 @@ _FALLBACK = (
 @router.post("/bio-suggestion", response_model=BioResponse)
 def suggest_bio(req: BioRequest) -> BioResponse:
     """Generate a short marriage profile bio based on user details."""
-    interests_str = ", ".join(req.interests[:5]) if req.interests else ""
+    # Sanitize user-controlled fields (strip newlines, cap length) before they
+    # go into the LLM prompt — prevents prompt injection via profile fields.
+    def s(v, n=60):
+        return str(v).replace("\n", " ").replace("\r", " ").strip()[:n] if v else None
+
+    interests_str = ", ".join(s(i, 30) or "" for i in req.interests[:5]) if req.interests else ""
     lang_note = "Write in Arabic (Modern Standard Arabic)." if req.language == "ar" else "Write in English."
     parts = [p for p in [
         f"{req.age}y" if req.age else None,
-        req.gender,
-        req.country,
-        req.occupation,
-        req.education,
-        f"{req.lifestyle} lifestyle" if req.lifestyle else None,
-        req.sect,
+        s(req.gender),
+        s(req.country),
+        s(req.occupation),
+        s(req.education),
+        f"{s(req.lifestyle)} lifestyle" if req.lifestyle else None,
+        s(req.sect),
         f"interests: {interests_str}" if interests_str else None,
     ] if p]
 

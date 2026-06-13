@@ -17,10 +17,16 @@ def generate_icebreaker(req: IcebreakerRequest) -> IcebreakerResponse:
     # Symmetric cache: same result regardless of who is A vs B
     cache_prefix = "ice:" + ":".join(sorted([req.user_a_id, req.user_b_id]))
 
+    # Sanitize user-controlled fields (strip newlines, cap length) before they
+    # go into the prompt — prevents prompt injection via profile fields.
+    def s(v, n=50):
+        return str(v).replace("\n", " ").replace("\r", " ").strip()[:n] if v else None
+
+    shared = ", ".join(x for x in (s(i, 30) for i in req.shared_interests[:3]) if x) if req.shared_interests else ""
     context_parts = [p for p in [
-        req.user_b_country,
-        req.user_b_occupation,
-        (", ".join(req.shared_interests[:3]) + " (shared interests)") if req.shared_interests else None,
+        s(req.user_b_country),
+        s(req.user_b_occupation),
+        (shared + " (shared interests)") if shared else None,
     ] if p]
     context = "; ".join(context_parts) if context_parts else "general"
 

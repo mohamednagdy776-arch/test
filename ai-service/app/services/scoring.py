@@ -56,15 +56,21 @@ def _llm_reasons(a: UserProfile, b: UserProfile, score: float) -> list[str] | No
     """
     cache_prefix = "reasons:" + ":".join(sorted([a.user_id, b.user_id]))
 
+    # Sanitize user-controlled fields before interpolation: strip newlines and
+    # cap length so a profile can't inject adversarial instructions (prompt
+    # injection) into the matching engine.
+    def s(v, n=40):
+        return str(v).replace("\n", " ").replace("\r", " ").strip()[:n] if v else "?"
+
     prompt = (
         "Islamic marriage compatibility — give 2-3 short bullet points explaining "
         "the key compatibility factors between these profiles. Be direct, no intro.\n"
-        f"A: {a.age or '?'}y {a.gender or '?'}, sect={a.sect or '?'}, "
-        f"prayer={a.prayer_level or '?'}/5, {a.country or '?'}, "
-        f"lifestyle={a.lifestyle_type or '?'}\n"
-        f"B: {b.age or '?'}y {b.gender or '?'}, sect={b.sect or '?'}, "
-        f"prayer={b.prayer_level or '?'}/5, {b.country or '?'}, "
-        f"lifestyle={b.lifestyle_type or '?'}\n"
+        f"A: {a.age or '?'}y {s(a.gender)}, sect={s(a.sect)}, "
+        f"prayer={a.prayer_level or '?'}/5, {s(a.country)}, "
+        f"lifestyle={s(a.lifestyle_type)}\n"
+        f"B: {b.age or '?'}y {s(b.gender)}, sect={s(b.sect)}, "
+        f"prayer={b.prayer_level or '?'}/5, {s(b.country)}, "
+        f"lifestyle={s(b.lifestyle_type)}\n"
         f"Score: {score}/100"
     )
 
