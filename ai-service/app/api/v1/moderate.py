@@ -36,13 +36,16 @@ def moderate_content(req: ModerateRequest) -> ModerateResponse:
             reason="Content violates Islamic community guidelines.",
         )
 
-    # LLM check — cached by content hash so same content is only checked once
+    # LLM check — cached by content hash so same content is only checked once.
+    # Sanitize content_type (user-supplied) before it enters the prompt to block
+    # prompt injection via that field.
+    content_type = str(req.content_type or "post").replace("\n", " ").replace("\r", " ").strip()[:30]
     content_hash = hashlib.sha256(req.content.encode()).hexdigest()[:32]
-    cache_prefix = f"mod:{req.content_type}:{content_hash}"
+    cache_prefix = f"mod:{content_type}:{content_hash}"
 
     prompt = (
         f"You moderate an Islamic marriage platform. "
-        f"Is this {req.content_type} appropriate for the community? "
+        f"Is this {content_type} appropriate for the community? "
         f"Reply with YES or NO on the first line, then one short reason.\n"
         f'Content: "{req.content[:400]}"'
     )

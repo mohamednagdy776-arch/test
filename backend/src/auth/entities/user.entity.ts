@@ -1,6 +1,5 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn, BeforeInsert } from 'typeorm';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Profile } from '../../users/entities/profile.entity';
-import { randomBytes } from 'crypto';
 
 export enum Gender {
   MALE = 'male',
@@ -94,9 +93,8 @@ export class User {
   @OneToOne(() => Profile, profile => profile.user)
   profile: Profile;
 
-  @BeforeInsert()
-  generateVerificationToken() {
-    this.verificationToken = randomBytes(32).toString('hex');
-    this.verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  }
+  // NOTE: verification-token generation is done in AuthService.register (which
+  // stores a SHA-256 HASH of the token). A @BeforeInsert hook here used to
+  // overwrite that with a fresh RAW token on save — undoing the hashing and
+  // persisting a usable token in plaintext. Removed. (#121)
 }

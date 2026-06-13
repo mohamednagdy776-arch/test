@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards, UploadedFile, UseInterceptors, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { diskStorage } from 'multer';
@@ -122,7 +122,9 @@ export class UsersController {
   }
 
   @Get(':id/activity')
-  async getActivityLog(@Param('id') id: string, @Query() dto: ActivityLogQueryDto) {
+  async getActivityLog(@Param('id') id: string, @Query() dto: ActivityLogQueryDto, @CurrentUser() user: User) {
+    // A user's activity log is private to them (was readable by any user — IDOR).
+    if (id !== user.id) throw new ForbiddenException('Access denied');
     return ok(await this.usersService.getActivityLog(id, dto));
   }
 

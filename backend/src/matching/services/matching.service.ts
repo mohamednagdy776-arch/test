@@ -335,8 +335,9 @@ export class MatchingService {
 
     return {
       id: profile.userId,
-      email: profile.email || '',
-      phone: profile.phone || '',
+      // Do NOT expose another user's email/phone in the match-profile view.
+      email: '',
+      phone: '',
       accountType: 'user' as const,
       status: profile.status || 'active',
       createdAt: profile.createdAt ? new Date(profile.createdAt).toISOString() : new Date().toISOString(),

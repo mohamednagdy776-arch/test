@@ -11,7 +11,13 @@ import { Server, Socket } from 'socket.io';
 import { ChatService } from './services/chat.service';
 import { readCookie } from '../auth/cookie.util';
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({
+  // Restrict WS origins like the REST API (was '*'). Same-origin in prod.
+  cors: {
+    origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim()) : true,
+    credentials: true,
+  },
+})
 export class ChatGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
@@ -84,10 +90,15 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   @SubscribeMessage('joinConversation')
-  handleJoin(
+  async handleJoin(
     @MessageBody() payload: { conversationId: string; userId: string },
     @ConnectedSocket() client: Socket,
   ) {
+    // Only join the room if the authenticated user is a participant — otherwise
+    // anyone could join any conversation room and receive its messages.
+    if (!(await this.chatService.isParticipant(payload.conversationId, client.data.userId))) {
+      return;
+    }
     client.join(`conversation:${payload.conversationId}`);
   }
 
@@ -111,9 +122,15 @@ export class ChatGateway implements OnGatewayConnection {
     },
     @ConnectedSocket() client: Socket,
   ) {
+    // Use the server-verified user id, never the client-supplied senderId
+    // (which allowed impersonating any user). Also require participation.
+    const senderId: string = client.data.userId;
+    if (!senderId || !(await this.chatService.isParticipant(payload.conversationId, senderId))) {
+      return;
+    }
     const saved: any = await this.chatService.sendMessage(
       payload.conversationId,
-      payload.senderId,
+      senderId,
       payload.content,
       payload.type,
       payload.replyToId,
@@ -125,7 +142,7 @@ export class ChatGateway implements OnGatewayConnection {
       conversationId: payload.conversationId,
       content: saved.contentEncrypted,
       type: saved.type,
-      senderId: payload.senderId,
+      senderId,
       replyToId: saved.replyToId,
       mediaUrl: saved.mediaUrl,
       createdAt: saved.createdAt,

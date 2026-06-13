@@ -26,8 +26,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: { sub: string }) {
+    // findOne excludes soft-deleted rows (@DeleteDateColumn), so deleted users
+    // are already rejected; also reject banned and deactivated accounts.
     const user = await this.usersRepo.findOne({ where: { id: payload.sub } });
-    if (!user || user.status === 'banned') throw new UnauthorizedException();
+    if (!user || user.status === 'banned' || user.isDeactivated) throw new UnauthorizedException();
     return user;
   }
 }

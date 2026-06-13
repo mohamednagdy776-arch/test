@@ -86,6 +86,11 @@ export class ChatService {
     return out;
   }
 
+  async isParticipant(conversationId: string, userId: string): Promise<boolean> {
+    const participant = await this.participantRepo.findOne({ where: { conversationId, userId } });
+    return !!participant;
+  }
+
   async getMessages(conversationId: string, userId: string, page: number = 1, limit: number = 50) {
     const participant = await this.participantRepo.findOne({
       where: { conversationId, userId },
