@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { validate } from './config/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
@@ -29,7 +30,10 @@ import { SeedModule } from './seed/seed.module';
 @Module({
   imports: [
     // Load .env globally
-    ConfigModule.forRoot({ isGlobal: true }),
+    // Validate required env vars (e.g. JWT_SECRET present + >=32 chars) at
+    // startup — refuse to boot with a missing/weak secret instead of silently
+    // accepting it.
+    ConfigModule.forRoot({ isGlobal: true, validate }),
 
     // PostgreSQL connection via env
     TypeOrmModule.forRoot({

@@ -1,5 +1,5 @@
 import { plainToInstance } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsOptional, IsString, validateSync } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, MinLength, validateSync } from 'class-validator';
 
 class EnvironmentVariables {
   @IsNotEmpty()
@@ -8,6 +8,7 @@ class EnvironmentVariables {
 
   @IsNotEmpty()
   @IsString()
+  @MinLength(32, { message: 'JWT_SECRET must be at least 32 characters' })
   JWT_SECRET: string;
 
   @IsOptional()
