@@ -1,6 +1,14 @@
 -- Seed script for Tayyibt database
 -- Run with: docker exec -i tayyibt-kilocode-postgres-1 psql -U postgres -d tayyibt < seed.sql
 
+-- Safety guard: refuse to run against anything but a dev/test database, so this
+-- (which disables triggers) can never be run against production by mistake.
+DO $$ BEGIN
+  IF current_database() NOT IN ('tayyibt_dev', 'tayyibt_test') THEN
+    RAISE EXCEPTION 'Seed script must not run on database: %', current_database();
+  END IF;
+END $$;
+
 -- Disable triggers temporarily for seeding
 ALTER TABLE profiles DISABLE TRIGGER ALL;
 ALTER TABLE users DISABLE TRIGGER ALL;

@@ -1,8 +1,23 @@
-import { IsArray, IsEnum, IsIn, IsOptional, IsString, IsDateString, IsNumber, IsBoolean } from 'class-validator';
+import { IsArray, IsEnum, IsIn, IsOptional, IsString, IsDateString, IsNumber, IsBoolean, MaxLength, ArrayMaxSize, ValidateNested, IsInt, Min, Max, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PostType, Audience } from '../entities/post.entity';
+
+class PollOptionDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(200)
+  text: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(100_000_000)
+  votes?: number;
+}
 
 export class CreatePostDto {
   @IsString()
+  @MaxLength(10000)
   content: string;
 
   @IsOptional()
@@ -15,7 +30,9 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
   @IsString({ each: true })
+  @MaxLength(2048, { each: true })
   mediaUrls?: string[];
 
   @IsOptional()
@@ -64,7 +81,10 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsArray()
-  pollOptions?: { text: string; votes: number }[];
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => PollOptionDto)
+  pollOptions?: PollOptionDto[];
 
   @IsOptional()
   @IsString()

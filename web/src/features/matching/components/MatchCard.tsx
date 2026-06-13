@@ -84,7 +84,9 @@ export const MatchCard = ({ match, onView, onAccept, onReject, accepting, reject
   );
 };
 
-// Simulated breakdown based on total score
+// Deterministic per-category approximation from the overall score and category
+// weight. (Was Math.random() — different numbers every render, a hydration
+// mismatch and invented data. Real per-category scores need a Match API change.)
 const ScoreBreakdown = ({ score }: { score: number }) => {
   const categories = [
     { label: 'الدين', weight: 0.30 },
@@ -97,7 +99,7 @@ const ScoreBreakdown = ({ score }: { score: number }) => {
   return (
     <div className="space-y-1.5">
       {categories.map((c) => {
-        const val = Math.min(100, Math.round(score * (0.8 + Math.random() * 0.4)));
+        const val = Math.min(100, Math.round(score * (0.85 + c.weight / 2)));
         return (
           <div key={c.label} className="flex items-center gap-2">
             <span className="w-20 text-xs text-gray-400 shrink-0">{c.label}</span>

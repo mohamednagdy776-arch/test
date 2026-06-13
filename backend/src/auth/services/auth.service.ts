@@ -26,6 +26,11 @@ export class AuthService {
     const usernameExists = dto.username ? await this.usersRepo.findOne({ where: { username: dto.username } }) : null;
     if (usernameExists) throw new ConflictException('Username already taken');
 
+    // Pre-check phone too, so a duplicate gives a clear message instead of a
+    // raw DB unique-violation (which leaked that phone enumeration differs).
+    const phoneExists = dto.phone ? await this.usersRepo.findOne({ where: { phone: dto.phone } }) : null;
+    if (phoneExists) throw new ConflictException('Phone number already registered');
+
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const verificationToken = randomBytes(32).toString('hex');
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);

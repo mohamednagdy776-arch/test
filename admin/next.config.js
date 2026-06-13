@@ -1,4 +1,15 @@
 /** @type {import('next').NextConfig} */
+
+// Allowed image host derived from the API URL (no hardcoded VPS IP, #26) and
+// the optimizer pinned to that exact host (no `**.sslip.io` wildcard SSRF, #100).
+const apiHost = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').hostname;
+  } catch {
+    return 'localhost';
+  }
+})();
+
 const nextConfig = {
   // Required for Docker multi-stage build — produces standalone server.js
   output: 'standalone',
@@ -8,15 +19,9 @@ const nextConfig = {
   basePath: '/admin',
   assetPrefix: '/admin',
   images: {
-    domains: [
-      'localhost',
-      '145-14-158-100.sslip.io',
-    ],
+    domains: ['localhost', apiHost],
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: '**.sslip.io',
-      },
+      { protocol: 'https', hostname: apiHost },
     ],
   },
 };

@@ -24,11 +24,14 @@ export class AuthController {
   }
 
   @Post('login')
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(@Body() dto: LoginDto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
+    // Derive real device info from the request so new-device security emails are
+    // meaningful (was hardcoded 'Unknown').
+    const ua = (req?.headers?.['user-agent'] as string) || 'Unknown device';
     const deviceInfo = {
-      browser: 'Unknown',
-      ip: '0.0.0.0',
-      deviceName: 'Unknown device',
+      browser: ua.slice(0, 160),
+      ip: (req?.headers?.['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req?.ip || '0.0.0.0',
+      deviceName: ua.slice(0, 160),
     };
     const result = await this.authService.login(dto, deviceInfo);
     // Sets cookies only when tokens are present (skipped when 2FA is required).

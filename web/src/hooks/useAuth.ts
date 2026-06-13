@@ -12,6 +12,8 @@ export function useAuth() {
   const [auth, setAuth] = useState<AuthState>({ isAuthenticated: false, token: null });
 
   useEffect(() => {
+    // Guard against SSR / non-browser contexts where localStorage is undefined.
+    if (typeof window === 'undefined') return;
     const token = localStorage.getItem('access_token');
     setAuth({ isAuthenticated: !!token, token });
   }, []);

@@ -25,9 +25,10 @@ check_env() {
     log_info "Checking environment configuration..."
     
     if [ ! -f .env ]; then
-        log_warn ".env file not found. Using .env.example as template."
-        cp .env.example .env
-        log_warn "Please update .env with your actual values before deploying."
+        # Never auto-generate from .env.example — that would bring up production
+        # with the well-known placeholder secrets. Fail hard instead.
+        log_error ".env file not found. Copy .env.example, fill in real credentials, and re-run."
+        exit 1
     fi
 }
 

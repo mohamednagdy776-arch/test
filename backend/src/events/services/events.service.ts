@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Event } from '../entities/event.entity';
 import { EventRSVP } from '../entities/event-rsvp.entity';
 import { CreateEventDto } from '../dto/create-event.dto';
@@ -107,7 +107,9 @@ export class EventsService {
 
   async getMyEvents(userId: string) {
     const rsvps = await this.rsvpRepo.find({
-      where: { user: { id: userId } },
+      // "My events" = events the user is attending/interested in, not ones they
+      // explicitly declined (not_going).
+      where: { user: { id: userId }, status: In(['going', 'interested']) },
       relations: ['event'],
       order: { rsvpedAt: 'DESC' },
     });
