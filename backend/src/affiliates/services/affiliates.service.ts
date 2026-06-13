@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Affiliate } from '../entities/affiliate.entity';
@@ -16,7 +16,14 @@ export class AffiliatesService {
   }
 
   async findByReferralCode(code: string) {
-    return this.affiliateRepo.findOne({ where: { referralCode: code }, relations: ['user'] });
+    const affiliate = await this.affiliateRepo.findOne({ where: { referralCode: code }, relations: ['user'] });
+    // Strip PII — this is reachable by any authenticated user who knows a code.
+    if (affiliate?.user) {
+      delete (affiliate.user as any).email;
+      delete (affiliate.user as any).phone;
+      delete (affiliate.user as any).passwordHash;
+    }
+    return affiliate;
   }
 
   async findAll(page: number, limit: number) {
@@ -50,6 +57,11 @@ export class AffiliatesService {
   }
 
   async addCommission(affiliateId: string, amount: number) {
+    // Reject negative amounts — otherwise a caller could silently drain a
+    // commission balance.
+    if (!(amount > 0)) {
+      throw new BadRequestException('Commission amount must be positive');
+    }
     await this.affiliateRepo.increment({ id: affiliateId }, 'commissionBalance', amount);
   }
 
