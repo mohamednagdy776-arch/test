@@ -69,7 +69,9 @@ import { SeedModule } from './seed/seed.module';
     SettingsModule,
     MemoriesModule,
     VideosModule,
-    SeedModule,
+    // Seed endpoints (which can wipe/re-seed the DB) must never be exposed in
+    // production. Only register the module outside production.
+    ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
 })
 export class AppModule {}

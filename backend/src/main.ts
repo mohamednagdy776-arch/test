@@ -22,11 +22,17 @@ async function bootstrap() {
   app.useGlobalFilters(new QueryErrorFilter());
 
   // CORS: restrict to known origins in production; allow all in development.
+  // When CORS_ORIGIN is unset we must NOT fall back to wildcard in production —
+  // that would let any site make credentialed cross-origin calls. Deny instead.
+  // (The web app and API are same-origin behind nginx, so this doesn't affect
+  // first-party requests.)
   const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
     origin: corsOrigin
       ? corsOrigin.split(',').map((o) => o.trim())
-      : true,
+      : process.env.NODE_ENV === 'production'
+        ? false
+        : true,
     credentials: true,
   });
 
