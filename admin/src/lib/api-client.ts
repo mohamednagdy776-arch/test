@@ -4,13 +4,8 @@ import axios from 'axios';
 export const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1',
   headers: { 'Content-Type': 'application/json' },
-});
-
-// Inject auth token on every request
-apiClient.interceptors.request.use((config) => {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
+  // Auth is via HttpOnly cookies set by the backend; send them with each call.
+  withCredentials: true,
 });
 
 // Handle 401 globally — redirect to login

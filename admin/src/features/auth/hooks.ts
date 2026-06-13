@@ -9,9 +9,8 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (payload: LoginPayload) => authApi.login(payload),
-    onSuccess: (res) => {
-      localStorage.setItem('access_token', res.data.accessToken);
-      localStorage.setItem('refresh_token', res.data.refreshToken);
+    onSuccess: () => {
+      // Tokens are set as HttpOnly cookies by the backend — nothing to store.
       router.push('/dashboard');
     },
   });

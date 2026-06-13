@@ -1,9 +1,14 @@
 'use client';
 import { useRouter } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 
 export const Header = () => {
   const router = useRouter();
-  const handleLogout = () => { localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token'); router.push('/login'); };
+  const handleLogout = async () => {
+    // Cookies are HttpOnly — only the backend can clear them.
+    try { await apiClient.post('/auth/logout'); } catch { /* redirect regardless */ }
+    router.push('/login');
+  };
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 backdrop-blur-xl px-6">
       <div className="flex items-center gap-2">
