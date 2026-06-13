@@ -91,6 +91,12 @@ export class GroupsService {
     const group = await this.groupsRepo.findOne({ where: { id: groupId } });
     if (!group) throw new NotFoundException('Group not found');
 
+    // Only public groups can be joined directly; private/secret groups require
+    // an invitation (the privacy field was fetched but never enforced).
+    if (group.privacy && group.privacy !== 'public') {
+      throw new ForbiddenException('This group requires an invitation to join');
+    }
+
     const existing = await this.memberRepo.findOne({
       where: { group: { id: groupId }, user: { id: user.id } },
     });
