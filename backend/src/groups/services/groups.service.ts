@@ -1,6 +1,10 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository, Like, Not, In } from 'typeorm';
+
+// Cap free-text search terms so a giant ILIKE '%...%' (which can't use an index)
+// can't be used as a DoS vector.
+const MAX_SEARCH_LEN = 100;
 import { Group, GroupPrivacy } from '../entities/group.entity';
 import { GroupMember } from '../entities/group-member.entity';
 import { CreateGroupDto } from '../dto/create-group.dto';
@@ -38,7 +42,7 @@ export class GroupsService {
       return { joinedGroups: [], otherGroups: [] };
     }
 
-    const searchTerm = `%${query.trim()}%`;
+    const searchTerm = `%${query.trim().slice(0, MAX_SEARCH_LEN)}%`;
 
     // Get all groups matching the search
     const allGroups = await this.groupsRepo
@@ -66,7 +70,7 @@ export class GroupsService {
 
     return this.groupsRepo
       .createQueryBuilder('group')
-      .where('group.name ILIKE :search', { search: `%${query.trim()}%` })
+      .where('group.name ILIKE :search', { search: `%${query.trim().slice(0, MAX_SEARCH_LEN)}%` })
       .select(['group.id', 'group.name'])
       .orderBy('group.name', 'ASC')
       .limit(8)
@@ -90,6 +94,7 @@ export class GroupsService {
     const existing = await this.memberRepo.findOne({
       where: { group: { id: groupId }, user: { id: user.id } },
     });
+    if (existing?.isBanned) throw new ForbiddenException('You have been banned from this group');
     if (existing) throw new ConflictException('Already a member');
 
     await this.memberRepo.save(this.memberRepo.create({
@@ -204,13 +209,17 @@ export class GroupsService {
       where: { user: { id: userId } },
       relations: ['group'],
     });
-    const joined = new Set(memberships.map((m) => m.group.id));
-    const groups = await this.groupsRepo.find({
-      where: { privacy: 'public' },
+    const joinedIds = memberships.map((m) => m.group.id);
+    // Exclude joined groups at the DB level instead of over-fetching
+    // (limit + joined.size) rows into memory and filtering — that was a
+    // memory/DoS risk for users with very many memberships.
+    return this.groupsRepo.find({
+      where: joinedIds.length
+        ? { privacy: 'public', id: Not(In(joinedIds)) }
+        : { privacy: 'public' },
       order: { createdAt: 'DESC' },
-      take: limit + joined.size,
+      take: limit,
     });
-    return groups.filter((g) => !joined.has(g.id)).slice(0, limit);
   }
 
   // No join-request model exists in the schema yet, so there are no pending
