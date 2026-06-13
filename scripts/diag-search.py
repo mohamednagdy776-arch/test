@@ -3,8 +3,10 @@ import os
 import paramiko, json
 
 c = paramiko.SSHClient()
-c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-c.connect('145.14.158.100', username='root', password=os.environ.get('VPS_PASSWORD',''),
+# Security fix: Use RejectPolicy and load system host keys to prevent MitM
+c.load_system_host_keys()
+c.set_missing_host_key_policy(paramiko.RejectPolicy())
+c.connect('145.14-158-100', username='root', password=os.environ.get('VPS_PASSWORD',''),
           timeout=60, banner_timeout=60, auth_timeout=60)
 
 def run(cmd, timeout=30):
@@ -13,10 +15,17 @@ def run(cmd, timeout=30):
 
 # 1. Login
 print("=== 1. Login ===")
+# Security fix: Load test credentials from environment variables instead of hardcoding.
+# This prevents secrets from being exposed in source code.
+TEST_EMAIL = os.environ.get('TEST_USER_EMAIL', 'omar.khalifa@tayyibt.test')
+TEST_PASSWORD = os.environ.get('TEST_USER_PASSWORD')
+if not TEST_PASSWORD:
+    raise ValueError('TEST_USER_PASSWORD environment variable is required')
+login_payload = json.dumps({'email': TEST_EMAIL, 'password': TEST_PASSWORD})
 login = json.loads(run(
-    "curl -s -X POST https://145-14-158-100.sslip.io/api/v1/auth/login "
-    "-H 'Content-Type: application/json' "
-    "-d '{\"email\":\"omar.khalifa@tayyibt.test\",\"password\":\"Test1234\"}'"
+    f"curl -s -X POST https://145-14-158-100.sslip.io/api/v1/auth/login "
+    f"-H 'Content-Type: application/json' "
+    f"-d '{login_payload}'"
 ))
 token = login.get("data", {}).get("accessToken", "")
 print(f"Login: {'OK' if token else 'FAILED'} — {'' if token else login}")
@@ -86,3 +95,4 @@ result = run(
 print(f"  {result[:200] if result else 'NOT FOUND — API URL may not be baked in!'}")
 
 c.close()
+
