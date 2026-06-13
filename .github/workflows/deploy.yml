@@ -2,6 +2,11 @@ name: Deploy to VPS
 
 # Continuous deployment: every push to `main` ships the code to the VPS,
 # rebuilds the Docker stack, and restarts it. Can also be run manually.
+#
+# This runs on a SELF-HOSTED runner installed on the VPS itself. The runner
+# connects OUTBOUND to GitHub for jobs, so deployment no longer depends on
+# GitHub being able to SSH INBOUND to port 22 (which the host firewall kept
+# blocking). Deployment is therefore a local rsync + cd-deploy.sh — no SSH/SCP.
 on:
   push:
     branches: [main]
@@ -14,97 +19,47 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, vps]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Package the application
-        # Use `git archive`, not `tar`, so the package is built from COMMITTED
-        # state — not the working tree. This makes local and CI behaviour
-        # identical and guarantees only tracked files ship (untracked/ignored
-        # files like node_modules, .next, dist can never sneak in or, worse,
-        # cause "Cannot stat" failures when they exist locally but not on CI).
+      - name: Deploy to /opt/tayyibt and rebuild
         run: |
-          git archive --format=tar.gz -o app.tar.gz HEAD \
-            backend web admin ai-service docker scripts \
-            docker-compose.vps.yml docker-compose.prod.yml docker-compose.yml \
-            .dockerignore README.md CLAUDE.md
-          echo "Archive size: $(stat -c%s app.tar.gz) bytes"
+          set -e
+          mkdir -p /opt/tayyibt
 
-      - name: Upload package to VPS
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT || 22 }}
-          source: app.tar.gz
-          target: /tmp
+          # Clean-mirror deploy: stage exactly the tracked paths we ship, then
+          # rsync --delete into /opt/tayyibt so it is byte-for-byte the repo
+          # EXCEPT the VPS-only state we must never touch (.env.production,
+          # certs/). Staging keeps the mirror identical to the old archive-based
+          # flow (untracked/dev files never leak in).
+          rm -rf /tmp/deploy_stage && mkdir -p /tmp/deploy_stage
+          cp -r backend web admin ai-service docker scripts \
+                docker-compose.vps.yml docker-compose.prod.yml docker-compose.yml \
+                .dockerignore README.md CLAUDE.md /tmp/deploy_stage/
 
-      - name: Extract, build and restart on VPS
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USERNAME }}
-          password: ${{ secrets.VPS_PASSWORD }}
-          port: ${{ secrets.VPS_PORT || 22 }}
-          command_timeout: 40m
-          script: |
-            set -e
-            mkdir -p /opt/tayyibt
+          # Normalise any CRLF in shell scripts (Windows authoring backstop).
+          find /tmp/deploy_stage/scripts -name '*.sh' -exec sed -i 's/\r$//' {} + 2>/dev/null || true
 
-            # --- Clean-mirror deploy ------------------------------------------
-            # The old approach (tar-extract over the live dir) only ADDED/updated
-            # files; anything deleted or renamed in the repo lingered on disk and
-            # could mask repo changes (e.g. a dead duplicate component still being
-            # edited or imported). We now mirror the repo onto the VPS with
-            # `rsync --delete`, so /opt/tayyibt is byte-for-byte the repo EXCEPT
-            # for the VPS-only state we must never touch (.env.production, certs/).
-            command -v rsync >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rsync)
+          command -v rsync >/dev/null 2>&1 || (apt-get update -qq && apt-get install -y -qq rsync)
+          rsync -a --delete \
+            --exclude='.env.production' \
+            --exclude='.env' \
+            --exclude='certs/' \
+            --exclude='.git/' \
+            /tmp/deploy_stage/ /opt/tayyibt/
+          rm -rf /tmp/deploy_stage
 
-            # Fail loudly if the upload didn't arrive, instead of a cryptic
-            # "tar: Cannot open" further down.
-            if [ ! -s /tmp/app.tar.gz ]; then
-              echo "ERROR: /tmp/app.tar.gz missing or empty — upload step did not deliver the archive." >&2
-              exit 1
-            fi
+          chmod +x /opt/tayyibt/scripts/cd-deploy.sh || true
+          bash /opt/tayyibt/scripts/cd-deploy.sh
 
-            rm -rf /tmp/tayyibt_new
-            mkdir -p /tmp/tayyibt_new
-            tar xzf /tmp/app.tar.gz -C /tmp/tayyibt_new
-            rm -f /tmp/app.tar.gz
-
-            # Guard: bash scripts must be LF. A stray CRLF (e.g. authored on
-            # Windows) makes bash abort with "set: pipefail: invalid option".
-            # .gitattributes enforces LF, but normalise here too as a backstop.
-            find /tmp/tayyibt_new/scripts -name '*.sh' -exec sed -i 's/\r$//' {} + 2>/dev/null || true
-
-            rsync -a --delete \
-              --exclude='.env.production' \
-              --exclude='.env' \
-              --exclude='certs/' \
-              --exclude='.git/' \
-              /tmp/tayyibt_new/ /opt/tayyibt/
-            rm -rf /tmp/tayyibt_new
-
-            chmod +x /opt/tayyibt/scripts/cd-deploy.sh || true
-            bash /opt/tayyibt/scripts/cd-deploy.sh
-
-      - name: Public reachability (informational)
-        # The authoritative health gate already ran on the VPS inside
-        # cd-deploy.sh (curl localhost); the deploy step above fails if the app
-        # is unhealthy. This is a best-effort EXTERNAL probe only and must never
-        # fail the deploy: the GitHub runner often can't reach the public
-        # endpoint (sslip.io DNS / Hostinger firewall on 443), which is unrelated
-        # to whether the app is actually healthy.
-        continue-on-error: true
+      - name: Public reachability check
+        # cd-deploy.sh already gated health on localhost (authoritative). This
+        # confirms the public endpoint too — and since the runner is ON the VPS,
+        # this no longer depends on any external firewall.
         run: |
           code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 10 \
             https://145-14-158-100.sslip.io/api/v1/health 2>/dev/null || echo 000)
-          echo "Public endpoint from runner: HTTP $code (informational only)"
-          if [ "$code" != "200" ]; then
-            echo "NOTE: the runner could not reach the public endpoint. The app is"
-            echo "gated healthy on the VPS. If you also want it reachable from the"
-            echo "public internet, allow ports 80/443 from any in the Hostinger firewall."
-          fi
+          echo "Public endpoint: HTTP $code"
+          test "$code" = "200"
