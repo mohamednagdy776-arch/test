@@ -1,9 +1,12 @@
-import { IsString, Matches, MinLength } from 'class-validator';
+import { IsString, Length, Matches, MinLength } from 'class-validator';
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 export class ResetPasswordDto {
+  // Reset tokens are randomBytes(32).toString('hex') = exactly 64 hex chars.
   @IsString()
+  @Length(64, 64)
+  @Matches(/^[0-9a-f]{64}$/, { message: 'Invalid token format' })
   token: string;
 
   @IsString()
