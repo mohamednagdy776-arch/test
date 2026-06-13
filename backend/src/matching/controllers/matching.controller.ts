@@ -33,8 +33,8 @@ export class MatchingController {
   }
 
   @Get(':id')
-  async getById(@Param('id') id: string) {
-    const match = await this.matchingService.getById(id);
+  async getById(@Param('id') id: string, @CurrentUser() user: User) {
+    const match = await this.matchingService.getById(id, user.id);
     return ok(match);
   }
 

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
@@ -9,6 +9,8 @@ import { User } from '../../auth/entities/user.entity';
 
 @Injectable()
 export class MatchingService {
+  private readonly logger = new Logger(MatchingService.name);
+
   constructor(
     @InjectRepository(Match) private matchesRepo: Repository<Match>,
     @InjectRepository(Profile) private profilesRepo: Repository<Profile>,
@@ -65,7 +67,10 @@ export class MatchingService {
     );
 
     const filteredData = enrichedData.filter((m) => m !== null);
-    return { data: filteredData, total: filteredData.length };
+    // Return the true DB total (matches are opposite-gender by construction),
+    // not the post-filter length of the current page — otherwise the frontend
+    // computes the wrong number of pages and stops paginating early.
+    return { data: filteredData, total };
   }
 
   async generateMatchesForUser(userId: string): Promise<Match[]> {
@@ -97,7 +102,7 @@ export class MatchingService {
     const candidates = await query.take(50).getMany();
     const unmatched = candidates.filter((u) => !matchedIds.has(u.id)).slice(0, 10);
 
-    const newMatches: Match[] = [];
+    const pending: Match[] = [];
 
     for (const candidate of unmatched) {
       try {
@@ -121,20 +126,25 @@ export class MatchingService {
 
         const score = aiResponse.data?.compatibilityScore ?? 50;
 
-        const match = this.matchesRepo.create({
+        pending.push(this.matchesRepo.create({
           user1: currentUser,
           user2: candidate,
           score,
           status: 'pending',
-        });
-        const saved = await this.matchesRepo.save(match);
-        newMatches.push(saved);
-      } catch {
-        // skip this candidate on error
+        }));
+      } catch (err) {
+        // Don't silently swallow: a systemic AI-service outage would otherwise
+        // be invisible. We still skip the candidate, but it's logged.
+        this.logger.warn(
+          `generateMatchesForUser: scoring failed for candidate ${candidate.id}: ${err instanceof Error ? err.message : err}`,
+        );
       }
     }
 
-    return newMatches;
+    // Persist all matches atomically so a mid-batch crash can't leave a
+    // half-generated, inconsistent set behind.
+    if (pending.length === 0) return [];
+    return this.matchesRepo.manager.transaction((em) => em.save(pending));
   }
 
   private profileToAiFields(profile: Profile) {
@@ -162,13 +172,20 @@ export class MatchingService {
   }
 
   async respondToMatch(matchId: string, userId: string, status: 'accepted' | 'rejected') {
-    const match = await this.matchesRepo.findOneOrFail({ where: { id: matchId } });
+    const match = await this.matchesRepo.findOneOrFail({ where: { id: matchId }, relations: ['user1', 'user2'] });
+    if (match.user1.id !== userId && match.user2.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
     match.status = status;
     return this.matchesRepo.save(match);
   }
 
-  async getById(id: string) {
-    return this.matchesRepo.findOneOrFail({ where: { id } });
+  async getById(id: string, userId: string) {
+    const match = await this.matchesRepo.findOneOrFail({ where: { id }, relations: ['user1', 'user2'] });
+    if (match.user1.id !== userId && match.user2.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    return match;
   }
 
   /**
