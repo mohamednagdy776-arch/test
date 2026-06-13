@@ -8,7 +8,16 @@ const nextConfig = {
   basePath: '/admin',
   assetPrefix: '/admin',
   images: {
-    domains: ['localhost'],
+    domains: [
+      'localhost',
+      '145-14-158-100.sslip.io',
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.sslip.io',
+      },
+    ],
   },
 };
 

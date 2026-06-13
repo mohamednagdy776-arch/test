@@ -160,7 +160,7 @@ export const RegisterForm = () => {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-[#374151]">تاريخ ��لميلاد</label>
+          <label className="block text-sm font-medium text-[#374151]">تاريخ الميلاد</label>
           <input type="date" value={form.dateOfBirth} onChange={set('dateOfBirth')}
             className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
         </div>

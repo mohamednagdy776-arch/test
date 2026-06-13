@@ -1,26 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-const protectedPaths = ['/dashboard', '/matching', '/profile', '/chat', '/search', '/groups'];
-const authPaths = ['/login', '/register'];
+// NOTE: Auth tokens are stored in localStorage (browser-only) and are not
+// accessible to server-side middleware. Route protection for authenticated
+// pages is handled client-side by the AuthGuard component
+// (web/src/components/auth/AuthGuard.tsx).
+//
+// This middleware is retained as a lightweight layer that can be extended in
+// the future (e.g. once cookie-based auth is implemented). For now it simply
+// allows all requests to pass through.
 
-export function middleware(request: NextRequest) {
-  const token = request.cookies.get('access_token')?.value;
-  const { pathname } = request.nextUrl;
-
-  const isProtected = protectedPaths.some((path) => pathname.startsWith(path));
-  const isAuth = authPaths.some((path) => pathname.startsWith(path));
-
-  if (isProtected && !token) {
-    const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  if (isAuth && token) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
-  }
-
+export function middleware(_request: NextRequest) {
   return NextResponse.next();
 }
 

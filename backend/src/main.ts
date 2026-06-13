@@ -20,8 +20,13 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
   // Translate DB-level errors (invalid UUID, FK/unique violations) into clean 4xx
   app.useGlobalFilters(new QueryErrorFilter());
+
+  // CORS: restrict to known origins in production; allow all in development.
+  const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
-    origin: true,
+    origin: corsOrigin
+      ? corsOrigin.split(',').map((o) => o.trim())
+      : true,
     credentials: true,
   });
 
@@ -42,5 +47,3 @@ async function bootstrap() {
   }
 }
 bootstrap();
-
-
