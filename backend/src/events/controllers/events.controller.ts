@@ -17,7 +17,7 @@ export class EventsController {
   @Post()
   async create(@Body() dto: CreateEventDto, @CurrentUser() user: User) {
     this.logger.log(`POST /events - Creating event: ${dto.title}`);
-    this.logger.debug('Request body:', dto);
+    // (removed debug log of the full request DTO — it leaked PII into logs)
     try {
       const event = await this.eventsService.create(dto, user);
       this.logger.log(`Event created successfully: ${event.id}`);

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Event } from '../entities/event.entity';
@@ -17,11 +17,17 @@ export class EventsService {
 
   async create(dto: CreateEventDto, user: User) {
     this.logger.log(`Creating event: ${dto.title} by user ${user.id}`);
-    this.logger.debug('DTO received:', dto);
+    // (removed debug log of the full DTO — it leaked PII into logs)
+    const startDate = new Date(dto.startDate);
+    const endDate = dto.endDate ? new Date(dto.endDate) : undefined;
+    // #94: reject logically invalid date ranges.
+    if (endDate && endDate < startDate) {
+      throw new BadRequestException('endDate must be after startDate');
+    }
     const event = this.eventsRepo.create({
       ...dto,
-      startDate: new Date(dto.startDate),
-      endDate: dto.endDate ? new Date(dto.endDate) : undefined,
+      startDate,
+      endDate,
       createdBy: user,
     });
     try {
