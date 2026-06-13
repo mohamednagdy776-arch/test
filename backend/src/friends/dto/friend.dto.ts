@@ -2,7 +2,7 @@ import { IsEnum, IsOptional, IsString, IsArray, IsUUID, IsBoolean } from 'class-
 import { FriendshipStatus, FriendListType } from '../entities/friendship.entity';
 
 export class SendFriendRequestDto {
-  @IsString()
+  @IsUUID('4')
   userId: string;
 }
 
@@ -32,12 +32,12 @@ export class UpdateFriendListDto {
 }
 
 export class BlockUserDto {
-  @IsString()
+  @IsUUID('4')
   userId: string;
 }
 
 export class RestrictUserDto {
-  @IsString()
+  @IsUUID('4')
   userId: string;
 
   @IsOptional()

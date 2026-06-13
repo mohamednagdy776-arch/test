@@ -8,6 +8,7 @@ export class RegisterDto {
   email: string;
 
   @IsString()
+  @Matches(/^\+?[1-9]\d{6,14}$/, { message: 'phone must be a valid phone number' })
   phone: string;
 
   @IsString()
