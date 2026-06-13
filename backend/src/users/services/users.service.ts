@@ -308,23 +308,23 @@ export class UsersService {
   }
 
   async getPhotos(userId: string, page = 1, limit = 20) {
-    const activities = await this.activityRepo.find({
+    const [activities, total] = await this.activityRepo.findAndCount({
       where: { userId, type: 'photo' as any },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
-    return { data: activities, total: 0, page, totalPages: 0 };
+    return { data: activities, total, page, totalPages: Math.ceil(total / limit) };
   }
 
   async getVideos(userId: string, page = 1, limit = 20) {
-    const activities = await this.activityRepo.find({
+    const [activities, total] = await this.activityRepo.findAndCount({
       where: { userId, type: 'video' as any },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
-    return { data: activities, total: 0, page, totalPages: 0 };
+    return { data: activities, total, page, totalPages: Math.ceil(total / limit) };
   }
 
   async logActivity(userId: string, type: string, description: string, metadata?: Record<string, any>) {

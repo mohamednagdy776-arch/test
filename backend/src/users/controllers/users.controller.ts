@@ -42,7 +42,11 @@ export class UsersController {
     }),
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      // Validate BOTH the extension and the declared MIME type — an extension
+      // check alone lets a polyglot/webshell be uploaded as `exploit.jpg`.
+      const okExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname);
+      const okMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype);
+      if (!okExt || !okMime) {
         return cb(new BadRequestException('Only image files are allowed'), false);
       }
       cb(null, true);
@@ -65,7 +69,11 @@ export class UsersController {
     }),
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-      if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+      // Validate BOTH the extension and the declared MIME type — an extension
+      // check alone lets a polyglot/webshell be uploaded as `exploit.jpg`.
+      const okExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname);
+      const okMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype);
+      if (!okExt || !okMime) {
         return cb(new BadRequestException('Only image files are allowed'), false);
       }
       cb(null, true);

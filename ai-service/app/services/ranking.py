@@ -40,6 +40,7 @@ def batch_rank(
     users: List[UserProfile],
     top_n: int = 20,
     min_score: float = 30.0,
+    max_users: int = 500,
 ) -> dict[str, List[Tuple[str, float]]]:
     """Precompute top matches for all users.
 
@@ -52,6 +53,10 @@ def batch_rank(
         Dict mapping user_id to list of (candidate_id, score) tuples
     """
     results: dict[str, List[Tuple[str, float]]] = {}
+
+    # Guard against O(n^2) blowup on large user sets — cap the batch size.
+    if len(users) > max_users:
+        users = users[:max_users]
 
     for user in users:
         matches = rank_candidates(user, users, top_n, min_score)

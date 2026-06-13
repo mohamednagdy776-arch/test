@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Headers, Post, Put, UseGuards, Req, Res, HttpCode, Query } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from '../services/auth.service';
@@ -12,6 +13,10 @@ import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { SetupTwoFactorDto, DisableTwoFactorDto } from '../dto/two-factor.dto';
 import { ok } from '../../common/response.helper';
 
+// Tighter rate limit on auth endpoints (brute-force / mass-signup / email
+// bombing protection) — 10 requests/minute/IP, vs the global 100. (#14/#88)
+@UseGuards(ThrottlerGuard)
+@Throttle({ default: { limit: 10, ttl: 60000 } })
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
