@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, ForbiddenException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { GroupsService } from '../services/groups.service';
 import { PostsService } from '../../posts/services/posts.service';
@@ -116,6 +116,11 @@ export class GroupsController {
     @Body() dto: CreatePostDto,
     @CurrentUser() user: User,
   ) {
+    // Must be a member to post in the group (was unchecked — any user who knew
+    // a group UUID could post in it, including private/secret groups).
+    if (!(await this.groupsService.isMember(id, user.id))) {
+      throw new ForbiddenException('You must be a member of this group to post');
+    }
     const post = await this.postsService.create(id, dto, user);
     return ok(post, 'Post created');
   }
