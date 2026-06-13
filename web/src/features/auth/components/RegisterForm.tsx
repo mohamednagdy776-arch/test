@@ -83,16 +83,26 @@ export const RegisterForm = () => {
     if (!strong) { setError('كلمة المرور يجب أن تحتوي على حرف كبير وحرف صغير ورقم ورمز خاص'); return; }
     setLoading(true);
     try {
-      const res = await authApi.register({
-        email: form.email,
-        phone: form.phone,
+      // Only send optional fields when they have a value. The backend marks
+      // username/dateOfBirth/gender @IsOptional(), but class-validator only
+      // skips null/undefined — an empty string still runs @IsDateString() and
+      // 400s. Sending dateOfBirth: '' (the default when the user leaves the
+      // non-required birth-date blank) was rejecting otherwise-valid signups.
+      const payload: {
+        email: string; phone: string; password: string;
+        firstName?: string; lastName?: string; username?: string;
+        dateOfBirth?: string; gender?: string;
+      } = {
+        email: form.email.trim(),
+        phone: form.phone.trim(),
         password: form.password,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        username: form.username,
-        dateOfBirth: form.dateOfBirth,
+        firstName: form.firstName.trim(),
+        lastName: form.lastName.trim(),
         gender: form.gender,
-      });
+      };
+      if (form.username.trim()) payload.username = form.username.trim();
+      if (form.dateOfBirth) payload.dateOfBirth = form.dateOfBirth;
+      const res = await authApi.register(payload);
       localStorage.setItem('access_token', res.data.accessToken);
       localStorage.setItem('refresh_token', res.data.refreshToken);
       router.push('/dashboard');
