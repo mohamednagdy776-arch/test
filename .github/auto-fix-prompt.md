@@ -18,10 +18,12 @@ HARD RULES — do NOT violate:
 
 For each issue you fix:
 - Make the smallest correct change.
-- Typecheck the affected package and REVERT your change if it doesn't pass:
-  - backend: `cd backend && npx tsc --noEmit -p tsconfig.json`
-  - web:     `cd web && npx tsc --noEmit`
-  - admin:   `cd admin && npx tsc --noEmit`
+- Typecheck the package you changed IF its dependencies are available. If
+  `node_modules` is missing, run `npm ci` in that package first (network
+  permitting): `cd <pkg> && npx tsc --noEmit` (backend uses `-p tsconfig.json`).
+  If your change doesn't typecheck, REVERT it. If you genuinely can't install
+  deps, keep the change minimal and well-scoped — the PR's review and CI will
+  catch type errors before merge.
 
 When finished, write `FIX_SUMMARY.md` listing, concisely:
 - FIXED: `#<num> — one line` for each issue you changed.
