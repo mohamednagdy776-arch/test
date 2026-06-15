@@ -5,12 +5,16 @@ import { Comment } from '../entities/comment.entity';
 import { CommentReaction, CommentReactionType } from '../entities/comment-reaction.entity';
 import { CreateCommentDto, UpdateCommentDto, ReactToCommentDto } from '../dto/create-comment.dto';
 import { User } from '../../auth/entities/user.entity';
+import { Post } from '../../posts/entities/post.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     @InjectRepository(Comment) private commentsRepo: Repository<Comment>,
     @InjectRepository(CommentReaction) private reactionsRepo: Repository<CommentReaction>,
+    @InjectRepository(Post) private postsRepo: Repository<Post>,
+    private notifications: NotificationsService,
   ) {}
 
   async create(postId: string, dto: CreateCommentDto, user: User) {
@@ -20,7 +24,15 @@ export class CommentsService {
       user,
       parent: dto.parentId ? ({ id: dto.parentId } as any) : null,
     });
-    return this.commentsRepo.save(comment);
+    const saved = await this.commentsRepo.save(comment);
+
+    // Notify the post owner about the comment, and anyone @mentioned in it
+    // (#383/#385). Best-effort — never blocks the comment from being created.
+    const post = await this.postsRepo.findOne({ where: { id: postId } });
+    await this.notifications.notifyUser(post?.userId, user.id, 'comment', 'commented on your post', 'post', postId);
+    await this.notifications.notifyMentions(dto.content, user.id, 'post', postId);
+
+    return saved;
   }
 
   async findByPost(postId: string) {

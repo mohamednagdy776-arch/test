@@ -1,14 +1,52 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Notification } from '../entities/notification.entity';
+import { In, Repository } from 'typeorm';
+import { Notification, NotificationType } from '../entities/notification.entity';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
+import { User } from '../../auth/entities/user.entity';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification) private notificationRepo: Repository<Notification>,
+    @InjectRepository(User) private usersRepo: Repository<User>,
   ) {}
+
+  // Notify a target user about an action by `actorId`. Never notifies a user
+  // about their own action (e.g. reacting to your own post). Best-effort —
+  // notification failures must not break the underlying action (#382/#383).
+  async notifyUser(
+    targetUserId: string | undefined,
+    actorId: string,
+    type: NotificationType,
+    message: string,
+    entityType?: string,
+    entityId?: string,
+  ) {
+    if (!targetUserId || targetUserId === actorId) return;
+    try {
+      await this.create(targetUserId, { type, message, entityType, entityId });
+    } catch {
+      /* best-effort */
+    }
+  }
+
+  // Parse @username mentions out of free text and notify each mentioned user
+  // (excluding the actor). Usernames are [a-zA-Z0-9_] (#385).
+  async notifyMentions(content: string | undefined, actorId: string, entityType: string, entityId: string) {
+    if (!content) return;
+    const usernames = [...new Set((content.match(/@([a-zA-Z0-9_]+)/g) || []).map((m) => m.slice(1)))];
+    if (!usernames.length) return;
+    try {
+      const users = await this.usersRepo.find({ where: { username: In(usernames) } });
+      for (const u of users) {
+        if (u.id === actorId) continue;
+        await this.create(u.id, { type: 'mention', message: 'mentioned you', entityType, entityId });
+      }
+    } catch {
+      /* best-effort */
+    }
+  }
 
   async findByUser(userId: string, page: number, limit: number) {
     const [data, total] = await this.notificationRepo.findAndCount({

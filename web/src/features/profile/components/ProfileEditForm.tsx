@@ -59,9 +59,9 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const bool = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLSelectElement>) =>
     setForm((f: typeof form) => ({ ...f, [k]: e.target.value === 'true' }));
 
-  const inp = (k: keyof typeof form, label: string, type = 'text', ph = '') => (
+  const inp = (k: keyof typeof form, label: string, type = 'text', ph = '', maxLength?: number) => (
     <Field label={label}>
-      <input type={type} value={(form as any)[k] ?? ''} onChange={type === 'number' ? num(k) : str(k)} placeholder={ph}
+      <input type={type} value={(form as any)[k] ?? ''} onChange={type === 'number' ? num(k) : str(k)} placeholder={ph} maxLength={maxLength}
         className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none focus:ring-1 focus:ring-[#547792]/30" />
     </Field>
   );
@@ -89,7 +89,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const tabContent = [
     // Tab 0 — Basic
     <div key="basic" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {inp('fullName', 'الاسم الكامل', 'text', 'أحمد محمد')}
+      {inp('fullName', 'الاسم الكامل', 'text', 'أحمد محمد', 100)}
       {inp('age', 'العمر', 'number', '25')}
       {sel('gender', 'الجنس', [['male', 'ذكر'], ['female', 'أنثى']])}
       {inp('country', 'الدولة', 'text', 'مصر')}

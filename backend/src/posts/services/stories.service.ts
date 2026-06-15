@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
 import { Post } from '../entities/post.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class StoriesService {
@@ -14,6 +15,7 @@ export class StoriesService {
     @InjectRepository(PostReport) private reportRepo: Repository<PostReport>,
     @InjectRepository(HiddenPost) private hiddenRepo: Repository<HiddenPost>,
     @InjectRepository(Post) private postRepo: Repository<Post>,
+    private notifications: NotificationsService,
   ) {}
 
   async createStory(userId: string, data: { mediaUrl?: string; mediaType?: string; thumbnailUrl?: string; text?: string; bgColor?: string; duration?: number }) {
@@ -299,6 +301,8 @@ export class StoriesService {
       post.scheduledAt = new Date(data.scheduledAt);
     }
     const saved = await this.postRepo.save(post);
+    // Notify anyone @mentioned in the post body (#385).
+    await this.notifications.notifyMentions(post.content, userId, 'post', saved.id);
     return this.postRepo.findOne({ where: { id: saved.id }, relations: ['user', 'group'] });
   }
 

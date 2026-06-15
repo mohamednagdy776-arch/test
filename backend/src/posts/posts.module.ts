@@ -9,9 +9,10 @@ import { AdminPostsController } from './controllers/admin-posts.controller';
 import { FeedController } from './controllers/feed.controller';
 import { StoriesController } from './controllers/stories.controller';
 import { UploadController } from './controllers/upload.controller';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost])],
+  imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost]), NotificationsModule],
   providers: [PostsService, StoriesService],
   controllers: [PostsController, AdminPostsController, FeedController, StoriesController, UploadController],
   exports: [PostsService],
