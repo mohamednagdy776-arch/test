@@ -49,6 +49,7 @@ export const ProfileHeader = ({
   // NOTE: do not set Content-Type manually — axios must add the multipart
   // boundary itself, otherwise the server cannot parse the uploaded file.
   const uploadAvatar = async (file: File) => {
+    if (uploading) return; // ignore rapid double-clicks → no parallel uploads (#398)
     setUploading(true);
     try {
       const form = new FormData();
@@ -64,6 +65,7 @@ export const ProfileHeader = ({
   };
 
   const uploadCover = async (file: File) => {
+    if (uploading) return; // ignore rapid double-clicks → no parallel uploads (#398)
     setUploading(true);
     try {
       const form = new FormData();
