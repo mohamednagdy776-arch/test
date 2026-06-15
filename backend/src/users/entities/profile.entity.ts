@@ -22,7 +22,10 @@ export class Profile {
   // Nullable with no default — gender must be set explicitly. Defaulting to
   // 'male' silently mis-gendered users who omitted the field, which is wrong on
   // a matchmaking platform (#192). Null renders as '—' in the UI.
-  @Column({ nullable: true })
+  // Explicit `type` is required: the `string | null` union makes TypeORM's
+  // metadata reflection infer `Object`, which postgres can't map (crashes on
+  // boot). Keep nullable so an omitted gender stays unset rather than 'male'.
+  @Column({ type: 'varchar', nullable: true })
   gender: string | null;
 
   @Column({ default: '' })
