@@ -126,31 +126,6 @@ jobs:
       - name: Check for dead/duplicate components (admin)
         run: node scripts/check-dead-components.mjs admin
 
-  # ========== Security Scan ==========
-  # Runs only when the CLAUDE_API_KEY secret is configured; never blocks CI.
-  security:
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check for API key
-        id: key
-        run: |
-          if [ -n "${{ secrets.CLAUDE_API_KEY }}" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "CLAUDE_API_KEY secret not set — skipping security review."
-          fi
-
-      - name: Run Security Review
-        if: steps.key.outputs.present == 'true'
-        uses: anthropics/claude-code-security-review@main
-        with:
-          comment-pr: true
-          claude-api-key: ${{ secrets.CLAUDE_API_KEY }}
-
   # ========== Lint ==========
   # Lint the Next.js apps (configured for ESLint). The backend is covered by
   # its `type-check` step in the backend-test job.
