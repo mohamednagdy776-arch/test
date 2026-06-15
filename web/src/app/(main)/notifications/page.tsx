@@ -4,11 +4,14 @@ import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useD
 import { NotificationList } from '@/features/notifications/components/NotificationList';
 import { Spinner } from '@/components/ui/Spinner';
 
-type Tab = 'all' | 'unread' | 'mentions';
+type Tab = 'all' | 'unread' | 'mentions' | 'likes' | 'comments';
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('all');
-  const { data, isLoading } = useNotifications();
+  // Load-more pagination: bump the page size on demand instead of being stuck
+  // on the first 20 with no way to see older notifications (#451).
+  const [limit, setLimit] = useState(20);
+  const { data, isLoading } = useNotifications(1, limit);
   const { data: unreadData } = useUnreadCount();
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
@@ -16,16 +19,22 @@ export default function NotificationsPage() {
 
   const allNotifications: any[] = data?.data?.notifications ?? [];
   const unreadCount = unreadData?.data?.count ?? 0;
+  // If the server filled the page, there are probably more to load.
+  const hasMore = allNotifications.length >= limit;
 
-  const filtered = activeTab === 'unread'
-    ? allNotifications.filter((n) => !n.readStatus)
-    : activeTab === 'mentions'
-    ? allNotifications.filter((n) => n.type === 'mention' || n.type === 'tag')
+  // Per-type filtering so likes/comments/mentions can be viewed separately (#449).
+  const filtered =
+    activeTab === 'unread' ? allNotifications.filter((n) => !n.readStatus)
+    : activeTab === 'mentions' ? allNotifications.filter((n) => n.type === 'mention' || n.type === 'tag')
+    : activeTab === 'likes' ? allNotifications.filter((n) => n.type === 'like')
+    : activeTab === 'comments' ? allNotifications.filter((n) => n.type === 'comment')
     : allNotifications;
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: 'all', label: 'الكل', count: allNotifications.length },
     { id: 'unread', label: 'غير مقروء', count: unreadCount },
+    { id: 'likes', label: 'الإعجابات' },
+    { id: 'comments', label: 'التعليقات' },
     { id: 'mentions', label: 'الإشارات' },
   ];
 
@@ -72,12 +81,24 @@ export default function NotificationsPage() {
               <Spinner />
             </div>
           ) : (
-            <NotificationList
-              notifications={filtered}
-              onMarkAsRead={(id) => markAsRead.mutate(id)}
-              onMarkAllAsRead={() => markAllAsRead.mutate()}
-              onDelete={(id) => deleteNotification.mutate(id)}
-            />
+            <>
+              <NotificationList
+                notifications={filtered}
+                onMarkAsRead={(id) => markAsRead.mutate(id)}
+                onMarkAllAsRead={() => markAllAsRead.mutate()}
+                onDelete={(id) => deleteNotification.mutate(id)}
+              />
+              {hasMore && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={() => setLimit((l) => l + 20)}
+                    className="px-5 py-2 text-sm font-medium text-emerald-700 rounded-full border border-emerald-200 hover:bg-emerald-50 transition-colors"
+                  >
+                    تحميل المزيد
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

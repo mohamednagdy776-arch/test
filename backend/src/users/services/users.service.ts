@@ -303,6 +303,26 @@ export class UsersService {
     return this.getProfile(userId);
   }
 
+  // Clear the cover photo and delete its file, reverting to the placeholder
+  // (#348). Column is already nullable, so no schema change.
+  async removeCover(userId: string) {
+    const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
+    if (existing?.coverUrl) await this.deleteUploadedFile(existing.coverUrl);
+    await this.profilesRepo.update({ user: { id: userId } }, { coverUrl: null as any });
+    await this.logActivity(userId, 'photo', 'Removed cover photo', {});
+    return this.getProfile(userId);
+  }
+
+  // Clear the avatar and delete its file, reverting to the initials placeholder
+  // (#358).
+  async removeAvatar(userId: string) {
+    const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
+    if (existing?.avatarUrl) await this.deleteUploadedFile(existing.avatarUrl);
+    await this.profilesRepo.update({ user: { id: userId } }, { avatarUrl: null as any });
+    await this.logActivity(userId, 'photo', 'Removed profile picture', {});
+    return this.getProfile(userId);
+  }
+
   // Remove a previously uploaded file from disk when it's replaced, so old
   // avatars/covers don't accumulate. Only touches paths under ./uploads.
   private async deleteUploadedFile(urlPath: string) {

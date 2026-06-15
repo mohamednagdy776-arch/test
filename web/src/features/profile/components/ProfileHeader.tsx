@@ -49,6 +49,7 @@ export const ProfileHeader = ({
   // NOTE: do not set Content-Type manually — axios must add the multipart
   // boundary itself, otherwise the server cannot parse the uploaded file.
   const uploadAvatar = async (file: File) => {
+    if (uploading) return; // ignore rapid double-clicks → no parallel uploads (#398)
     setUploading(true);
     try {
       const form = new FormData();
@@ -64,6 +65,7 @@ export const ProfileHeader = ({
   };
 
   const uploadCover = async (file: File) => {
+    if (uploading) return; // ignore rapid double-clicks → no parallel uploads (#398)
     setUploading(true);
     try {
       const form = new FormData();
@@ -73,6 +75,21 @@ export const ProfileHeader = ({
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
       alert(`${msg}\n\nالصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Remove avatar/cover with a confirm prompt (destructive, #399).
+  const removeImage = async (kind: 'avatar' | 'cover') => {
+    const msg = kind === 'avatar' ? 'إزالة صورة الملف الشخصي؟' : 'إزالة صورة الغلاف؟';
+    if (!window.confirm(msg)) return;
+    setUploading(true);
+    try {
+      await apiClient.delete(`/users/me/${kind}`);
+      qc.invalidateQueries({ queryKey: ['my-profile'] });
+    } catch (err: any) {
+      alert(err?.response?.data?.message ?? 'فشل إزالة الصورة');
     } finally {
       setUploading(false);
     }
@@ -117,6 +134,15 @@ export const ProfileHeader = ({
               <Camera size={18} />
               <span>{uploading ? 'جاري الرفع...' : 'تعديل غلاف'}</span>
             </button>
+            {mediaUrl(profile.coverUrl) && (
+              <button
+                onClick={() => removeImage('cover')}
+                disabled={uploading}
+                className="absolute bottom-4 left-36 px-3 py-2 bg-[#131F2E]/60 hover:bg-red-600/80 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
+              >
+                إزالة
+              </button>
+            )}
             <input
               ref={coverRef}
               type="file"
@@ -159,6 +185,16 @@ export const ProfileHeader = ({
                   className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); }}
                 />
+                {mediaUrl(profile.avatarUrl) && (
+                  <button
+                    onClick={() => removeImage('avatar')}
+                    disabled={uploading}
+                    title="إزالة الصورة"
+                    className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[#131F2E]/70 hover:bg-red-600/80 text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
+                  >
+                    ✕
+                  </button>
+                )}
               </>
             )}
           </div>

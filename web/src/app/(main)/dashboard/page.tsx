@@ -111,14 +111,38 @@ function TrendingTopics() {
   );
 }
 
+// Quick-action shortcuts so new users have an obvious next step (#443).
+function QuickActions() {
+  const router = useRouter();
+  const actions: [string, string, string][] = [
+    ['✍️', 'إنشاء منشور', '/posts'],
+    ['🧭', 'ابحث عن أشخاص', '/search'],
+    ['💞', 'التوافقات', '/matching'],
+  ];
+  return (
+    <div className="rounded-3xl bg-[#FFFBEB] shadow-soft border border-[#DCFCE7]/60 p-3 space-y-1">
+      {actions.map(([icon, label, href]) => (
+        <button
+          key={href}
+          onClick={() => router.push(href)}
+          className="w-full flex items-center gap-3 rounded-2xl p-2.5 hover:bg-[#DCFCE7]/50 transition-colors text-right"
+        >
+          <span className="text-xl">{icon}</span>
+          <span className="text-sm font-semibold text-[#065F46]">{label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function QuickStats() {
   // Real counts — no fabricated activity (L-05).
-  const { data: matchesData } = useQuery({
+  const { data: matchesData, isLoading: ml, isError: me } = useQuery({
     queryKey: ['dashboard-matches-count'],
     queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 100 } }).then((r) => r.data),
     staleTime: 60_000,
   });
-  const { data: friendsData } = useQuery({
+  const { data: friendsData, isLoading: fl, isError: fe } = useQuery({
     queryKey: ['dashboard-friends-count'],
     queryFn: () => apiClient.get('/friends', { params: { page: 1, limit: 100 } }).then((r) => r.data),
     staleTime: 60_000,
@@ -131,24 +155,49 @@ function QuickStats() {
   const acceptedCount = Array.isArray(matchesArr)
     ? matchesArr.filter((m: any) => m.status === 'accepted').length
     : 0;
+  const isLoading = ml || fl;
+  const isError = me || fe;
+  const isEmpty = !isLoading && !isError && matchesCount === 0 && friendsCount === 0;
 
   return (
     <div className="rounded-3xl p-5 text-[#FFFBEB] shadow-lg" style={{ background: 'linear-gradient(135deg, #10B981, #34D399)' }}>
       <p className="text-sm font-bold opacity-90 mb-3">نشاطك</p>
-      <div className="grid grid-cols-3 gap-4">
-        <div className="text-center">
-          <p className="text-2xl font-bold">{matchesCount}</p>
-          <p className="text-[10px] opacity-70">توافقات</p>
+      {isError ? (
+        // Don't blank/crash on a failed stats fetch (#439).
+        <p className="text-xs opacity-90 py-2">تعذّر تحميل الإحصائيات. حدّث الصفحة للمحاولة مرة أخرى.</p>
+      ) : isLoading ? (
+        <div className="grid grid-cols-3 gap-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="text-center">
+              <div className="h-7 w-8 mx-auto rounded bg-white/30 animate-pulse" />
+              <div className="h-2 w-10 mx-auto mt-1 rounded bg-white/20 animate-pulse" />
+            </div>
+          ))}
         </div>
-        <div className="text-center">
-          <p className="text-2xl font-bold">{acceptedCount}</p>
-          <p className="text-[10px] opacity-70">مقبولة</p>
-        </div>
-        <div className="text-center">
-          <p className="text-2xl font-bold">{friendsCount}</p>
-          <p className="text-[10px] opacity-70">أصدقاء</p>
-        </div>
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold">{matchesCount}</p>
+              <p className="text-[10px] opacity-70">توافقات</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{acceptedCount}</p>
+              <p className="text-[10px] opacity-70">مقبولة</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold">{friendsCount}</p>
+              <p className="text-[10px] opacity-70">أصدقاء</p>
+            </div>
+          </div>
+          {isEmpty && (
+            // Empty state for brand-new users instead of a wall of zeros (#376).
+            <p className="text-[11px] opacity-90 mt-3 leading-relaxed">
+              ابدأ رحلتك: أكمل ملفك الشخصي وأضف أصدقاء لرؤية نشاطك هنا.
+            </p>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -167,6 +216,7 @@ export default function DashboardPage() {
       <aside className="hidden xl:block w-72 shrink-0">
         <div className="sticky top-[5.5rem] max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-thin space-y-5 pr-1">
           <QuickStats />
+          <QuickActions />
           <SuggestedConnections />
           <TrendingTopics />
         </div>
