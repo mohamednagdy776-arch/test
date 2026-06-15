@@ -1,8 +1,9 @@
 'use client';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { profileApi } from '@/features/profile/api';
 import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
 import { ProfileSection } from '@/features/profile/components/ProfileSection';
 import { ProfileTabs } from '@/features/profile/components/ProfileTabs';
@@ -10,6 +11,9 @@ import { ActivityLogViewer } from '@/features/profile/components/ActivityLogView
 import { PostCard } from '@/features/posts/components/PostCard';
 
 type Tab = 'posts' | 'about' | 'friends' | 'photos' | 'videos' | 'activity';
+
+// Only render http(s) website links — never javascript:/data: URIs (stored XSS).
+const safeWebsite = (url?: string) => (url && /^https?:\/\//i.test(url) ? url : null);
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -24,6 +28,23 @@ export default function UserProfilePage() {
   });
 
   const profile = (profileData as any)?.data;
+  const qc = useQueryClient();
+  const profileUserId: string = profile?.userId ?? '';
+  const isSelf = !!profile?.isSelf;
+
+  const { data: friendStatusData } = useQuery({
+    queryKey: ['friendship-status', profileUserId],
+    queryFn: () => profileApi.getFriendshipStatus(profileUserId),
+    enabled: !isSelf && !!profileUserId,
+  });
+  const friendshipStatus = (friendStatusData as any)?.data ?? { status: 'none' };
+
+  const inval = () => qc.invalidateQueries({ queryKey: ['friendship-status', profileUserId] });
+  const sendRequest = useMutation({ mutationFn: () => profileApi.sendFriendRequest(profileUserId), onSuccess: inval });
+  const cancelRequest = useMutation({ mutationFn: () => { if (!friendshipStatus.id) throw new Error('no id'); return profileApi.cancelFriendRequest(friendshipStatus.id); }, onSuccess: inval });
+  const acceptRequest = useMutation({ mutationFn: () => { if (!friendshipStatus.id) throw new Error('no id'); return profileApi.acceptFriendRequest(friendshipStatus.id); }, onSuccess: inval });
+  const unfriend = useMutation({ mutationFn: () => profileApi.unfriend(profileUserId), onSuccess: inval });
+  const friendActionPending = sendRequest.isPending || cancelRequest.isPending || acceptRequest.isPending || unfriend.isPending;
 
   if (isLoading) {
     return (
@@ -40,7 +61,17 @@ export default function UserProfilePage() {
 
   return (
     <div className="space-y-4">
-      <ProfileHeader profile={profile} isSelf={!!profile.isSelf} onEdit={() => router.push('/profile')} />
+      <ProfileHeader
+        profile={profile}
+        isSelf={isSelf}
+        onEdit={isSelf ? () => router.push('/profile') : undefined}
+        friendshipStatus={!isSelf ? friendshipStatus : undefined}
+        onAddFriend={!isSelf ? () => sendRequest.mutate() : undefined}
+        onCancelRequest={!isSelf ? () => cancelRequest.mutate() : undefined}
+        onAcceptRequest={!isSelf ? () => acceptRequest.mutate() : undefined}
+        onUnfriend={!isSelf ? () => unfriend.mutate() : undefined}
+        friendActionPending={!isSelf ? friendActionPending : false}
+      />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
       <div className="min-h-[400px]">
         {activeTab === 'posts' && <PostsTab userId={profile.userId} />}
@@ -48,7 +79,9 @@ export default function UserProfilePage() {
         {activeTab === 'friends' && <FriendsTab userId={profile.userId} />}
         {activeTab === 'photos' && <PhotosTab userId={profile.userId} />}
         {activeTab === 'videos' && <VideosTab userId={profile.userId} />}
-        {activeTab === 'activity' && <ActivityLogViewer userId={profile.userId} />}
+        {activeTab === 'activity' && (isSelf
+          ? <ActivityLogViewer userId={profile.userId} />
+          : <div className="rounded-xl bg-white p-6 text-center text-gray-400">النشاط خاص</div>)}
       </div>
     </div>
   );
@@ -151,10 +184,10 @@ function AboutTab({ profile }: { profile: any }) {
               <p className="text-sm font-semibold text-gray-800">{profile.location}</p>
             </div>
           )}
-          {profile.website && (
+          {safeWebsite(profile.website) && (
             <div className="rounded-lg bg-gray-50 p-3">
               <p className="text-xs text-gray-400">الموقع الإلكتروني</p>
-              <a href={profile.website} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue-600 hover:underline">
+              <a href={safeWebsite(profile.website)!} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue-600 hover:underline">
                 {profile.website}
               </a>
             </div>
@@ -166,13 +199,16 @@ function AboutTab({ profile }: { profile: any }) {
 }
 
 function FriendsTab({ userId }: { userId: string }) {
-  const { data } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['friends', userId],
     queryFn: () => apiClient.get(`/users/${userId}/friends`).then((r) => r.data),
     enabled: !!userId,
   });
 
   const friends = (data as any)?.data?.data || [];
+
+  if (isLoading) return <div className="rounded-xl bg-white p-6"><p className="text-gray-500 text-center">جاري التحميل...</p></div>;
+  if (isError) return <div className="rounded-xl bg-white p-6"><p className="text-red-500 text-center">تعذّر تحميل الأصدقاء</p></div>;
 
   return (
     <div className="rounded-xl bg-white p-6">
@@ -202,13 +238,16 @@ function FriendsTab({ userId }: { userId: string }) {
 }
 
 function PhotosTab({ userId }: { userId: string }) {
-  const { data } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['photos', userId],
     queryFn: () => apiClient.get(`/users/${userId}/photos`).then((r) => r.data),
     enabled: !!userId,
   });
 
   const photos = (data as any)?.data?.data || [];
+
+  if (isLoading) return <div className="rounded-xl bg-white p-6"><p className="text-gray-500 text-center">جاري التحميل...</p></div>;
+  if (isError) return <div className="rounded-xl bg-white p-6"><p className="text-red-500 text-center">تعذّر تحميل الصور</p></div>;
 
   return (
     <div className="rounded-xl bg-white p-6">
@@ -230,13 +269,16 @@ function PhotosTab({ userId }: { userId: string }) {
 }
 
 function VideosTab({ userId }: { userId: string }) {
-  const { data } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['videos', userId],
     queryFn: () => apiClient.get(`/users/${userId}/videos`).then((r) => r.data),
     enabled: !!userId,
   });
 
   const videos = (data as any)?.data?.data || [];
+
+  if (isLoading) return <div className="rounded-xl bg-white p-6"><p className="text-gray-500 text-center">جاري التحميل...</p></div>;
+  if (isError) return <div className="rounded-xl bg-white p-6"><p className="text-red-500 text-center">تعذّر تحميل الفيديوهات</p></div>;
 
   return (
     <div className="rounded-xl bg-white p-6">

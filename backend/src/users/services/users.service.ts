@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
+import { promises as fs } from 'fs';
+import { join } from 'path';
 import { Profile } from '../entities/profile.entity';
 import { ProfileWork } from '../entities/profile-work.entity';
 import { ProfileEducation } from '../entities/profile-education.entity';
@@ -155,7 +157,7 @@ export class UsersService {
 
     return {
       ...this.formatProfile(profile, userId),
-      username: profile.user?.username || profile.user?.email?.split('@')[0],
+      username: profile.user?.username ?? null,
       joinDate: profile.createdAt,
       mutualFriends,
       friendCount,
@@ -279,15 +281,35 @@ export class UsersService {
   }
 
   async updateCover(userId: string, coverUrl: string) {
+    const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
+    if (existing?.coverUrl && existing.coverUrl !== coverUrl) {
+      await this.deleteUploadedFile(existing.coverUrl);
+    }
     await this.profilesRepo.update({ user: { id: userId } }, { coverUrl });
     await this.logActivity(userId, 'photo', 'Updated cover photo', { coverUrl });
     return this.getProfile(userId);
   }
 
   async updateAvatar(userId: string, avatarUrl: string) {
+    const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
+    if (existing?.avatarUrl && existing.avatarUrl !== avatarUrl) {
+      await this.deleteUploadedFile(existing.avatarUrl);
+    }
     await this.profilesRepo.update({ user: { id: userId } }, { avatarUrl });
     await this.logActivity(userId, 'photo', 'Updated profile picture', { avatarUrl });
     return this.getProfile(userId);
+  }
+
+  // Remove a previously uploaded file from disk when it's replaced, so old
+  // avatars/covers don't accumulate. Only touches paths under ./uploads.
+  private async deleteUploadedFile(urlPath: string) {
+    try {
+      const rel = urlPath.replace(/^\/+/, '');
+      if (!rel.startsWith('uploads/')) return;
+      await fs.unlink(join(process.cwd(), rel));
+    } catch {
+      /* file already gone or never existed — ignore */
+    }
   }
 
   async getActivityLog(userId: string, dto: ActivityLogQueryDto) {

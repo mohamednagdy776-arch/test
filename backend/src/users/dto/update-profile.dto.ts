@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUrl, Max, Min, ValidateNested } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUrl, Max, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateProfileDto {
@@ -10,10 +10,12 @@ export class UpdateProfileDto {
   @IsOptional() @IsString() city?: string;
   @IsOptional() @IsString() socialStatus?: string;
   @IsOptional() @IsInt() @Min(0) childrenCount?: number;
-  @IsOptional() @IsString() bio?: string;
+  @IsOptional() @IsString() @MaxLength(500) bio?: string;
   @IsOptional() @IsString() avatarUrl?: string;
   @IsOptional() @IsString() coverUrl?: string;
-  @IsOptional() @IsString() website?: string;
+  // Reject javascript:/data: URIs (stored XSS); only http(s) with a protocol.
+  // ValidateIf skips empty string so clearing the field still saves.
+  @IsOptional() @ValidateIf((o) => !!o.website) @IsUrl({ protocols: ['http', 'https'], require_protocol: true }) website?: string;
   @IsOptional() @IsString() relationshipStatus?: string;
   @IsOptional() @IsString() location?: string;
   @IsOptional() @IsString() workplace?: string;

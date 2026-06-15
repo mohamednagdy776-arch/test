@@ -15,7 +15,11 @@ const BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:300
 
 const mediaUrl = (url: string | null | undefined) => {
   if (!url) return null;
-  return url.startsWith('http') ? url : `${BACKEND_ORIGIN}${url}`;
+  // Only allow http(s) absolute URLs or backend-relative paths — reject
+  // data:, javascript:, blob:, etc. that could be injected via the API.
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`;
+  return null;
 };
 
 interface Props {
@@ -86,12 +90,15 @@ export const ProfileHeader = ({
         {mediaUrl(profile.coverUrl) ? (
           <img src={mediaUrl(profile.coverUrl)!} alt="cover" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div
+            className={`w-full h-full flex items-center justify-center ${isSelf ? 'cursor-pointer' : ''}`}
+            onClick={() => { if (isSelf) coverRef.current?.click(); }}
+          >
             <div className="text-center">
               <div className="w-16 h-16 rounded-2xl bg-[#FDFAF5]/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
                 <Camera size={32} className="text-[#FDFAF5]/50" />
               </div>
-              <p className="text-sm text-[#FDFAF5]/70 font-medium">أضف صورة غلاف</p>
+              <p className="text-sm text-[#FDFAF5]/70 font-medium">{isSelf ? 'أضف صورة غلاف' : 'لا توجد صورة غلاف'}</p>
             </div>
           </div>
         )}
@@ -101,10 +108,11 @@ export const ProfileHeader = ({
           <>
             <button
               onClick={() => coverRef.current?.click()}
-              className="absolute bottom-4 left-4 px-4 py-2 bg-[#131F2E]/70 hover:bg-[#131F2E]/90 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105"
+              disabled={uploading}
+              className="absolute bottom-4 left-4 px-4 py-2 bg-[#131F2E]/70 hover:bg-[#131F2E]/90 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105 disabled:opacity-70"
             >
               <Camera size={18} />
-              <span>تعديل غلاف</span>
+              <span>{uploading ? 'جاري الرفع...' : 'تعديل غلاف'}</span>
             </button>
             <input
               ref={coverRef}
@@ -155,9 +163,11 @@ export const ProfileHeader = ({
           {/* Info */}
           <div className="flex-1 min-w-0 pt-16">
             <h2 className="text-2xl font-bold text-gradient">{profile.fullName}</h2>
-            <p className="mt-1 text-sm text-[#547792] font-medium">
-              @{profile.username || profile.userId}
-            </p>
+            {profile.username && (
+              <p className="mt-1 text-sm text-[#547792] font-medium">
+                @{profile.username}
+              </p>
+            )}
             <p className="mt-1 text-sm text-[#547792]">
               {[profile.location, profile.city, profile.country].filter(Boolean).join('، ')}
             </p>
@@ -256,14 +266,16 @@ export const ProfileHeader = ({
           )}
         </div>
 
-        {/* Completion bar */}
-        <ProfileCompletion profile={profile} />
+        {/* Completion bar — only on your own profile (private metric) */}
+        {isSelf && <ProfileCompletion profile={profile} />}
       </div>
     </div>
   );
 };
 
-const fields = ['fullName', 'age', 'gender', 'country', 'city', 'bio', 'education', 'jobTitle', 'sect', 'prayerLevel', 'relationshipStatus', 'location', 'workplace', 'website'];
+// Includes the core matchmaking fields (religion + preferences) so 100% means
+// the profile is actually ready for matching — not just bio/website filled.
+const fields = ['fullName', 'age', 'gender', 'country', 'city', 'bio', 'education', 'jobTitle', 'financialLevel', 'sect', 'prayerLevel', 'religiousCommitment', 'minAge', 'maxAge', 'relocateWilling', 'wantsChildren'];
 const ProfileCompletion = ({ profile }: { profile: any }) => {
   const filled = fields.filter((f) => profile[f] != null && profile[f] !== '').length;
   const pct = Math.round((filled / fields.length) * 100);

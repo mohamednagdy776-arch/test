@@ -15,6 +15,18 @@ const REACTIONS = [
   { type: 'angry', emoji: '😠', label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
 ];
 
+// Turn #hashtags in post text into clickable links to the search page.
+function renderWithHashtags(text: string) {
+  if (!text) return text;
+  return text.split(/(#[\p{L}0-9_]+)/gu).map((part, i) =>
+    /^#[\p{L}0-9_]+$/u.test(part) ? (
+      <Link key={i} href={`/search?q=${encodeURIComponent(part)}`} className="text-[#547792] font-medium hover:underline">{part}</Link>
+    ) : (
+      part
+    ),
+  );
+}
+
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
@@ -198,8 +210,8 @@ function PostMenu({ postId, post, onClose }: { postId: string; post: any; onClos
   const menuItems = [
     { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId) },
     { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
-    { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => {} },
-    { label: 'إخفاء المنشور', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
+    // Archive now actually archives (was a no-op); "عدم الاهتمام" duplicate removed.
+    { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => pinPost.mutate({ postId, data: { isArchived: true } }) },
     { label: 'عدم الاهتمام', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
     { label: 'إيقاف مؤقت 30 يوم', icon: Clock, action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }) },
     { label: 'حذف المنشور', icon: Trash, action: () => deletePost.mutate(postId), danger: true },
@@ -299,7 +311,9 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const userName = displayName(post.user);
   const userInitial = userName.charAt(0).toUpperCase();
   const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3000';
-  
+  const avatarRaw = post.user?.profile?.avatarUrl;
+  const authorAvatar = avatarRaw ? (avatarRaw.startsWith('http') ? avatarRaw : `${apiUrl}${avatarRaw}`) : null;
+
   const mediaUrl = post.mediaUrl?.startsWith('/uploads/') ? `${apiUrl}${post.mediaUrl}` : post.mediaUrl;
   const isShared = post.postType === 'shared' || post.originalPostId;
 
@@ -307,7 +321,9 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
     <article className="rounded-2xl bg-[#FDFAF5] shadow-card-hover border border-[#C8D8DF]/60 overflow-hidden transition-all duration-300 hover:shadow-glow-lg hover:-translate-y-1 relative group">
       <div className="flex items-center gap-3 p-4 pb-0">
         <div className="relative">
-          <div className="h-11 w-11 shrink-0 rounded-full text-[#FDFAF5] font-bold text-sm ring-2 ring-[#FDFAF5] shadow-soft flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #213448 0%, #547792 100%)' }}>{userInitial}</div>
+          <div className="h-11 w-11 shrink-0 rounded-full overflow-hidden text-[#FDFAF5] font-bold text-sm ring-2 ring-[#FDFAF5] shadow-soft flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #213448 0%, #547792 100%)' }}>
+            {authorAvatar ? <img src={authorAvatar} alt={userName} className="h-full w-full object-cover" /> : userInitial}
+          </div>
           <div className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-[#4A8C6F] ring-2 ring-[#FDFAF5] shadow-[0_0_6px_rgba(74,140,111,0.5)]" />
         </div>
         <div className="flex-1 min-w-0">
@@ -336,12 +352,12 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
 
       {post.bgColor && !mediaUrl ? (
         <div className="px-4 py-6 m-4 rounded-xl text-center shadow-card-hover" style={{ backgroundColor: post.bgColor }}>
-          <p className="text-lg text-[#FDFAF5] font-medium">{post.content}</p>
+          <p className="text-lg text-[#FDFAF5] font-medium">{renderWithHashtags(post.content)}</p>
         </div>
       ) : (
         <>
           <div className="px-4 py-3">
-            <p className="text-sm text-[#131F2E]/85 leading-relaxed whitespace-pre-wrap">{post.content}</p>
+            <p className="text-sm text-[#131F2E]/85 leading-relaxed whitespace-pre-wrap">{renderWithHashtags(post.content)}</p>
             {isShared && post.originalPost && (
               <div className="mt-3 p-3 rounded-xl bg-[#EAE0CF]/40 border border-[#C8D8DF]/40 shadow-card-hover transition-all duration-300 hover:shadow-glow">
                 <div className="flex items-center gap-2 mb-2">

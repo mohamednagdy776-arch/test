@@ -29,7 +29,10 @@ export const ProfileView = ({ userId }: Props) => {
 
   const profile = (data as any)?.data ?? null;
   const isSelf = !userId || profile?.isSelf === true;
-  const hasProfile = !!profile?.fullName;
+  // A profile counts as "started" if any meaningful field is set — not only
+  // fullName, which OAuth users may never have (else they're stuck in edit mode).
+  const hasProfile = !!profile && ['fullName', 'age', 'gender', 'sect', 'education', 'city', 'country', 'bio']
+    .some((k) => (profile as any)[k]);
   const profileUserId: string = profile?.userId ?? userId ?? '';
 
   // Friendship status — only when viewing another user
@@ -46,12 +49,18 @@ export const ProfileView = ({ userId }: Props) => {
   });
 
   const cancelRequest = useMutation({
-    mutationFn: () => profileApi.cancelFriendRequest(friendshipStatus.id),
+    mutationFn: () => {
+      if (!friendshipStatus.id) throw new Error('No friend request id');
+      return profileApi.cancelFriendRequest(friendshipStatus.id);
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['friendship-status', profileUserId] }),
   });
 
   const acceptRequest = useMutation({
-    mutationFn: () => profileApi.acceptFriendRequest(friendshipStatus.id),
+    mutationFn: () => {
+      if (!friendshipStatus.id) throw new Error('No friend request id');
+      return profileApi.acceptFriendRequest(friendshipStatus.id);
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['friendship-status', profileUserId] });
       qc.invalidateQueries({ queryKey: ['user-profile', userId] });
@@ -169,15 +178,20 @@ export const ProfileView = ({ userId }: Props) => {
     </div>
   );
 
-  const tabContent: Record<Tab, React.ReactNode> = {
-    about:    aboutContent,
-    // Activity log is private to its owner (server returns 403 for others) —
-    // only render the viewer on your own profile, else a locked placeholder.
-    activity: isSelf && profileUserId ? <ActivityLogViewer userId={profileUserId} /> : placeholder('النشاط غير متاح'),
-    posts:    profileUserId ? <ProfilePostsFeed userId={profileUserId} /> : placeholder('المنشورات'),
-    friends:  placeholder('الأصدقاء'),
-    photos:   placeholder('الصور'),
-    videos:   placeholder('الفيديوهات'),
+  // Render only the active tab so each tab's query fires lazily when selected
+  // (the old object literal instantiated every tab — incl. a guaranteed 403
+  // from ActivityLogViewer — on every profile load).
+  const renderTab = (): React.ReactNode => {
+    switch (activeTab) {
+      case 'about':    return aboutContent;
+      case 'posts':    return profileUserId ? <ProfilePostsFeed userId={profileUserId} /> : placeholder('المنشورات');
+      case 'friends':  return profileUserId ? <ProfileFriendsFeed userId={profileUserId} /> : placeholder('الأصدقاء');
+      case 'photos':   return profileUserId ? <ProfilePhotosFeed userId={profileUserId} /> : placeholder('الصور');
+      case 'videos':   return profileUserId ? <ProfileVideosFeed userId={profileUserId} /> : placeholder('الفيديوهات');
+      // Activity log is private to its owner (server 403s for others).
+      case 'activity': return isSelf && profileUserId ? <ActivityLogViewer userId={profileUserId} /> : placeholder('النشاط غير متاح');
+      default:         return null;
+    }
   };
 
   return (
@@ -194,7 +208,7 @@ export const ProfileView = ({ userId }: Props) => {
         friendActionPending={!isSelf ? friendActionPending : false}
       />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
-      {tabContent[activeTab]}
+      {renderTab()}
     </div>
   );
 };
@@ -223,6 +237,81 @@ const ProfilePostsFeed = ({ userId }: { userId: string }) => {
     <div className="space-y-4">
       {posts.map((post) => (
         <PostCard key={post.id} post={post} />
+      ))}
+    </div>
+  );
+};
+
+const feedShell = (msg: string) => (
+  <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-10 text-center">
+    <p className="text-sm text-[#547792]">{msg}</p>
+  </div>
+);
+
+// Friends grid for the profile "Friends" tab (was a placeholder).
+const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['profile-friends', userId],
+    queryFn: () => profileApi.getFriends(userId),
+    enabled: !!userId,
+  });
+  const friends: any[] = (data as any)?.data?.data ?? (data as any)?.data ?? [];
+  if (isLoading) return feedShell('جاري تحميل الأصدقاء...');
+  if (isError) return feedShell('تعذّر تحميل الأصدقاء');
+  if (friends.length === 0) return feedShell('لا توجد أصدقاء');
+  return (
+    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-3 gap-4">
+      {friends.map((f: any, i: number) => (
+        <a key={f.id ?? i} href={f.id ? `/profile/${f.id}` : '#'} className="rounded-lg bg-gray-50 p-3 text-center hover:bg-[#D4E8EE]/40 transition-colors">
+          <div className="h-16 w-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+            {f.avatarUrl ? <img src={f.avatarUrl} alt="" className="h-full w-full object-cover" /> : <span className="text-xl font-bold text-[#547792]">{f.fullName?.charAt(0)}</span>}
+          </div>
+          <p className="mt-2 text-sm font-semibold text-gray-800 truncate">{f.fullName}</p>
+        </a>
+      ))}
+    </div>
+  );
+};
+
+// Photos grid for the profile "Photos" tab (was a placeholder).
+const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['profile-photos', userId],
+    queryFn: () => profileApi.getPhotos(userId),
+    enabled: !!userId,
+  });
+  const photos: any[] = (data as any)?.data?.data ?? [];
+  if (isLoading) return feedShell('جاري تحميل الصور...');
+  if (isError) return feedShell('تعذّر تحميل الصور');
+  if (photos.length === 0) return feedShell('لا توجد صور');
+  return (
+    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-4 gap-2">
+      {photos.map((p: any, i: number) => (
+        <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
+          {p.metadata?.url && <img src={p.metadata.url} alt="" className="w-full h-full object-cover" />}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Videos for the profile "Videos" tab (was a placeholder).
+const ProfileVideosFeed = ({ userId }: { userId: string }) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['profile-videos', userId],
+    queryFn: () => profileApi.getVideos(userId),
+    enabled: !!userId,
+  });
+  const videos: any[] = (data as any)?.data?.data ?? [];
+  if (isLoading) return feedShell('جاري تحميل الفيديوهات...');
+  if (isError) return feedShell('تعذّر تحميل الفيديوهات');
+  if (videos.length === 0) return feedShell('لا توجد فيديوهات');
+  return (
+    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-3 gap-4">
+      {videos.map((v: any, i: number) => (
+        <div key={i} className="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-4">
+          <p className="text-gray-500 text-center text-sm">{v.description}</p>
+        </div>
       ))}
     </div>
   );

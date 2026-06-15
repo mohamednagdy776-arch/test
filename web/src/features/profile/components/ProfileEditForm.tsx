@@ -10,7 +10,7 @@ interface Props {
 }
 
 const empty = {
-  fullName: '', age: 25, gender: 'male', country: '', city: '',
+  fullName: '', age: 25, gender: '', country: '', city: '',
   socialStatus: '', childrenCount: 0, bio: '',
   website: '', relationshipStatus: '', location: '', workplace: '', introVisibility: 'public',
   education: '', jobTitle: '', financialLevel: '', culturalLevel: '', lifestyle: '',
@@ -33,30 +33,43 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const [tab, setTab] = useState(0);
   const [form, setForm] = useState({ ...empty, ...(initial ?? {}) });
+  const [formError, setFormError] = useState('');
 
   const save = useMutation({
     mutationFn: (p: typeof form) => apiClient.patch('/users/me', p).then((r) => r.data),
     onSuccess: onSaved,
   });
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError('');
+    if (!form.gender) { setTab(0); setFormError('يرجى اختيار الجنس'); return; }
+    if (!form.age || form.age < 18 || form.age > 99) { setTab(0); setFormError('يرجى إدخال عمر صحيح (18-99)'); return; }
+    if (form.minAge && form.maxAge && form.minAge > form.maxAge) {
+      setTab(3); setFormError('الحد الأدنى للعمر يجب أن يكون أقل من الحد الأقصى'); return;
+    }
+    save.mutate(form);
+  };
+
   const str = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f: typeof form) => ({ ...f, [k]: e.target.value }));
   const num = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
-    setForm((f: typeof form) => ({ ...f, [k]: Number(e.target.value) }));
+    // Empty input → null (not 0). Number('') === 0 would silently submit age 0 etc.
+    setForm((f: typeof form) => ({ ...f, [k]: e.target.value === '' ? null : Number(e.target.value) }));
   const bool = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLSelectElement>) =>
     setForm((f: typeof form) => ({ ...f, [k]: e.target.value === 'true' }));
 
   const inp = (k: keyof typeof form, label: string, type = 'text', ph = '') => (
     <Field label={label}>
       <input type={type} value={(form as any)[k] ?? ''} onChange={type === 'number' ? num(k) : str(k)} placeholder={ph}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary" />
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none focus:ring-1 focus:ring-[#547792]/30" />
     </Field>
   );
 
   const sel = (k: keyof typeof form, label: string, opts: [string, string][]) => (
     <Field label={label}>
       <select value={(form as any)[k] ?? ''} onChange={str(k)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none">
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none">
         <option value="">اختر...</option>
         {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
@@ -66,7 +79,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const boolSel = (k: keyof typeof form, label: string) => (
     <Field label={label}>
       <select value={String((form as any)[k])} onChange={bool(k)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none">
+        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none">
         <option value="true">نعم</option>
         <option value="false">لا</option>
       </select>
@@ -84,16 +97,19 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
       {inp('location', 'الموقع (مدينة/دولة)', 'text', 'القاهرة، مصر')}
       {sel('socialStatus', 'الحالة الاجتماعية', [['single', 'أعزب'], ['divorced', 'مطلق'], ['widowed', 'أرمل']])}
       {sel('relationshipStatus', 'الحالة العاطفية', [
-        ['single', 'عزباء'], ['in_relationship', 'في علاقة'], ['engaged', 'مخطوبة'], ['married', 'متزوجة'],
+        ['single', form.gender === 'female' ? 'عزباء' : 'أعزب'],
+        ['in_relationship', 'في علاقة'],
+        ['engaged', form.gender === 'female' ? 'مخطوبة' : 'مخطوب'],
+        ['married', form.gender === 'female' ? 'متزوجة' : 'متزوج'],
       ])}
       {inp('childrenCount', 'عدد الأطفال', 'number', '0')}
       {inp('workplace', 'مكان العمل', 'text', 'شركة تقنية')}
       {inp('website', 'الموقع الإلكتروني', 'url', 'https://example.com')}
       <div className="sm:col-span-2">
         <label className="mb-1 block text-xs font-medium text-gray-600">نبذة شخصية</label>
-        <textarea value={form.bio} onChange={str('bio')} rows={3} maxLength={101} placeholder="اكتب نبذة مختصرة عن نفسك..."
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none" />
-        <p className="text-xs text-gray-400 mt-1">{form.bio?.length || 0}/101</p>
+        <textarea value={form.bio} onChange={str('bio')} rows={3} maxLength={500} placeholder="اكتب نبذة مختصرة عن نفسك..."
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none focus:ring-1 focus:ring-[#547792]/30 resize-none" />
+        <p className="text-xs text-gray-400 mt-1">{form.bio?.length || 0}/500</p>
       </div>
     </div>,
 
@@ -139,9 +155,9 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   ];
 
   return (
-    <div className="rounded-xl bg-white shadow-sm overflow-hidden">
-      <div className="border-b px-6 py-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-gray-900">
+    <div className="rounded-xl bg-[#FDFAF5] shadow-card-hover border border-[#C8D8DF]/60 overflow-hidden">
+      <div className="border-b border-[#C8D8DF]/40 px-6 py-4 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-[#213448]">
           {initial?.fullName ? 'تعديل الملف الشخصي' : 'أكمل ملفك الشخصي'}
         </h2>
         {onCancel && (
@@ -154,17 +170,17 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
         {tabs.map((t, i) => (
           <button key={t} onClick={() => setTab(i)}
             className={`shrink-0 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === i ? 'border-primary text-primary' : 'border-transparent text-gray-500 hover:text-gray-700'
+              tab === i ? 'border-[#213448] text-[#213448]' : 'border-transparent text-[#547792] hover:text-[#213448]'
             }`}>
             {t}
           </button>
         ))}
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); save.mutate(form); }} className="p-6">
-        {save.isError && (
+      <form onSubmit={handleSubmit} className="p-6">
+        {(save.isError || formError) && (
           <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
-            فشل الحفظ، حاول مرة أخرى
+            {formError || 'فشل الحفظ، حاول مرة أخرى'}
           </div>
         )}
 
@@ -186,7 +202,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
             )}
           </div>
           <button type="submit" disabled={save.isPending}
-            className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50">
+            className="rounded-lg bg-gradient-to-r from-[#213448] to-[#547792] px-6 py-2 text-sm font-semibold text-[#FDFAF5] hover:shadow-glow disabled:opacity-50">
             {save.isPending ? 'جاري الحفظ...' : 'حفظ الملف الشخصي'}
           </button>
         </div>
