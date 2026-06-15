@@ -174,8 +174,12 @@ export class StoriesService {
       .leftJoinAndSelect('post.reactions', 'reactions')
       .leftJoinAndSelect('post.comments', 'comments')
       .where('post.id NOT IN (:...hiddenPostIds)', { hiddenPostIds: hiddenPostIds.length ? hiddenPostIds : [''] })
-      .andWhere('post.scheduledAt IS NULL OR post.scheduledAt <= :now', { now: new Date() })
+      // Parenthesised so the OR doesn't combine with the surrounding ANDs (SQL
+      // precedence) — keeps scheduled (future) posts hidden until their time.
+      .andWhere('(post.scheduledAt IS NULL OR post.scheduledAt <= :now)', { now: new Date() })
       .andWhere('post.isArchived = :isArchived', { isArchived: false })
+      // only_me posts are visible only to their author.
+      .andWhere('(post.audience != :onlyMe OR post.userId = :viewerId)', { onlyMe: 'only_me', viewerId: userId })
       .orderBy('post.isPinned', 'DESC')
       .addOrderBy('post.createdAt', 'DESC')
       .take(limit + 1);
@@ -207,8 +211,9 @@ export class StoriesService {
       .leftJoinAndSelect('post.reactions', 'reactions')
       .leftJoinAndSelect('post.comments', 'comments')
       .where('post.id NOT IN (:...hiddenPostIds)', { hiddenPostIds: hiddenPostIds.length ? hiddenPostIds : [''] })
-      .andWhere('post.scheduledAt IS NULL OR post.scheduledAt <= :now', { now: new Date() })
+      .andWhere('(post.scheduledAt IS NULL OR post.scheduledAt <= :now)', { now: new Date() })
       .andWhere('post.isArchived = :isArchived', { isArchived: false })
+      .andWhere('(post.audience != :onlyMe OR post.userId = :viewerId)', { onlyMe: 'only_me', viewerId: userId })
       .orderBy('post.createdAt', 'DESC')
       .take(limit + 1);
 
@@ -285,13 +290,28 @@ export class StoriesService {
   async votePoll(postId: string, userId: string, optionIndex: number) {
     const post = await this.postRepo.findOne({ where: { id: postId } });
     if (!post || !post.pollOptions) return { success: false, message: 'Post or poll not found' };
-    
+
     if (optionIndex < 0 || optionIndex >= post.pollOptions.length) {
       return { success: false, message: 'Invalid option' };
     }
 
-    post.pollOptions[optionIndex].votes += 1;
+    // One vote per user per poll — reject if they already voted on any option.
+    const alreadyVoted = post.pollOptions.some(
+      (o) => Array.isArray(o.voterIds) && o.voterIds.includes(userId),
+    );
+    if (alreadyVoted) {
+      return { success: false, message: 'Already voted', pollOptions: this.stripVoters(post.pollOptions) };
+    }
+
+    const opt = post.pollOptions[optionIndex];
+    opt.voterIds = Array.isArray(opt.voterIds) ? [...opt.voterIds, userId] : [userId];
+    opt.votes += 1;
     await this.postRepo.save(post);
-    return { success: true, pollOptions: post.pollOptions };
+    return { success: true, pollOptions: this.stripVoters(post.pollOptions) };
+  }
+
+  // Never expose who voted to clients.
+  private stripVoters(options: { text: string; votes: number; voterIds?: string[] }[]) {
+    return options.map(({ text, votes }) => ({ text, votes }));
   }
 }

@@ -50,8 +50,9 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
   const uploadMedia = useUploadMedia();
   const fileRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const [mediaPreviews, setMediaPreviews] = useState<string[]>([]);
+  const [showLocation, setShowLocation] = useState(false);
 
   useEffect(() => {
     if (showTagInput && tagInputRef.current) {
@@ -61,14 +62,17 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!content.trim() && !mediaFile && !pollQuestion.trim()) return;
+    if (!content.trim() && mediaFiles.length === 0 && !pollQuestion.trim()) return;
 
     let mediaUrl: string | undefined;
     let mediaType: string | undefined;
-    if (mediaFile) {
-      const uploadResult = await uploadMedia.mutateAsync(mediaFile);
-      mediaUrl = uploadResult.data?.url;
-      mediaType = uploadResult.data?.type;
+    let mediaUrls: string[] | undefined;
+    if (mediaFiles.length > 0) {
+      const results = await Promise.all(mediaFiles.map((f) => uploadMedia.mutateAsync(f)));
+      const urls = results.map((r) => r.data?.url).filter(Boolean) as string[];
+      mediaType = results[0]?.data?.type;
+      mediaUrl = urls[0];
+      if (urls.length > 1) mediaUrls = urls;
     }
 
     const scheduledAt = scheduleDate && scheduleTime 
@@ -85,6 +89,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
       content: content.trim(),
       mediaUrl,
       mediaType,
+      mediaUrls,
       bgColor: bgColor || undefined,
       feeling: feeling?.label || undefined,
       location: location || undefined,
@@ -103,9 +108,10 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
     setBgColor(null);
     setFeeling(null);
     setLocation('');
+    setShowLocation(false);
     setAudience('friends');
-    setMediaPreview(null);
-    setMediaFile(null);
+    setMediaPreviews([]);
+    setMediaFiles([]);
     setScheduleDate('');
     setScheduleTime('');
     setTaggedUsers([]);
@@ -114,12 +120,14 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setMediaPreview(url);
-      setMediaFile(file);
-    }
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    // A video can't be part of an image gallery — if any video is picked, keep
+    // only the first file. Otherwise allow up to 10 images.
+    const hasVideo = files.some((f) => f.type.startsWith('video/'));
+    const chosen = hasVideo ? files.slice(0, 1) : files.slice(0, 10);
+    setMediaFiles(chosen);
+    setMediaPreviews(chosen.map((f) => URL.createObjectURL(f)));
   };
 
   const handleTagAdd = (userId: string) => {
@@ -166,16 +174,24 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
           </div>
         </div>
 
-        {mediaPreview && (
-          <div className="mt-3 relative">
-            {mediaFile?.type.startsWith('video/') ? (
-              <video src={mediaPreview} controls className="max-h-48 rounded-xl w-full" />
-            ) : (
-              <img src={mediaPreview} alt="Preview" className="max-h-48 rounded-xl" />
-            )}
-            <button type="button" onClick={() => { setMediaPreview(null); setMediaFile(null); }} className="absolute top-2 right-2 h-8 w-8 rounded-full bg-[#131F2E]/60 text-[#FDFAF5] flex items-center justify-center">
-              <X size={18} />
-            </button>
+        {mediaPreviews.length > 0 && (
+          <div className={cn('mt-3 grid gap-2', mediaPreviews.length > 1 ? 'grid-cols-2' : 'grid-cols-1')}>
+            {mediaPreviews.map((src, i) => (
+              <div key={src} className="relative">
+                {mediaFiles[i]?.type.startsWith('video/') ? (
+                  <video src={src} controls className="max-h-48 w-full rounded-xl" />
+                ) : (
+                  <img src={src} alt={`معاينة ${i + 1}`} className="max-h-48 w-full object-cover rounded-xl" />
+                )}
+                <button
+                  type="button"
+                  onClick={() => { setMediaPreviews(mediaPreviews.filter((_, j) => j !== i)); setMediaFiles(mediaFiles.filter((_, j) => j !== i)); }}
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-[#131F2E]/60 text-[#FDFAF5] flex items-center justify-center"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
@@ -245,6 +261,22 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
           </div>
         )}
 
+        {showLocation && (
+          <div className="mt-3 p-3 bg-[#EAE0CF]/40 rounded-xl flex gap-2 items-center">
+            <MapPin size={20} className="text-[#547792]" />
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="أين أنت؟"
+              className="flex-1 bg-transparent text-sm text-black placeholder:text-[#BFB9AD] focus:outline-none"
+            />
+            <button type="button" onClick={() => { setLocation(''); setShowLocation(false); }} className="ml-auto text-[#547792]">
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
         {showPollCreator && (
           <div className="mt-3 p-3 bg-[#EAE0CF]/40 rounded-xl space-y-3">
             <input
@@ -287,13 +319,13 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
               <Palette size={20} />
             </button>
             <button type="button" onClick={() => fileRef.current?.click()} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" title="صورة/فيديو">
-              <input ref={fileRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleFileChange} />
+              <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFileChange} />
               <Image size={20} />
             </button>
             <button type="button" onClick={() => setShowFeelingPicker(!showFeelingPicker)} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" title="شعور">
               <Smiley size={20} />
             </button>
-            <button type="button" onClick={() => setLocation(prev => prev ? '' : 'موقع')} className={cn('p-2 rounded-lg hover:bg-[#EAE0CF]/50', location ? 'bg-[#D4E8EE] text-[#213448]' : 'text-[#547792]')} title="موقع">
+            <button type="button" onClick={() => setShowLocation((v) => !v)} className={cn('p-2 rounded-lg hover:bg-[#EAE0CF]/50', (showLocation || location) ? 'bg-[#D4E8EE] text-[#213448]' : 'text-[#547792]')} title="موقع">
               <MapPin size={20} />
             </button>
             <button type="button" onClick={() => setShowAudiencePicker(!showAudiencePicker)} className={cn('p-2 rounded-lg hover:bg-[#EAE0CF]/50', showAudiencePicker ? 'bg-[#D4E8EE]' : 'text-[#547792]')} title="الجمهور">
@@ -308,7 +340,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
           </div>
           <button
             type="submit"
-            disabled={(!content.trim() && !mediaFile) || createPost.isPending}
+            disabled={(!content.trim() && mediaFiles.length === 0) || createPost.isPending}
             className="px-4 py-2 rounded-xl text-sm font-medium text-[#FDFAF5] hover:shadow-md disabled:opacity-40 transition-all"
             style={{ background: 'linear-gradient(to right, #213448, #547792)' }}
           >

@@ -94,8 +94,10 @@ export class Post {
   @Column({ name: 'link_image', nullable: true })
   linkImage: string;
 
+  // voterIds tracks who voted (stored in jsonb — no extra table) to prevent
+  // double-voting. It is stripped before sending poll results to clients.
   @Column({ name: 'poll_options', type: 'jsonb', nullable: true })
-  pollOptions: { text: string; votes: number }[];
+  pollOptions: { text: string; votes: number; voterIds?: string[] }[];
 
   @Column({ name: 'original_post_id', nullable: true })
   originalPostId: string;
