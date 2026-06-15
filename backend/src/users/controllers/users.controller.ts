@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards, UploadedFile, UseInterceptors, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, UploadedFile, UseInterceptors, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
@@ -90,6 +90,16 @@ export class UsersController {
     if (!file) throw new BadRequestException('No file uploaded');
     const coverUrl = `/uploads/covers/${file.filename}`;
     return ok(await this.usersService.updateCover(user.id, coverUrl), 'Cover uploaded');
+  }
+
+  @Delete('me/avatar')
+  async removeAvatar(@CurrentUser() user: User) {
+    return ok(await this.usersService.removeAvatar(user.id), 'Avatar removed');
+  }
+
+  @Delete('me/cover')
+  async removeCover(@CurrentUser() user: User) {
+    return ok(await this.usersService.removeCover(user.id), 'Cover removed');
   }
 
   @Get('search')
