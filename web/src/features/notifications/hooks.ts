@@ -4,7 +4,7 @@ import { notificationsApi } from './api';
 
 export function useNotifications(page = 1, limit = 20) {
   return useQuery({
-    queryKey: ['notifications', page],
+    queryKey: ['notifications', page, limit],
     queryFn: () => notificationsApi.getNotifications(page, limit),
   });
 }
