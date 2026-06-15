@@ -50,8 +50,9 @@ export const ProfileHeader = ({
       form.append('file', file);
       await apiClient.post('/users/me/avatar', form);
       qc.invalidateQueries({ queryKey: ['my-profile'] });
-    } catch {
-      alert('فشل رفع الصورة');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
+      alert(`${msg}\n\nالصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`);
     } finally {
       setUploading(false);
     }
@@ -64,8 +65,9 @@ export const ProfileHeader = ({
       form.append('file', file);
       await apiClient.post('/users/me/cover', form);
       qc.invalidateQueries({ queryKey: ['my-profile'] });
-    } catch {
-      alert('فشل رفع الصورة');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
+      alert(`${msg}\n\nالصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`);
     } finally {
       setUploading(false);
     }
@@ -107,7 +109,7 @@ export const ProfileHeader = ({
             <input
               ref={coverRef}
               type="file"
-              accept="image/*"
+              accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
               className="hidden"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCover(f); }}
             />
@@ -142,7 +144,7 @@ export const ProfileHeader = ({
                 <input
                   ref={avatarRef}
                   type="file"
-                  accept="image/*"
+                  accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
                   className="hidden"
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); }}
                 />
@@ -244,7 +246,7 @@ export const ProfileHeader = ({
 
               {/* Message — always visible */}
               <button
-                onClick={() => router.push('/chat')}
+                onClick={() => router.push(`/chat?user=${profile.userId}`)}
                 className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-[#D4E8EE] hover:border-[#547792] transition-all duration-300 flex items-center gap-1.5"
               >
                 <ChatCircle size={16} />

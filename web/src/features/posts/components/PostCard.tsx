@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
 import { apiClient } from '@/lib/api-client';
@@ -114,7 +115,11 @@ function CommentSection({ postId }: { postId: string }) {
               </div>
               <div className="flex-1 rounded-2xl px-4 py-2.5 shadow-card-hover group-hover:shadow-glow transition-all duration-300" style={{ backgroundColor: '#D4E8EE' }}>
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-bold text-[#213448]">{displayName(c.user)}</p>
+                  {c.user?.id ? (
+                    <Link href={`/profile/${c.user.id}`} className="text-xs font-bold text-[#213448] hover:underline">{displayName(c.user)}</Link>
+                  ) : (
+                    <p className="text-xs font-bold text-[#213448]">{displayName(c.user)}</p>
+                  )}
                   <span className="text-[10px] text-[#547792]">{timeAgo(c.createdAt)}</span>
                 </div>
                 <p className="text-sm text-[#131F2E] mt-0.5 leading-relaxed">{c.content}</p>
@@ -307,7 +312,11 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-bold text-[#213448]">{userName}</p>
+            {post.user?.id ? (
+              <Link href={`/profile/${post.user.id}`} className="text-sm font-bold text-[#213448] hover:underline">{userName}</Link>
+            ) : (
+              <p className="text-sm font-bold text-[#213448]">{userName}</p>
+            )}
             {post.feeling && <span className="text-xs text-[#547792] font-medium">شعور {post.feeling}</span>}
             {showGroupLink && post.group?.name && <><span className="text-xs text-[#547792]">في</span><a href={`/groups/${post.group.id}`} className="text-xs font-semibold text-[#547792] hover:text-[#213448] hover:underline hover:shadow-soft px-1 rounded transition-all">{post.group.name}</a></>}
           </div>
@@ -339,7 +348,11 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
                   <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[#547792] to-[#94B4C1] text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft">
                     {displayName(post.originalPost.user).charAt(0)}
                   </div>
-                  <span className="text-xs font-medium text-[#213448]">{displayName(post.originalPost.user)}</span>
+                  {post.originalPost.user?.id ? (
+                    <Link href={`/profile/${post.originalPost.user.id}`} className="text-xs font-medium text-[#213448] hover:underline">{displayName(post.originalPost.user)}</Link>
+                  ) : (
+                    <span className="text-xs font-medium text-[#213448]">{displayName(post.originalPost.user)}</span>
+                  )}
                 </div>
                 <p className="text-sm text-[#547792] line-clamp-2">{post.originalPost.content}</p>
               </div>

@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { User, CheckCircle, ThumbsUp, ChatCircle, Tag, ShareNetwork, Megaphone, Cake, Users, Bell, X } from '@phosphor-icons/react';
@@ -91,12 +92,25 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
                 {getNotificationIcon(notification.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={cn(
-                  "text-sm",
-                  notification.readStatus ? "text-[#547792]" : "text-[#131F2E] font-medium"
-                )}>
-                  {notification.message}
-                </p>
+                {notification.fromUser?.id ? (
+                  <Link
+                    href={`/profile/${notification.fromUser.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className={cn(
+                      "text-sm hover:underline",
+                      notification.readStatus ? "text-[#547792]" : "text-[#131F2E] font-medium"
+                    )}
+                  >
+                    {notification.message}
+                  </Link>
+                ) : (
+                  <p className={cn(
+                    "text-sm",
+                    notification.readStatus ? "text-[#547792]" : "text-[#131F2E] font-medium"
+                  )}>
+                    {notification.message}
+                  </p>
+                )}
                 <p className="text-xs text-[#547792] mt-1">{timeAgo(notification.createdAt)}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">

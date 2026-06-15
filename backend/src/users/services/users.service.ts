@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, DataSource } from 'typeorm';
 import { Profile } from '../entities/profile.entity';
 import { ProfileWork } from '../entities/profile-work.entity';
 import { ProfileEducation } from '../entities/profile-education.entity';
@@ -22,6 +22,7 @@ export class UsersService {
     @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Post) private postsRepo: Repository<Post>,
     private friendsService: FriendsService,
+    private dataSource: DataSource,
   ) {}
 
   // A user's own posts (the profile "posts" tab). Accepts a UUID or username.
@@ -71,44 +72,49 @@ export class UsersService {
   }
 
   async createProfile(userId: string, dto: UpdateProfileWithEntriesDto) {
-    let profile = await this.profilesRepo.findOne({
-      where: { user: { id: userId } },
-      relations: ['workEntries', 'educationEntries'],
-    });
+    // Run the delete-then-save of work/education entries atomically. Without a
+    // transaction, a failure after the deletes wipes the user's history with no
+    // rollback (data loss).
+    return this.dataSource.transaction(async (manager) => {
+      let profile = await manager.findOne(Profile, {
+        where: { user: { id: userId } },
+        relations: ['workEntries', 'educationEntries'],
+      });
 
-    if (profile) {
-      Object.assign(profile, dto);
-      if (dto.workEntries) {
-        await this.workRepo.delete({ profile: { id: profile.id } });
-        profile.workEntries = dto.workEntries.map(w => {
-          const work = new ProfileWork();
-          Object.assign(work, w);
-          work.profile = profile!;
-          return work;
-        });
+      if (profile) {
+        Object.assign(profile, dto);
+        if (dto.workEntries) {
+          await manager.delete(ProfileWork, { profile: { id: profile.id } });
+          profile.workEntries = dto.workEntries.map(w => {
+            const work = new ProfileWork();
+            Object.assign(work, w);
+            work.profile = profile!;
+            return work;
+          });
+        }
+        if (dto.educationEntries) {
+          await manager.delete(ProfileEducation, { profile: { id: profile.id } });
+          profile.educationEntries = dto.educationEntries.map(e => {
+            const edu = new ProfileEducation();
+            Object.assign(edu, e);
+            edu.profile = profile!;
+            return edu;
+          });
+        }
+        return manager.save(Profile, profile);
       }
-      if (dto.educationEntries) {
-        await this.eduRepo.delete({ profile: { id: profile.id } });
-        profile.educationEntries = dto.educationEntries.map(e => {
-          const edu = new ProfileEducation();
-          Object.assign(edu, e);
-          edu.profile = profile!;
-          return edu;
-        });
-      }
-      return this.profilesRepo.save(profile);
-    }
 
-    profile = this.profilesRepo.create({
-      ...dto,
-      user: { id: userId } as any,
-      fullName: dto.fullName ?? '',
-      age: dto.age ?? 18,
-      gender: dto.gender ?? 'male',
-      country: dto.country ?? '',
-      city: dto.city ?? '',
+      profile = manager.create(Profile, {
+        ...dto,
+        user: { id: userId } as any,
+        fullName: dto.fullName ?? '',
+        age: dto.age ?? 18,
+        gender: dto.gender ?? 'male',
+        country: dto.country ?? '',
+        city: dto.city ?? '',
+      });
+      return manager.save(Profile, profile);
     });
-    return this.profilesRepo.save(profile);
   }
 
   async updateProfile(userId: string, dto: UpdateProfileWithEntriesDto) {

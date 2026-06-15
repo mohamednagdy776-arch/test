@@ -8,6 +8,7 @@ import { ProfileSection } from './ProfileSection';
 import { ProfileEditForm } from './ProfileEditForm';
 import { ProfileTabs, type Tab } from './ProfileTabs';
 import { ActivityLogViewer } from './ActivityLogViewer';
+import { PostCard } from '@/features/posts/components/PostCard';
 
 interface Props {
   userId?: string;
@@ -16,9 +17,9 @@ interface Props {
 export const ProfileView = ({ userId }: Props) => {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<Tab>('about');
+  const [activeTab, setActiveTab] = useState<Tab>('posts');
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError, refetch } = useQuery({
     queryKey: userId ? ['user-profile', userId] : ['my-profile'],
     queryFn: () =>
       userId
@@ -76,6 +77,22 @@ export const ProfileView = ({ userId }: Props) => {
     );
   }
 
+  // Distinguish a load failure (network/500) from a genuine 404 — otherwise an
+  // error renders the "profile not found" message with no way to retry.
+  if (isError) {
+    return (
+      <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-12 text-center">
+        <p className="text-[#547792] text-sm mb-4">تعذّر تحميل الملف الشخصي</p>
+        <button
+          onClick={() => refetch()}
+          className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm text-[#213448] hover:bg-[#D4E8EE] transition-colors"
+        >
+          أعد المحاولة
+        </button>
+      </div>
+    );
+  }
+
   if (isSelf && (!hasProfile || editing)) {
     return (
       <ProfileEditForm
@@ -102,7 +119,7 @@ export const ProfileView = ({ userId }: Props) => {
       <ProfileSection title="المعلومات الأساسية" icon="👤">
         <Grid items={[
           ['العمر', profile.age ? `${profile.age} سنة` : '—'],
-          ['الجنس', profile.gender === 'male' ? 'ذكر' : 'أنثى'],
+          ['الجنس', profile.gender === 'male' ? 'ذكر' : profile.gender === 'female' ? 'أنثى' : '—'],
           ['الدولة', profile.country || '—'],
           ['المدينة', profile.city || '—'],
           ['الحالة الاجتماعية', profile.socialStatus || '—'],
@@ -154,8 +171,10 @@ export const ProfileView = ({ userId }: Props) => {
 
   const tabContent: Record<Tab, React.ReactNode> = {
     about:    aboutContent,
-    activity: profileUserId ? <ActivityLogViewer userId={profileUserId} /> : placeholder('النشاط'),
-    posts:    placeholder('المنشورات'),
+    // Activity log is private to its owner (server returns 403 for others) —
+    // only render the viewer on your own profile, else a locked placeholder.
+    activity: isSelf && profileUserId ? <ActivityLogViewer userId={profileUserId} /> : placeholder('النشاط غير متاح'),
+    posts:    profileUserId ? <ProfilePostsFeed userId={profileUserId} /> : placeholder('المنشورات'),
     friends:  placeholder('الأصدقاء'),
     photos:   placeholder('الصور'),
     videos:   placeholder('الفيديوهات'),
@@ -176,6 +195,35 @@ export const ProfileView = ({ userId }: Props) => {
       />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
       {tabContent[activeTab]}
+    </div>
+  );
+};
+
+// Posts tab — fetches and renders the profile user's own posts. (Was a static
+// "coming soon" placeholder; the backend GET /users/:id/posts is implemented.)
+const ProfilePostsFeed = ({ userId }: { userId: string }) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['profile-posts', userId],
+    queryFn: () => apiClient.get(`/users/${userId}/posts`).then((r) => r.data),
+    enabled: !!userId,
+  });
+  const posts: any[] = (data as any)?.data ?? [];
+
+  const shell = (msg: string) => (
+    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-10 text-center">
+      <p className="text-sm text-[#547792]">{msg}</p>
+    </div>
+  );
+
+  if (isLoading) return shell('جاري تحميل المنشورات...');
+  if (isError) return shell('تعذّر تحميل المنشورات');
+  if (posts.length === 0) return shell('لا توجد منشورات');
+
+  return (
+    <div className="space-y-4">
+      {posts.map((post) => (
+        <PostCard key={post.id} post={post} />
+      ))}
     </div>
   );
 };
