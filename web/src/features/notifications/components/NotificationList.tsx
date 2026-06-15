@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { User, CheckCircle, ThumbsUp, ChatCircle, Tag, ShareNetwork, Megaphone, Cake, Users, Bell, X } from '@phosphor-icons/react';
@@ -10,6 +11,8 @@ interface Notification {
   message: string;
   readStatus: boolean;
   createdAt: string;
+  entityType?: string;
+  entityId?: string;
   fromUser?: {
     id: string;
     profile?: { fullName?: string; avatar?: string };
@@ -51,6 +54,7 @@ function timeAgo(date: string | Date) {
 }
 
 export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead, onDelete }: NotificationListProps) {
+  const router = useRouter();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const unreadCount = notifications.filter(n => !n.readStatus).length;
 
@@ -78,6 +82,11 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
               onClick={() => {
                 if (!notification.readStatus) {
                   onMarkAsRead(notification.id);
+                }
+                // Navigate to the referenced content when there is one (#388).
+                if (notification.entityType === 'post' && notification.entityId) {
+                  router.push(`/posts/${notification.entityId}`);
+                  return;
                 }
                 setExpandedId(expandedId === notification.id ? null : notification.id);
               }}

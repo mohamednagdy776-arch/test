@@ -11,6 +11,14 @@ export function useFeed(cursor?: string, limit = 10) {
   });
 }
 
+export function usePost(postId: string) {
+  return useQuery({
+    queryKey: ['post', postId],
+    queryFn: () => postsApi.getPost(postId),
+    enabled: !!postId,
+  });
+}
+
 export function useRecentFeed(cursor?: string, limit = 10) {
   return useInfiniteQuery({
     queryKey: ['feed-recent', limit],
