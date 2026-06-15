@@ -15,16 +15,18 @@ const REACTIONS = [
   { type: 'angry', emoji: '😠', label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
 ];
 
-// Turn #hashtags in post text into clickable links to the search page.
+// Turn #hashtags into search links and @mentions into profile links (#392).
 function renderWithHashtags(text: string) {
   if (!text) return text;
-  return text.split(/(#[\p{L}0-9_]+)/gu).map((part, i) =>
-    /^#[\p{L}0-9_]+$/u.test(part) ? (
-      <Link key={i} href={`/search?q=${encodeURIComponent(part)}`} className="text-[#547792] font-medium hover:underline">{part}</Link>
-    ) : (
-      part
-    ),
-  );
+  return text.split(/(#[\p{L}0-9_]+|@[a-zA-Z0-9_]+)/gu).map((part, i) => {
+    if (/^#[\p{L}0-9_]+$/u.test(part)) {
+      return <Link key={i} href={`/search?q=${encodeURIComponent(part)}`} className="text-[#547792] font-medium hover:underline">{part}</Link>;
+    }
+    if (/^@[a-zA-Z0-9_]+$/.test(part)) {
+      return <Link key={i} href={`/${part.slice(1)}`} className="text-[#547792] font-medium hover:underline">{part}</Link>;
+    }
+    return part;
+  });
 }
 
 function timeAgo(date: string | Date) {

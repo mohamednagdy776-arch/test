@@ -4,11 +4,15 @@ import { Repository } from 'typeorm';
 import { Reaction } from '../entities/reaction.entity';
 import { CreateReactionDto } from '../dto/create-reaction.dto';
 import { User } from '../../auth/entities/user.entity';
+import { Post } from '../../posts/entities/post.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class ReactionsService {
   constructor(
     @InjectRepository(Reaction) private reactionsRepo: Repository<Reaction>,
+    @InjectRepository(Post) private postsRepo: Repository<Post>,
+    private notifications: NotificationsService,
   ) {}
 
   async react(postId: string, dto: CreateReactionDto, user: User) {
@@ -33,6 +37,11 @@ export class ReactionsService {
       type: dto.type || 'like',
     });
     const saved = await this.reactionsRepo.save(reaction);
+
+    // Notify the post owner that someone reacted to their post (#382).
+    const post = await this.postsRepo.findOne({ where: { id: postId } });
+    await this.notifications.notifyUser(post?.userId, user.id, 'like', 'reacted to your post', 'post', postId);
+
     return { reacted: true, type: saved.type };
   }
 

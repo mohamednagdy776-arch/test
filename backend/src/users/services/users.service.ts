@@ -111,7 +111,9 @@ export class UsersService {
         user: { id: userId } as any,
         fullName: dto.fullName ?? '',
         age: dto.age ?? 18,
-        gender: dto.gender ?? 'male',
+        // Don't silently default an omitted gender to 'male' (#192) — leave it
+        // unset so the user is prompted rather than mis-gendered.
+        gender: dto.gender ?? null,
         country: dto.country ?? '',
         city: dto.city ?? '',
       });
@@ -166,13 +168,14 @@ export class UsersService {
   }
 
   private async getMutualFriendsCount(userId: string, viewerId: string): Promise<number> {
-    const userFriends = await this.friendsService.getFriends(userId, 1, 1000);
-    const viewerFriends = await this.friendsService.getFriends(viewerId, 1, 1000);
-    
-    const userFriendIds = new Set(userFriends.data.map(f => f.id));
-    const mutualCount = viewerFriends.data.filter(f => userFriendIds.has(f.id)).length;
-    
-    return mutualCount;
+    if (!viewerId || viewerId === userId) return 0;
+    // Compare full, uncapped id lists (no 1,000-friend truncation — #165).
+    const [userFriendIds, viewerFriendIds] = await Promise.all([
+      this.friendsService.getFriendIds(userId),
+      this.friendsService.getFriendIds(viewerId),
+    ]);
+    const userSet = new Set(userFriendIds);
+    return viewerFriendIds.filter((id) => userSet.has(id)).length;
   }
 
   private formatProfile(profile: Profile, userId?: string) {

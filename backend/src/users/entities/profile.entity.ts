@@ -19,8 +19,11 @@ export class Profile {
   @Column({ default: 18 })
   age: number;
 
-  @Column({ default: 'male' })
-  gender: string;
+  // Nullable with no default — gender must be set explicitly. Defaulting to
+  // 'male' silently mis-gendered users who omitted the field, which is wrong on
+  // a matchmaking platform (#192). Null renders as '—' in the UI.
+  @Column({ nullable: true })
+  gender: string | null;
 
   @Column({ default: '' })
   country: string;

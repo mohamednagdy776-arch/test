@@ -40,7 +40,10 @@ import { SeedModule } from './seed/seed.module';
       type: 'postgres',
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
-      synchronize: process.env.NODE_ENV !== 'production' || process.env.TYPEORM_SYNCHRONIZE === 'true',
+      // Never auto-sync the schema in production — it can silently drop columns
+      // and cause data loss. Use migrations there. (Was overridable via
+      // TYPEORM_SYNCHRONIZE=true, which is unsafe in prod — see issue #147.)
+      synchronize: process.env.NODE_ENV !== 'production',
     }),
 
     // Rate limiting

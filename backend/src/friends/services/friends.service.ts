@@ -99,6 +99,20 @@ export class FriendsService {
     return { data: friendList, total };
   }
 
+  // Lightweight, uncapped list of a user's accepted-friend ids. Selects only the
+  // id columns (no profile relations, no 1,000-row cap) so callers like the
+  // mutual-friends count stay correct and cheap for power users (#165).
+  async getFriendIds(userId: string): Promise<string[]> {
+    const rows = await this.friendshipsRepo.find({
+      where: [
+        { requesterId: userId, status: FriendshipStatus.ACCEPTED },
+        { addresseeId: userId, status: FriendshipStatus.ACCEPTED },
+      ],
+      select: { id: true, requesterId: true, addresseeId: true },
+    });
+    return rows.map((f) => (f.requesterId === userId ? f.addresseeId : f.requesterId));
+  }
+
   async getPendingRequests(userId: string) {
     return this.friendshipsRepo.find({
       where: { addresseeId: userId, status: FriendshipStatus.PENDING },

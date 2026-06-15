@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 
 export class UpdateProfileDto {
   // Basic
-  @IsOptional() @IsString() fullName?: string;
+  @IsOptional() @IsString() @MaxLength(100) fullName?: string;
   @IsOptional() @IsInt() @Min(18) @Max(80) age?: number;
   @IsOptional() @IsEnum(['male', 'female']) gender?: string;
   @IsOptional() @IsString() country?: string;

@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
 import { Post } from '../entities/post.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class StoriesService {
@@ -14,6 +15,7 @@ export class StoriesService {
     @InjectRepository(PostReport) private reportRepo: Repository<PostReport>,
     @InjectRepository(HiddenPost) private hiddenRepo: Repository<HiddenPost>,
     @InjectRepository(Post) private postRepo: Repository<Post>,
+    private notifications: NotificationsService,
   ) {}
 
   async createStory(userId: string, data: { mediaUrl?: string; mediaType?: string; thumbnailUrl?: string; text?: string; bgColor?: string; duration?: number }) {
@@ -85,7 +87,13 @@ export class StoriesService {
     return { success: true };
   }
 
-  async getStoryViewers(storyId: string) {
+  async getStoryViewers(storyId: string, requesterId: string) {
+    // Viewer analytics are private to the story's author (#145).
+    const story = await this.storyRepo.findOne({ where: { id: storyId } });
+    if (!story) throw new NotFoundException('Story not found');
+    if (story.userId !== requesterId) {
+      throw new ForbiddenException('Only the story owner can view its viewers');
+    }
     const views = await this.viewRepo.find({
       where: { storyId },
       relations: ['user', 'user.profile'],
@@ -293,6 +301,8 @@ export class StoriesService {
       post.scheduledAt = new Date(data.scheduledAt);
     }
     const saved = await this.postRepo.save(post);
+    // Notify anyone @mentioned in the post body (#385).
+    await this.notifications.notifyMentions(post.content, userId, 'post', saved.id);
     return this.postRepo.findOne({ where: { id: saved.id }, relations: ['user', 'group'] });
   }
 

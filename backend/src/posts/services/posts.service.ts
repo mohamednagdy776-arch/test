@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan, MoreThan } from 'typeorm';
+import { Repository, LessThan, MoreThan, IsNull, LessThanOrEqual } from 'typeorm';
 import { Post, PostType } from '../entities/post.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { User } from '../../auth/entities/user.entity';
@@ -45,8 +45,20 @@ export class PostsService {
     return { data, total };
   }
 
+  // A scheduled post (scheduledAt in the future) must stay hidden from the feed
+  // until its time arrives; posts with no schedule (null) are always visible.
+  // Returned as an OR-array so it composes with the cursor filter below (#311).
+  private scheduledVisible(extra: Record<string, any> = {}) {
+    const now = new Date();
+    return [
+      { ...extra, scheduledAt: IsNull() },
+      { ...extra, scheduledAt: LessThanOrEqual(now) },
+    ];
+  }
+
   async getFeed(page: number, limit: number) {
     const [data, total] = await this.postsRepo.findAndCount({
+      where: this.scheduledVisible(),
       order: { isPinned: 'DESC', createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -57,6 +69,7 @@ export class PostsService {
 
   async getRecentFeed(page: number, limit: number) {
     const [data, total] = await this.postsRepo.findAndCount({
+      where: this.scheduledVisible(),
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -66,7 +79,7 @@ export class PostsService {
   }
 
   async getFeedByCursor(cursor: string | undefined, limit: number) {
-    const whereCondition = cursor ? { createdAt: LessThan(new Date(cursor)) } : {};
+    const whereCondition = this.scheduledVisible(cursor ? { createdAt: LessThan(new Date(cursor)) } : {});
     const data = await this.postsRepo.find({
       where: whereCondition,
       order: { isPinned: 'DESC', createdAt: 'DESC' },
@@ -80,7 +93,7 @@ export class PostsService {
   }
 
   async getRecentFeedByCursor(cursor: string | undefined, limit: number) {
-    const whereCondition = cursor ? { createdAt: LessThan(new Date(cursor)) } : {};
+    const whereCondition = this.scheduledVisible(cursor ? { createdAt: LessThan(new Date(cursor)) } : {});
     const data = await this.postsRepo.find({
       where: whereCondition,
       order: { createdAt: 'DESC' },
