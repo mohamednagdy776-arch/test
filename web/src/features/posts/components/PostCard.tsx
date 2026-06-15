@@ -387,7 +387,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
                   ))}
                 </div>
               ) : (
-                <img src={mediaUrl} alt="" className="w-full max-h-[480px] object-cover hover:scale-[1.02] transition-transform duration-300" loading="lazy" />
+                <img src={mediaUrl} alt="" className="w-full max-h-[600px] object-contain bg-[#EAE0CF]/30 hover:scale-[1.02] transition-transform duration-300" loading="lazy" />
               )}
             </div>
           )}

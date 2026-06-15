@@ -173,6 +173,9 @@ export class StoriesService {
       .leftJoinAndSelect('post.group', 'group')
       .leftJoinAndSelect('post.reactions', 'reactions')
       .leftJoinAndSelect('post.comments', 'comments')
+      // Load the embedded original so shared/reposted posts show their source.
+      .leftJoinAndSelect('post.originalPost', 'originalPost')
+      .leftJoinAndSelect('originalPost.user', 'originalUser')
       .where('post.id NOT IN (:...hiddenPostIds)', { hiddenPostIds: hiddenPostIds.length ? hiddenPostIds : [''] })
       // Parenthesised so the OR doesn't combine with the surrounding ANDs (SQL
       // precedence) — keeps scheduled (future) posts hidden until their time.
@@ -210,6 +213,8 @@ export class StoriesService {
       .leftJoinAndSelect('post.group', 'group')
       .leftJoinAndSelect('post.reactions', 'reactions')
       .leftJoinAndSelect('post.comments', 'comments')
+      .leftJoinAndSelect('post.originalPost', 'originalPost')
+      .leftJoinAndSelect('originalPost.user', 'originalUser')
       .where('post.id NOT IN (:...hiddenPostIds)', { hiddenPostIds: hiddenPostIds.length ? hiddenPostIds : [''] })
       .andWhere('(post.scheduledAt IS NULL OR post.scheduledAt <= :now)', { now: new Date() })
       .andWhere('post.isArchived = :isArchived', { isArchived: false })
@@ -259,8 +264,12 @@ export class StoriesService {
     return true;
   }
 
-  async getPostById(postId: string) {
-    return this.postRepo.findOne({ where: { id: postId }, relations: ['user', 'group', 'originalPost', 'originalPost.user'] });
+  async getPostById(postId: string, viewerId?: string) {
+    const post = await this.postRepo.findOne({ where: { id: postId }, relations: ['user', 'group', 'originalPost', 'originalPost.user'] });
+    // only_me posts are visible only to their author (was readable by anyone via
+    // GET /posts/:id — direct-URL access to private content).
+    if (post && post.audience === 'only_me' && post.userId !== viewerId) return null;
+    return post;
   }
 
   async createPost(userId: string, data: any) {

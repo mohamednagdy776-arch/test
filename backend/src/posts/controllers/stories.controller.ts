@@ -109,8 +109,8 @@ export class StoriesController {
   }
 
   @Get('posts/:id')
-  async getPost(@Param('id') postId: string) {
-    const post = await this.storiesService.getPostById(postId);
+  async getPost(@Param('id') postId: string, @CurrentUser() user: User) {
+    const post = await this.storiesService.getPostById(postId, user.id);
     return ok(post, 'Post retrieved');
   }
 
