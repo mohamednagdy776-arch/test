@@ -25,6 +25,14 @@ export class NotificationsService {
   ) {
     if (!targetUserId || targetUserId === actorId) return;
     try {
+      // Dedupe: don't stack multiple identical unread notifications for the same
+      // entity (e.g. repeated reactions on one post) — collapse to one (#447).
+      if (entityId) {
+        const existing = await this.notificationRepo.findOne({
+          where: { user: { id: targetUserId }, type, entityId, readStatus: false },
+        });
+        if (existing) return;
+      }
       await this.create(targetUserId, { type, message, entityType, entityId });
     } catch {
       /* best-effort */

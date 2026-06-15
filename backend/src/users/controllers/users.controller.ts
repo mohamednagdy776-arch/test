@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards, UploadedFile, UseInterceptors, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { UsersService } from '../services/users.service';
@@ -26,12 +27,16 @@ export class UsersController {
   }
 
   @Patch('me')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 20, ttl: 60000 } }) // cap profile-update floods (#414)
   async updateProfile(@CurrentUser() user: User, @Body() dto: UpdateProfileWithEntriesDto) {
     if ((dto as any).bio) (dto as any).bio = sanitizeUserContent((dto as any).bio);
     return ok(await this.usersService.updateProfile(user.id, dto), 'Profile updated');
   }
 
   @Post('me/avatar')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // cap upload floods / storage exhaustion (#427)
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: './uploads/avatars',
@@ -59,6 +64,8 @@ export class UsersController {
   }
 
   @Post('me/cover')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // cap upload floods / storage exhaustion (#427)
   @UseInterceptors(FileInterceptor('file', {
     storage: diskStorage({
       destination: './uploads/covers',

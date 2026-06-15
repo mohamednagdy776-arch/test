@@ -326,6 +326,8 @@ export class StoriesService {
     opt.voterIds = Array.isArray(opt.voterIds) ? [...opt.voterIds, userId] : [userId];
     opt.votes += 1;
     await this.postRepo.save(post);
+    // Notify the poll owner that someone voted (#446).
+    await this.notifications.notifyUser(post.userId, userId, 'vote', 'voted in your poll', 'post', postId);
     return { success: true, pollOptions: this.stripVoters(post.pollOptions) };
   }
 

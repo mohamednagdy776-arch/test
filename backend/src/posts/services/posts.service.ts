@@ -4,11 +4,13 @@ import { Repository, LessThan, MoreThan, IsNull, LessThanOrEqual } from 'typeorm
 import { Post, PostType } from '../entities/post.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { User } from '../../auth/entities/user.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post) private postsRepo: Repository<Post>,
+    private notifications: NotificationsService,
   ) {}
 
   async create(groupId: string, dto: CreatePostDto, user: User) {
@@ -215,7 +217,10 @@ export class PostsService {
       originalPostId: postId,
       user: { id: userId } as any,
     });
-    return this.postsRepo.save(shared);
+    const saved = await this.postsRepo.save(shared);
+    // Notify the original author that their post was shared (#445).
+    await this.notifications.notifyUser(original.userId, userId, 'share', 'shared your post', 'post', postId);
+    return saved;
   }
 
   async toggleComments(postId: string, userId: string, disabled: boolean) {

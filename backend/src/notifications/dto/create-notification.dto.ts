@@ -2,7 +2,7 @@ import { IsString, IsOptional, IsIn } from 'class-validator';
 import { NotificationType } from '../entities/notification.entity';
 
 export class CreateNotificationDto {
-  @IsIn(['friend_request', 'friend_accepted', 'like', 'comment', 'tag', 'share', 'mention', 'birthday', 'group_invite', 'event_invite', 'memory', 'story_view'])
+  @IsIn(['friend_request', 'friend_accepted', 'like', 'comment', 'tag', 'share', 'mention', 'birthday', 'group_invite', 'event_invite', 'memory', 'story_view', 'vote'])
   type: NotificationType;
 
   @IsString()
