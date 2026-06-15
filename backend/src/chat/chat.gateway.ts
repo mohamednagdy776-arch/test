@@ -9,6 +9,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 import { ChatService } from './services/chat.service';
+import { FriendsService } from '../friends/services/friends.service';
 import { readCookie } from '../auth/cookie.util';
 
 @WebSocketGateway({
@@ -28,10 +29,29 @@ export class ChatGateway implements OnGatewayConnection {
   constructor(
     private chatService: ChatService,
     private jwtService: JwtService,
+    private friendsService: FriendsService,
   ) {}
 
   private isOnline(userId: string): boolean {
     return (this.userSockets.get(userId)?.size ?? 0) > 0;
+  }
+
+  // Broadcast a user's presence ONLY to their friends' connected sockets, not to
+  // every client on the platform (#148). Fire-and-forget from the connect/
+  // disconnect handlers.
+  private async emitPresenceToFriends(userId: string, online: boolean) {
+    try {
+      const friendIds = await this.friendsService.getFriendIds(userId);
+      for (const friendId of friendIds) {
+        const sockets = this.userSockets.get(friendId);
+        if (!sockets) continue;
+        for (const socketId of sockets) {
+          this.server.to(socketId).emit('presence', { userId, online });
+        }
+      }
+    } catch {
+      // Presence is best-effort; never let it crash the socket lifecycle.
+    }
   }
 
   handleConnection(client: Socket) {
@@ -66,7 +86,7 @@ export class ChatGateway implements OnGatewayConnection {
     const wasOffline = this.userSockets.get(userId)!.size === 0;
     this.userSockets.get(userId)!.add(client.id);
     if (wasOffline) {
-      this.server.emit('presence', { userId, online: true });
+      void this.emitPresenceToFriends(userId, true);
     }
   }
 
@@ -76,7 +96,7 @@ export class ChatGateway implements OnGatewayConnection {
         set.delete(client.id);
         if (set.size === 0) {
           this.userSockets.delete(userId);
-          this.server.emit('presence', { userId, online: false });
+          void this.emitPresenceToFriends(userId, false);
         }
         break;
       }

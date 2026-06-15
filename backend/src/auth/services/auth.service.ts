@@ -381,7 +381,11 @@ export class AuthService {
     return { message: 'Account deactivated' };
   }
 
-  async reactivateAccount(email: string, password: string) {
+  async reactivateAccount(
+    email: string,
+    password: string,
+    deviceInfo?: { browser?: string; ip?: string; deviceName?: string },
+  ) {
     const user = await this.usersRepo.findOne({ where: { email } });
     if (!user) throw new UnauthorizedException('Invalid credentials');
 
@@ -389,7 +393,17 @@ export class AuthService {
     if (!valid) throw new UnauthorizedException('Invalid credentials');
 
     await this.usersRepo.update(user.id, { isDeactivated: false });
-    return { message: 'Account reactivated' };
+    // Invalidate any sessions that predate deactivation, then start a fresh one
+    // and issue tokens so the controller's setAuthCookies actually logs the user
+    // in (previously this returned a message only, leaving them unauthenticated — #146).
+    await this.sessionsRepo.delete({ userId: user.id });
+    await this.handleSuccessfulLogin(user, false, deviceInfo);
+
+    return {
+      ...this.signTokens(user),
+      user: this.sanitizeUser(user),
+      message: 'Account reactivated',
+    };
   }
 
   async deleteAccount(userId: string) {

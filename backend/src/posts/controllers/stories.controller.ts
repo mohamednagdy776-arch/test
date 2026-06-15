@@ -59,8 +59,9 @@ export class StoriesController {
   }
 
   @Get('stories/:id/viewers')
-  async getStoryViewers(@Param('id') storyId: string) {
-    const viewers = await this.storiesService.getStoryViewers(storyId);
+  async getStoryViewers(@CurrentUser() user: User, @Param('id') storyId: string) {
+    // Only the story owner may see who viewed it (#145).
+    const viewers = await this.storiesService.getStoryViewers(storyId, user.id);
     return ok(viewers, 'Viewers retrieved');
   }
 

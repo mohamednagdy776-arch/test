@@ -1,5 +1,6 @@
 'use client';
 import { useRef, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -88,7 +89,9 @@ export const ProfileHeader = ({
       {/* Cover Photo with enhanced styling */}
       <div className="relative h-56 bg-gradient-to-br from-[#D4E8EE] via-[#94B4C1] to-[#547792] overflow-hidden group">
         {mediaUrl(profile.coverUrl) ? (
-          <img src={mediaUrl(profile.coverUrl)!} alt="cover" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          // next/image enforces the next.config image allowlist, so a malicious
+          // URL from the API can't render an arbitrary external resource (#167).
+          <Image src={mediaUrl(profile.coverUrl)!} alt="cover" fill sizes="100vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
           <div
             className={`w-full h-full flex items-center justify-center ${isSelf ? 'cursor-pointer' : ''}`}
@@ -130,11 +133,11 @@ export const ProfileHeader = ({
           {/* Avatar with enhanced styling */}
           <div className="relative shrink-0 group">
             <div
-              className={`h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center ring-4 ring-[#FDFAF5] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${isSelf ? 'cursor-pointer' : ''}`}
+              className={`relative h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center ring-4 ring-[#FDFAF5] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${isSelf ? 'cursor-pointer' : ''}`}
               onClick={() => { if (isSelf) avatarRef.current?.click(); }}
             >
               {mediaUrl(profile.avatarUrl) ? (
-                <img src={mediaUrl(profile.avatarUrl)!} alt="avatar" className="h-full w-full object-cover" />
+                <Image src={mediaUrl(profile.avatarUrl)!} alt="avatar" fill sizes="112px" className="object-cover" />
               ) : (
                 <span className="text-4xl font-bold text-gradient">
                   {profile.fullName?.charAt(0)?.toUpperCase() ?? '?'}

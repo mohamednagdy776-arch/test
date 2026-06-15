@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
@@ -85,7 +85,13 @@ export class StoriesService {
     return { success: true };
   }
 
-  async getStoryViewers(storyId: string) {
+  async getStoryViewers(storyId: string, requesterId: string) {
+    // Viewer analytics are private to the story's author (#145).
+    const story = await this.storyRepo.findOne({ where: { id: storyId } });
+    if (!story) throw new NotFoundException('Story not found');
+    if (story.userId !== requesterId) {
+      throw new ForbiddenException('Only the story owner can view its viewers');
+    }
     const views = await this.viewRepo.find({
       where: { storyId },
       relations: ['user', 'user.profile'],

@@ -11,6 +11,7 @@ import { ChatService } from './services/chat.service';
 import { Match } from '../matching/entities/match.entity';
 import { User } from '../auth/entities/user.entity';
 import { Profile } from '../users/entities/profile.entity';
+import { FriendsModule } from '../friends/friends.module';
 
 @Module({
   imports: [
@@ -24,6 +25,8 @@ import { Profile } from '../users/entities/profile.entity';
       Profile,
     ]),
     JwtModule.register({ secret: process.env.JWT_SECRET }),
+    // For friend-scoped presence broadcasts (#148).
+    FriendsModule,
   ],
   providers: [ChatGateway, ChatService],
   controllers: [ChatController],
