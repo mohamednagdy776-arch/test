@@ -20,7 +20,7 @@ function SuggestedConnections() {
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 rounded-2xl p-2.5 animate-pulse">
-              <div className="h-10 w-10 rounded-2xl bg-[#DCFCE7]" />
+              <div className="h-10 w-10 rounded-full bg-[#DCFCE7]" />
               <div className="flex-1 space-y-1.5">
                 <div className="h-3 bg-[#DCFCE7] rounded w-24" />
                 <div className="h-2.5 bg-[#DCFCE7] rounded w-16" />
@@ -43,7 +43,7 @@ function SuggestedConnections() {
                 onClick={() => user?.username && router.push(`/${user.username}`)}
                 className="flex items-center gap-3 rounded-2xl p-2.5 hover:bg-[#DCFCE7]/50 transition-colors group cursor-pointer"
               >
-                <div className="h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center text-base font-bold text-white shadow-soft bg-gradient-to-br from-emerald-400 to-emerald-600">
+                <div className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-base font-bold text-white shadow-soft bg-gradient-to-br from-emerald-400 to-emerald-600">
                   {initial}
                 </div>
                 <div className="flex-1 min-w-0">

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
@@ -34,6 +34,17 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const [tab, setTab] = useState(0);
   const [form, setForm] = useState({ ...empty, ...(initial ?? {}) });
   const [formError, setFormError] = useState('');
+
+  // Warn before leaving with unsaved edits (browser refresh/close) (#458).
+  const initialSnapshot = useRef(JSON.stringify({ ...empty, ...(initial ?? {}) }));
+  const dirty = JSON.stringify(form) !== initialSnapshot.current;
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (dirty) { e.preventDefault(); e.returnValue = ''; }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [dirty]);
 
   const save = useMutation({
     mutationFn: (p: typeof form) => apiClient.patch('/users/me', p).then((r) => r.data),
