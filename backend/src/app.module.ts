@@ -18,6 +18,7 @@ import { AffiliatesModule } from './affiliates/affiliates.module';
 import { HealthModule } from './health/health.module';
 import { ReportsModule } from './reports/reports.module';
 import { FriendsModule } from './friends/friends.module';
+import { FollowsModule } from './follows/follows.module';
 import { UploadModule } from './upload/upload.module';
 import { PagesModule } from './pages/pages.module';
 import { EventsModule } from './events/events.module';
@@ -65,6 +66,7 @@ import { SeedModule } from './seed/seed.module';
     HealthModule,
     ReportsModule,
     FriendsModule,
+    FollowsModule,
     UploadModule,
     PagesModule,
     EventsModule,

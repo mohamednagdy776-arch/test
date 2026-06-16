@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users } from '@phosphor-icons/react';
+import { FollowSection } from '@/features/follows/components/FollowSection';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -209,6 +210,7 @@ export const ProfileHeader = ({
                 @{profile.username}
               </p>
             )}
+            {profile.userId && <FollowSection userId={profile.userId} isSelf={isSelf} />}
             <p className="mt-1 text-sm text-[#547792]">
               {[profile.location, profile.city, profile.country].filter(Boolean).join('، ')}
             </p>
