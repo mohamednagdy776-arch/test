@@ -43,12 +43,15 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
+    // Reject a whitespace-only name and trim before saving (#407).
+    const fullName = (form.fullName ?? '').trim();
+    if (form.fullName && !fullName) { setTab(0); setFormError('يرجى إدخال اسم صحيح'); return; }
     if (!form.gender) { setTab(0); setFormError('يرجى اختيار الجنس'); return; }
     if (!form.age || form.age < 18 || form.age > 99) { setTab(0); setFormError('يرجى إدخال عمر صحيح (18-99)'); return; }
     if (form.minAge && form.maxAge && form.minAge > form.maxAge) {
       setTab(3); setFormError('الحد الأدنى للعمر يجب أن يكون أقل من الحد الأقصى'); return;
     }
-    save.mutate(form);
+    save.mutate({ ...form, fullName });
   };
 
   const str = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
