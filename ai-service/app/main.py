@@ -1,14 +1,13 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import matching, health, bio, icebreaker, moderate, profile_tips
+from app.api.v1 import matching, health, bio, icebreaker, moderate, profile_tips, child_prediction
 from app.core.config import settings
 from app.services import llm
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Log LLM readiness on startup (non-blocking)
     ready = llm.is_ready()
     status = f"ready (model: {settings.OLLAMA_MODEL})" if ready else "not ready — will retry per request"
     print(f"[startup] Ollama LLM: {status}")
@@ -29,8 +28,9 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
-app.include_router(matching.router,     prefix="/api/v1")
-app.include_router(bio.router,          prefix="/api/v1")
-app.include_router(icebreaker.router,   prefix="/api/v1")
-app.include_router(moderate.router,     prefix="/api/v1")
-app.include_router(profile_tips.router, prefix="/api/v1")
+app.include_router(matching.router,         prefix="/api/v1")
+app.include_router(bio.router,              prefix="/api/v1")
+app.include_router(icebreaker.router,       prefix="/api/v1")
+app.include_router(moderate.router,         prefix="/api/v1")
+app.include_router(profile_tips.router,     prefix="/api/v1")
+app.include_router(child_prediction.router, prefix="/api/v1")

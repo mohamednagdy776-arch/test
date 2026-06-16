@@ -27,30 +27,21 @@ import { SettingsModule } from './settings/settings.module';
 import { MemoriesModule } from './memories/memories.module';
 import { VideosModule } from './videos/videos.module';
 import { SeedModule } from './seed/seed.module';
+import { ChildPredictionModule } from './features/child-prediction.module';
 
 @Module({
   imports: [
-    // Load .env globally
-    // Validate required env vars (e.g. JWT_SECRET present + >=32 chars) at
-    // startup — refuse to boot with a missing/weak secret instead of silently
-    // accepting it.
     ConfigModule.forRoot({ isGlobal: true, validate }),
 
-    // PostgreSQL connection via env
     TypeOrmModule.forRoot({
       type: 'postgres',
       url: process.env.DATABASE_URL,
       autoLoadEntities: true,
-      // Never auto-sync the schema in production — it can silently drop columns
-      // and cause data loss. Use migrations there. (Was overridable via
-      // TYPEORM_SYNCHRONIZE=true, which is unsafe in prod — see issue #147.)
       synchronize: process.env.NODE_ENV !== 'production',
     }),
 
-    // Rate limiting
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
 
-    // Feature modules
     AuthModule,
     UsersModule,
     MatchingModule,
@@ -74,8 +65,7 @@ import { SeedModule } from './seed/seed.module';
     SettingsModule,
     MemoriesModule,
     VideosModule,
-    // Seed endpoints (which can wipe/re-seed the DB) must never be exposed in
-    // production. Only register the module outside production.
+    ChildPredictionModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
 })
