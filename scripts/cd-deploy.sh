@@ -19,6 +19,29 @@ $COMPOSE build
 echo "==> Starting/refreshing services…"
 $COMPOSE up -d --remove-orphans
 
+# ── Database migrations ──────────────────────────────────────────────────────
+# Production runs with TypeORM `synchronize` disabled (#147), so schema changes
+# do NOT auto-apply. Run the SQL migrations here so a merged schema change can't
+# leave the code referencing a table/column that doesn't exist. Every file is
+# written to be idempotent (CREATE/ALTER ... IF NOT EXISTS, etc.), so replaying
+# all of them on every deploy is safe and order-stable (lexical filename order).
+echo "==> Applying database migrations…"
+# up -d returns before Postgres accepts connections — wait for it.
+for i in $(seq 1 30); do
+  if $COMPOSE exec -T postgres sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"' >/dev/null 2>&1; then break; fi
+  sleep 2
+done
+shopt -s nullglob
+for f in backend/migrations/*.sql; do
+  echo "   migration: $f"
+  if ! $COMPOSE exec -T postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1' < "$f"; then
+    echo "ERROR: migration $f failed — aborting deploy before traffic is served." >&2
+    exit 1
+  fi
+done
+shopt -u nullglob
+echo "==> Migrations applied ✅"
+
 echo "==> Applying nginx config…"
 # nginx.conf is a single-file bind mount. rsync/clean-mirror replaces the file
 # (new inode), but the running container still points at the OLD inode, so
