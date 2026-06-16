@@ -9,6 +9,7 @@ import { User } from '../auth/entities/user.entity';
 import { Post } from '../posts/entities/post.entity';
 import { UsersService } from './services/users.service';
 import { UsersController } from './controllers/users.controller';
+import { PublicProfileController } from './controllers/public-profile.controller';
 import { FriendsModule } from '../friends/friends.module';
 
 @Module({
@@ -18,7 +19,7 @@ import { FriendsModule } from '../friends/friends.module';
     FriendsModule,
   ],
   providers: [UsersService],
-  controllers: [UsersController],
+  controllers: [UsersController, PublicProfileController],
   exports: [UsersService],
 })
 export class UsersModule {}
