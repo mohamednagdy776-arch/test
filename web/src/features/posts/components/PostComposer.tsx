@@ -251,13 +251,19 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
         )}
 
         {showSchedule && (
-          <div className="mt-3 p-3 bg-[#EAE0CF]/40 rounded-xl flex gap-2 items-center">
-            <Clock size={20} className="text-[#547792]" />
-            <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="bg-transparent text-sm text-black focus:outline-none" />
-            <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="bg-transparent text-sm text-black focus:outline-none" />
-            <button type="button" onClick={() => setShowSchedule(false)} className="ml-auto text-[#547792]">
-              <X size={16} />
-            </button>
+          <div className="mt-3 p-3 bg-[#EAE0CF]/40 rounded-xl">
+            <div className="flex gap-2 items-center">
+              <Clock size={20} className="text-[#547792]" />
+              <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="bg-transparent text-sm text-black focus:outline-none" />
+              <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="bg-transparent text-sm text-black focus:outline-none" />
+              <button type="button" onClick={() => setShowSchedule(false)} className="ml-auto text-[#547792]">
+                <X size={16} />
+              </button>
+            </div>
+            {/* Times are entered in the viewer's local timezone (#389). */}
+            <p className="mt-1.5 text-[11px] text-[#547792]">
+              بتوقيتك المحلي ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+            </p>
           </div>
         )}
 

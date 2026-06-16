@@ -20,7 +20,7 @@ function SuggestedConnections() {
         {isLoading ? (
           Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3 rounded-2xl p-2.5 animate-pulse">
-              <div className="h-10 w-10 rounded-2xl bg-[#DCFCE7]" />
+              <div className="h-10 w-10 rounded-full bg-[#DCFCE7]" />
               <div className="flex-1 space-y-1.5">
                 <div className="h-3 bg-[#DCFCE7] rounded w-24" />
                 <div className="h-2.5 bg-[#DCFCE7] rounded w-16" />
@@ -43,7 +43,7 @@ function SuggestedConnections() {
                 onClick={() => user?.username && router.push(`/${user.username}`)}
                 className="flex items-center gap-3 rounded-2xl p-2.5 hover:bg-[#DCFCE7]/50 transition-colors group cursor-pointer"
               >
-                <div className="h-10 w-10 shrink-0 rounded-2xl flex items-center justify-center text-base font-bold text-white shadow-soft bg-gradient-to-br from-emerald-400 to-emerald-600">
+                <div className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-base font-bold text-white shadow-soft bg-gradient-to-br from-emerald-400 to-emerald-600">
                   {initial}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -137,12 +137,12 @@ function QuickActions() {
 
 function QuickStats() {
   // Real counts — no fabricated activity (L-05).
-  const { data: matchesData, isLoading: ml, isError: me } = useQuery({
+  const { data: matchesData, isLoading: ml, isError: me, refetch: rm, isFetching: fm } = useQuery({
     queryKey: ['dashboard-matches-count'],
     queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 100 } }).then((r) => r.data),
     staleTime: 60_000,
   });
-  const { data: friendsData, isLoading: fl, isError: fe } = useQuery({
+  const { data: friendsData, isLoading: fl, isError: fe, refetch: rf, isFetching: ff } = useQuery({
     queryKey: ['dashboard-friends-count'],
     queryFn: () => apiClient.get('/friends', { params: { page: 1, limit: 100 } }).then((r) => r.data),
     staleTime: 60_000,
@@ -161,7 +161,18 @@ function QuickStats() {
 
   return (
     <div className="rounded-3xl p-5 text-[#FFFBEB] shadow-lg" style={{ background: 'linear-gradient(135deg, #10B981, #34D399)' }}>
-      <p className="text-sm font-bold opacity-90 mb-3">نشاطك</p>
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-bold opacity-90">نشاطك</p>
+        {/* Manual refresh so stale stats can be updated without a full reload (#442). */}
+        <button
+          onClick={() => { rm(); rf(); }}
+          disabled={fm || ff}
+          title="تحديث"
+          className="text-xs opacity-80 hover:opacity-100 disabled:opacity-50 transition-opacity"
+        >
+          {fm || ff ? '⏳' : '↻'}
+        </button>
+      </div>
       {isError ? (
         // Don't blank/crash on a failed stats fetch (#439).
         <p className="text-xs opacity-90 py-2">تعذّر تحميل الإحصائيات. حدّث الصفحة للمحاولة مرة أخرى.</p>
