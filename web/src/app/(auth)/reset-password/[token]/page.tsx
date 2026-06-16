@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/features/auth/api';
@@ -14,6 +14,22 @@ function ResetPasswordForm() {
   const [step, setStep] = useState<'enter' | 'reset'>('enter');
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Live password-strength indicator (#459) — same scoring as registration.
+  const passwordStrength = useMemo(() => {
+    const pwd = password;
+    if (!pwd) return null;
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (pwd.length >= 12) score++;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
+    if (/\d/.test(pwd)) score++;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score++;
+    if (score <= 1) return { level: 1, label: 'ضعيفة', color: '#EF4444' };
+    if (score <= 2) return { level: 2, label: 'متوسطة', color: '#F59E0B' };
+    if (score <= 3) return { level: 3, label: 'قوية', color: '#10B981' };
+    return { level: 4, label: 'قوية جداً', color: '#059669' };
+  }, [password]);
 
   useEffect(() => {
     const tokenParam = searchParams.get('token');
@@ -110,6 +126,16 @@ function ResetPasswordForm() {
                   <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
                     className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
                     placeholder="••••••••" />
+                  {passwordStrength && (
+                    <div className="mt-1.5">
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={i} className="h-1 flex-1 rounded-full" style={{ backgroundColor: i <= passwordStrength.level ? passwordStrength.color : '#E5E7EB' }} />
+                        ))}
+                      </div>
+                      <p className="mt-1 text-xs" style={{ color: passwordStrength.color }}>{passwordStrength.label}</p>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-[#213448]">تأكيد كلمة المرور</label>

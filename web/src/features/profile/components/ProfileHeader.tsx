@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users } from '@phosphor-icons/react';
+import { FollowSection } from '@/features/follows/components/FollowSection';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -129,6 +130,7 @@ export const ProfileHeader = ({
             <button
               onClick={() => coverRef.current?.click()}
               disabled={uploading}
+              title="يُفضّل صورة غلاف بنسبة 3:1 (مثال 1500×500 بكسل) — حتى 5 ميجابايت" /* #401 */
               className="absolute bottom-4 left-4 px-4 py-2 bg-[#131F2E]/70 hover:bg-[#131F2E]/90 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105 disabled:opacity-70"
             >
               <Camera size={18} />
@@ -174,6 +176,7 @@ export const ProfileHeader = ({
               <>
                 <button
                   onClick={() => avatarRef.current?.click()}
+                  title="يُفضّل صورة مربعة (مثال 400×400 بكسل) — حتى 5 ميجابايت" /* #406 */
                   className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gradient-to-r from-[#213448] to-[#547792] text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft hover:shadow-glow hover:scale-110 transition-all duration-200"
                 >
                   {uploading ? '...' : <Camera size={14} />}
@@ -207,6 +210,7 @@ export const ProfileHeader = ({
                 @{profile.username}
               </p>
             )}
+            {profile.userId && <FollowSection userId={profile.userId} isSelf={isSelf} />}
             <p className="mt-1 text-sm text-[#547792]">
               {[profile.location, profile.city, profile.country].filter(Boolean).join('، ')}
             </p>

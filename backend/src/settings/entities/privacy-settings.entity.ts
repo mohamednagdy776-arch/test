@@ -33,6 +33,12 @@ export class PrivacySettings {
   @Column({ name: 'who_can_tag_me', default: 'friends' })
   whoCanTagMe: PrivacyVisibility;
 
+  // Who may start a conversation with this user (#457). Defaults to 'public'
+  // so existing behaviour is unchanged; enforcement only applies when a user
+  // explicitly restricts it.
+  @Column({ name: 'who_can_send_messages', default: 'public' })
+  whoCanSendMessages: PrivacyVisibility;
+
   @Column({ name: 'allow_search_engines', default: true })
   allowSearchEngines: boolean;
 }

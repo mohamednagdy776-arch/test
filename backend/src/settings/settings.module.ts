@@ -9,6 +9,7 @@ import { SettingsController } from './controllers/settings.controller';
   imports: [TypeOrmModule.forFeature([PrivacySettings, Block])],
   providers: [SettingsService],
   controllers: [SettingsController],
+  // Exported so the chat layer (#457) and posts layer (#456) can use it.
   exports: [SettingsService],
 })
 export class SettingsModule {}
