@@ -81,6 +81,8 @@ services:
     networks:
       - tayyibt-network
     restart: unless-stopped
+    volumes:
+      - ai_model_cache:/app/model-cache
 
   postgres:
     image: postgres:15-alpine
@@ -116,6 +118,7 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  ai_model_cache:
 
 networks:
   tayyibt-network:

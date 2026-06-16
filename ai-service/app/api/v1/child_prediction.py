@@ -2,7 +2,7 @@
 from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from app.services.child_blend import predict_child
+from app.services.child_generate import predict_child
 
 router = APIRouter(tags=["child-prediction"])
 

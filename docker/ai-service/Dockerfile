@@ -3,11 +3,12 @@ FROM python:3.11 AS builder
 
 WORKDIR /app/ai-service
 
-# Install deps into a virtual env to keep the final image clean
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 COPY ai-service/requirements.txt ./
+# CPU-only torch first (saves ~1.5 GB vs full wheel)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ── Stage 2: Production image ────────────────────────────────────
@@ -18,6 +19,7 @@ WORKDIR /app/ai-service
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV HF_HOME=/app/model-cache
 
 COPY --from=builder /opt/venv /opt/venv
 COPY ai-service/ .
