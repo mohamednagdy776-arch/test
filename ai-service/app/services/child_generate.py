@@ -57,7 +57,7 @@ def _describe_child(p1_b64: str, p2_b64: str) -> str:
             "images": [p1_b64, p2_b64],
             "stream": False,
         },
-        timeout=120.0,
+        timeout=300.0,
     )
     r.raise_for_status()
     return r.json()["response"].strip()
