@@ -7,6 +7,8 @@ import { ConversationParticipant } from '../entities/conversation-participant.en
 import { MessageReaction } from '../entities/message-reaction.entity';
 import { User } from '../../auth/entities/user.entity';
 import { Profile } from '../../users/entities/profile.entity';
+import { SettingsService } from '../../settings/services/settings.service';
+import { FriendsService } from '../../friends/services/friends.service';
 
 @Injectable()
 export class ChatService {
@@ -17,7 +19,32 @@ export class ChatService {
     @InjectRepository(MessageReaction) private reactionRepo: Repository<MessageReaction>,
     @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Profile) private profilesRepo: Repository<Profile>,
+    private settingsService: SettingsService,
+    private friendsService: FriendsService,
   ) {}
+
+  // Enforce the recipient's "who can message me" privacy before a NEW 1:1
+  // conversation is opened (#457). Fail-open: default/'public'/any error → allow,
+  // so existing behaviour is unchanged and a settings hiccup never blocks chat.
+  private async assertCanMessage(senderId: string, targetId: string) {
+    let setting = 'public';
+    try {
+      const privacy: any = await this.settingsService.getPrivacySettings(targetId);
+      setting = privacy?.whoCanSendMessages ?? 'public';
+    } catch {
+      return; // fail open
+    }
+    if (setting === 'public' || setting === 'friends_of_friends') return;
+    if (setting === 'only_me') {
+      throw new ForbiddenException('This user is not accepting new messages');
+    }
+    if (setting === 'friends') {
+      const friendIds = await this.friendsService.getFriendIds(targetId);
+      if (!friendIds.includes(senderId)) {
+        throw new ForbiddenException('Only this user\'s friends can start a conversation');
+      }
+    }
+  }
 
   /**
    * Resolve display info for the "other" participant of a 1:1 conversation.
@@ -268,7 +295,10 @@ export class ChatService {
       }
     }
 
-    // None exists → create a fresh 1:1 conversation.
+    // None exists → this is first contact, so enforce the target's messaging
+    // privacy before opening the conversation (#457).
+    await this.assertCanMessage(userId, targetUserId);
+
     const conversation = await this.conversationRepo.save(
       this.conversationRepo.create({ isGroup: false, createdBy: { id: userId } as any }),
     );
