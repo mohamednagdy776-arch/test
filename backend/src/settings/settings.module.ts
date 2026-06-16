@@ -9,5 +9,6 @@ import { SettingsController } from './controllers/settings.controller';
   imports: [TypeOrmModule.forFeature([PrivacySettings, Block])],
   providers: [SettingsService],
   controllers: [SettingsController],
+  exports: [SettingsService],
 })
 export class SettingsModule {}

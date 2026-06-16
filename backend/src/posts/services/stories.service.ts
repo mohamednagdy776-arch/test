@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 import { Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
 import { Post } from '../entities/post.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
+import { SettingsService } from '../../settings/services/settings.service';
 
 @Injectable()
 export class StoriesService {
@@ -16,6 +17,7 @@ export class StoriesService {
     @InjectRepository(HiddenPost) private hiddenRepo: Repository<HiddenPost>,
     @InjectRepository(Post) private postRepo: Repository<Post>,
     private notifications: NotificationsService,
+    private settingsService: SettingsService,
   ) {}
 
   async createStory(userId: string, data: { mediaUrl?: string; mediaType?: string; thumbnailUrl?: string; text?: string; bgColor?: string; duration?: number }) {
@@ -288,7 +290,22 @@ export class StoriesService {
     if (data.mediaType) post.mediaType = data.mediaType;
     if (data.mediaUrls) post.mediaUrls = data.mediaUrls;
     if (data.postType) post.postType = data.postType as any;
-    if (data.audience) post.audience = data.audience as any;
+    if (data.audience) {
+      post.audience = data.audience as any;
+    } else {
+      // No explicit audience → default from the author's "who can see my posts"
+      // privacy setting so it actually affects visibility (#456). Fail-safe:
+      // any error leaves the column default unchanged.
+      try {
+        const privacy: any = await this.settingsService.getPrivacySettings(userId);
+        const w = privacy?.whoCanSeePosts;
+        if (w === 'only_me') post.audience = 'only_me' as any;
+        else if (w === 'friends' || w === 'friends_of_friends') post.audience = 'friends' as any;
+        else if (w === 'public') post.audience = 'public' as any;
+      } catch {
+        /* keep entity default */
+      }
+    }
     if (data.bgColor) post.bgColor = data.bgColor;
     if (data.feeling) post.feeling = data.feeling;
     if (data.location) post.location = data.location;
