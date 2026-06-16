@@ -25,6 +25,7 @@ export default function UserProfilePage() {
     queryKey: ['user-profile', username],
     queryFn: () => apiClient.get(`/users/${username}`).then((r) => r.data),
     enabled: !!username,
+    staleTime: 60_000, // cache between navigations, don't re-fetch every visit (#431)
   });
 
   const profile = (profileData as any)?.data;

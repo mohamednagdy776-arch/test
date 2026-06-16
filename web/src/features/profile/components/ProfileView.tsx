@@ -25,6 +25,9 @@ export const ProfileView = ({ userId }: Props) => {
       userId
         ? apiClient.get(`/users/${userId}`).then((r) => r.data)
         : apiClient.get('/users/me').then((r) => r.data),
+    // Serve cached profile data between navigations instead of re-fetching on
+    // every visit (#431); edits still invalidate this key for freshness.
+    staleTime: 60_000,
   });
 
   const profile = (data as any)?.data ?? null;
