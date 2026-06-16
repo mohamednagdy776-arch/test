@@ -12,6 +12,7 @@ import { Match } from '../matching/entities/match.entity';
 import { User } from '../auth/entities/user.entity';
 import { Profile } from '../users/entities/profile.entity';
 import { FriendsModule } from '../friends/friends.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -27,6 +28,8 @@ import { FriendsModule } from '../friends/friends.module';
     JwtModule.register({ secret: process.env.JWT_SECRET }),
     // For friend-scoped presence broadcasts (#148).
     FriendsModule,
+    // For messaging-privacy enforcement (#457).
+    SettingsModule,
   ],
   providers: [ChatGateway, ChatService],
   controllers: [ChatController],

@@ -31,6 +31,10 @@ export class UpdatePrivacyDto {
   @IsOptional()
   whoCanTagMe?: PrivacyVisibility;
 
+  @IsIn(['public', 'friends', 'friends_of_friends', 'only_me'])
+  @IsOptional()
+  whoCanSendMessages?: PrivacyVisibility;
+
   @IsBoolean()
   @IsOptional()
   allowSearchEngines?: boolean;

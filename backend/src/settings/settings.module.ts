@@ -9,5 +9,7 @@ import { SettingsController } from './controllers/settings.controller';
   imports: [TypeOrmModule.forFeature([PrivacySettings, Block])],
   providers: [SettingsService],
   controllers: [SettingsController],
+  // Exported so the chat layer can enforce messaging privacy (#457).
+  exports: [SettingsService],
 })
 export class SettingsModule {}
