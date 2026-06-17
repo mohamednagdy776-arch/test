@@ -128,6 +128,16 @@ export const authApi = {
     return res.data;
   },
 
+  requestEmailChange: async (newEmail: string, currentPassword: string): Promise<AuthResponse> => {
+    const res = await apiClient.post('/auth/change-email', { newEmail, currentPassword });
+    return res.data;
+  },
+
+  confirmEmailChange: async (token: string): Promise<AuthResponse> => {
+    const res = await apiClient.post('/auth/change-email/confirm', { token });
+    return res.data;
+  },
+
   deleteAccount: async (): Promise<AuthResponse> => {
     const res = await apiClient.post('/auth/delete');
     return res.data;

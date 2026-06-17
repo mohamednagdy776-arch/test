@@ -6,6 +6,7 @@ import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
 import { User } from '../entities/user.entity';
 import { Session } from '../entities/session.entity';
+import { EmailChangeRequest } from '../entities/email-change-request.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { MailService } from './mail.service';
@@ -15,9 +16,64 @@ export class AuthService {
   constructor(
     @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Session) private sessionsRepo: Repository<Session>,
+    @InjectRepository(EmailChangeRequest) private emailChangeRepo: Repository<EmailChangeRequest>,
     private jwtService: JwtService,
     private mailService: MailService,
   ) {}
+
+  // ── Email change (#454) ─────────────────────────────────────────────────
+  // Require the current password, then email a verification link to the NEW
+  // address. The change only applies once that link is confirmed.
+  async requestEmailChange(userId: string, newEmailRaw: string, currentPassword: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw new UnauthorizedException('Current password is incorrect');
+
+    const newEmail = newEmailRaw.trim().toLowerCase();
+    if (newEmail === (user.email || '').toLowerCase()) {
+      throw new ConflictException('That is already your email address');
+    }
+    const taken = await this.usersRepo.findOne({ where: { email: newEmail } });
+    if (taken) throw new ConflictException('That email address is already in use');
+
+    await this.emailChangeRepo.delete({ userId }); // supersede any prior request
+    const token = randomBytes(32).toString('hex');
+    await this.emailChangeRepo.save(this.emailChangeRepo.create({
+      userId,
+      newEmail,
+      tokenHash: this.hashToken(token),
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    }));
+    await this.mailService.sendEmailChangeVerification(newEmail, token);
+    return { message: 'A verification link has been sent to the new email address.' };
+  }
+
+  // Apply the change once the link is confirmed: update email, drop the request,
+  // invalidate all sessions (#426), and alert the OLD address (#470).
+  async confirmEmailChange(token: string) {
+    const reqRow = await this.emailChangeRepo.findOne({ where: { tokenHash: this.hashToken(token) } });
+    if (!reqRow) throw new NotFoundException('Invalid or expired link');
+    if (reqRow.expiresAt < new Date()) {
+      await this.emailChangeRepo.delete(reqRow.id);
+      throw new ForbiddenException('This link has expired');
+    }
+    const user = await this.usersRepo.findOne({ where: { id: reqRow.userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const stillTaken = await this.usersRepo.findOne({ where: { email: reqRow.newEmail } });
+    if (stillTaken && stillTaken.id !== user.id) {
+      await this.emailChangeRepo.delete(reqRow.id);
+      throw new ConflictException('That email address is already in use');
+    }
+
+    const oldEmail = user.email;
+    await this.usersRepo.update(user.id, { email: reqRow.newEmail });
+    await this.emailChangeRepo.delete({ userId: user.id });
+    await this.sessionsRepo.delete({ userId: user.id }); // #426 — force re-login
+    await this.mailService.sendEmailChangedAlert(oldEmail, reqRow.newEmail); // #470
+    return { message: 'Your email has been updated. Please log in again.' };
+  }
 
   async register(dto: RegisterDto) {
     const exists = await this.usersRepo.findOne({ where: { email: dto.email } });
