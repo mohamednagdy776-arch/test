@@ -18,7 +18,7 @@ class ChildPredictionResponse(BaseModel):
 
 
 @router.post("/child-prediction", response_model=ChildPredictionResponse)
-async def child_prediction(body: ChildPredictionRequest):
+def child_prediction(body: ChildPredictionRequest):
     try:
         img = predict_child(body.parent1, body.parent2)
     except ValueError as exc:
