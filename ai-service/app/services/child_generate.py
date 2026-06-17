@@ -1,21 +1,16 @@
-"""
-AI child image prediction pipeline (zero disk I/O):
-  Step 1 – gemma3:4b (Ollama vision) analyses both parent photos and writes
-            a detailed description of the predicted child.
-  Step 2 – Stable Diffusion LCM generates a wholly new portrait image from
-            that description (CPU inference, ~2-3 min).
-"""
 from __future__ import annotations
-import base64, io, os
+import base64, io, logging, os
 import httpx
 import torch
 from diffusers import DiffusionPipeline, LCMScheduler
+from PIL import Image
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://ollama:11434")
+log = logging.getLogger(__name__)
+
+OLLAMA_URL  = os.environ.get("OLLAMA_URL", "http://ollama:11434")
 VISION_MODEL = "gemma3:4b"
-HF_CACHE = os.environ.get("HF_HOME", "/app/model-cache")
-
-_pipe = None
+HF_CACHE    = os.environ.get("HF_HOME", "/app/model-cache")
+_pipe       = None
 
 
 def _load_pipe() -> DiffusionPipeline:
@@ -39,39 +34,57 @@ def _clean(b64: str) -> str:
     return b64.split(",", 1)[1] if "," in b64 else b64
 
 
+def _resize_for_ollama(b64: str, max_px: int = 512) -> str:
+    """Resize image to max_px on the longest side and re-encode as JPEG.
+    Keeps large phone photos from overflowing Ollama's token context."""
+    raw = base64.b64decode(b64)
+    img = Image.open(io.BytesIO(raw)).convert("RGB")
+    w, h = img.size
+    if max(w, h) > max_px:
+        scale = max_px / max(w, h)
+        img = img.resize((int(w * scale), int(h * scale)), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=85)
+    return base64.b64encode(buf.getvalue()).decode()
+
+
 def _describe_child(p1_b64: str, p2_b64: str) -> str:
-    """Ask Ollama vision model to describe the predicted child's appearance."""
-    r = httpx.post(
-        f"{OLLAMA_URL}/api/generate",
-        json={
-            "model": VISION_MODEL,
-            "prompt": (
-                "You are looking at photos of two parents. "
-                "Based on their facial features, predict what their biological child would look like. "
-                "Write a single concise image-generation prompt (max 60 words) starting with "
-                "'A young child with' and describing: skin tone, eye colour and shape, "
-                "nose shape, lips, hair colour and texture, face shape. "
-                "End with: soft natural lighting, photorealistic portrait, high detail. "
-                "Output only the prompt, nothing else."
-            ),
-            "images": [p1_b64, p2_b64],
-            "stream": False,
-        },
-        timeout=300.0,
-    )
-    r.raise_for_status()
-    return r.json()["response"].strip()
+    log.info("Sending images to Ollama (sizes: %d / %d chars)", len(p1_b64), len(p2_b64))
+    try:
+        r = httpx.post(
+            f"{OLLAMA_URL}/api/generate",
+            json={
+                "model": VISION_MODEL,
+                "prompt": (
+                    "You are looking at photos of two parents. "
+                    "Based on their facial features, predict what their biological child would look like. "
+                    "Write a single concise image-generation prompt (max 60 words) starting with "
+                    "'A young child with' and describing: skin tone, eye colour and shape, "
+                    "nose shape, lips, hair colour and texture, face shape. "
+                    "End with: soft natural lighting, photorealistic portrait, high detail. "
+                    "Output only the prompt, nothing else."
+                ),
+                "images": [p1_b64, p2_b64],
+                "stream": False,
+            },
+            timeout=300.0,
+        )
+        if not r.is_success:
+            log.error("Ollama %d: %s", r.status_code, r.text[:400])
+            r.raise_for_status()
+        desc = r.json()["response"].strip()
+        log.info("Ollama description: %s", desc[:120])
+        return desc
+    except httpx.HTTPStatusError as exc:
+        raise ValueError(f"Ollama error {exc.response.status_code}: {exc.response.text[:200]}") from exc
 
 
 def predict_child(p1_b64: str, p2_b64: str) -> str:
-    """Generate a child portrait from two parent images. Zero disk writes."""
-    p1 = _clean(p1_b64)
-    p2 = _clean(p2_b64)
+    p1 = _resize_for_ollama(_clean(p1_b64))
+    p2 = _resize_for_ollama(_clean(p2_b64))
 
-    # Step 1: vision LLM → child description prompt
     child_prompt = _describe_child(p1, p2)
 
-    # Step 2: Stable Diffusion LCM → new image
     pipe = _load_pipe()
     image = pipe(
         prompt=child_prompt,
