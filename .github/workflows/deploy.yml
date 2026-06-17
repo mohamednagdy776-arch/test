@@ -24,6 +24,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Inject secrets into .env.production
+        env:
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_EMAIL: ${{ secrets.VAPID_EMAIL }}
+        run: |
+          ENV_FILE="/opt/tayyibt/.env.production"
+          # Create the file if it does not exist yet (first deploy)
+          touch "$ENV_FILE"
+          # Upsert each VAPID key: remove old line then append current value
+          for KEY in VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY VAPID_EMAIL; do
+            VAL="${!KEY}"
+            if [ -n "$VAL" ]; then
+              sed -i "/^${KEY}=/d" "$ENV_FILE"
+              echo "${KEY}=${VAL}" >> "$ENV_FILE"
+            fi
+          done
+
       - name: Deploy to /opt/tayyibt and rebuild
         run: |
           set -e
