@@ -82,6 +82,10 @@ for i in $(seq 1 30); do
 done
 if [ "$health_ok" != "1" ]; then
   echo "ERROR: backend did not become healthy on the VPS within ~150s." >&2
+  echo "==> Backend container logs (last 80 lines):" >&2
+  docker logs tayyibt-backend-1 --tail 80 2>&1 >&2 || true
+  echo "==> Backend container status:" >&2
+  docker inspect tayyibt-backend-1 --format '{{.State.Status}} exitCode={{.State.ExitCode}} error={{.State.Error}}' 2>&1 >&2 || true
   exit 1
 fi
 echo "==> Stack healthy ✅"
