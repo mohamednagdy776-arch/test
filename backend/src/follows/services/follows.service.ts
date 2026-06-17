@@ -1,9 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Repository } from 'typeorm';
 import { Follow } from '../entities/follow.entity';
 import { User } from '../../auth/entities/user.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
+import { SettingsService } from '../../settings/services/settings.service';
+import { FriendsService } from '../../friends/services/friends.service';
 
 @Injectable()
 export class FollowsService {
@@ -11,6 +13,8 @@ export class FollowsService {
     @InjectRepository(Follow) private followsRepo: Repository<Follow>,
     @InjectRepository(User) private usersRepo: Repository<User>,
     private notifications: NotificationsService,
+    private settingsService: SettingsService,
+    private friendsService: FriendsService,
   ) {}
 
   // Confirm a follow target is a real, active, non-deleted account (#395).
@@ -20,11 +24,34 @@ export class FollowsService {
     return user;
   }
 
+  // Enforce the target's "who can follow me" privacy (#480). Fail-open: default/
+  // 'public'/any error always allows, so existing behaviour is unchanged.
+  private async assertCanFollow(followerId: string, targetId: string) {
+    let setting = 'public';
+    try {
+      const privacy: any = await this.settingsService.getPrivacySettings(targetId);
+      setting = privacy?.whoCanFollow ?? 'public';
+    } catch {
+      return;
+    }
+    if (setting === 'public' || setting === 'friends_of_friends') return;
+    if (setting === 'only_me') {
+      throw new ForbiddenException('This user does not allow new followers');
+    }
+    if (setting === 'friends') {
+      const friendIds = await this.friendsService.getFriendIds(targetId);
+      if (!friendIds.includes(followerId)) {
+        throw new ForbiddenException('Only this user\'s friends can follow them');
+      }
+    }
+  }
+
   async follow(followerId: string, followingId: string) {
     if (followerId === followingId) {
       throw new BadRequestException('You cannot follow yourself'); // #378
     }
     await this.assertActiveUser(followingId);
+    await this.assertCanFollow(followerId, followingId); // #480
 
     const existing = await this.followsRepo.findOne({ where: { followerId, followingId } });
     if (existing) return { following: true }; // idempotent — no duplicate rows (#379)
