@@ -53,8 +53,8 @@ export class PostsService {
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.group', 'group')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
-      .orderBy('post.is_pinned', 'DESC')
-      .addOrderBy('post.created_at', 'DESC')
+      .orderBy('post.isPinned', 'DESC')
+      .addOrderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
     this.applyAudienceFilter(qb, viewerId);
@@ -68,7 +68,7 @@ export class PostsService {
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.group', 'group')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
-      .orderBy('post.created_at', 'DESC')
+      .orderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
     this.applyAudienceFilter(qb, viewerId);
@@ -82,8 +82,8 @@ export class PostsService {
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.group', 'group')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
-      .orderBy('post.is_pinned', 'DESC')
-      .addOrderBy('post.created_at', 'DESC')
+      .orderBy('post.isPinned', 'DESC')
+      .addOrderBy('post.createdAt', 'DESC')
       .take(limit + 1);
     if (cursor) {
       qb.andWhere('post.created_at < :cursor', { cursor: new Date(cursor) });
@@ -102,10 +102,10 @@ export class PostsService {
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.group', 'group')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
-      .orderBy('post.created_at', 'DESC')
+      .orderBy('post.createdAt', 'DESC')
       .take(limit + 1);
     if (cursor) {
-      qb.andWhere('post.created_at < :cursor', { cursor: new Date(cursor) });
+      qb.andWhere('post.createdAt < :cursor', { cursor: new Date(cursor) });
     }
     this.applyAudienceFilter(qb, viewerId);
     const data = await qb.getMany();
