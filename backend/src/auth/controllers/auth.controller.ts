@@ -11,6 +11,7 @@ import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { SetupTwoFactorDto, DisableTwoFactorDto } from '../dto/two-factor.dto';
+import { ChangeEmailDto, ConfirmEmailChangeDto } from '../dto/change-email.dto';
 import { ok } from '../../common/response.helper';
 
 // Tighter rate limit on auth endpoints (brute-force / mass-signup / email
@@ -151,6 +152,22 @@ export class AuthController {
     const result = await this.authService.reactivateAccount(body.email, body.password);
     setAuthCookies(res, result as any);
     return ok(result, 'Account reactivated');
+  }
+
+  // Request an email change — emails a verification link to the new address (#454).
+  @Post('change-email')
+  @UseGuards(AuthGuard('jwt'))
+  async changeEmail(@Req() req: any, @Body() dto: ChangeEmailDto) {
+    return ok(await this.authService.requestEmailChange(req.user.id, dto.newEmail, dto.currentPassword));
+  }
+
+  // Confirm the change from the emailed link; sessions are invalidated so the
+  // user must re-log in — clear cookies here too.
+  @Post('change-email/confirm')
+  async confirmEmailChange(@Body() dto: ConfirmEmailChangeDto, @Res({ passthrough: true }) res: Response) {
+    const result = await this.authService.confirmEmailChange(dto.token);
+    clearAuthCookies(res);
+    return ok(result);
   }
 
   @Post('delete')
