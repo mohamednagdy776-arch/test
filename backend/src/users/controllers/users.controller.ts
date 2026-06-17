@@ -2,8 +2,10 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, Up
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
+import { extname, join } from 'path';
+import { writeFileSync, mkdirSync } from 'fs';
+import sharp from 'sharp';
 import { UsersService } from '../services/users.service';
 import { UpdateProfileWithEntriesDto } from '../dto/update-profile.dto';
 import { SearchUsersDto } from '../dto/search-users.dto';
@@ -15,6 +17,7 @@ import { ok, paginated } from '../../common/response.helper';
 import { PaginationDto } from '../../common/dto/pagination.dto';
 import { User } from '../../auth/entities/user.entity';
 import { sanitizeUserContent } from '../../common/utils/sanitize';
+import { signMediaPath } from '../../common/utils/media-token';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -38,17 +41,9 @@ export class UsersController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // cap upload floods / storage exhaustion (#427)
   @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads/avatars',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-      },
-    }),
+    storage: memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-      // Validate BOTH the extension and the declared MIME type — an extension
-      // check alone lets a polyglot/webshell be uploaded as `exploit.jpg`.
       const okExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname);
       const okMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype);
       if (!okExt || !okMime) {
@@ -59,7 +54,17 @@ export class UsersController {
   }))
   async uploadAvatar(@CurrentUser() user: User, @UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
-    const avatarUrl = `/uploads/avatars/${file.filename}`;
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+    const destDir = join(process.cwd(), 'uploads', 'avatars');
+    mkdirSync(destDir, { recursive: true });
+    const processed = await sharp(file.buffer)
+      .resize(512, 512, { fit: 'cover', position: 'centre' })
+      .jpeg({ quality: 88 })
+      .toBuffer();
+    writeFileSync(join(destDir, filename), processed);
+    const mediaPath = `avatars/${filename}`;
+    const token = signMediaPath(mediaPath);
+    const avatarUrl = `/api/v1/media/${mediaPath}?t=${token}`;
     return ok(await this.usersService.updateAvatar(user.id, avatarUrl), 'Avatar uploaded');
   }
 
@@ -67,17 +72,9 @@ export class UsersController {
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { limit: 10, ttl: 60000 } }) // cap upload floods / storage exhaustion (#427)
   @UseInterceptors(FileInterceptor('file', {
-    storage: diskStorage({
-      destination: './uploads/covers',
-      filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-      },
-    }),
+    storage: memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-      // Validate BOTH the extension and the declared MIME type — an extension
-      // check alone lets a polyglot/webshell be uploaded as `exploit.jpg`.
       const okExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname);
       const okMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype);
       if (!okExt || !okMime) {
@@ -88,7 +85,17 @@ export class UsersController {
   }))
   async uploadCover(@CurrentUser() user: User, @UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('No file uploaded');
-    const coverUrl = `/uploads/covers/${file.filename}`;
+    const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+    const destDir = join(process.cwd(), 'uploads', 'covers');
+    mkdirSync(destDir, { recursive: true });
+    const processed = await sharp(file.buffer)
+      .resize(1200, 375, { fit: 'cover', position: 'centre' })
+      .jpeg({ quality: 85 })
+      .toBuffer();
+    writeFileSync(join(destDir, filename), processed);
+    const mediaPath = `covers/${filename}`;
+    const token = signMediaPath(mediaPath);
+    const coverUrl = `/api/v1/media/${mediaPath}?t=${token}`;
     return ok(await this.usersService.updateCover(user.id, coverUrl), 'Cover uploaded');
   }
 
@@ -114,7 +121,13 @@ export class UsersController {
 
   @Get(':id')
   async getFullProfile(@Param('id') id: string, @CurrentUser() user?: User) {
-    return ok(await this.usersService.getFullProfile(id, user?.id));
+    const [profile, friendshipStatus] = await Promise.all([
+      this.usersService.getFullProfile(id, user?.id),
+      user?.id && user.id !== id
+        ? this.usersService.getFriendshipStatus(id, user.id)
+        : Promise.resolve(null),
+    ]);
+    return ok({ ...profile, friendshipStatus });
   }
 
   @Get(':id/posts')

@@ -38,13 +38,8 @@ export const ProfileView = ({ userId }: Props) => {
     .some((k) => (profile as any)[k]);
   const profileUserId: string = profile?.userId ?? userId ?? '';
 
-  // Friendship status — only when viewing another user
-  const { data: friendStatusData } = useQuery({
-    queryKey: ['friendship-status', profileUserId],
-    queryFn: () => profileApi.getFriendshipStatus(profileUserId),
-    enabled: !!userId && !!profileUserId,
-  });
-  const friendshipStatus = (friendStatusData as any)?.data ?? { status: 'none' };
+  // Friendship status is now embedded in the profile response (Issue #429)
+  const friendshipStatus = profile?.friendshipStatus ?? { status: 'none' };
 
   const sendRequest = useMutation({
     mutationFn: () => profileApi.sendFriendRequest(profileUserId),

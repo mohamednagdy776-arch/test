@@ -28,6 +28,7 @@ import { MemoriesModule } from './memories/memories.module';
 import { VideosModule } from './videos/videos.module';
 import { SeedModule } from './seed/seed.module';
 import { ChildPredictionModule } from './features/child-prediction.module';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { ChildPredictionModule } from './features/child-prediction.module';
     MemoriesModule,
     VideosModule,
     ChildPredictionModule,
+    MediaModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
 })

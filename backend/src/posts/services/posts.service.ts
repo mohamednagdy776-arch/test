@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan, MoreThan, IsNull, LessThanOrEqual } from 'typeorm';
+import { Repository, SelectQueryBuilder, LessThan, LessThanOrEqual, IsNull, MoreThan } from 'typeorm';
 import { Post, PostType } from '../entities/post.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { User } from '../../auth/entities/user.entity';
@@ -47,65 +47,95 @@ export class PostsService {
     return { data, total };
   }
 
-  // A scheduled post (scheduledAt in the future) must stay hidden from the feed
-  // until its time arrives; posts with no schedule (null) are always visible.
-  // Returned as an OR-array so it composes with the cursor filter below (#311).
-  private scheduledVisible(extra: Record<string, any> = {}) {
+  async getFeed(page: number, limit: number, viewerId?: string) {
     const now = new Date();
-    return [
-      { ...extra, scheduledAt: IsNull() },
-      { ...extra, scheduledAt: LessThanOrEqual(now) },
-    ];
-  }
-
-  async getFeed(page: number, limit: number) {
-    const [data, total] = await this.postsRepo.findAndCount({
-      where: this.scheduledVisible(),
-      order: { isPinned: 'DESC', createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-      relations: ['user', 'group'],
-    });
+    const qb = this.postsRepo.createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('post.group', 'group')
+      .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      .orderBy('post.is_pinned', 'DESC')
+      .addOrderBy('post.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+    this.applyAudienceFilter(qb, viewerId);
+    const [data, total] = await qb.getManyAndCount();
     return { data, total };
   }
 
-  async getRecentFeed(page: number, limit: number) {
-    const [data, total] = await this.postsRepo.findAndCount({
-      where: this.scheduledVisible(),
-      order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-      relations: ['user', 'group'],
-    });
+  async getRecentFeed(page: number, limit: number, viewerId?: string) {
+    const now = new Date();
+    const qb = this.postsRepo.createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('post.group', 'group')
+      .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      .orderBy('post.created_at', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+    this.applyAudienceFilter(qb, viewerId);
+    const [data, total] = await qb.getManyAndCount();
     return { data, total };
   }
 
-  async getFeedByCursor(cursor: string | undefined, limit: number) {
-    const whereCondition = this.scheduledVisible(cursor ? { createdAt: LessThan(new Date(cursor)) } : {});
-    const data = await this.postsRepo.find({
-      where: whereCondition,
-      order: { isPinned: 'DESC', createdAt: 'DESC' },
-      take: limit + 1,
-      relations: ['user', 'group'],
-    });
+  async getFeedByCursor(cursor: string | undefined, limit: number, viewerId?: string) {
+    const now = new Date();
+    const qb = this.postsRepo.createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('post.group', 'group')
+      .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      .orderBy('post.is_pinned', 'DESC')
+      .addOrderBy('post.created_at', 'DESC')
+      .take(limit + 1);
+    if (cursor) {
+      qb.andWhere('post.created_at < :cursor', { cursor: new Date(cursor) });
+    }
+    this.applyAudienceFilter(qb, viewerId);
+    const data = await qb.getMany();
     const hasMore = data.length > limit;
     const results = hasMore ? data.slice(0, limit) : data;
     const nextCursor = hasMore ? results[results.length - 1]?.createdAt?.toISOString() : undefined;
     return { data: results, nextCursor, hasMore };
   }
 
-  async getRecentFeedByCursor(cursor: string | undefined, limit: number) {
-    const whereCondition = this.scheduledVisible(cursor ? { createdAt: LessThan(new Date(cursor)) } : {});
-    const data = await this.postsRepo.find({
-      where: whereCondition,
-      order: { createdAt: 'DESC' },
-      take: limit + 1,
-      relations: ['user', 'group'],
-    });
+  async getRecentFeedByCursor(cursor: string | undefined, limit: number, viewerId?: string) {
+    const now = new Date();
+    const qb = this.postsRepo.createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('post.group', 'group')
+      .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      .orderBy('post.created_at', 'DESC')
+      .take(limit + 1);
+    if (cursor) {
+      qb.andWhere('post.created_at < :cursor', { cursor: new Date(cursor) });
+    }
+    this.applyAudienceFilter(qb, viewerId);
+    const data = await qb.getMany();
     const hasMore = data.length > limit;
     const results = hasMore ? data.slice(0, limit) : data;
     const nextCursor = hasMore ? results[results.length - 1]?.createdAt?.toISOString() : undefined;
     return { data: results, nextCursor, hasMore };
+  }
+
+  private applyAudienceFilter(qb: SelectQueryBuilder<Post>, viewerId?: string) {
+    if (viewerId) {
+      qb.andWhere(`(
+        post.user_id = :viewerId
+        OR post.audience = 'public'
+        OR (
+          post.audience IN ('friends', 'friends_of_friends')
+          AND EXISTS (
+            SELECT 1 FROM friendships f
+            WHERE f.status = 'accepted'
+            AND f.deleted_at IS NULL
+            AND (
+              (f.requester_id = post.user_id AND f.addressee_id = :viewerId)
+              OR (f.addressee_id = post.user_id AND f.requester_id = :viewerId)
+            )
+          )
+        )
+      )`, { viewerId });
+    } else {
+      qb.andWhere("post.audience = 'public'");
+    }
   }
 
   // Admin-only hard delete (route is guarded by @Roles('admin')). User-facing
@@ -121,10 +151,25 @@ export class PostsService {
     });
     if (!post) throw new NotFoundException('Post not found');
 
-    // Audience enforcement: only_me posts are visible only to their author (5.11).
-    if (post.audience === 'only_me' && post.userId !== viewerId) {
+    if (post.userId === viewerId) return post;
+
+    if (post.audience === 'only_me') {
       throw new NotFoundException('Post not found');
     }
+
+    if (post.audience === 'friends' || post.audience === 'friends_of_friends') {
+      const rows = await this.postsRepo.manager.query(
+        `SELECT 1 FROM friendships f
+         WHERE f.status = 'accepted' AND f.deleted_at IS NULL
+         AND (
+           (f.requester_id = $1 AND f.addressee_id = $2)
+           OR (f.addressee_id = $1 AND f.requester_id = $2)
+         ) LIMIT 1`,
+        [post.userId, viewerId],
+      );
+      if (!rows.length) throw new NotFoundException('Post not found');
+    }
+
     return post;
   }
 

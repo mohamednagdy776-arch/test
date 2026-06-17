@@ -358,6 +358,10 @@ export class UsersService {
     return this.friendsService.getFriends(userId, page, limit);
   }
 
+  async getFriendshipStatus(userId: string, viewerId: string) {
+    return this.friendsService.getFriendshipStatus(viewerId, userId);
+  }
+
   async getPhotos(userId: string, page = 1, limit = 20) {
     const [activities, total] = await this.activityRepo.findAndCount({
       where: { userId, type: 'photo' as any },

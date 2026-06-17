@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users } from '@phosphor-icons/react';
 import { FollowSection } from '@/features/follows/components/FollowSection';
+import { ImageCropper } from '@/components/ui/ImageCropper';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -46,16 +47,16 @@ export const ProfileHeader = ({
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
+  const [coverCropFile, setCoverCropFile] = useState<File | null>(null);
 
-  // NOTE: do not set Content-Type manually — axios must add the multipart
-  // boundary itself, otherwise the server cannot parse the uploaded file.
-  const uploadAvatar = async (file: File) => {
-    if (uploading) return; // ignore rapid double-clicks → no parallel uploads (#398)
+  const uploadBlob = async (blob: Blob, endpoint: string, filename: string) => {
+    if (uploading) return;
     setUploading(true);
     try {
       const form = new FormData();
-      form.append('file', file);
-      await apiClient.post('/users/me/avatar', form);
+      form.append('file', blob, filename);
+      await apiClient.post(endpoint, form);
       qc.invalidateQueries({ queryKey: ['my-profile'] });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
@@ -65,20 +66,14 @@ export const ProfileHeader = ({
     }
   };
 
-  const uploadCover = async (file: File) => {
-    if (uploading) return; // ignore rapid double-clicks → no parallel uploads (#398)
-    setUploading(true);
-    try {
-      const form = new FormData();
-      form.append('file', file);
-      await apiClient.post('/users/me/cover', form);
-      qc.invalidateQueries({ queryKey: ['my-profile'] });
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
-      alert(`${msg}\n\nالصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`);
-    } finally {
-      setUploading(false);
-    }
+  const handleAvatarCrop = async (blob: Blob) => {
+    setAvatarCropFile(null);
+    await uploadBlob(blob, '/users/me/avatar', 'avatar.jpg');
+  };
+
+  const handleCoverCrop = async (blob: Blob) => {
+    setCoverCropFile(null);
+    await uploadBlob(blob, '/users/me/cover', 'cover.jpg');
   };
 
   // Remove avatar/cover with a confirm prompt (destructive, #399).
@@ -150,7 +145,7 @@ export const ProfileHeader = ({
               type="file"
               accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
               className="hidden"
-              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadCover(f); }}
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) { e.target.value = ''; setCoverCropFile(f); } }}
             />
           </>
         )}
@@ -186,7 +181,7 @@ export const ProfileHeader = ({
                   type="file"
                   accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
                   className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadAvatar(f); }}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) { e.target.value = ''; setAvatarCropFile(f); } }}
                 />
                 {mediaUrl(profile.avatarUrl) && (
                   <button
@@ -312,6 +307,26 @@ export const ProfileHeader = ({
         {/* Completion bar — only on your own profile (private metric) */}
         {isSelf && <ProfileCompletion profile={profile} />}
       </div>
+
+      {avatarCropFile && (
+        <ImageCropper
+          file={avatarCropFile}
+          aspectRatio={1}
+          circular={true}
+          onCrop={handleAvatarCrop}
+          onCancel={() => setAvatarCropFile(null)}
+        />
+      )}
+
+      {coverCropFile && (
+        <ImageCropper
+          file={coverCropFile}
+          aspectRatio={16 / 5}
+          circular={false}
+          onCrop={handleCoverCrop}
+          onCancel={() => setCoverCropFile(null)}
+        />
+      )}
     </div>
   );
 };

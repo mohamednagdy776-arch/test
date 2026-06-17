@@ -2,12 +2,14 @@
 import { useState } from 'react';
 import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '@/features/notifications/hooks';
 import { NotificationList } from '@/features/notifications/components/NotificationList';
+import { usePushNotifications } from '@/features/notifications/usePushNotifications';
 import { Spinner } from '@/components/ui/Spinner';
 
 type Tab = 'all' | 'unread' | 'mentions' | 'likes' | 'comments';
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('all');
+  usePushNotifications();
   // Load-more pagination: bump the page size on demand instead of being stuck
   // on the first 20 with no way to see older notifications (#451).
   const [limit, setLimit] = useState(20);
