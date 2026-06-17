@@ -71,6 +71,12 @@ const PRIVACY_FIELDS: PrivacyField[] = [
     description: 'حدد من يمكنه بدء محادثة معك',
     options: VISIBILITY_OPTIONS.filter(o => o.value !== 'friends_of_friends'),
   },
+  {
+    key: 'whoCanFollow',
+    label: 'من يمكنه متابعتك',
+    description: 'حدد من يمكنه متابعة حسابك',
+    options: VISIBILITY_OPTIONS.filter(o => o.value !== 'friends_of_friends'),
+  },
 ];
 
 interface BlockedUser {

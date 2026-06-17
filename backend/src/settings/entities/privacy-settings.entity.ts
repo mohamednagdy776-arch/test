@@ -39,6 +39,10 @@ export class PrivacySettings {
   @Column({ name: 'who_can_send_messages', default: 'public' })
   whoCanSendMessages: PrivacyVisibility;
 
+  // Who may follow this user (#480). Defaults to 'public' (unchanged behaviour).
+  @Column({ name: 'who_can_follow', default: 'public' })
+  whoCanFollow: PrivacyVisibility;
+
   @Column({ name: 'allow_search_engines', default: true })
   allowSearchEngines: boolean;
 }
