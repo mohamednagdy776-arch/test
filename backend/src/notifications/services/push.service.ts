@@ -14,10 +14,19 @@ export class PushService {
   ) {
     const publicKey = process.env.VAPID_PUBLIC_KEY;
     const privateKey = process.env.VAPID_PRIVATE_KEY;
-    const email = process.env.VAPID_EMAIL || 'mailto:admin@tayyibt.com';
+    let email = process.env.VAPID_EMAIL || 'mailto:admin@tayyibt.com';
+    // Ensure subject has the required mailto: or https:// prefix
+    if (email && !email.startsWith('mailto:') && !email.startsWith('https://')) {
+      email = `mailto:${email}`;
+    }
 
     if (publicKey && privateKey) {
-      webpush.setVapidDetails(email, publicKey, privateKey);
+      try {
+        webpush.setVapidDetails(email, publicKey, privateKey);
+      } catch (err) {
+        // Log and continue — push notifications won't work but the app must still start
+        this.logger.error(`VAPID init failed (push notifications disabled): ${err}`);
+      }
     }
   }
 

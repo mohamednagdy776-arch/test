@@ -47,6 +47,9 @@ jobs:
           set -e
           mkdir -p /opt/tayyibt
 
+          echo "==> Checkout state: $(git log --oneline -1)"
+          echo "==> Migrations in workspace: $(ls backend/migrations/)"
+
           # Clean-mirror deploy: stage exactly the tracked paths we ship, then
           # rsync --delete into /opt/tayyibt so it is byte-for-byte the repo
           # EXCEPT the VPS-only state we must never touch (.env.production,
