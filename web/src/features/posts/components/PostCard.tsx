@@ -130,7 +130,7 @@ function CommentSection({ postId }: { postId: string }) {
               <div className="flex-1 rounded-2xl px-4 py-2.5 shadow-card-hover group-hover:shadow-glow transition-all duration-300" style={{ backgroundColor: '#D4E8EE' }}>
                 <div className="flex items-center gap-2">
                   {c.user?.id ? (
-                    <Link href={`/profile/${c.user.id}`} className="text-xs font-bold text-[#213448] hover:underline">{displayName(c.user)}</Link>
+                    <Link href={c.user?.username ? `/${c.user.username}` : `/profile/${c.user.id}`} className="text-xs font-bold text-[#213448] hover:underline">{displayName(c.user)}</Link>
                   ) : (
                     <p className="text-xs font-bold text-[#213448]">{displayName(c.user)}</p>
                   )}
@@ -331,7 +331,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             {post.user?.id ? (
-              <Link href={`/profile/${post.user.id}`} className="text-sm font-bold text-[#213448] hover:underline">{userName}</Link>
+              <Link href={post.user?.username ? `/${post.user.username}` : `/profile/${post.user.id}`} className="text-sm font-bold text-[#213448] hover:underline">{userName}</Link>
             ) : (
               <p className="text-sm font-bold text-[#213448]">{userName}</p>
             )}
@@ -367,7 +367,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
                     {displayName(post.originalPost.user).charAt(0)}
                   </div>
                   {post.originalPost.user?.id ? (
-                    <Link href={`/profile/${post.originalPost.user.id}`} className="text-xs font-medium text-[#213448] hover:underline">{displayName(post.originalPost.user)}</Link>
+                    <Link href={post.originalPost.user?.username ? `/${post.originalPost.user.username}` : `/profile/${post.originalPost.user.id}`} className="text-xs font-medium text-[#213448] hover:underline">{displayName(post.originalPost.user)}</Link>
                   ) : (
                     <span className="text-xs font-medium text-[#213448]">{displayName(post.originalPost.user)}</span>
                   )}

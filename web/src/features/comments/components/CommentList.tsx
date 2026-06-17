@@ -10,6 +10,7 @@ interface Comment {
   user: {
     id: string;
     email?: string;
+    username?: string;
     profile?: { fullName?: string; avatar?: string };
   };
   isPinned: boolean;
@@ -155,7 +156,7 @@ function CommentItem({
             <>
               <div className="flex items-center gap-2">
                 {comment.user?.id ? (
-                  <Link href={`/profile/${comment.user.id}`} className="text-xs font-bold text-[#213448] hover:underline">{displayName(comment.user)}</Link>
+                  <Link href={comment.user?.username ? `/${comment.user.username}` : `/profile/${comment.user.id}`} className="text-xs font-bold text-[#213448] hover:underline">{displayName(comment.user)}</Link>
                 ) : (
                   <p className="text-xs font-bold text-[#213448]">{displayName(comment.user)}</p>
                 )}
