@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MatchingModule } from './matching/matching.module';
@@ -49,6 +50,7 @@ import { FamilyModule } from './family/family.module';
 
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
 
+    CommonModule,
     AuthModule,
     UsersModule,
     MatchingModule,

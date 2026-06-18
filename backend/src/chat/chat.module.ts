@@ -8,6 +8,7 @@ import { MessageReaction } from './entities/message-reaction.entity';
 import { ChatGateway } from './chat.gateway';
 import { ChatController } from './controllers/chat.controller';
 import { ChatService } from './services/chat.service';
+import { TranslationService } from './services/translation.service';
 import { Match } from '../matching/entities/match.entity';
 import { User } from '../auth/entities/user.entity';
 import { Profile } from '../users/entities/profile.entity';
@@ -31,8 +32,8 @@ import { SettingsModule } from '../settings/settings.module';
     // For messaging-privacy enforcement (#457).
     SettingsModule,
   ],
-  providers: [ChatGateway, ChatService],
+  providers: [ChatGateway, ChatService, TranslationService],
   controllers: [ChatController],
-  exports: [ChatService],
+  exports: [ChatService, TranslationService],
 })
 export class ChatModule {}

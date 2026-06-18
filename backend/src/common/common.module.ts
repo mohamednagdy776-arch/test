@@ -1,9 +1,15 @@
 import { Module, Global } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { EncryptionService } from './services/encryption.service';
+import { RedisCacheService } from './services/redis-cache.service';
+import { WsJwtGuard } from './guards/ws-jwt.guard';
 
 @Global()
 @Module({
-  providers: [EncryptionService],
-  exports: [EncryptionService],
+  imports: [
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
+  ],
+  providers: [EncryptionService, RedisCacheService, WsJwtGuard],
+  exports: [EncryptionService, RedisCacheService, WsJwtGuard, JwtModule],
 })
 export class CommonModule {}

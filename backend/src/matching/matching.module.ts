@@ -12,6 +12,7 @@ import { GeneticCompatibilityService } from './services/genetic-compatibility.se
 import { BiasMonitorService } from './services/bias-monitor.service';
 import { MatchingController } from './controllers/matching.controller';
 import { GeneticHealthController } from './controllers/genetic-health.controller';
+import { MatchingAdminController } from './controllers/matching-admin.controller';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { GeneticHealthController } from './controllers/genetic-health.controller
     GeneticCompatibilityService,
     BiasMonitorService,
   ],
-  controllers: [MatchingController, GeneticHealthController],
+  controllers: [MatchingController, GeneticHealthController, MatchingAdminController],
   exports: [ColdStartService, CompatibilityService, GeneticCompatibilityService, BiasMonitorService],
 })
 export class MatchingModule {}
