@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Comment } from '../entities/comment.entity';
@@ -18,11 +18,33 @@ export class CommentsService {
   ) {}
 
   async create(postId: string, dto: CreateCommentDto, user: User) {
+    let depth = 0;
+
+    if (dto.parentId) {
+      const parent = await this.commentsRepo.findOne({ where: { id: dto.parentId } });
+      if (!parent) throw new NotFoundException('Parent comment not found');
+
+      // Validate the parent belongs to the same post
+      const parentWithPost = await this.commentsRepo.findOne({
+        where: { id: dto.parentId },
+        relations: ['post'],
+      });
+      if (parentWithPost?.post?.id !== postId) {
+        throw new BadRequestException('Parent comment does not belong to this post');
+      }
+
+      if (parent.depth >= 1) {
+        throw new BadRequestException('Replies cannot exceed one level of nesting');
+      }
+      depth = parent.depth + 1;
+    }
+
     const comment = this.commentsRepo.create({
       content: dto.content,
       post: { id: postId } as any,
       user,
       parent: dto.parentId ? ({ id: dto.parentId } as any) : null,
+      depth,
     });
     const saved = await this.commentsRepo.save(comment);
 
@@ -138,5 +160,19 @@ export class CommentsService {
 
   async getUserReaction(commentId: string, userId: string) {
     return this.reactionsRepo.findOne({ where: { commentId, userId } });
+  }
+
+  async getReplies(commentId: string, page = 1, limit = 20) {
+    const comment = await this.commentsRepo.findOne({ where: { id: commentId } });
+    if (!comment) throw new NotFoundException('Comment not found');
+
+    const [data, total] = await this.commentsRepo.findAndCount({
+      where: { parentId: commentId },
+      order: { createdAt: 'ASC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['user', 'reactions'],
+    });
+    return { data, total };
   }
 }

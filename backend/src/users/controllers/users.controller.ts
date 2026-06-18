@@ -18,15 +18,24 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { User } from '../../auth/entities/user.entity';
 import { sanitizeUserContent } from '../../common/utils/sanitize';
 import { signMediaPath } from '../../common/utils/media-token';
+import { ColdStartService } from '../../matching/services/cold-start.service';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
 export class UsersController {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private coldStartService: ColdStartService,
+  ) {}
 
   @Get('me')
   async getProfile(@CurrentUser() user: User) {
     return ok(await this.usersService.getProfile(user.id));
+  }
+
+  @Get('me/completeness')
+  async getCompleteness(@CurrentUser() user: User) {
+    return ok(await this.coldStartService.getCompletenessScore(user.id));
   }
 
   @Patch('me')

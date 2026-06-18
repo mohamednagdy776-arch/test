@@ -1,6 +1,14 @@
 import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 
+export enum ModerationStatus {
+  PENDING_TRANSCODING = 'pending_transcoding',
+  PENDING_REVIEW = 'pending_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  HIDDEN = 'hidden',
+}
+
 @Entity('videos')
 export class Video {
   @PrimaryGeneratedColumn('uuid')
@@ -20,6 +28,14 @@ export class Video {
 
   @Column({ default: 0 })
   views: number;
+
+  @Column({
+    name: 'moderation_status',
+    type: 'enum',
+    enum: ModerationStatus,
+    default: ModerationStatus.PENDING_TRANSCODING,
+  })
+  moderationStatus: ModerationStatus;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })

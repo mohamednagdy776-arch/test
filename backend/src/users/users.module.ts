@@ -11,6 +11,7 @@ import { UsersService } from './services/users.service';
 import { UsersController } from './controllers/users.controller';
 import { PublicProfileController } from './controllers/public-profile.controller';
 import { FriendsModule } from '../friends/friends.module';
+import { ColdStartService } from '../matching/services/cold-start.service';
 
 @Module({
   imports: [
@@ -18,8 +19,8 @@ import { FriendsModule } from '../friends/friends.module';
     MulterModule.register({}),
     FriendsModule,
   ],
-  providers: [UsersService],
+  providers: [UsersService, ColdStartService],
   controllers: [UsersController, PublicProfileController],
-  exports: [UsersService],
+  exports: [UsersService, ColdStartService],
 })
 export class UsersModule {}

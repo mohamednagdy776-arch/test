@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Report } from '../entities/report.entity';
+import { Report, ContentAction } from '../entities/report.entity';
 
 @Injectable()
 export class ReportsService {
@@ -30,6 +30,23 @@ export class ReportsService {
     const report = await this.reportsRepo.findOne({ where: { id } });
     if (!report) throw new NotFoundException('Report not found');
     report.status = 'dismissed';
+    return this.reportsRepo.save(report);
+  }
+
+  async takeAction(
+    id: string,
+    adminId: string,
+    action: ContentAction,
+    adminNote?: string,
+  ) {
+    const report = await this.reportsRepo.findOne({ where: { id } });
+    if (!report) throw new NotFoundException('Report not found');
+
+    report.actionTaken = action;
+    report.reviewedByAdminId = adminId;
+    report.status = 'resolved';
+    if (adminNote) report.adminNote = adminNote;
+
     return this.reportsRepo.save(report);
   }
 }
