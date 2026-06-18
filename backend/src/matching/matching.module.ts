@@ -6,6 +6,7 @@ import { Profile } from '../users/entities/profile.entity';
 import { User } from '../auth/entities/user.entity';
 import { MatchingService } from './services/matching.service';
 import { MatchingController } from './controllers/matching.controller';
+import { MatchingAdminController } from './controllers/matching-admin.controller';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import { MatchingController } from './controllers/matching.controller';
     }),
   ],
   providers: [MatchingService],
-  controllers: [MatchingController],
+  controllers: [MatchingController, MatchingAdminController],
 })
 export class MatchingModule {}
