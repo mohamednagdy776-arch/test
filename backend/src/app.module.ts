@@ -29,6 +29,8 @@ import { VideosModule } from './videos/videos.module';
 import { SeedModule } from './seed/seed.module';
 import { ChildPredictionModule } from './features/child-prediction.module';
 import { MediaModule } from './media/media.module';
+import { LabPortalModule } from './lab-portal/lab-portal.module';
+import { FamilyModule } from './family/family.module';
 
 @Module({
   imports: [
@@ -68,6 +70,8 @@ import { MediaModule } from './media/media.module';
     VideosModule,
     ChildPredictionModule,
     MediaModule,
+    LabPortalModule,
+    FamilyModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
 })
