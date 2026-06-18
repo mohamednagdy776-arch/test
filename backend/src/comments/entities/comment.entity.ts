@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Post } from '../../posts/entities/post.entity';
 import { User } from '../../auth/entities/user.entity';
 import { CommentReaction } from './comment-reaction.entity';
@@ -26,6 +26,9 @@ export class Comment {
   @Column()
   content: string;
 
+  @Column({ type: 'int', default: 0 })
+  depth: number;
+
   @Column({ name: 'is_pinned', default: false })
   isPinned: boolean;
 
@@ -40,4 +43,10 @@ export class Comment {
 
   @OneToMany(() => CommentReaction, reaction => reaction.comment)
   reactions: CommentReaction[];
+
+  @OneToMany(() => Comment, comment => comment.parent)
+  replies: Comment[];
+
+  @DeleteDateColumn({ name: 'deleted_at', nullable: true })
+  deletedAt: Date;
 }

@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { CommentsService } from '../services/comments.service';
 import { CreateCommentDto, UpdateCommentDto, ReactToCommentDto, PinCommentDto } from '../dto/create-comment.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { ok } from '../../common/response.helper';
+import { ok, paginated } from '../../common/response.helper';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 import { User } from '../../auth/entities/user.entity';
 import { sanitizeUserContent } from '../../common/utils/sanitize';
 
@@ -94,5 +95,20 @@ export class CommentsController {
   ) {
     const comment = await this.commentsService.pin(postId, commentId, user.id);
     return ok(comment, dto.isPinned ? 'Comment pinned' : 'Comment unpinned');
+  }
+}
+
+@UseGuards(AuthGuard('jwt'))
+@Controller('comments')
+export class CommentRepliesController {
+  constructor(private commentsService: CommentsService) {}
+
+  @Get(':id/replies')
+  async getReplies(
+    @Param('id') id: string,
+    @Query() query: PaginationDto,
+  ) {
+    const { data, total } = await this.commentsService.getReplies(id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
   }
 }

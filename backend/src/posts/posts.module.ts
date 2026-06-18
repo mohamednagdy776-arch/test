@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost } from './entities/story.entity';
 import { PostsService } from './services/posts.service';
+import { FeedService } from './services/feed.service';
 import { StoriesService } from './services/stories.service';
 import { PostsController } from './controllers/posts.controller';
 import { AdminPostsController } from './controllers/admin-posts.controller';
@@ -14,7 +15,7 @@ import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost]), NotificationsModule, SettingsModule],
-  providers: [PostsService, StoriesService],
+  providers: [PostsService, FeedService, StoriesService],
   controllers: [PostsController, AdminPostsController, FeedController, StoriesController, UploadController],
   exports: [PostsService],
 })

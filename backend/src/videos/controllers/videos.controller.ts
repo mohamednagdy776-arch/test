@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { VideosService } from '../services/videos.service';
+import { CdnService } from '../services/cdn.service';
 import { CreateVideoDto } from '../dto/create-video.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ok, paginated } from '../../common/response.helper';
@@ -10,7 +11,10 @@ import { User } from '../../auth/entities/user.entity';
 @UseGuards(AuthGuard('jwt'))
 @Controller('videos')
 export class VideosController {
-  constructor(private videosService: VideosService) {}
+  constructor(
+    private videosService: VideosService,
+    private cdnService: CdnService,
+  ) {}
 
   @Post()
   async create(@Body() dto: CreateVideoDto, @CurrentUser() user: User) {
@@ -56,5 +60,26 @@ export class VideosController {
   async delete(@Param('id') id: string, @CurrentUser() user: User) {
     await this.videosService.delete(id, user.id);
     return ok(null, 'Video deleted');
+  }
+}
+
+@UseGuards(AuthGuard('jwt'))
+@Controller('reels')
+export class ReelsController {
+  constructor(
+    private videosService: VideosService,
+    private cdnService: CdnService,
+  ) {}
+
+  @Get(':id/stream')
+  async stream(@Param('id') id: string) {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      throw new HttpException('Reel not found', HttpStatus.NOT_FOUND);
+    }
+    const video = await this.videosService.findOne(id);
+    const streamUrl = this.cdnService.getVideoUrl(video.url);
+    const thumbnailUrl = this.cdnService.getThumbnailUrl(video.thumbnail);
+    return ok({ id: video.id, streamUrl, thumbnailUrl });
   }
 }

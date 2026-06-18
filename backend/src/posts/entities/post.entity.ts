@@ -99,6 +99,9 @@ export class Post {
   @Column({ name: 'poll_options', type: 'jsonb', nullable: true })
   pollOptions: { text: string; votes: number; voterIds?: string[] }[];
 
+  @Column({ name: 'feed_score', type: 'float', default: 0 })
+  feedScore: number;
+
   @Column({ name: 'original_post_id', nullable: true })
   originalPostId: string;
 

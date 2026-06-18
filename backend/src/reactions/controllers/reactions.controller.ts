@@ -1,15 +1,23 @@
 import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { ReactionsService } from '../services/reactions.service';
+import { ReactionRealtimeService } from '../services/reaction-realtime.service';
 import { CreateReactionDto } from '../dto/create-reaction.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ok } from '../../common/response.helper';
 import { User } from '../../auth/entities/user.entity';
+import { Reaction } from '../entities/reaction.entity';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('posts/:postId/reactions')
 export class ReactionsController {
-  constructor(private reactionsService: ReactionsService) {}
+  constructor(
+    private reactionsService: ReactionsService,
+    private reactionRealtimeService: ReactionRealtimeService,
+    @InjectRepository(Reaction) private reactionsRepo: Repository<Reaction>,
+  ) {}
 
   @Post()
   async react(
@@ -31,5 +39,11 @@ export class ReactionsController {
   async getMyReaction(@Param('postId') postId: string, @CurrentUser() user: User) {
     const reaction = await this.reactionsService.getUserReaction(postId, user.id);
     return ok(reaction);
+  }
+
+  @Get('breakdown')
+  async getBreakdown(@Param('postId') postId: string) {
+    const breakdown = await this.reactionRealtimeService.getReactionBreakdown(postId, this.reactionsRepo);
+    return ok(breakdown);
   }
 }
