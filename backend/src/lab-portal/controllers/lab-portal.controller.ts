@@ -11,7 +11,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { LabPortalService } from '../services/lab-portal.service';
 
-@Controller('api/v1/lab-portal')
+@Controller('lab-portal')
 export class LabPortalController {
   constructor(private service: LabPortalService) {}
 

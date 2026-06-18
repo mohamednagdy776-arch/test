@@ -3,7 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 
-@Controller('api/v1/admin/ai')
+@Controller('admin/ai')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('admin')
 export class MatchingAdminController {

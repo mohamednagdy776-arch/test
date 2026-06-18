@@ -1,7 +1,7 @@
 import { Controller, Get, Param, UseGuards, Request } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
-@Controller('api/v1/ai')
+@Controller('ai')
 @UseGuards(AuthGuard('jwt'))
 export class GeneticHealthController {
   @Get('genetic-alert/:targetUserId')

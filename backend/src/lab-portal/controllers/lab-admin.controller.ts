@@ -11,7 +11,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { LabPortalService } from '../services/lab-portal.service';
 import { LabStatus } from '../entities/lab.entity';
 
-@Controller('api/v1/admin/labs')
+@Controller('admin/labs')
 @UseGuards(AuthGuard('jwt'))
 export class LabAdminController {
   constructor(private service: LabPortalService) {}

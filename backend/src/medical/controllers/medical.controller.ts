@@ -17,7 +17,7 @@ import { ConfirmUploadDto } from '../dto/confirm-upload.dto';
 import { MedicalFileValidationPipe } from '../pipes/medical-file-validation.pipe';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('api/v1/medical')
+@Controller('medical')
 export class MedicalController {
   constructor(private readonly medicalService: MedicalService) {}
 

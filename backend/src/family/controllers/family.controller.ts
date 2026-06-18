@@ -13,7 +13,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { FamilyService } from '../services/family.service';
 import { RelationshipType } from '../entities/family-relationship.entity';
 
-@Controller('api/v1/family')
+@Controller('family')
 @UseGuards(AuthGuard('jwt'))
 export class FamilyController {
   constructor(private service: FamilyService) {}

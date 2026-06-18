@@ -13,7 +13,7 @@ import { CreateConsentRequestDto } from '../dto/create-consent-request.dto';
 import { RespondConsentDto } from '../dto/respond-consent.dto';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('api/v1/consent')
+@Controller('consent')
 export class ConsentController {
   constructor(private readonly consentService: ConsentService) {}
 

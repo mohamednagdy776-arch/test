@@ -4,7 +4,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { AffiliatesService } from '../services/affiliates.service';
 
-@Controller('api/v1/admin/affiliates')
+@Controller('admin/affiliates')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Roles('admin')
 export class AffiliatesAdminController {

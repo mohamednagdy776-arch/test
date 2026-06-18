@@ -15,7 +15,7 @@ import { PaginationDto } from '../../common/dto/pagination.dto';
 import { User } from '../../auth/entities/user.entity';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('api/v1/notifications')
+@Controller('notifications')
 export class NotificationsController {
   constructor(
     private notificationsService: NotificationsService,
