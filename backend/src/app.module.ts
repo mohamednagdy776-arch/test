@@ -29,6 +29,9 @@ import { VideosModule } from './videos/videos.module';
 import { SeedModule } from './seed/seed.module';
 import { ChildPredictionModule } from './features/child-prediction.module';
 import { MediaModule } from './media/media.module';
+import { CommonModule } from './common/common.module';
+import { ConsentModule } from './consent/consent.module';
+import { MedicalModule } from './medical/medical.module';
 
 @Module({
   imports: [
@@ -68,6 +71,9 @@ import { MediaModule } from './media/media.module';
     VideosModule,
     ChildPredictionModule,
     MediaModule,
+    CommonModule,
+    ConsentModule,
+    MedicalModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
 })

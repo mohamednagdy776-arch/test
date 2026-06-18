@@ -325,6 +325,47 @@ export class AuthService {
     return { message: 'Password reset successfully' };
   }
 
+  /**
+   * Find the session for this refresh token and revoke it.
+   * If the session was already revoked, it means the token is being reused —
+   * a sign of theft — so revoke ALL sessions for that user.
+   */
+  async revokeTokenAndDetectReuse(refreshToken: string): Promise<void> {
+    // Find all active+inactive sessions and check against the hash
+    const sessions = await this.sessionsRepo.find({
+      where: { isActive: true },
+    });
+
+    let matchedSession: Session | null = null;
+    for (const session of sessions) {
+      const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
+      if (match) {
+        matchedSession = session;
+        break;
+      }
+    }
+
+    if (!matchedSession) {
+      // Token not found in active sessions — check revoked sessions for theft detection
+      const allSessions = await this.sessionsRepo.find();
+      for (const session of allSessions) {
+        const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
+        if (match) {
+          // Token was previously revoked — possible theft, revoke everything
+          await this.revokeAllSessions(session.userId);
+          return;
+        }
+      }
+      return;
+    }
+
+    // Session found and still active — mark as revoked
+    await this.sessionsRepo.update(matchedSession.id, {
+      isActive: false,
+      revokedAt: new Date(),
+    });
+  }
+
   async refreshTokens(refreshToken: string, sessionId?: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
@@ -332,28 +373,45 @@ export class AuthService {
       });
       if (payload.type !== 'refresh') throw new UnauthorizedException();
 
-      let session: Session | null = null;
-      if (sessionId) {
-        session = await this.sessionsRepo.findOne({ where: { id: sessionId, isActive: true } });
-        if (session) {
-          const valid = await bcrypt.compare(refreshToken, session.refreshTokenHash);
-          if (!valid) throw new UnauthorizedException();
-        }
-      }
+      // Detect token reuse before issuing new tokens (#497)
+      await this.revokeTokenAndDetectReuse(refreshToken);
 
       const user = await this.usersRepo.findOne({ where: { id: payload.sub } });
       if (!user || user.isDeactivated) throw new UnauthorizedException();
 
-      // Only touch the session row when we actually have one — updating with an
-      // empty id throws an invalid-UUID error (previously surfaced as 401).
-      if (session?.id) {
-        await this.sessionsRepo.update(session.id, { lastActive: new Date() });
-      }
+      // Issue new refresh token and create a fresh session
+      const newTokens = this.signTokens(user);
+      const refreshTokenHash = await bcrypt.hash(newTokens.refreshToken, 12);
+      const newSession = this.sessionsRepo.create({
+        userId: user.id,
+        refreshTokenHash,
+        lastActive: new Date(),
+      });
+      await this.sessionsRepo.save(newSession);
 
-      return this.signTokens(user);
+      return newTokens;
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
+  }
+
+  async logout(userId: string, refreshToken: string): Promise<{ message: string }> {
+    const sessions = await this.sessionsRepo.find({
+      where: { userId, isActive: true },
+    });
+
+    for (const session of sessions) {
+      const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
+      if (match) {
+        await this.sessionsRepo.update(session.id, {
+          isActive: false,
+          revokedAt: new Date(),
+        });
+        break;
+      }
+    }
+
+    return { message: 'Logged out successfully' };
   }
 
   async getSessions(userId: string) {

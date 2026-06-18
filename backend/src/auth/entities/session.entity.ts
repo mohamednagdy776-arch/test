@@ -31,6 +31,12 @@ export class Session {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column({ name: 'device_fingerprint', nullable: true })
+  deviceFingerprint: string;
+
+  @Column({ name: 'revoked_at', nullable: true, type: 'timestamp' })
+  revokedAt: Date;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

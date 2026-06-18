@@ -13,6 +13,7 @@ import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { SetupTwoFactorDto, DisableTwoFactorDto } from '../dto/two-factor.dto';
 import { ChangeEmailDto, ConfirmEmailChangeDto } from '../dto/change-email.dto';
 import { ok } from '../../common/response.helper';
+import { LoginThrottle } from '../../common/decorators/throttle.decorator';
 
 // Tighter rate limit on auth endpoints (brute-force / mass-signup / email
 // bombing protection) — 10 requests/minute/IP, vs the global 100. (#14/#88)
@@ -30,6 +31,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @LoginThrottle()
   async login(@Body() dto: LoginDto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
     // Derive real device info from the request so new-device security emails are
     // meaningful (was hardcoded 'Unknown').
