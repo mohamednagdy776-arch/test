@@ -49,7 +49,9 @@ export class FamilyService {
       status: RelationshipStatus.ACTIVE,
       acceptedAt: new Date(),
     });
-    return this.relRepo.findOne({ where: { id: relationshipId } });
+    const updated = await this.relRepo.findOne({ where: { id: relationshipId } });
+    if (!updated) throw new NotFoundException('Relationship not found after update');
+    return updated;
   }
 
   async revokeRelationship(relationshipId: string, userId: string): Promise<void> {
