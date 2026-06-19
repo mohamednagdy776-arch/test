@@ -2,10 +2,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { videosApi } from './api';
 
-export function useVideos(page = 1, limit = 20) {
+export function useVideos(page = 1, limit = 20, enabled = true) {
   return useQuery({
     queryKey: ['videos', page],
     queryFn: () => videosApi.getVideos(page, limit),
+    enabled,
   });
 }
 
@@ -17,17 +18,19 @@ export function useVideo(videoId: string) {
   });
 }
 
-export function useRecommendedVideos() {
+export function useRecommendedVideos(enabled = true) {
   return useQuery({
     queryKey: ['videos-recommended'],
     queryFn: () => videosApi.getRecommended(),
+    enabled,
   });
 }
 
-export function useTrendingVideos() {
+export function useTrendingVideos(enabled = true) {
   return useQuery({
     queryKey: ['videos-trending'],
     queryFn: () => videosApi.getTrending(),
+    enabled,
   });
 }
 

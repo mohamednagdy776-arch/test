@@ -1,8 +1,8 @@
 import { apiClient } from '@/lib/api-client';
 
 export const notificationsApi = {
-  getNotifications: (page = 1, limit = 20) =>
-    apiClient.get('/notifications', { params: { page, limit } }).then(r => r.data),
+  getNotifications: (page = 1, limit = 20, type?: string) =>
+    apiClient.get('/notifications', { params: { page, limit, ...(type ? { type } : {}) } }).then(r => r.data),
 
   getUnreadCount: () =>
     apiClient.get('/notifications/unread-count').then(r => r.data),

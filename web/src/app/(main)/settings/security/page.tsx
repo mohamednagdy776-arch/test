@@ -34,7 +34,17 @@ export default function SecurityPage() {
   const [error, setError] = useState('');
   const [alerts, setAlerts] = useState<Array<{ id: string; type: 'success' | 'error'; message: string }>>([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
+
+  // Change password state
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changePwdLoading, setChangePwdLoading] = useState(false);
+  const [changePwdError, setChangePwdError] = useState('');
+  const [changePwdSuccess, setChangePwdSuccess] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -73,8 +83,10 @@ export default function SecurityPage() {
     }
   };
 
+  const [showRevokeAllModal, setShowRevokeAllModal] = useState(false);
+
   const handleRevokeAllSessions = async () => {
-    if (!confirm('هل أنت متأكد من إلغاء جميع الجلسات الأخرى؟')) return;
+    setShowRevokeAllModal(false);
     setRevoking('all');
     try {
       await authApi.revokeAllSessions();
@@ -127,6 +139,49 @@ export default function SecurityPage() {
       setError(err.response?.data?.message || 'رمز التحقق غير صحيح');
     } finally {
       setTwoFactorLoading(false);
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePwdError('');
+    setChangePwdSuccess(false);
+    if (newPassword !== confirmPassword) {
+      setChangePwdError('كلمتا المرور غير متطابقتين');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setChangePwdError('يجب أن تكون كلمة المرور 8 أحرف على الأقل');
+      return;
+    }
+    setChangePwdLoading(true);
+    try {
+      await authApi.changePassword({ oldPassword, newPassword });
+      setChangePwdSuccess(true);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setChangePwdError(err?.response?.data?.message || 'فشل تغيير كلمة المرور');
+    } finally {
+      setChangePwdLoading(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) {
+      setAlerts(prev => [...prev, { id: Date.now().toString(), type: 'error', message: 'يرجى إدخال كلمة المرور للتأكيد' }]);
+      return;
+    }
+    setDeleteLoading(true);
+    try {
+      await authApi.deleteAccount({ password: deletePassword });
+      await authApi.logout().catch(() => {});
+      window.location.href = '/login';
+    } catch (err: any) {
+      setAlerts(prev => [...prev, { id: Date.now().toString(), type: 'error', message: err?.response?.data?.message || 'فشل حذف الحساب، حاول مرة أخرى' }]);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -255,7 +310,7 @@ export default function SecurityPage() {
                   variant="outline"
                   size="sm"
                   loading={revoking === 'all'}
-                  onClick={handleRevokeAllSessions}
+                  onClick={() => setShowRevokeAllModal(true)}
                   className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
                 >
                   إلغاء جميع الجلسات الأخرى
@@ -391,6 +446,59 @@ export default function SecurityPage() {
           </CardContent>
         </Card>
 
+        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+          <CardHeader>
+            <CardTitle className="text-emerald-900 flex items-center gap-2">
+              <span>🔑</span> تغيير كلمة المرور
+            </CardTitle>
+            <CardDescription>استخدم كلمة مرور قوية لا تستخدمها في مواقع أخرى</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <Input
+                label="كلمة المرور الحالية"
+                type="password"
+                placeholder="••••••••"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                required
+              />
+              <Input
+                label="كلمة المرور الجديدة"
+                type="password"
+                placeholder="8 أحرف على الأقل"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                minLength={8}
+              />
+              <Input
+                label="تأكيد كلمة المرور الجديدة"
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+              {changePwdError && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{changePwdError}</p>
+              )}
+              {changePwdSuccess && (
+                <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">تم تغيير كلمة المرور بنجاح</p>
+              )}
+              <Button
+                type="submit"
+                variant="primary"
+                loading={changePwdLoading}
+                disabled={!oldPassword || !newPassword || !confirmPassword}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                تغيير كلمة المرور
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
         <Card variant="default" className="bg-white/80 backdrop-blur-sm border-red-200/50">
           <CardHeader>
             <CardTitle className="text-red-700 flex items-center gap-2">
@@ -415,7 +523,17 @@ export default function SecurityPage() {
           </CardContent>
         </Card>
 
-        <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="حذف الحساب">
+        <Modal open={showRevokeAllModal} onClose={() => setShowRevokeAllModal(false)} title="إلغاء جميع الجلسات">
+          <div className="space-y-4">
+            <p className="text-sm text-emerald-700">هل أنت متأكد من إلغاء جميع الجلسات الأخرى؟ ستحتاج إلى تسجيل الدخول من جديد على الأجهزة الأخرى.</p>
+            <div className="flex gap-3">
+              <Button variant="ghost" onClick={() => setShowRevokeAllModal(false)} className="flex-1 text-emerald-700">إلغاء</Button>
+              <Button variant="danger" onClick={handleRevokeAllSessions} loading={revoking === 'all'} className="flex-1">تأكيد</Button>
+            </div>
+          </div>
+        </Modal>
+
+        <Modal open={showDeleteModal} onClose={() => { setShowDeleteModal(false); setDeletePassword(''); }} title="حذف الحساب">
           <div className="space-y-4">
             <p className="text-sm text-emerald-700">
               هل أنت متأكد من طلب حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه.
@@ -423,19 +541,24 @@ export default function SecurityPage() {
             <div className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">
               ⚠️ سيتم حذف جميع منشوراتك، صورك، رسائلك، وصدقائك نهائياً
             </div>
+            <Input
+              label="كلمة المرور للتأكيد"
+              type="password"
+              placeholder="أدخل كلمة مرورك الحالية"
+              value={deletePassword}
+              onChange={(e) => setDeletePassword(e.target.value)}
+            />
             <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => setShowDeleteModal(false)} className="flex-1 text-emerald-700">
+              <Button variant="ghost" onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }} className="flex-1 text-emerald-700">
                 إلغاء
               </Button>
-              <Button variant="danger" onClick={async () => {
-                try {
-                  await authApi.deleteAccount();
-                  await authApi.logout().catch(() => {});
-                  window.location.href = '/login';
-                } catch {
-                  alert('فشل حذف الحساب، حاول مرة أخرى');
-                }
-              }} className="flex-1">
+              <Button
+                variant="danger"
+                onClick={handleDeleteAccount}
+                loading={deleteLoading}
+                disabled={!deletePassword.trim()}
+                className="flex-1"
+              >
                 تأكيد الحذف
               </Button>
             </div>

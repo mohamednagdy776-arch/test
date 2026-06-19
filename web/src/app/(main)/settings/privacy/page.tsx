@@ -97,31 +97,36 @@ export default function PrivacyPage() {
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<BlockedUser | null>(null);
 
+  const [privacyError, setPrivacyError] = useState<string | null>(null);
+
   const handleVisibilityChange = async (key: string, value: string) => {
+    setPrivacyError(null);
     try {
       await updatePrivacy.mutateAsync({ [key]: value });
-    } catch (err) {
-      console.error('Failed to update privacy setting:', err);
+    } catch (err: any) {
+      setPrivacyError(err?.response?.data?.message || 'فشل حفظ إعداد الخصوصية');
     }
   };
 
   const handleSearchEnginesToggle = async () => {
     const newValue = !privacyData?.data?.allowSearchEngines;
+    setPrivacyError(null);
     try {
       await updatePrivacy.mutateAsync({ allowSearchEngines: newValue });
-    } catch (err) {
-      console.error('Failed to update search engines setting:', err);
+    } catch (err: any) {
+      setPrivacyError(err?.response?.data?.message || 'فشل حفظ الإعداد');
     }
   };
 
   const handleUnblock = async () => {
     if (!selectedBlock) return;
+    setPrivacyError(null);
     try {
       await unblockUser.mutateAsync(selectedBlock.id);
       setShowBlockModal(false);
       setSelectedBlock(null);
-    } catch (err) {
-      console.error('Failed to unblock user:', err);
+    } catch (err: any) {
+      setPrivacyError(err?.response?.data?.message || 'فشل إلغاء الحظر');
     }
   };
 
@@ -176,6 +181,14 @@ export default function PrivacyPage() {
           <h1 className="text-3xl font-bold text-emerald-900">الخصوصية</h1>
           <p className="text-emerald-700/70 mt-2">تحكم في من يرى معلوماتك</p>
         </div>
+
+        {privacyError && (
+          <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <span>⚠️</span>
+            <span className="flex-1">{privacyError}</span>
+            <button onClick={() => setPrivacyError(null)} className="text-red-400 hover:text-red-600">✕</button>
+          </div>
+        )}
 
         <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
           <CardHeader>

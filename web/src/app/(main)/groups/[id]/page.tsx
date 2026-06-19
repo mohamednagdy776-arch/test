@@ -60,8 +60,8 @@ export default function GroupDetailPage() {
       setContent('');
       removeMedia();
       setShowForm(false);
-    } catch (err) {
-      console.error('Failed to create post:', err);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'فشل نشر المنشور، يرجى المحاولة مجدداً');
     }
   };
 

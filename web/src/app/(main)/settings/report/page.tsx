@@ -24,9 +24,21 @@ export default function ReportPage() {
   const handleSubmit = async () => {
     if (!issueType || !description.trim()) return;
     setSending(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSubmitted(true);
-    setSending(false);
+    try {
+      await import('@/lib/api-client').then(({ apiClient }) =>
+        apiClient.post('/support/report', {
+          type: issueType,
+          description: description.trim(),
+          email: email.trim() || undefined,
+        })
+      );
+      setSubmitted(true);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'فشل إرسال البلاغ. يرجى المحاولة مجدداً.';
+      alert(msg);
+    } finally {
+      setSending(false);
+    }
   };
 
   if (submitted) {

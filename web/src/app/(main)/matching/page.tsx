@@ -30,20 +30,36 @@ export default function MatchingPage() {
   const generateMatches = useGenerateMatches();
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['matches-web', ageRange, location, prayerLevel],
-    queryFn: () => apiClient.get('/matches', { 
-      params: { 
-        page: 1, 
+    queryKey: ['matches-web', ageRange, location, prayerLevel, tab],
+    queryFn: () => apiClient.get('/matches', {
+      params: {
+        page: 1,
         limit: 20,
+        status: tab,
         minAge: ageRange[0],
         maxAge: ageRange[1],
         location: location || undefined,
         prayerLevel: prayerLevel || undefined
-      } 
+      }
     }).then((r) => r.data),
   });
 
   const matches: MatchWithUser[] = data?.data || [];
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const handleAction = async (matchId: string, action: 'accept' | 'reject') => {
+    setActionLoading(matchId + action);
+    setActionError(null);
+    try {
+      await apiClient.patch(`/matches/${matchId}/${action}`);
+      refetch();
+    } catch (err: any) {
+      setActionError(err?.response?.data?.message || 'فشلت العملية، يرجى المحاولة مجدداً');
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const handleViewProfile = (username: string) => {
     router.push(`/${username}`);
@@ -125,6 +141,12 @@ export default function MatchingPage() {
         </div>
       </div>
 
+      {actionError && (
+        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 flex items-center gap-2">
+          <span>⚠️</span><span>{actionError}</span>
+          <button onClick={() => setActionError(null)} className="mr-auto text-red-400 hover:text-red-600">✕</button>
+        </div>
+      )}
       <MatchingStats />
       <MatchingTabs activeTab={tab} onTabChange={setTab} />
 
@@ -171,16 +193,18 @@ export default function MatchingPage() {
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
                     <button
-                      onClick={() => apiClient.patch(`/matches/${match.id}/accept`).then(() => refetch())}
-                      className="flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all"
+                      onClick={() => handleAction(match.id, 'accept')}
+                      disabled={actionLoading !== null}
+                      className="flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all disabled:opacity-60"
                     >
-                      قبول
+                      {actionLoading === match.id + 'accept' ? '...' : 'قبول'}
                     </button>
                     <button
-                      onClick={() => apiClient.patch(`/matches/${match.id}/reject`).then(() => refetch())}
-                      className="flex-1 rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors"
+                      onClick={() => handleAction(match.id, 'reject')}
+                      disabled={actionLoading !== null}
+                      className="flex-1 rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-60"
                     >
-                      رفض
+                      {actionLoading === match.id + 'reject' ? '...' : 'رفض'}
                     </button>
                   </div>
                   {match.user?.username && (
@@ -205,6 +229,15 @@ export default function MatchingPage() {
                   <div className={`rounded-xl py-2.5 text-center text-sm font-medium ${match.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
                     {match.status === 'accepted' ? '✓ تم القبول' : '✗ تم الرفض'}
                   </div>
+                  {match.status === 'rejected' && (
+                    <button
+                      onClick={() => handleAction(match.id, 'accept')}
+                      disabled={actionLoading !== null}
+                      className="w-full rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-60"
+                    >
+                      {actionLoading === match.id + 'accept' ? '...' : '↩ تراجع عن الرفض'}
+                    </button>
+                  )}
                   {match.status === 'accepted' && match.user?.username && (
                     <>
                       <button

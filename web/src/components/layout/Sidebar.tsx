@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { House, MagnifyingGlass, Heart, UsersThree, User, Flag, CalendarBlank, ChatCircle, Gear, Star, Clock, PlayCircle } from '@phosphor-icons/react';
+import { House, MagnifyingGlass, Heart, UsersThree, User, Flag, CalendarBlank, ChatCircle, Gear, Star, Clock, PlayCircle, ShareNetwork } from '@phosphor-icons/react';
 
 const navItems = [
   { label: 'الرئيسية', href: '/dashboard', icon: House },
@@ -15,6 +15,7 @@ const navItems = [
   { label: 'المحادثات', href: '/chat', icon: ChatCircle },
   { label: 'الذكريات', href: '/memories', icon: Clock },
   { label: 'Watch', href: '/watch', icon: PlayCircle },
+  { label: 'الإحالة', href: '/affiliates', icon: ShareNetwork },
   { label: 'الملف الشخصي', href: '/profile', icon: User },
   { label: 'الإعدادات', href: '/settings', icon: Gear },
 ];

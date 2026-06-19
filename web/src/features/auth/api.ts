@@ -138,8 +138,13 @@ export const authApi = {
     return res.data;
   },
 
-  deleteAccount: async (): Promise<AuthResponse> => {
-    const res = await apiClient.post('/auth/delete');
+  changePassword: async (data: { oldPassword: string; newPassword: string }): Promise<AuthResponse> => {
+    const res = await apiClient.post('/auth/change-password', data);
+    return res.data;
+  },
+
+  deleteAccount: async (data?: { password?: string }): Promise<AuthResponse> => {
+    const res = await apiClient.post('/auth/delete', data ?? {});
     return res.data;
   },
 

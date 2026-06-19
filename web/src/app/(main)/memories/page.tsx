@@ -5,6 +5,7 @@ import { useMemories, useSavedItems, useRemoveSaved } from '@/features/memories/
 import { PostCard } from '@/features/posts/components/PostCard';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
 
 export default function MemoriesPage() {
@@ -12,14 +13,16 @@ export default function MemoriesPage() {
   const { data: memoriesData, isLoading: memoriesLoading } = useMemories();
   const { data: savedData, isLoading: savedLoading } = useSavedItems();
   const removeSaved = useRemoveSaved();
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
 
-  const handleRemoveSaved = async (id: string) => {
-    if (confirm('هل أنت متأكد من إزالة هذا العنصر من المحفوظات؟')) {
-      try {
-        await removeSaved.mutateAsync(id);
-      } catch (err) {
-        console.error('Failed to remove saved item:', err);
-      }
+  const handleRemoveSaved = async () => {
+    if (!pendingRemoveId) return;
+    try {
+      await removeSaved.mutateAsync(pendingRemoveId);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || 'فشل إزالة العنصر');
+    } finally {
+      setPendingRemoveId(null);
     }
   };
 
@@ -155,7 +158,7 @@ export default function MemoriesPage() {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleRemoveSaved(item.id)}
+                      onClick={() => setPendingRemoveId(item.id)}
                       className="text-rose-500 hover:bg-rose-50"
                     >
                       🗑️
@@ -167,6 +170,15 @@ export default function MemoriesPage() {
           )}
         </div>
       )}
+      <Modal open={!!pendingRemoveId} onClose={() => setPendingRemoveId(null)} title="إزالة من المحفوظات">
+        <div className="space-y-4">
+          <p className="text-sm text-emerald-700">هل أنت متأكد من إزالة هذا العنصر من المحفوظات؟</p>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={() => setPendingRemoveId(null)} className="flex-1 text-emerald-700">إلغاء</Button>
+            <Button variant="danger" onClick={handleRemoveSaved} loading={removeSaved.isPending} className="flex-1">إزالة</Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

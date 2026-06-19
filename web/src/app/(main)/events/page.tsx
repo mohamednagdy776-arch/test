@@ -19,10 +19,8 @@ export default function EventsPage() {
       showToast('يرجى إدخال العنوان والتاريخ', 'error');
       return;
     }
-    console.log('[EventsPage] Creating event:', { title, description, location, startDate });
     try {
-      const result = await createEvent.mutateAsync({ title: title.trim(), description: description.trim(), location: location.trim(), startDate, privacy: 'public' });
-      console.log('[EventsPage] Create success:', result);
+      await createEvent.mutateAsync({ title: title.trim(), description: description.trim(), location: location.trim(), startDate, privacy: 'public' });
       showToast('تم إنشاء الحدث بنجاح', 'success');
       setTitle('');
       setDescription('');

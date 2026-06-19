@@ -1,6 +1,6 @@
-export default function Loading() {
+export default function MainLoading() {
   return (
-    <div className="min-h-[50vh] flex flex-col items-center justify-center gap-3">
+    <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3">
       <div className="relative h-10 w-10">
         <div className="absolute inset-0 rounded-full border-2 border-emerald-100" />
         <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" />

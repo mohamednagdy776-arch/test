@@ -2,10 +2,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notificationsApi } from './api';
 
-export function useNotifications(page = 1, limit = 20) {
+export function useNotifications(page = 1, limit = 20, type?: string) {
   return useQuery({
-    queryKey: ['notifications', page, limit],
-    queryFn: () => notificationsApi.getNotifications(page, limit),
+    queryKey: ['notifications', page, limit, type],
+    queryFn: () => notificationsApi.getNotifications(page, limit, type),
   });
 }
 

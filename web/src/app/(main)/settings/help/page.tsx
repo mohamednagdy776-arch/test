@@ -8,28 +8,28 @@ const HELP_ITEMS = [
     icon: '❓',
     title: 'الأسئلة الشائعة',
     description: 'ابحث عن إجابات للأسئلة الشائعة',
-    href: '#',
+    href: '/terms',
     color: 'bg-emerald-100',
   },
   {
     icon: '📖',
     title: 'كيفية الاستخدام',
     description: 'تعلم كيفية استخدام المنصة',
-    href: '#',
+    href: '/terms',
     color: 'bg-blue-100',
   },
   {
     icon: '📝',
-    title: 'السياسات والشروط',
-    description: 'اقرأ سياسات الاستخدام',
-    href: '#',
+    title: 'الشروط والأحكام',
+    description: 'اقرأ شروط الاستخدام',
+    href: '/terms',
     color: 'bg-amber-100',
   },
   {
     icon: '🔒',
-    title: 'الخصوصية',
+    title: 'سياسة الخصوصية',
     description: 'كيف نحمي بياناتك',
-    href: '/settings/privacy',
+    href: '/privacy',
     color: 'bg-purple-100',
   },
 ];
@@ -109,16 +109,16 @@ export default function HelpPage() {
                 href="mailto:support@tayyibt.com"
               />
               <ContactItem
-                icon="💬"
-                title="الدردشة"
-                detail="متواجدون لمساعدتك"
-                href="#"
+                icon="🐛"
+                title="الإبلاغ عن مشكلة"
+                detail="أخبرنا عن خطأ أو مقترح"
+                href="/settings/report"
               />
               <ContactItem
-                icon="🌐"
-                title="وسائل التواصل"
-                detail="تابعنا على وسائل التواصل"
-                href="#"
+                icon="🔒"
+                title="إعدادات الخصوصية"
+                detail="تحكم في بياناتك وخصوصيتك"
+                href="/settings/privacy"
               />
             </div>
           </CardContent>

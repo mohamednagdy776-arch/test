@@ -27,8 +27,10 @@ interface NotificationListProps {
 }
 
 const ITEM_HEIGHT = 72;
-const CONTAINER_HEIGHT = 560;
 const OVERSCAN = 3;
+// Use viewport-relative height so the list doesn't overflow on short mobile screens
+const getContainerHeight = () =>
+  typeof window !== 'undefined' ? Math.min(560, window.innerHeight - 220) : 560;
 
 function getNotificationIcon(type: string) {
   switch (type) {
@@ -70,8 +72,9 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
     }
   }, []);
 
+  const containerHeight = getContainerHeight();
   const totalHeight = notifications.length * ITEM_HEIGHT;
-  const visibleCount = Math.ceil(CONTAINER_HEIGHT / ITEM_HEIGHT);
+  const visibleCount = Math.ceil(containerHeight / ITEM_HEIGHT);
   const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
   const endIndex = Math.min(notifications.length - 1, startIndex + visibleCount + OVERSCAN * 2);
 
@@ -99,7 +102,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
         <div
           ref={containerRef}
           onScroll={handleScroll}
-          style={{ height: `${CONTAINER_HEIGHT}px`, overflowY: 'auto' }}
+          style={{ height: `${containerHeight}px`, overflowY: 'auto' }}
           className="relative"
         >
           <div style={{ height: `${totalHeight}px`, position: 'relative' }}>

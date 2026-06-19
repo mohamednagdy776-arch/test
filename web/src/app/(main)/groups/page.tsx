@@ -1,6 +1,7 @@
 'use client';
 import { GroupList } from '@/features/groups/components/GroupList';
 import { useCreateGroup } from '@/features/groups/hooks';
+import { useToast } from '@/components/ui/Toast';
 import { useState, useRef } from 'react';
 
 export default function GroupsPage() {
@@ -13,6 +14,7 @@ export default function GroupsPage() {
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const createGroup = useCreateGroup();
+  const { showToast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -27,20 +29,25 @@ export default function GroupsPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    await createGroup.mutateAsync({ 
-      name: name.trim(), 
-      description: description.trim(), 
-      privacy,
-      category: category.trim(),
-      coverPhoto: coverPhoto || undefined
-    });
-    setName('');
-    setDescription('');
-    setPrivacy('public');
-    setCategory('');
-    setCoverPhoto(null);
-    setCoverPreview(null);
-    setShowCreate(false);
+    try {
+      await createGroup.mutateAsync({
+        name: name.trim(),
+        description: description.trim(),
+        privacy,
+        category: category.trim(),
+        coverPhoto: coverPhoto || undefined
+      });
+      showToast('تم إنشاء المجتمع بنجاح', 'success');
+      setName('');
+      setDescription('');
+      setPrivacy('public');
+      setCategory('');
+      setCoverPhoto(null);
+      setCoverPreview(null);
+      setShowCreate(false);
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'فشل إنشاء المجتمع', 'error');
+    }
   };
 
   return (

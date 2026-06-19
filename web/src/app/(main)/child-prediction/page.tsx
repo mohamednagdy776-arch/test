@@ -44,8 +44,11 @@ export default function ChildPredictionPage() {
 
   const setParentImg = (file: File, which: 1 | 2) => {
     const preview = URL.createObjectURL(file);
-    if (which === 1) setParent1({ file, preview });
-    else             setParent2({ file, preview });
+    if (which === 1) {
+      setParent1(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); return { file, preview }; });
+    } else {
+      setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); return { file, preview }; });
+    }
   };
 
   const onDrop = useCallback((e: React.DragEvent, which: 1 | 2) => {
@@ -73,18 +76,21 @@ export default function ChildPredictionPage() {
       credentials: 'include',
     });
 
-    // Cycle stages in parallel while fetch runs
+    // Cycle stages with bounded delays — advance on fetch completion if it finishes early
+    setStage('analyzing');
+    const abortCtrl = new AbortController();
+
     const cycleStages = async () => {
-      setStage('analyzing');
-      await new Promise(r => setTimeout(r, 60_000));
-      setStage('generating');
-      await new Promise(r => setTimeout(r, 60_000));
-      setStage('rendering');
+      await new Promise(r => setTimeout(r, 20_000));
+      if (!abortCtrl.signal.aborted) setStage('generating');
+      await new Promise(r => setTimeout(r, 20_000));
+      if (!abortCtrl.signal.aborted) setStage('rendering');
     };
-    cycleStages();
+    const stagePromise = cycleStages();
 
     try {
       const res = await fetchPromise;
+      abortCtrl.abort(); // stop stage cycling as soon as fetch resolves
       if (!res.ok) {
         const body = await res.json().catch(() => ({})) as { message?: string };
         throw new Error(body.message ?? `خطأ ${res.status}`);
@@ -93,14 +99,17 @@ export default function ChildPredictionPage() {
       setResult(`data:image/jpeg;base64,${data.image}`);
       setStage('done');
     } catch (e: unknown) {
+      abortCtrl.abort();
       const msg = e instanceof Error ? e.message : 'خطأ غير متوقع';
       setErrMsg(msg);
       setStage('error');
     }
+    await stagePromise.catch(() => {});
   };
 
   const reset = () => {
-    setParent1(null); setParent2(null);
+    setParent1(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); return null; });
+    setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); return null; });
     setResult(null);  setErrMsg(null);
     setStage('idle');
   };

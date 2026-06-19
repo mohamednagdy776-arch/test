@@ -1,63 +1,44 @@
 'use client';
-import { useState, useEffect, useMemo, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useMemo } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/features/auth/api';
 
-function ResetPasswordForm() {
+export default function ResetPasswordPage() {
+  const { token } = useParams<{ token: string }>();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState('');
-  const [step, setStep] = useState<'enter' | 'reset'>('enter');
   const router = useRouter();
-  const searchParams = useSearchParams();
 
-  // Live password-strength indicator (#459) — same scoring as registration.
   const passwordStrength = useMemo(() => {
-    const pwd = password;
-    if (!pwd) return null;
+    if (!password) return null;
     let score = 0;
-    if (pwd.length >= 8) score++;
-    if (pwd.length >= 12) score++;
-    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score++;
-    if (/\d/.test(pwd)) score++;
-    if (/[^a-zA-Z0-9]/.test(pwd)) score++;
+    if (password.length >= 8) score++;
+    if (password.length >= 12) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
     if (score <= 1) return { level: 1, label: 'ضعيفة', color: '#EF4444' };
     if (score <= 2) return { level: 2, label: 'متوسطة', color: '#F59E0B' };
     if (score <= 3) return { level: 3, label: 'قوية', color: '#10B981' };
     return { level: 4, label: 'قوية جداً', color: '#059669' };
   }, [password]);
 
-  useEffect(() => {
-    const tokenParam = searchParams.get('token');
-    if (tokenParam) {
-      setToken(tokenParam);
-      setStep('reset');
-    }
-  }, [searchParams]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-
-    if (!token) {
-      setError('الرجاء إدخال الرمز');
-      return;
-    }
 
     if (password !== confirmPassword) {
       setError('كلمات المرور غير متطابقة');
       return;
     }
-
     if (password.length < 8) {
       setError('يجب أن تكون كلمة المرور 8 أحرف على الأقل');
       return;
     }
-    // Match the same complexity rule as registration (and the backend).
     const strong = /[a-z]/.test(password) && /[A-Z]/.test(password)
       && /\d/.test(password) && /[^a-zA-Z0-9]/.test(password);
     if (!strong) {
@@ -70,7 +51,7 @@ function ResetPasswordForm() {
       await authApi.resetPassword(token, password);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.response?.data?.message ?? 'حدث خطأ');
+      setError(err.response?.data?.message ?? 'حدث خطأ، ربما انتهت صلاحية الرابط');
     } finally {
       setLoading(false);
     }
@@ -81,7 +62,7 @@ function ResetPasswordForm() {
       <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #D4E8EE 0%, #EAE0CF 50%, #FDFAF5 100%)' }} />
       <div className="absolute top-20 left-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#94B4C1', opacity: 0.2 }} />
       <div className="absolute bottom-20 right-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#547792', opacity: 0.15 }} />
-      <div className="relative w-full max-w-md px-4 animate-scale-in">
+      <div className="relative w-full max-w-md px-4">
         <Link href="/login" className="flex items-center gap-2 text-sm text-[#547792] hover:text-[#213448] transition-colors mb-6">
           <svg className="h-4 w-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
           العودة لتسجيل الدخول
@@ -92,9 +73,7 @@ function ResetPasswordForm() {
               <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
             </div>
             <h1 className="text-2xl font-bold text-[#213448]">إعادة تعيين كلمة المرور</h1>
-            <p className="mt-1.5 text-sm text-[#547792]">
-              {step === 'enter' ? 'أدخل رمز الاستعادة من البريد الإلكتروني' : 'أدخل كلمة المرور الجديدة'}
-            </p>
+            <p className="mt-1.5 text-sm text-[#547792]">أدخل كلمة المرور الجديدة</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
@@ -103,26 +82,22 @@ function ResetPasswordForm() {
                 <p className="text-sm font-medium text-[#B05252]">{error}</p>
               </div>
             )}
-            {success && (
-              <div className="flex items-center gap-3 rounded-xl border border-[#52B069]/30 bg-[#52B069]/10 px-4 py-3">
-                <svg className="h-5 w-5 shrink-0 text-[#52B069]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p className="text-sm font-medium text-[#52B069]">تم إعادة تعيين كلمة المرور بنجاح</p>
-              </div>
-            )}
-            {!success && (
+            {success ? (
               <>
-                {step === 'enter' && (
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-[#213448]">رمز الاستعادة</label>
-                    <input type="text" required value={token} onChange={(e) => setToken(e.target.value)}
-                      className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
-                      placeholder="أدخل الرمز من البريد الإلكتروني" />
-                  </div>
-                )}
+                <div className="flex items-center gap-3 rounded-xl border border-[#52B069]/30 bg-[#52B069]/10 px-4 py-3">
+                  <svg className="h-5 w-5 shrink-0 text-[#52B069]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <p className="text-sm font-medium text-[#52B069]">تم إعادة تعيين كلمة المرور بنجاح</p>
+                </div>
+                <button type="button" onClick={() => router.push('/login')}
+                  className="w-full h-11 rounded-xl text-sm font-semibold text-[#FDFAF5] shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(to left, #213448, #547792)' }}>
+                  تسجيل الدخول
+                </button>
+              </>
+            ) : (
+              <>
                 <div className="space-y-1.5">
-                  <label className="block text-sm font-medium text-[#213448]">
-                    {step === 'enter' ? 'أو أدخل الرمز من الرابط' : 'كلمة المرور الجديدة'}
-                  </label>
+                  <label className="block text-sm font-medium text-[#213448]">كلمة المرور الجديدة</label>
                   <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
                     className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
                     placeholder="••••••••" />
@@ -150,24 +125,9 @@ function ResetPasswordForm() {
                 </button>
               </>
             )}
-            {success && (
-              <button type="button" onClick={() => router.push('/login')}
-                className="w-full h-11 rounded-xl text-sm font-semibold text-[#FDFAF5] shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98]"
-                style={{ background: 'linear-gradient(to left, #213448, #547792)' }}>
-                تسجيل الدخول
-              </button>
-            )}
           </form>
         </div>
       </div>
     </main>
-  );
-}
-
-export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#EAE0CF]">Loading...</div>}>
-      <ResetPasswordForm />
-    </Suspense>
   );
 }

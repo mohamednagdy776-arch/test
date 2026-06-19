@@ -13,7 +13,8 @@ export default function NotificationsPage() {
   // Load-more pagination: bump the page size on demand instead of being stuck
   // on the first 20 with no way to see older notifications (#451).
   const [limit, setLimit] = useState(20);
-  const { data, isLoading } = useNotifications(1, limit);
+  const serverType = activeTab === 'likes' ? 'like' : activeTab === 'comments' ? 'comment' : activeTab === 'mentions' ? 'mention' : undefined;
+  const { data, isLoading } = useNotifications(1, limit, serverType);
   const { data: unreadData } = useUnreadCount();
   const markAsRead = useMarkAsRead();
   const markAllAsRead = useMarkAllAsRead();
@@ -24,13 +25,8 @@ export default function NotificationsPage() {
   // If the server filled the page, there are probably more to load.
   const hasMore = allNotifications.length >= limit;
 
-  // Per-type filtering so likes/comments/mentions can be viewed separately (#449).
-  const filtered =
-    activeTab === 'unread' ? allNotifications.filter((n) => !n.readStatus)
-    : activeTab === 'mentions' ? allNotifications.filter((n) => n.type === 'mention' || n.type === 'tag')
-    : activeTab === 'likes' ? allNotifications.filter((n) => n.type === 'like')
-    : activeTab === 'comments' ? allNotifications.filter((n) => n.type === 'comment')
-    : allNotifications;
+  // Server-side type filter handles likes/comments/mentions; unread is client-side only.
+  const filtered = activeTab === 'unread' ? allNotifications.filter((n) => !n.readStatus) : allNotifications;
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: 'all', label: 'الكل', count: allNotifications.length },
