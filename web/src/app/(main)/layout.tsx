@@ -1,10 +1,12 @@
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { AuthGuard } from '@/components/auth/AuthGuard';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
+      <OfflineBanner />
       <div className="min-h-screen" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)', transition: 'background-color 0.3s ease, color 0.3s ease' }}>
         <Navbar />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">

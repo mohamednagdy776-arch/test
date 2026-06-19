@@ -1,25 +1,43 @@
 'use client';
-import { usePage, useLikePage, useUnlikePage, useFollowPage, useUnfollowPage, usePagePosts } from '@/features/pages/hooks';
+import { useState } from 'react';
+import { usePage, useLikePage, useUnlikePage, useFollowPage, useUnfollowPage, usePagePosts, useCreatePagePost } from '@/features/pages/hooks';
 import { Spinner } from '@/components/ui/Spinner';
 import { useParams } from 'next/navigation';
 
 export default function PageDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  
+
   const { data: pageData, isLoading: isLoadingPage } = usePage(id);
   const { data: postsData, isLoading: isLoadingPosts } = usePagePosts(id);
-  
+
   const likePage = useLikePage();
   const unlikePage = useUnlikePage();
   const followPage = useFollowPage();
   const unfollowPage = useUnfollowPage();
-  
+  const createPost = useCreatePagePost();
+
+  const [postContent, setPostContent] = useState('');
+  const [postError, setPostError] = useState('');
+
   const page = pageData?.data;
   const posts = (postsData?.data as any[]) || [];
-  
+
   const isLiked = pageData?.data?.isLiked as boolean || false;
   const isFollowing = pageData?.data?.isFollowing as boolean || false;
+  const isOwner = pageData?.data?.isOwner as boolean || false;
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!postContent.trim()) return;
+    setPostError('');
+    try {
+      await createPost.mutateAsync({ pageId: id, content: postContent.trim() });
+      setPostContent('');
+    } catch (err: any) {
+      setPostError(err?.response?.data?.message || 'فشل نشر المنشور');
+    }
+  };
   
   const handleLike = () => {
     if (isLiked) {
@@ -118,6 +136,29 @@ export default function PageDetailPage() {
         </div>
       </div>
       
+      {isOwner && (
+        <form onSubmit={handleCreatePost} className="mb-5 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-4 shadow-lg shadow-emerald-500/10">
+          <h3 className="text-sm font-bold text-[#059669] mb-3">نشر على الصفحة</h3>
+          <textarea
+            value={postContent}
+            onChange={(e) => setPostContent(e.target.value)}
+            placeholder="اكتب منشوراً..."
+            rows={3}
+            className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400/50 mb-3 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 resize-none"
+          />
+          {postError && (
+            <p className="mb-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{postError}</p>
+          )}
+          <button
+            type="submit"
+            disabled={createPost.isPending || !postContent.trim()}
+            className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-emerald-500/25 transition-all"
+          >
+            {createPost.isPending ? 'جاري النشر...' : 'نشر'}
+          </button>
+        </form>
+      )}
+
       <div>
         <h2 className="text-xl font-bold text-emerald-900 mb-4">المنشورات</h2>
         {isLoadingPosts ? (

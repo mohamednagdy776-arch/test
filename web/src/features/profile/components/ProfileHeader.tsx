@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api-client';
 import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users } from '@phosphor-icons/react';
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
+import { Modal } from '@/components/ui/Modal';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -34,12 +35,13 @@ interface Props {
   onCancelRequest?: () => void;
   onAcceptRequest?: () => void;
   onUnfriend?: () => void;
+  onBlock?: () => void;
   friendActionPending?: boolean;
 }
 
 export const ProfileHeader = ({
   profile, onEdit, isSelf = false,
-  friendshipStatus, onAddFriend, onCancelRequest, onAcceptRequest, onUnfriend,
+  friendshipStatus, onAddFriend, onCancelRequest, onAcceptRequest, onUnfriend, onBlock,
   friendActionPending = false,
 }: Props) => {
   const router = useRouter();
@@ -49,6 +51,7 @@ export const ProfileHeader = ({
   const [uploading, setUploading] = useState(false);
   const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
   const [coverCropFile, setCoverCropFile] = useState<File | null>(null);
+  const [removeImageKind, setRemoveImageKind] = useState<'avatar' | 'cover' | null>(null);
 
   const uploadBlob = async (blob: Blob, endpoint: string, filename: string) => {
     if (uploading) return;
@@ -76,10 +79,10 @@ export const ProfileHeader = ({
     await uploadBlob(blob, '/users/me/cover', 'cover.jpg');
   };
 
-  // Remove avatar/cover with a confirm prompt (destructive, #399).
-  const removeImage = async (kind: 'avatar' | 'cover') => {
-    const msg = kind === 'avatar' ? 'إزالة صورة الملف الشخصي؟' : 'إزالة صورة الغلاف؟';
-    if (!window.confirm(msg)) return;
+  const removeImage = async () => {
+    if (!removeImageKind) return;
+    const kind = removeImageKind;
+    setRemoveImageKind(null);
     setUploading(true);
     try {
       await apiClient.delete(`/users/me/${kind}`);
@@ -133,7 +136,7 @@ export const ProfileHeader = ({
             </button>
             {mediaUrl(profile.coverUrl) && (
               <button
-                onClick={() => removeImage('cover')}
+                onClick={() => setRemoveImageKind('cover')}
                 disabled={uploading}
                 className="absolute bottom-4 left-36 px-3 py-2 bg-[#131F2E]/60 hover:bg-red-600/80 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
               >
@@ -185,7 +188,7 @@ export const ProfileHeader = ({
                 />
                 {mediaUrl(profile.avatarUrl) && (
                   <button
-                    onClick={() => removeImage('avatar')}
+                    onClick={() => setRemoveImageKind('avatar')}
                     disabled={uploading}
                     title="إزالة الصورة"
                     className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[#131F2E]/70 hover:bg-red-600/80 text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
@@ -300,6 +303,16 @@ export const ProfileHeader = ({
                 <ChatCircle size={16} />
                 رسالة
               </button>
+
+              {/* Block user */}
+              {onBlock && friendshipStatus?.status !== 'blocked' && (
+                <button
+                  onClick={onBlock}
+                  className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-300"
+                >
+                  حظر
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -327,6 +340,18 @@ export const ProfileHeader = ({
           onCancel={() => setCoverCropFile(null)}
         />
       )}
+
+      <Modal open={!!removeImageKind} onClose={() => setRemoveImageKind(null)} title="إزالة الصورة">
+        <div className="space-y-4">
+          <p className="text-sm text-emerald-700">
+            {removeImageKind === 'avatar' ? 'هل أنت متأكد من إزالة صورة الملف الشخصي؟' : 'هل أنت متأكد من إزالة صورة الغلاف؟'}
+          </p>
+          <div className="flex gap-3">
+            <button onClick={() => setRemoveImageKind(null)} className="flex-1 rounded-xl border border-emerald-200 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">إلغاء</button>
+            <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">إزالة</button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -48,4 +48,7 @@ export const profileApi = {
 
   unfriend: (userId: string) =>
     apiClient.delete(`/friends/${userId}`).then((r) => r.data),
+
+  blockUser: (userId: string) =>
+    apiClient.post(`/users/${userId}/block`).then((r) => r.data),
 };

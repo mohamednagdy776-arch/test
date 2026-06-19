@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { getSocket, getCurrentUserId } from '@/lib/socket-client';
+import { useDeleteMessage } from '@/features/chat/hooks';
 import type { Match } from '@/types';
 
 interface Message {
@@ -36,13 +37,15 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [showReactions, setShowReactions] = useState<string | null>(null);
+  const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
+  const deleteMessage = useDeleteMessage();
   const [isOnline, setIsOnline] = useState(false);
   // ISO timestamp up to which the other user has seen my messages (read receipts).
   const [otherSeenAt, setOtherSeenAt] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { data } = useQuery({
+  const { data, isLoading: messagesLoading } = useQuery({
     queryKey: ['messages', match.id],
     queryFn: () => apiClient.get(`/chat/conversations/${match.id}/messages`).then((r) => r.data),
     enabled: !!match.id,
@@ -229,6 +232,17 @@ export const ChatWindow = ({ match, onBack }: Props) => {
     }
   };
 
+  const handleDelete = async (messageId: string, forEveryone: boolean) => {
+    try {
+      await deleteMessage.mutateAsync({ messageId, forEveryone });
+      setMessages(prev => prev.map(m =>
+        m.id === messageId
+          ? forEveryone ? { ...m, isDeletedForEveryone: true } : prev.filter(x => x.id !== messageId)[0]
+          : m
+      ).filter(m => !(!forEveryone && m.id === messageId)));
+    } catch (e) { console.error(e); }
+  };
+
   const handleReaction = async (messageId: string, emoji: string) => {
     try {
       await apiClient.post(`/chat/messages/${messageId}/reactions`, { emoji });
@@ -288,13 +302,44 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.length === 0 && (
+        {messagesLoading ? (
+          <div className="flex h-full items-center justify-center gap-3 flex-col">
+            <div className="relative h-8 w-8">
+              <div className="absolute inset-0 rounded-full border-2 border-emerald-100" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" />
+            </div>
+            <p className="text-xs text-gray-400">جاري تحميل الرسائل...</p>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex h-full items-center justify-center text-gray-300 text-sm">
             ابدأ المحادثة الآن 👋
           </div>
-        )}
+        ) : null}
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.isOwn ? 'justify-start' : 'justify-end'}`}>
+          <div
+            key={msg.id}
+            className={`group flex ${msg.isOwn ? 'justify-start' : 'justify-end'}`}
+            onMouseEnter={() => setHoveredMsgId(msg.id)}
+            onMouseLeave={() => setHoveredMsgId(null)}
+          >
+            {msg.isOwn && hoveredMsgId === msg.id && !msg.isDeletedForEveryone && !String(msg.id).startsWith('temp-') && (
+              <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  onClick={() => handleDelete(msg.id, false)}
+                  title="حذف للي"
+                  className="text-xs text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow border"
+                >
+                  حذف
+                </button>
+                <button
+                  onClick={() => handleDelete(msg.id, true)}
+                  title="حذف للجميع"
+                  className="text-xs text-gray-400 hover:text-red-600 bg-white rounded-full px-2 py-1 shadow border"
+                >
+                  حذف للجميع
+                </button>
+              </div>
+            )}
             <div className={`relative max-w-xs lg:max-w-md rounded-2xl px-4 py-2.5 text-sm ${
               msg.isOwn ? 'bg-primary text-white rounded-br-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm'
             }`}>
@@ -308,7 +353,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                 <span className="italic opacity-50">تم حذف الرسالة</span>
               ) : (
                 <>
-                  <p className="leading-relaxed">{msg.content}</p>
+                  <p className="leading-relaxed" dir="auto">{msg.content}</p>
                   {msg.isEdited && <span className="text-xs opacity-60">(تم التعديل)</span>}
                 </>
               )}
@@ -376,6 +421,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             onKeyDown={handleKey}
             placeholder="اكتب رسالة..."
             rows={1}
+            dir="auto"
             className="flex-1 resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary max-h-32"
           />
           <button

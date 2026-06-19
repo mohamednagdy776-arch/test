@@ -50,4 +50,7 @@ export const pagesApi = {
 
   getPagePosts: (id: string, page = 1, limit = 20) =>
     apiClient.get(`/pages/${id}/posts`, { params: { page, limit } }).then((r) => r.data),
+
+  createPagePost: (pageId: string, content: string) =>
+    apiClient.post(`/pages/${pageId}/posts`, { content }).then((r) => r.data),
 };

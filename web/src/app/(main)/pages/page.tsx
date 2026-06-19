@@ -3,6 +3,8 @@ import { PagesList } from '@/features/pages/components/PagesList';
 import { useCreatePage } from '@/features/pages/hooks';
 import { useState } from 'react';
 
+const PAGE_CATEGORIES = ['دراسة', 'صحة', 'رياضة', 'تكنولوجيا', 'فنون', 'موسيقى', 'ألعاب', 'طعام', 'سفر', 'أعمال', 'أخرى'];
+
 export default function PagesPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
@@ -10,14 +12,21 @@ export default function PagesPage() {
   const [category, setCategory] = useState('');
   const createPage = useCreatePage();
 
+  const [createError, setCreateError] = useState('');
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    await createPage.mutateAsync({ name: name.trim(), description: description.trim(), category: category.trim() });
-    setName('');
-    setDescription('');
-    setCategory('');
-    setShowCreate(false);
+    setCreateError('');
+    try {
+      await createPage.mutateAsync({ name: name.trim(), description: description.trim(), category: category.trim() });
+      setName('');
+      setDescription('');
+      setCategory('');
+      setShowCreate(false);
+    } catch (err: any) {
+      setCreateError(err?.response?.data?.message || 'فشل إنشاء الصفحة');
+    }
   };
 
   return (
@@ -42,13 +51,14 @@ export default function PagesPage() {
             className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400/50 mb-3 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80"
             required
           />
-          <input
-            type="text"
+          <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            placeholder="الفئة"
-            className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400/50 mb-3 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80"
-          />
+            className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 mb-3 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80"
+          >
+            <option value="">اختر الفئة (اختياري)</option>
+            {PAGE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -56,6 +66,9 @@ export default function PagesPage() {
             rows={2}
             className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400/50 mb-3 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 resize-none"
           />
+          {createError && (
+            <p className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">{createError}</p>
+          )}
           <button
             type="submit"
             disabled={createPage.isPending || !name.trim()}

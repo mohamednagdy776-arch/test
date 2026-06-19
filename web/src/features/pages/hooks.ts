@@ -120,3 +120,14 @@ export function usePagePosts(id: string, page = 1, limit = 20) {
     enabled: !!id,
   });
 }
+
+export function useCreatePagePost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pageId, content }: { pageId: string; content: string }) =>
+      pagesApi.createPagePost(pageId, content),
+    onSuccess: (_data, { pageId }) => {
+      qc.invalidateQueries({ queryKey: ['page-posts', pageId] });
+    },
+  });
+}
