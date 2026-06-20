@@ -67,24 +67,30 @@ export default function UsersPage() {
     return params;
   };
 
-  // Use search hook if any advanced filters are set, otherwise use basic list
   const hasAdvancedFilters = Object.values(advancedFilters).some(v => v !== '' && v !== undefined);
-  
-  const { data, isLoading, isError } = useSearchUsers(
-    hasAdvancedFilters ? buildSearchParams() : { page, limit: 20 }
+
+  // Default listing uses /users (returns User with id, email, status).
+  // Advanced filters use /users/search (returns UserProfile with userId, fullName, etc.).
+  const { data: listData, isLoading: listLoading, isError: listError } = useUsers(page);
+  const { data: searchData, isLoading: searchLoading, isError: searchError } = useSearchUsers(
+    buildSearchParams(),
+    hasAdvancedFilters,
   );
+  const data = hasAdvancedFilters ? searchData : listData;
+  const isLoading = hasAdvancedFilters ? searchLoading : listLoading;
+  const isError = hasAdvancedFilters ? searchError : listError;
   const banUser = useBanUser();
   const unbanUser = useUnbanUser();
   const createConversation = useCreateConversation();
   const { toast } = useToast();
 
-  // Filter basic users for display (when not using advanced search)
   const filtered = (data?.data ?? []).filter((u: UserProfile) => {
-    const matchSearch = !search || 
-      (u.email && u.email.includes(search)) || 
-      (u.phone && u.phone.includes(search)) ||
-      (u.firstName && u.firstName.toLowerCase().includes(search.toLowerCase())) ||
-      (u.lastName && u.lastName.toLowerCase().includes(search.toLowerCase()));
+    const matchSearch = !search ||
+      (u.email ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (u.phone ?? '').includes(search) ||
+      (u.firstName ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (u.lastName ?? '').toLowerCase().includes(search.toLowerCase()) ||
+      (u.fullName ?? '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = !statusFilter || u.status === statusFilter;
     const matchRole = !roleFilter || u.accountType === roleFilter;
     return matchSearch && matchStatus && matchRole;
@@ -159,7 +165,7 @@ export default function UsersPage() {
             onClick={() => setProfileUserId(u.id)} 
             className="text-primary hover:underline text-left font-medium"
           >
-            {u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : u.email.split('@')[0]}
+            {u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : (u.fullName || u.email?.split('@')[0] || 'Unknown')}
           </button>
           <p className="text-xs text-gray-500">{u.email}</p>
         </div>

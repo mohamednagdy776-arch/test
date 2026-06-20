@@ -13,7 +13,11 @@ export const usersApi = {
       const d = r.data;
       // /users/search wraps results in data.data; flatten to match /users shape
       if (d?.data?.data !== undefined) {
-        return { ...d, data: d.data.data, meta: d.data.meta };
+        return {
+          ...d,
+          data: d.data.data.map((u: Record<string, unknown>) => ({ ...u, id: u.id ?? u.userId })),
+          meta: d.data.meta,
+        };
       }
       return d;
     }),

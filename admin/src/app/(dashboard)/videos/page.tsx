@@ -23,7 +23,7 @@ export default function VideosPage() {
   const { toast } = useToast();
 
   const filtered = (data?.data ?? []).filter((v) =>
-    !search || v.title.toLowerCase().includes(search.toLowerCase())
+    !search || (v.title ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleDelete = async () => {

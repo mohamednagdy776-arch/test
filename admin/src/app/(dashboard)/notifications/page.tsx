@@ -25,7 +25,7 @@ export default function NotificationsPage() {
   const { toast } = useToast();
 
   const filtered = (data?.data ?? []).filter((n) =>
-    !search || n.title.toLowerCase().includes(search.toLowerCase()) || n.message.toLowerCase().includes(search.toLowerCase())
+    !search || (n.title ?? '').toLowerCase().includes(search.toLowerCase()) || (n.message ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleDelete = async () => {

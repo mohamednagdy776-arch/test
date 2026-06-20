@@ -18,11 +18,11 @@ export function useUser(id: string) {
   });
 }
 
-export function useSearchUsers(params: SearchParams) {
+export function useSearchUsers(params: SearchParams, enabled = true) {
   return useQuery({
     queryKey: ['search-users', params],
     queryFn: () => usersApi.searchUsers(params),
-    enabled: !!params && (params.name ? params.name.length >= 2 : true),
+    enabled: enabled && !!params && (params.name ? params.name.length >= 2 : true),
   });
 }
 

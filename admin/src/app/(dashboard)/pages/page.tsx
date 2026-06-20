@@ -25,7 +25,7 @@ export default function PagesPage() {
   const { toast } = useToast();
 
   const filtered = (data?.data ?? []).filter((p) =>
-    !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.category.toLowerCase().includes(search.toLowerCase())
+    !search || (p.name ?? '').toLowerCase().includes(search.toLowerCase()) || (p.category ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleDelete = async () => {

@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 interface AiStats {
   coldStartCount: number;
@@ -9,22 +10,22 @@ interface AiStats {
   scoreDistribution: { bucket: string; count: number }[];
 }
 
+const DEFAULT_STATS: AiStats = {
+  coldStartCount: 0,
+  averageScore: 0,
+  dailySuggestions: 0,
+  modelVersion: 1,
+  scoreDistribution: [],
+};
+
 export function AiMatchingStats() {
   const [stats, setStats] = useState<AiStats | null>(null);
 
   useEffect(() => {
-    fetch('/api/v1/admin/ai/stats', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-    })
-      .then(r => r.json())
-      .then(setStats)
-      .catch(() => setStats({
-        coldStartCount: 0,
-        averageScore: 0,
-        dailySuggestions: 0,
-        modelVersion: 1,
-        scoreDistribution: [],
-      }));
+    apiClient
+      .get('/admin/ai/stats')
+      .then((r) => setStats(r.data?.data ?? r.data ?? DEFAULT_STATS))
+      .catch(() => setStats(DEFAULT_STATS));
   }, []);
 
   return (

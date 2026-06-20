@@ -23,7 +23,7 @@ export default function EventsPage() {
   const { toast } = useToast();
 
   const filtered = (data?.data ?? []).filter((e) =>
-    !search || e.title.toLowerCase().includes(search.toLowerCase())
+    !search || (e.title ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleDelete = async () => {

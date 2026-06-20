@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 interface Lab {
   id: string;
@@ -17,11 +18,18 @@ export function LabsManagement() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/v1/admin/labs', {
-      headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-    })
-      .then(r => r.json())
-      .then(data => setLabs(data))
+    apiClient
+      .get('/admin/labs')
+      .then((r) => {
+        const payload = r.data;
+        // Handle both plain array and wrapped { data: [...] } responses
+        const list: Lab[] = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+          ? payload.data
+          : [];
+        setLabs(list);
+      })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
