@@ -213,6 +213,7 @@ export class UsersService {
       sect: profile.sect,
       prayerLevel: profile.prayerLevel,
       religiousCommitment: profile.religiousCommitment,
+      isHealthVerified: profile.isHealthVerified ?? false,
       createdAt: profile.createdAt,
     };
   }
