@@ -1,7 +1,9 @@
 'use client';
 import { useState } from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/features/auth/api';
+import { apiClient } from '@/lib/api-client';
 
 const STEPS = [
   { n: '١', label: 'أدخل البريد الجديد وكلمة المرور' },
@@ -15,6 +17,13 @@ export default function ChangeEmailPage() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState('');
   const [error, setError] = useState('');
+
+  const { data: meData } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => apiClient.get('/users/me').then((r) => r.data),
+    staleTime: 300_000,
+  });
+  const currentEmail: string = meData?.data?.email ?? meData?.email ?? '';
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +89,12 @@ export default function ChangeEmailPage() {
             </div>
           )}
 
+          {currentEmail && (
+            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-[#065F46]">
+              <span className="font-semibold">البريد الحالي: </span>
+              <span className="font-mono">{currentEmail}</span>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-semibold text-[#065F46] mb-1.5">البريد الإلكتروني الجديد</label>
             <input

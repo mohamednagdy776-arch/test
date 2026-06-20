@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePage, useLikePage, useUnlikePage, useFollowPage, useUnfollowPage, usePagePosts, useCreatePagePost, useUpdatePage, useDeletePage } from '@/features/pages/hooks';
 import { Spinner } from '@/components/ui/Spinner';
@@ -13,7 +13,25 @@ export default function PageDetailPage() {
   const router = useRouter();
 
   const { data: pageData, isLoading: isLoadingPage } = usePage(id);
-  const { data: postsData, isLoading: isLoadingPosts } = usePagePosts(id);
+  const [postsPage, setPostsPage] = useState(1);
+  const [allPosts, setAllPosts] = useState<any[]>([]);
+  const [shareCopied, setShareCopied] = useState(false);
+  const { data: postsData, isLoading: isLoadingPosts } = usePagePosts(id, postsPage);
+
+  useEffect(() => {
+    const incoming = (postsData?.data as any[]) ?? [];
+    if (postsPage === 1) {
+      setAllPosts(incoming);
+    } else {
+      setAllPosts((prev) => {
+        const ids = new Set(prev.map((p: any) => p.id));
+        return [...prev, ...incoming.filter((p: any) => !ids.has(p.id))];
+      });
+    }
+  }, [postsData, postsPage]);
+
+  const totalPages: number = postsData?.meta?.totalPages ?? 1;
+  const hasMorePosts = postsPage < totalPages;
 
   const likePage = useLikePage();
   const unlikePage = useUnlikePage();
@@ -33,7 +51,7 @@ export default function PageDetailPage() {
   const [editError, setEditError] = useState('');
 
   const page = pageData?.data;
-  const posts = (postsData?.data as any[]) || [];
+  const posts = allPosts;
 
   const isLiked = pageData?.data?.isLiked as boolean || false;
   const isFollowing = pageData?.data?.isFollowing as boolean || false;
@@ -172,7 +190,7 @@ export default function PageDetailPage() {
 
       <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden mb-5">
         {page.coverPhoto ? (
-          <img src={page.coverPhoto} alt="" className="w-full h-full object-cover" />
+          <img src={page.coverPhoto} alt={`صورة غلاف ${page.name}`} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-emerald-400/30 via-emerald-500/20 to-amber-500/10" />
         )}
@@ -224,7 +242,7 @@ export default function PageDetailPage() {
           <p className="text-emerald-800/80 mb-4">{page.description}</p>
         )}
 
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button
             onClick={handleLike}
             disabled={likePage.isPending || unlikePage.isPending}
@@ -246,6 +264,21 @@ export default function PageDetailPage() {
             } disabled:opacity-50`}
           >
             {followPage.isPending || unfollowPage.isPending ? '...' : isFollowing ? 'إلغاء المتابعة' : 'متابعة'}
+          </button>
+          <button
+            onClick={async () => {
+              const url = window.location.href;
+              if (navigator.share) {
+                await navigator.share({ title: page.name, url });
+              } else {
+                await navigator.clipboard.writeText(url);
+                setShareCopied(true);
+                setTimeout(() => setShareCopied(false), 2000);
+              }
+            }}
+            className="px-5 py-2.5 rounded-xl font-medium bg-white/80 text-emerald-700 border border-emerald-200/50 hover:bg-emerald-50 shadow-md transition-all"
+          >
+            {shareCopied ? '✓ تم النسخ' : '↗ مشاركة'}
           </button>
         </div>
       </div>
@@ -286,12 +319,12 @@ export default function PageDetailPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {posts.map((post: any) => (
-              <div key={post.id} className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
+            {posts.map((post: any, i: number) => (
+              <div key={post.id ?? i} className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400/20 to-amber-500/10 flex items-center justify-center">
                     {page.coverPhoto ? (
-                      <img src={page.coverPhoto} alt="" className="w-full h-full object-cover rounded-full" />
+                      <img src={page.coverPhoto} alt={page.name} className="w-full h-full object-cover rounded-full" />
                     ) : (
                       <span className="text-lg font-bold text-emerald-600">{page.name?.[0]}</span>
                     )}
@@ -317,6 +350,17 @@ export default function PageDetailPage() {
                 </div>
               </div>
             ))}
+            {hasMorePosts && (
+              <div className="flex justify-center pt-2">
+                <button
+                  onClick={() => setPostsPage((p) => p + 1)}
+                  disabled={isLoadingPosts}
+                  className="px-6 py-2.5 rounded-xl text-sm font-medium text-emerald-700 border border-emerald-200/50 hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                >
+                  {isLoadingPosts ? 'جاري التحميل...' : 'تحميل المزيد'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

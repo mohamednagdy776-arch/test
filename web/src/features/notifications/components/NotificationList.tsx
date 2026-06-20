@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import {
@@ -109,6 +110,7 @@ function groupByDate(notifications: Notification[]) {
 
 export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead, onDelete }: NotificationListProps) {
   const router = useRouter();
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
   const unreadCount = notifications.filter((n) => !n.readStatus).length;
   const groups = groupByDate(notifications);
 
@@ -196,10 +198,23 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
 
                   {/* Delete */}
                   <button
-                    onClick={(e) => { e.stopPropagation(); onDelete(n.id); }}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-[#BFB9AD] hover:text-red-400 hover:bg-red-50 shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeletingId(n.id);
+                      onDelete(n.id);
+                    }}
+                    disabled={deletingId === n.id}
+                    aria-label="حذف الإشعار"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-[#BFB9AD] hover:text-red-400 hover:bg-red-50 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <X size={13} />
+                    {deletingId === n.id ? (
+                      <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                      </svg>
+                    ) : (
+                      <X size={13} />
+                    )}
                   </button>
                 </div>
               ))}

@@ -18,12 +18,14 @@ export default function AppearancePage() {
   const [activeCategory, setActiveCategory] = useState<string>('base');
   const [largeText, setLargeText] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [highContrast, setHighContrast] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // Load accessibility prefs from localStorage
   useEffect(() => {
     setLargeText(localStorage.getItem('largeText') === 'true');
     setReducedMotion(localStorage.getItem('reducedMotion') === 'true');
+    setHighContrast(localStorage.getItem('highContrast') === 'true');
   }, []);
 
   // Apply accessibility settings to <html>
@@ -41,6 +43,13 @@ export default function AppearancePage() {
     localStorage.setItem('reducedMotion', String(reducedMotion));
   }, [reducedMotion]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (highContrast) root.classList.add('high-contrast');
+    else root.classList.remove('high-contrast');
+    localStorage.setItem('highContrast', String(highContrast));
+  }, [highContrast]);
+
   const handleSelectTheme = (t: Theme) => {
     setTheme(t); // applies immediately via ThemeProvider → data-theme attribute
   };
@@ -52,7 +61,7 @@ export default function AppearancePage() {
         colorScheme: 'emerald',
         reducedMotion,
         largeText,
-        highContrast: false,
+        highContrast,
         fontFamily: 'default',
       } as any);
       setSaved(true);
@@ -167,6 +176,7 @@ export default function AppearancePage() {
           {[
             { label: 'نص كبير', desc: 'زيادة حجم الخط في التطبيق', value: largeText, onChange: setLargeText },
             { label: 'تقليل الحركة', desc: 'تقليل تأثيرات الحركة والانتقالات', value: reducedMotion, onChange: setReducedMotion },
+            { label: 'تباين عالٍ', desc: 'زيادة التباين لتحسين قراءة النصوص', value: highContrast, onChange: setHighContrast },
           ].map(item => (
             <div key={item.label} className="flex items-center justify-between p-3 rounded-xl" style={{ backgroundColor: 'var(--muted)' }}>
               <div>

@@ -282,14 +282,46 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
   if (isLoading) return feedShell('جاري تحميل الصور...');
   if (isError) return feedShell('تعذّر تحميل الصور');
   if (photos.length === 0) return feedShell('لا توجد صور');
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   return (
-    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-4 gap-2">
-      {photos.map((p: any, i: number) => (
-        <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden">
-          {p.metadata?.url && <img src={p.metadata.url} alt="" className="w-full h-full object-cover" />}
+    <>
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            aria-label="إغلاق"
+            className="absolute top-4 left-4 text-white text-2xl hover:text-gray-300 transition-colors"
+          >
+            ✕
+          </button>
+          <img
+            src={lightboxUrl}
+            alt=""
+            className="max-w-full max-h-full rounded-xl shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
-      ))}
-    </div>
+      )}
+      <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-4 gap-2">
+        {photos.map((p: any, i: number) =>
+          p.metadata?.url ? (
+            <button
+              key={i}
+              onClick={() => setLightboxUrl(p.metadata.url)}
+              className="aspect-square bg-gray-100 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#547792]"
+              aria-label={`عرض الصورة ${i + 1}`}
+            >
+              <img src={p.metadata.url} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+            </button>
+          ) : (
+            <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden" />
+          )
+        )}
+      </div>
+    </>
   );
 };
 

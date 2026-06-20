@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useMemories, useSavedItems, useRemoveSaved } from '@/features/memories/hooks';
 import { PostCard } from '@/features/posts/components/PostCard';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +10,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
 
 export default function MemoriesPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'memories' | 'saved'>('memories');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const { data: memoriesData, isLoading: memoriesLoading } = useMemories();
@@ -165,22 +167,28 @@ export default function MemoriesPage() {
                         <PostCard post={item.entity} />
                       )}
                       {item.entityType === 'video' && item.entity && (
-                        <div className="flex gap-4 p-4 rounded-2xl bg-white/80 border border-emerald-100">
-                          <div className="w-32 h-20 bg-gradient-to-br from-emerald-100 to-amber-100 rounded-xl flex items-center justify-center text-2xl">▶️</div>
+                        <button
+                          onClick={() => item.entity?.id && router.push(`/videos/${item.entity.id}`)}
+                          className="w-full text-right flex gap-4 p-4 rounded-2xl bg-white/80 border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all"
+                        >
+                          <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-emerald-100 to-amber-100 rounded-xl flex items-center justify-center text-2xl">▶️</div>
                           <div>
                             <p className="font-semibold text-emerald-900">{item.entity.title || 'فيديو'}</p>
                             <p className="text-sm text-emerald-600/60">تم الحفظ في {formatDate(item.createdAt)}</p>
                           </div>
-                        </div>
+                        </button>
                       )}
                       {item.entityType === 'story' && item.entity && (
-                        <div className="flex gap-4 p-4 rounded-2xl bg-white/80 border border-emerald-100">
-                          <div className="w-32 h-20 bg-gradient-to-br from-emerald-100 to-amber-100 rounded-xl flex items-center justify-center text-2xl">📸</div>
+                        <button
+                          onClick={() => item.entity?.id && router.push(`/stories/${item.entity.id}`)}
+                          className="w-full text-right flex gap-4 p-4 rounded-2xl bg-white/80 border border-emerald-100 hover:border-emerald-300 hover:shadow-md transition-all"
+                        >
+                          <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-emerald-100 to-amber-100 rounded-xl flex items-center justify-center text-2xl">📸</div>
                           <div>
                             <p className="font-semibold text-emerald-900">قصة</p>
                             <p className="text-sm text-emerald-600/60">تم الحفظ في {formatDate(item.createdAt)}</p>
                           </div>
-                        </div>
+                        </button>
                       )}
                     </div>
                     <Button

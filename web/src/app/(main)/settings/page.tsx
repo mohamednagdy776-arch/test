@@ -93,7 +93,7 @@ export default function SettingsPage() {
                   <h3 className="font-semibold text-emerald-900 text-lg">{section.title}</h3>
                   <p className="text-emerald-700/70 text-sm">{section.description}</p>
                 </div>
-                <span className="text-emerald-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all">→</span>
+                <span className="text-emerald-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" aria-hidden="true">→</span>
               </div>
             </Link>
           ))}
