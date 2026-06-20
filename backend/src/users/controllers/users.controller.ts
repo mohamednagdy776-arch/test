@@ -130,12 +130,12 @@ export class UsersController {
 
   @Get(':id')
   async getFullProfile(@Param('id') id: string, @CurrentUser() user?: User) {
-    const [profile, friendshipStatus] = await Promise.all([
-      this.usersService.getFullProfile(id, user?.id),
-      user?.id && user.id !== id
-        ? this.usersService.getFriendshipStatus(id, user.id)
-        : Promise.resolve(null),
-    ]);
+    const profile = await this.usersService.getFullProfile(id, user?.id);
+    // Use the resolved UUID from the profile, not the raw :id param which may be a username
+    const resolvedId = (profile as any)?.userId;
+    const friendshipStatus = (user?.id && resolvedId && user.id !== resolvedId)
+      ? await this.usersService.getFriendshipStatus(resolvedId, user.id)
+      : null;
     return ok({ ...profile, friendshipStatus });
   }
 
