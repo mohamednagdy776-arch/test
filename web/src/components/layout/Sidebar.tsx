@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { House, MagnifyingGlass, Heart, UsersThree, User, Flag, CalendarBlank, ChatCircle, Gear, Star, Clock, PlayCircle, ShareNetwork } from '@phosphor-icons/react';
+import { House, MagnifyingGlass, Heart, UsersThree, User, Flag, CalendarBlank, ChatCircle, Gear, Star, Clock, PlayCircle, FilmStrip, ShieldStar, ShareNetwork } from '@phosphor-icons/react';
 
 const navItems = [
   { label: 'الرئيسية', href: '/dashboard', icon: House },
@@ -10,11 +10,13 @@ const navItems = [
   { label: 'التوافق', href: '/matching', icon: Heart },
   { label: 'الأصدقاء', href: '/friends', icon: UsersThree },
   { label: 'المجتمعات', href: '/groups', icon: UsersThree },
+  { label: 'العائلة', href: '/family', icon: ShieldStar },
   { label: 'الصفحات', href: '/pages', icon: Flag },
   { label: 'الفعاليات', href: '/events', icon: CalendarBlank },
   { label: 'المحادثات', href: '/chat', icon: ChatCircle },
   { label: 'الذكريات', href: '/memories', icon: Clock },
   { label: 'Watch', href: '/watch', icon: PlayCircle },
+  { label: 'ريلز', href: '/reels', icon: FilmStrip },
   { label: 'الإحالة', href: '/affiliates', icon: ShareNetwork },
   { label: 'الملف الشخصي', href: '/profile', icon: User },
   { label: 'الإعدادات', href: '/settings', icon: Gear },

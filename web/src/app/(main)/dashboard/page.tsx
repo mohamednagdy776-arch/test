@@ -6,6 +6,56 @@ import { useSuggestions } from '@/features/friends/hooks';
 import { apiClient } from '@/lib/api-client';
 import { cn, displayName } from '@/lib/utils';
 
+function ProfileCompleteness() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['profile-completeness'],
+    queryFn: () => apiClient.get('/users/me/completeness').then((r) => r.data),
+    staleTime: 300_000,
+  });
+
+  const score = data?.score ?? data?.completeness ?? data?.percentage ?? 0;
+  const missing: string[] = data?.missing ?? data?.incompleteSections ?? [];
+
+  if (isLoading) {
+    return (
+      <div className="rounded-3xl bg-[#FFFBEB] shadow-soft border border-[#DCFCE7]/60 p-4 animate-pulse">
+        <div className="h-4 bg-[#DCFCE7] rounded w-36 mb-3" />
+        <div className="h-2.5 bg-[#DCFCE7] rounded-full w-full mb-2" />
+        <div className="h-3 bg-[#DCFCE7] rounded w-24" />
+      </div>
+    );
+  }
+
+  const pct = Math.min(100, Math.max(0, Number(score)));
+  const barColor = pct >= 80 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444';
+
+  return (
+    <div className="rounded-3xl bg-[#FFFBEB] shadow-soft border border-[#DCFCE7]/60 p-4">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-bold text-[#059669]">اكتمال الملف الشخصي</h3>
+        <span className="text-lg font-bold" style={{ color: barColor }}>{pct}%</span>
+      </div>
+      <div className="h-2.5 rounded-full bg-[#DCFCE7] overflow-hidden mb-3">
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${pct}%`, backgroundColor: barColor }}
+        />
+      </div>
+      {pct < 100 && missing.length > 0 && (
+        <div>
+          <p className="text-[11px] text-[#A7F3D0] mb-1">أكمل هذه الأقسام:</p>
+          {missing.slice(0, 3).map((section) => (
+            <p key={section} className="text-[11px] text-[#10B981]">• {section}</p>
+          ))}
+        </div>
+      )}
+      {pct === 100 && (
+        <p className="text-[11px] text-[#10B981]">✓ ملفك الشخصي مكتمل!</p>
+      )}
+    </div>
+  );
+}
+
 function SuggestedConnections() {
   const router = useRouter();
   const { data, isLoading } = useSuggestions(4);
@@ -73,39 +123,64 @@ function SuggestedConnections() {
   );
 }
 
+const TRENDING_COLORS = [
+  'from-green-100 to-emerald-200',
+  'from-amber-100 to-yellow-200',
+  'from-pink-100 to-rose-200',
+  'from-purple-100 to-violet-200',
+];
+const TRENDING_EMOJIS = ['🔥', '💡', '⭐', '💬'];
+
 function TrendingTopics() {
-  const topics = [
-    { tag: '#الزواج_الإسلامي', posts: 234, image: '💍', color: 'from-green-100 to-emerald-200' },
-    { tag: '#قصص_نجاح', posts: 187, image: '🏆', color: 'from-amber-100 to-yellow-200' },
-    { tag: '#نصائح_للعروسين', posts: 156, image: '💒', color: 'from-pink-100 to-rose-200' },
-    { tag: '#توافق', posts: 142, image: '💕', color: 'from-purple-100 to-violet-200' },
-  ];
+  const { data, isLoading } = useQuery({
+    queryKey: ['trending-posts'],
+    queryFn: () =>
+      apiClient.get('/posts', { params: { page: 1, limit: 4, sortBy: 'feedScore', order: 'DESC' } }).then((r) => r.data),
+    staleTime: 120_000,
+  });
+
+  const posts: any[] = data?.data ?? data?.posts ?? [];
 
   return (
     <div className="rounded-3xl bg-[#FFFBEB] shadow-soft border border-[#DCFCE7]/60 overflow-hidden">
       <div className="px-4 py-3 border-b border-[#DCFCE7]/40">
-        <h3 className="text-sm font-bold text-[#059669]">🔥 المواضيع الرائجة</h3>
+        <h3 className="text-sm font-bold text-[#059669]">🔥 المنشورات الرائجة</h3>
       </div>
       <div className="p-3 space-y-1">
-        {topics.map((t, i) => (
-          <button key={t.tag} className="w-full text-right rounded-2xl p-2.5 hover:bg-[#DCFCE7]/50 transition-colors group">
-            <div className="flex items-center gap-3">
-              <div className={cn(
-                'h-10 w-10 rounded-2xl flex items-center justify-center text-xl shadow-inner',
-                'bg-gradient-to-br', t.color
-              )}>
-                {t.image}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-bold text-[#10B981]">{t.tag}</p>
-                  <span className="text-[10px] text-[#6EE7B7] font-medium">#{i + 1}</span>
-                </div>
-                <p className="text-[11px] text-[#A7F3D0]">{t.posts} منشور</p>
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-2xl p-2.5 animate-pulse">
+              <div className="h-10 w-10 rounded-2xl bg-[#DCFCE7]" />
+              <div className="flex-1 space-y-1.5">
+                <div className="h-3 bg-[#DCFCE7] rounded w-32" />
+                <div className="h-2.5 bg-[#DCFCE7] rounded w-20" />
               </div>
             </div>
-          </button>
-        ))}
+          ))
+        ) : posts.length === 0 ? (
+          <p className="text-center text-xs text-[#10B981] py-4">لا توجد منشورات رائجة حالياً</p>
+        ) : (
+          posts.map((post: any, i: number) => {
+            const title = (post.content ?? post.title ?? '').slice(0, 40) || 'منشور';
+            const reactions = (post.likesCount ?? 0) + (post.commentsCount ?? 0);
+            return (
+              <div key={post.id ?? i} className="w-full text-right rounded-2xl p-2.5 hover:bg-[#DCFCE7]/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className={cn('h-10 w-10 rounded-2xl flex items-center justify-center text-xl shadow-inner bg-gradient-to-br', TRENDING_COLORS[i % TRENDING_COLORS.length])}>
+                    {TRENDING_EMOJIS[i % TRENDING_EMOJIS.length]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold text-[#10B981] truncate">{title}</p>
+                      <span className="text-[10px] text-[#6EE7B7] font-medium">#{i + 1}</span>
+                    </div>
+                    <p className="text-[11px] text-[#A7F3D0]">{reactions} تفاعل</p>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
@@ -226,6 +301,7 @@ export default function DashboardPage() {
 
       <aside className="hidden xl:block w-72 shrink-0">
         <div className="sticky top-[5.5rem] max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-thin space-y-5 pr-1">
+          <ProfileCompleteness />
           <QuickStats />
           <QuickActions />
           <SuggestedConnections />

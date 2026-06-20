@@ -60,6 +60,13 @@ export default function SettingsPage() {
       href: '/settings/report',
       color: 'bg-red-50',
     },
+    {
+      title: 'إدارة الموافقات',
+      icon: '🔏',
+      description: 'طلبات مشاركة البيانات الطبية والجينية',
+      href: '/settings/consent',
+      color: 'bg-teal-50',
+    },
   ];
 
   return (
