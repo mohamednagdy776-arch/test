@@ -81,11 +81,13 @@ export interface SearchParams {
 // User profile with extended details
 export interface UserProfile {
   id: string;
-  email: string;
-  phone: string;
-  accountType: 'user' | 'guardian' | 'agent' | 'admin';
-  status: 'active' | 'pending' | 'banned';
-  createdAt: string;
+  userId?: string;
+  email?: string;
+  phone?: string;
+  fullName?: string;
+  accountType?: 'user' | 'guardian' | 'agent' | 'admin';
+  status?: 'active' | 'pending' | 'banned';
+  createdAt?: string;
   // Extended profile fields
   firstName?: string;
   lastName?: string;
