@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
-import { ArrowLeft, Check, X, Clock, ShieldLock } from '@phosphor-icons/react';
+import { ArrowLeft, Check, X, Clock, LockSimple } from '@phosphor-icons/react';
 
 type ConsentStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'revoked';
 
@@ -52,7 +52,7 @@ function ConsentCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-            <ShieldLock size={20} className="text-emerald-600" />
+            <LockSimple size={20} className="text-emerald-600" />
           </div>
           <div>
             <p className="font-semibold text-emerald-900 text-sm">
@@ -186,7 +186,7 @@ export default function ConsentManagementPage() {
           </div>
         ) : displayed.length === 0 ? (
           <div className="text-center py-16">
-            <ShieldLock size={56} className="text-emerald-200 mx-auto mb-4" />
+            <LockSimple size={56} className="text-emerald-200 mx-auto mb-4" />
             <p className="text-emerald-700 font-medium">
               {tab === 'incoming' ? 'لا توجد طلبات واردة' : 'لم ترسل أي طلبات بعد'}
             </p>

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { ShieldStar, Plus, Check, X, Trash } from '@phosphor-icons/react';
+import { ShieldCheck, Plus, Check, X, Trash } from '@phosphor-icons/react';
 
 type RelStatus = 'pending' | 'active' | 'revoked';
 
@@ -158,7 +158,7 @@ export default function FamilyPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <ShieldStar size={28} weight="fill" className="text-emerald-600" />
+              <ShieldCheck size={28} weight="fill" className="text-emerald-600" />
               <h1 className="text-3xl font-bold text-emerald-900">وضع العائلة</h1>
             </div>
             <p className="text-emerald-700/70">إدارة أولياء الأمور والصلاحيات</p>
@@ -180,7 +180,7 @@ export default function FamilyPage() {
           </div>
         ) : relationships.length === 0 ? (
           <div className="text-center py-20">
-            <ShieldStar size={64} className="text-emerald-200 mx-auto mb-4" />
+            <ShieldCheck size={64} className="text-emerald-200 mx-auto mb-4" />
             <h2 className="text-xl font-bold text-emerald-800 mb-2">لا توجد علاقات عائلية</h2>
             <p className="text-emerald-600/70 text-sm mb-6">ادعُ ولي أمر للإشراف على حسابك</p>
             <button
