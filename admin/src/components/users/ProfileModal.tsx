@@ -56,7 +56,7 @@ export function ProfileModal({ userId, open, onClose }: ProfileModalProps) {
           <h3 className="text-lg font-semibold text-gray-900">
             {profile.firstName} {profile.lastName}
           </h3>
-          <p className="text-sm text-gray-500">{profile.email}</p>
+          <p className="text-sm text-gray-500">{profile.email ?? ''}</p>
           <div className="flex gap-2 mt-1">
             {profile.gender && <Badge label={profile.gender} variant="default" />}
             {profile.age && <Badge label={`${profile.age} years`} variant="default" />}
@@ -150,7 +150,7 @@ export function ProfileModal({ userId, open, onClose }: ProfileModalProps) {
 
         <div className="pt-2 border-t border-gray-100">
           <dt className="text-sm font-medium text-gray-500">Joined</dt>
-          <dd className="text-sm text-gray-700">{new Date(profile.createdAt).toLocaleString()}</dd>
+          <dd className="text-sm text-gray-700">{profile.createdAt ? new Date(profile.createdAt).toLocaleString() : '—'}</dd>
         </div>
       </div>
     </div>
