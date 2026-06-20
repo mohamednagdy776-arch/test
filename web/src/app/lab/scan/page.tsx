@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 
@@ -12,6 +12,11 @@ export default function LabScanPage() {
   const [result, setResult] = useState<'success' | 'error' | null>(null);
   const [message, setMessage] = useState('');
   const [scanCount, setScanCount] = useState(0);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const scannerRef = useRef<any>(null);
 
   useEffect(() => {
     const token = sessionStorage.getItem('lab_token');
@@ -19,17 +24,61 @@ export default function LabScanPage() {
     setLabName(sessionStorage.getItem('lab_name') ?? 'المختبر');
   }, [router]);
 
-  const handleScan = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const stopCamera = useCallback(() => {
+    if (scannerRef.current) {
+      scannerRef.current.stop();
+      scannerRef.current.destroy();
+      scannerRef.current = null;
+    }
+    setCameraOpen(false);
+    setCameraError('');
+  }, []);
+
+  const openCamera = useCallback(async () => {
+    setCameraError('');
+    setCameraOpen(true);
+    // Dynamic import keeps qr-scanner out of the initial bundle
+    const QrScanner = (await import('qr-scanner')).default;
+    if (!videoRef.current) return;
+    try {
+      const scanner = new QrScanner(
+        videoRef.current,
+        (result: any) => {
+          const scanned: string = typeof result === 'string' ? result : result.data ?? '';
+          if (!scanned) return;
+          stopCamera();
+          setCode(scanned.toUpperCase().replace(/[^A-F0-9]/g, ''));
+        },
+        {
+          preferredCamera: 'environment',
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+        },
+      );
+      scannerRef.current = scanner;
+      await scanner.start();
+    } catch (err: any) {
+      setCameraError('تعذّر الوصول إلى الكاميرا. تأكد من منح الإذن وأن الموقع يعمل عبر HTTPS.');
+      setCameraOpen(false);
+    }
+  }, [stopCamera]);
+
+  useEffect(() => {
+    return () => { stopCamera(); };
+  }, [stopCamera]);
+
+  const submitCode = useCallback(async (codeToSubmit: string) => {
     const token = sessionStorage.getItem('lab_token');
     if (!token) { router.replace('/lab'); return; }
+    const clean = codeToSubmit.trim().toUpperCase();
+    if (!clean) return;
 
     setLoading(true);
     setResult(null);
     try {
       await apiClient.post(
         '/lab-portal/scan',
-        { code: code.trim().toUpperCase() },
+        { code: clean },
         { headers: { 'x-lab-token': token } },
       );
       setResult('success');
@@ -53,9 +102,22 @@ export default function LabScanPage() {
     } finally {
       setLoading(false);
     }
+  }, [router]);
+
+  // Auto-submit when code is populated from QR scan
+  useEffect(() => {
+    if (code.length >= 32) {
+      submitCode(code);
+    }
+  }, [code, submitCode]);
+
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitCode(code);
   };
 
   const handleLogout = () => {
+    stopCamera();
     sessionStorage.clear();
     router.replace('/lab');
   };
@@ -66,6 +128,47 @@ export default function LabScanPage() {
       <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #F0F9F4 0%, #E8F4EE 40%, #FDFAF5 100%)' }} />
       <div className="absolute top-0 right-0 h-64 w-64 rounded-full blur-3xl" style={{ background: '#10B981', opacity: 0.1 }} />
       <div className="absolute bottom-0 left-0 h-64 w-64 rounded-full blur-3xl" style={{ background: '#547792', opacity: 0.08 }} />
+
+      {/* Camera Overlay */}
+      {cameraOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-black">
+          <div className="flex items-center justify-between px-4 py-4 bg-black/80">
+            <p className="text-white font-medium text-sm">وجّه الكاميرا نحو رمز QR</p>
+            <button
+              onClick={stopCamera}
+              className="flex items-center gap-1.5 text-sm text-white border border-white/30 rounded-xl px-3 py-1.5 hover:bg-white/10 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              إغلاق
+            </button>
+          </div>
+
+          <div className="flex-1 relative flex items-center justify-center">
+            <video
+              ref={videoRef}
+              className="w-full h-full object-cover"
+              muted
+              playsInline
+            />
+            {/* Scan frame overlay */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="relative w-64 h-64">
+                {/* Corner brackets */}
+                <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-green-400 rounded-tl-lg" />
+                <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-green-400 rounded-tr-lg" />
+                <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-green-400 rounded-bl-lg" />
+                <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-green-400 rounded-br-lg" />
+                {/* Scanning line animation */}
+                <div className="absolute left-2 right-2 h-0.5 bg-green-400 opacity-80 animate-scan" style={{ top: '50%' }} />
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-white/60 text-xs py-4">سيتم المسح تلقائياً عند الكشف عن الرمز</p>
+        </div>
+      )}
 
       <div className="relative max-w-lg mx-auto px-4 py-6">
 
@@ -106,7 +209,7 @@ export default function LabScanPage() {
         {/* Main card */}
         <div className="rounded-3xl shadow-xl p-7" style={{ background: 'rgba(253,250,245,0.97)', backdropFilter: 'blur(12px)' }}>
 
-          {/* Icon + title */}
+          {/* Header */}
           <div className="flex items-center gap-4 mb-7 pb-6 border-b border-[#E5E7EB]">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl flex-shrink-0" style={{ background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)' }}>
               <svg className="w-7 h-7 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -115,35 +218,61 @@ export default function LabScanPage() {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[#1F2937]">مسح كود التحقق</h2>
-              <p className="text-sm text-[#6B7280] mt-0.5">أدخل الكود الظاهر في تطبيق المريض</p>
+              <h2 className="text-lg font-bold text-[#1F2937]">التحقق من كود المريض</h2>
+              <p className="text-sm text-[#6B7280] mt-0.5">امسح رمز QR أو أدخل الكود يدوياً</p>
             </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleScan} className="space-y-5">
+          {/* QR Scan Button — primary action */}
+          <button
+            type="button"
+            onClick={openCamera}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 rounded-2xl py-5 mb-5 font-semibold text-white shadow-lg hover:shadow-xl disabled:opacity-50 transition-all duration-200 active:scale-[0.98]"
+            style={{ background: 'linear-gradient(135deg, #213448, #547792)' }}
+          >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+            </svg>
+            <span className="text-base">مسح رمز QR بالكاميرا</span>
+          </button>
+
+          {cameraError && (
+            <div className="flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 mb-4 text-sm text-amber-700">
+              <svg className="w-4 h-4 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              <span>{cameraError}</span>
+            </div>
+          )}
+
+          {/* Divider */}
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#E5E7EB]" /></div>
+            <div className="relative flex justify-center">
+              <span className="bg-[#FDFAF5] px-4 text-xs text-[#9CA3AF]">أو أدخل الكود يدوياً</span>
+            </div>
+          </div>
+
+          {/* Manual input */}
+          <form onSubmit={handleManualSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-[#374151] mb-2">كود الإحالة</label>
               <input
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-F0-9]/g, ''))}
-                placeholder="أدخل الكود هنا"
-                required
+                placeholder="الكود"
                 maxLength={32}
-                autoFocus
-                className="flex h-14 w-full rounded-2xl border-2 border-[#D1D5DB] bg-white px-5 text-base font-mono tracking-[0.2em] uppercase text-[#1F2937] placeholder:text-[#9CA3AF] placeholder:tracking-normal placeholder:font-sans placeholder:text-sm focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all duration-200"
+                className="flex h-14 w-full rounded-2xl border-2 border-[#D1D5DB] bg-white px-5 text-base font-mono tracking-[0.2em] uppercase text-[#1F2937] placeholder:text-[#9CA3AF] placeholder:tracking-normal placeholder:font-sans placeholder:text-sm focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-500/10 transition-all duration-200 text-center"
               />
-              <p className="text-xs text-[#9CA3AF] mt-1.5 text-center">
-                الكود مكوّن من 32 خانة بالأرقام والحروف الإنجليزية
-              </p>
             </div>
 
             <button
               type="submit"
               disabled={loading || code.trim().length < 4}
-              className="w-full h-13 rounded-2xl text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-40 transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2"
-              style={{ background: 'linear-gradient(135deg, #059669, #10B981)', height: '52px' }}
+              className="w-full flex items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-40 transition-all duration-200 active:scale-[0.98]"
+              style={{ background: 'linear-gradient(135deg, #059669, #10B981)' }}
             >
               {loading ? (
                 <>
@@ -158,7 +287,7 @@ export default function LabScanPage() {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  تحقق وأضف شارة السلامة الصحية
+                  تحقق وأضف شارة السلامة
                 </>
               )}
             </button>
@@ -166,13 +295,7 @@ export default function LabScanPage() {
 
           {/* Result */}
           {result && (
-            <div
-              className={`mt-5 rounded-2xl p-5 text-center transition-all duration-300 ${
-                result === 'success'
-                  ? 'bg-green-50 border border-green-200'
-                  : 'bg-red-50 border border-red-200'
-              }`}
-            >
+            <div className={`mt-5 rounded-2xl p-5 text-center border ${result === 'success' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
               {result === 'success' ? (
                 <>
                   <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-full mb-3" style={{ background: '#D1FAE5' }}>
@@ -180,7 +303,7 @@ export default function LabScanPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                     </svg>
                   </div>
-                  <p className="font-bold text-green-800 mb-1">تم التحقق بنجاح</p>
+                  <p className="font-bold text-green-800 mb-1">تم التحقق بنجاح ✓</p>
                   <p className="text-sm text-green-600">{message}</p>
                 </>
               ) : (
@@ -198,11 +321,18 @@ export default function LabScanPage() {
           )}
         </div>
 
-        {/* Footer note */}
         <p className="text-center text-xs text-[#9CA3AF] mt-5">
           بعد التحقق سيظهر في ملف المستخدم شارة تأكيد السلامة الصحية
         </p>
       </div>
+
+      <style jsx global>{`
+        @keyframes scan {
+          0%, 100% { transform: translateY(-60px); opacity: 1; }
+          50% { transform: translateY(60px); opacity: 0.8; }
+        }
+        .animate-scan { animation: scan 2s ease-in-out infinite; }
+      `}</style>
     </main>
   );
 }
