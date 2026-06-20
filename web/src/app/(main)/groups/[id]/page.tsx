@@ -1,9 +1,10 @@
 'use client';
 import { useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useGroup, useJoinGroup, useLeaveGroup } from '@/features/groups/hooks';
+import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup } from '@/features/groups/hooks';
 import { useGroupPosts, useCreatePostWithMedia, useCreatePost } from '@/features/posts/hooks';
 import { PostCard } from '@/features/posts/components/PostCard';
+import { useToast } from '@/components/ui/Toast';
 
 export default function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,8 +13,10 @@ export default function GroupDetailPage() {
   const { data: postsData, isLoading: isLoadingPosts } = useGroupPosts(id, 1, 50);
   const joinGroup = useJoinGroup();
   const leaveGroup = useLeaveGroup();
+  const deleteGroup = useDeleteGroup();
   const createPost = useCreatePost();
   const createPostWithMedia = useCreatePostWithMedia();
+  const { showToast } = useToast();
 
   const [content, setContent] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -61,7 +64,7 @@ export default function GroupDetailPage() {
       removeMedia();
       setShowForm(false);
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'فشل نشر المنشور، يرجى المحاولة مجدداً');
+      showToast(err?.response?.data?.message || 'فشل نشر المنشور، يرجى المحاولة مجدداً', 'error');
     }
   };
 
@@ -118,7 +121,25 @@ export default function GroupDetailPage() {
             <p className="text-sm text-emerald-700/70">{group.description || 'لا يوجد وصف'}</p>
             <p className="mt-2 text-xs text-emerald-600/50">{group.memberCount ?? 0} عضو · {posts.length} منشور</p>
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-2">
+            {(group.isOwner || group.isAdmin) && (
+              <button
+                onClick={async () => {
+                  if (!confirm('هل أنت متأكد من حذف هذا المجتمع؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+                  try {
+                    await deleteGroup.mutateAsync(id);
+                    showToast('تم حذف المجتمع', 'success');
+                    router.push('/groups');
+                  } catch (err: any) {
+                    showToast(err?.response?.data?.message || 'فشل حذف المجتمع', 'error');
+                  }
+                }}
+                disabled={deleteGroup.isPending}
+                className="rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
+              >
+                {deleteGroup.isPending ? '...' : '🗑 حذف'}
+              </button>
+            )}
             {group.isMember ? (
               <button
                 onClick={() => leaveGroup.mutate(id)}

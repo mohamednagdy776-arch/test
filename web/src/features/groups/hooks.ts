@@ -108,3 +108,15 @@ export function useCreateGroup() {
     },
   });
 }
+
+export function useDeleteGroup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => groupsApi.deleteGroup(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-groups'] });
+      qc.invalidateQueries({ queryKey: ['groups'] });
+      qc.invalidateQueries({ queryKey: ['public-groups'] });
+    },
+  });
+}

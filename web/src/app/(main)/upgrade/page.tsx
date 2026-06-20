@@ -4,6 +4,64 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useActiveSubscription, useCreateSubscription, useCancelSubscription } from '@/features/subscriptions/hooks';
 
+function PaymentModal({ plan, onClose, onConfirm, isPending }: { plan: { id: string; name: string; price: string }; onClose: () => void; onConfirm: () => void; isPending: boolean }) {
+  const [method, setMethod] = useState<'card' | 'apple_pay' | 'bank'>('card');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvv, setCvv] = useState('');
+
+  const formatCard = (v: string) => v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
+  const formatExpiry = (v: string) => { const d = v.replace(/\D/g, '').slice(0, 4); return d.length >= 3 ? `${d.slice(0,2)}/${d.slice(2)}` : d; };
+
+  const canSubmit = method !== 'card' || (cardNumber.replace(/\s/g,'').length === 16 && expiry.length === 5 && cvv.length >= 3);
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-5" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-[#065F46]">إتمام الاشتراك — {plan.name}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+        </div>
+        <p className="text-2xl font-bold text-[#059669] text-center">{plan.price} ر.س <span className="text-sm font-normal text-gray-400">/ شهر</span></p>
+
+        <div className="flex gap-2">
+          {(['card', 'apple_pay', 'bank'] as const).map(m => (
+            <button key={m} onClick={() => setMethod(m)} className={cn('flex-1 rounded-xl py-2 text-xs font-semibold transition-all', method === m ? 'bg-[#10B981] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')}>
+              {m === 'card' ? '💳 بطاقة' : m === 'apple_pay' ? ' Apple Pay' : '🏦 تحويل'}
+            </button>
+          ))}
+        </div>
+
+        {method === 'card' && (
+          <div className="space-y-3">
+            <input value={cardNumber} onChange={e => setCardNumber(formatCard(e.target.value))} placeholder="رقم البطاقة" dir="ltr" className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[#10B981]" />
+            <div className="flex gap-3">
+              <input value={expiry} onChange={e => setExpiry(formatExpiry(e.target.value))} placeholder="MM/YY" dir="ltr" className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[#10B981]" />
+              <input value={cvv} onChange={e => setCvv(e.target.value.replace(/\D/g,'').slice(0,4))} placeholder="CVV" dir="ltr" className="w-20 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[#10B981]" />
+            </div>
+          </div>
+        )}
+        {method === 'apple_pay' && (
+          <div className="rounded-xl bg-black text-white py-3 text-center text-sm font-semibold cursor-pointer hover:opacity-90">🍎 الدفع بـ Apple Pay</div>
+        )}
+        {method === 'bank' && (
+          <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600 space-y-1 text-right">
+            <p className="font-bold text-[#065F46]">تحويل بنكي</p>
+            <p>رقم الآيبان: SA00 1234 5678 9012 3456 7890</p>
+            <p>اسم المستفيد: طيبت للتقنية</p>
+            <p className="text-xs text-gray-400">أرسل إشعار التحويل للدعم بعد إتمامه</p>
+          </div>
+        )}
+
+        <button onClick={onConfirm} disabled={!canSubmit || isPending} className="w-full rounded-2xl bg-gradient-to-r from-[#10B981] to-[#059669] py-3 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed">
+          {isPending ? 'جارٍ المعالجة...' : 'تأكيد الدفع'}
+        </button>
+        <p className="text-center text-[10px] text-gray-400">🔒 بياناتك محمية بتشفير SSL 256-bit</p>
+      </div>
+    </div>
+  );
+}
+
 const plans = [
   {
     id: 'basic',
@@ -36,6 +94,7 @@ export default function UpgradePage() {
   const router = useRouter();
   const [selected, setSelected] = useState('premium');
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [paymentPlan, setPaymentPlan] = useState<typeof plans[0] | null>(null);
 
   const { data: activeData, isLoading: activeLoading } = useActiveSubscription();
   const activeSub = activeData?.data;
@@ -44,11 +103,18 @@ export default function UpgradePage() {
   const createSub = useCreateSubscription();
   const cancelSub = useCancelSubscription();
 
-  const handleSubscribe = async (planId: string) => {
+  const handleSubscribe = (planId: string) => {
     if (planId === 'basic') return;
+    const plan = plans.find(p => p.id === planId);
+    if (plan) setPaymentPlan(plan);
+  };
+
+  const confirmPayment = async () => {
+    if (!paymentPlan) return;
     setFeedback(null);
     try {
-      await createSub.mutateAsync(planId);
+      await createSub.mutateAsync(paymentPlan.id);
+      setPaymentPlan(null);
       setFeedback('تم الاشتراك بنجاح! 🎉');
     } catch (e: any) {
       setFeedback(e?.response?.data?.message ?? 'حدث خطأ، حاول مجدداً');
@@ -68,6 +134,14 @@ export default function UpgradePage() {
 
   return (
     <div className="max-w-5xl mx-auto">
+      {paymentPlan && (
+        <PaymentModal
+          plan={paymentPlan}
+          onClose={() => setPaymentPlan(null)}
+          onConfirm={confirmPayment}
+          isPending={createSub.isPending}
+        />
+      )}
       <div className="text-center mb-10">
         <div className="inline-flex items-center gap-2 rounded-full bg-[#DCFCE7] px-4 py-1.5 text-sm font-semibold text-[#059669] mb-4">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
