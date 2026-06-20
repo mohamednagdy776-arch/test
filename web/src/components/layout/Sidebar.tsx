@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { House, MagnifyingGlass, Heart, UsersThree, User, Flag, CalendarBlank, ChatCircle, Gear, Star, Clock, PlayCircle, FilmStrip, ShieldCheck, ShareNetwork, TestTube } from '@phosphor-icons/react';
+import { House, MagnifyingGlass, Heart, UsersThree, User, Flag, CalendarBlank, ChatCircle, Gear, Star, Clock, PlayCircle, FilmStrip, ShieldCheck, ShareNetwork, TestTube, Baby } from '@phosphor-icons/react';
 
 const navItems = [
   { label: 'الرئيسية', href: '/dashboard', icon: House },
@@ -17,6 +17,7 @@ const navItems = [
   { label: 'الذكريات', href: '/memories', icon: Clock },
   { label: 'Watch', href: '/watch', icon: PlayCircle },
   { label: 'ريلز', href: '/reels', icon: FilmStrip },
+  { label: 'توقع شكل طفلك', href: '/child-prediction', icon: Baby },
   { label: 'المختبرات', href: '/lab-portal', icon: TestTube },
   { label: 'الإحالة', href: '/affiliates', icon: ShareNetwork },
   { label: 'الملف الشخصي', href: '/profile', icon: User },

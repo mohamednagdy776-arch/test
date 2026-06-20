@@ -16,8 +16,10 @@ export class VideosService {
     return this.videosRepo.save(video);
   }
 
-  async findAll(page: number, limit: number) {
+  async findAll(page: number, limit: number, isReel?: boolean) {
+    const where = isReel !== undefined ? { isReel } : {};
     const [data, total] = await this.videosRepo.findAndCount({
+      where,
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
@@ -28,6 +30,7 @@ export class VideosService {
 
   async findTrending(page: number, limit: number) {
     const [data, total] = await this.videosRepo.findAndCount({
+      where: { isReel: false },
       skip: (page - 1) * limit,
       take: limit,
       order: { views: 'DESC', createdAt: 'DESC' },
@@ -38,6 +41,7 @@ export class VideosService {
 
   async findRecommended(page: number, limit: number) {
     const [data, total] = await this.videosRepo.findAndCount({
+      where: { isReel: false },
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
@@ -48,6 +52,18 @@ export class VideosService {
 
   async findContinueWatching(page: number, limit: number) {
     const [data, total] = await this.videosRepo.findAndCount({
+      where: { isReel: false },
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      relations: ['createdBy'],
+    });
+    return { data, total };
+  }
+
+  async findReels(page: number, limit: number) {
+    const [data, total] = await this.videosRepo.findAndCount({
+      where: { isReel: true },
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },

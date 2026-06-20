@@ -112,7 +112,7 @@ export default function ReelsPage() {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['reels-feed'],
-    queryFn: () => apiClient.get('/videos', { params: { page: 1, limit: 20 } }).then((r) => r.data),
+    queryFn: () => apiClient.get('/reels', { params: { page: 1, limit: 50 } }).then((r) => r.data),
     staleTime: 60_000,
   });
 

@@ -1,8 +1,10 @@
 'use client';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { User, CheckCircle, ThumbsUp, ChatCircle, Tag, ShareNetwork, Megaphone, Cake, Users, Bell, X } from '@phosphor-icons/react';
+import {
+  UserPlus, CheckCircle, Heart, ChatCircle, Tag, ShareNetwork,
+  Megaphone, Cake, UsersThree, Bell, X, UserCircle,
+} from '@phosphor-icons/react';
 
 interface Notification {
   id: string;
@@ -25,37 +27,90 @@ interface NotificationListProps {
   onDelete: (id: string) => void;
 }
 
-function getNotificationIcon(type: string) {
-  const cls = 'h-5 w-5';
-  switch (type) {
-    case 'friend_request':  return <User className={cls} />;
-    case 'friend_accepted': return <CheckCircle className={cls} weight="fill" />;
-    case 'like':            return <ThumbsUp className={cls} weight="fill" />;
-    case 'comment':         return <ChatCircle className={cls} />;
-    case 'tag':             return <Tag className={cls} />;
-    case 'share':           return <ShareNetwork className={cls} />;
-    case 'mention':         return <Megaphone className={cls} />;
-    case 'birthday':        return <Cake className={cls} />;
-    case 'group_invite':    return <Users className={cls} />;
-    default:                return <Bell className={cls} />;
-  }
+const TYPE_CONFIG: Record<string, { icon: React.ElementType; bg: string; fg: string }> = {
+  friend_request:  { icon: UserPlus,     bg: 'bg-blue-100',   fg: 'text-blue-600'   },
+  friend_accepted: { icon: CheckCircle,  bg: 'bg-green-100',  fg: 'text-green-600'  },
+  like:            { icon: Heart,        bg: 'bg-red-100',    fg: 'text-red-500'    },
+  comment:         { icon: ChatCircle,   bg: 'bg-sky-100',    fg: 'text-sky-600'    },
+  tag:             { icon: Tag,          bg: 'bg-orange-100', fg: 'text-orange-500' },
+  share:           { icon: ShareNetwork, bg: 'bg-purple-100', fg: 'text-purple-600' },
+  mention:         { icon: Megaphone,    bg: 'bg-yellow-100', fg: 'text-yellow-600' },
+  birthday:        { icon: Cake,         bg: 'bg-pink-100',   fg: 'text-pink-500'   },
+  group_invite:    { icon: UsersThree,   bg: 'bg-teal-100',   fg: 'text-teal-600'   },
+};
+const DEFAULT_TYPE = { icon: Bell, bg: 'bg-[#EAE0CF]', fg: 'text-[#547792]' };
+
+function NotifIcon({ type }: { type: string }) {
+  const cfg = TYPE_CONFIG[type] ?? DEFAULT_TYPE;
+  const Icon = cfg.icon;
+  const isDefault = !(type in TYPE_CONFIG);
+  return (
+    <div className={cn('h-9 w-9 rounded-full flex items-center justify-center shrink-0', cfg.bg)}>
+      <Icon size={18} weight={isDefault ? 'regular' : 'fill'} className={cfg.fg} />
+    </div>
+  );
+}
+
+function SenderAvatar({ fromUser }: { fromUser?: Notification['fromUser'] }) {
+  const name = fromUser?.profile?.fullName || '';
+  const avatar = fromUser?.profile?.avatarUrl;
+  const initial = name.charAt(0).toUpperCase() || '?';
+
+  return avatar ? (
+    <img src={avatar} alt={name} className="h-9 w-9 rounded-full object-cover shrink-0" />
+  ) : (
+    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center shrink-0">
+      {initial !== '?' ? (
+        <span className="text-sm font-bold text-[#213448]">{initial}</span>
+      ) : (
+        <UserCircle size={20} className="text-[#547792]" />
+      )}
+    </div>
+  );
 }
 
 function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'الآن';
-  if (mins < 60) return `منذ ${mins} د`;
+  if (mins < 60) return `${mins} د`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `منذ ${hours} س`;
+  if (hours < 24) return `${hours} س`;
   const days = Math.floor(hours / 24);
-  if (days < 7) return `منذ ${days} ي`;
+  if (days < 7) return `${days} ي`;
   return new Date(date).toLocaleDateString('ar-EG');
+}
+
+function groupByDate(notifications: Notification[]) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const weekAgo = new Date(today);
+  weekAgo.setDate(today.getDate() - 7);
+
+  const groups: { label: string; items: Notification[] }[] = [
+    { label: 'اليوم', items: [] },
+    { label: 'الأمس', items: [] },
+    { label: 'هذا الأسبوع', items: [] },
+    { label: 'أقدم', items: [] },
+  ];
+
+  for (const n of notifications) {
+    const d = new Date(n.createdAt);
+    if (d >= today) groups[0].items.push(n);
+    else if (d >= yesterday) groups[1].items.push(n);
+    else if (d >= weekAgo) groups[2].items.push(n);
+    else groups[3].items.push(n);
+  }
+
+  return groups.filter((g) => g.items.length > 0);
 }
 
 export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead, onDelete }: NotificationListProps) {
   const router = useRouter();
   const unreadCount = notifications.filter((n) => !n.readStatus).length;
+  const groups = groupByDate(notifications);
 
   const handleClick = (n: Notification) => {
     if (!n.readStatus) onMarkAsRead(n.id);
@@ -65,76 +120,89 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
   };
 
   return (
-    <div className="p-4">
+    <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-bold text-[#213448]">الإشعارات</h2>
+      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[#C8D8DF]/40">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base font-bold text-[#213448]">الإشعارات</h2>
+          {unreadCount > 0 && (
+            <span className="h-5 min-w-5 px-1 rounded-full bg-[#213448] text-[#FDFAF5] text-[10px] font-bold flex items-center justify-center">
+              {unreadCount}
+            </span>
+          )}
+        </div>
         {unreadCount > 0 && (
           <button
             onClick={onMarkAllAsRead}
-            className="text-xs text-[#547792] hover:text-[#213448] hover:underline transition-colors"
+            className="text-xs text-[#547792] hover:text-[#213448] font-medium transition-colors"
           >
-            تعيين الكل كمقروء
+            قراءة الكل
           </button>
         )}
       </div>
 
-      {/* Empty state */}
+      {/* Body */}
       {notifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-10 gap-2">
-          <Bell size={32} className="text-[#94B4C1]" />
+        <div className="flex flex-col items-center justify-center py-12 gap-3">
+          <div className="h-14 w-14 rounded-2xl bg-[#EAE0CF]/60 flex items-center justify-center">
+            <Bell size={28} className="text-[#94B4C1]" />
+          </div>
           <p className="text-sm text-[#547792]">لا توجد إشعارات</p>
         </div>
       ) : (
-        <div className="space-y-1">
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              onClick={() => handleClick(n)}
-              className={cn(
-                'flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors group',
-                n.readStatus
-                  ? 'hover:bg-[#EAE0CF]/40'
-                  : 'bg-[#D4E8EE]/50 hover:bg-[#D4E8EE]/80',
-              )}
-            >
-              {/* Icon */}
-              <div className="h-9 w-9 rounded-full flex items-center justify-center bg-[#EAE0CF] shrink-0 text-[#547792] mt-0.5">
-                {getNotificationIcon(n.type)}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p
+        <div className="py-2">
+          {groups.map((group) => (
+            <div key={group.label}>
+              <p className="px-4 py-1.5 text-[11px] font-semibold text-[#94B4C1] uppercase tracking-wide">
+                {group.label}
+              </p>
+              {group.items.map((n) => (
+                <div
+                  key={n.id}
+                  onClick={() => handleClick(n)}
                   className={cn(
-                    'text-sm leading-snug',
-                    n.readStatus ? 'text-[#547792]' : 'text-[#131F2E] font-medium',
+                    'relative flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors group',
+                    'hover:bg-[#EAE0CF]/30',
+                    !n.readStatus && 'bg-[#D4E8EE]/30',
                   )}
                 >
-                  {n.fromUser?.profile?.fullName ? (
-                    <>
-                      <span className="font-semibold">{n.fromUser.profile.fullName}</span>{' '}
-                      {n.message}
-                    </>
-                  ) : (
-                    n.message
+                  {/* Unread accent bar */}
+                  {!n.readStatus && (
+                    <div className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#547792]" />
                   )}
-                </p>
-                <p className="text-xs text-[#94B4C1] mt-1">{timeAgo(n.createdAt)}</p>
-              </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-                {!n.readStatus && (
-                  <div className="h-2 w-2 rounded-full bg-[#547792]" />
-                )}
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(n.id); }}
-                  className="text-[#BFB9AD] hover:text-red-400 p-1 rounded-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                >
-                  <X size={14} />
-                </button>
-              </div>
+                  {/* Avatar + Icon overlay */}
+                  <div className="relative mt-0.5">
+                    <SenderAvatar fromUser={n.fromUser} />
+                    <div className="absolute -bottom-1 -left-1">
+                      <NotifIcon type={n.type} />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 min-w-0 pr-1">
+                    <p className={cn('text-sm leading-snug', n.readStatus ? 'text-[#547792]' : 'text-[#131F2E] font-medium')}>
+                      {n.fromUser?.profile?.fullName ? (
+                        <>
+                          <span className="font-semibold">{n.fromUser.profile.fullName}</span>{' '}
+                          {n.message}
+                        </>
+                      ) : (
+                        n.message
+                      )}
+                    </p>
+                    <p className="text-[11px] text-[#94B4C1] mt-0.5">{timeAgo(n.createdAt)}</p>
+                  </div>
+
+                  {/* Delete */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDelete(n.id); }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-[#BFB9AD] hover:text-red-400 hover:bg-red-50 shrink-0"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              ))}
             </div>
           ))}
         </div>

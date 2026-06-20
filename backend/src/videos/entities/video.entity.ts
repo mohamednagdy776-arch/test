@@ -37,6 +37,9 @@ export class Video {
   })
   moderationStatus: ModerationStatus;
 
+  @Column({ name: 'is_reel', default: false })
+  isReel: boolean;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })
   createdBy: User;

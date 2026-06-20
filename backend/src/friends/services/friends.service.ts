@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Friendship, FriendList, UserBlock, UserRestriction, FriendshipStatus, FriendListType } from '../entities/friendship.entity';
 import { User } from '../../auth/entities/user.entity';
+import { Follow } from '../../follows/entities/follow.entity';
 
 @Injectable()
 export class FriendsService {
@@ -11,6 +12,7 @@ export class FriendsService {
     @InjectRepository(FriendList) private friendListsRepo: Repository<FriendList>,
     @InjectRepository(UserBlock) private blocksRepo: Repository<UserBlock>,
     @InjectRepository(UserRestriction) private restrictionsRepo: Repository<UserRestriction>,
+    @InjectRepository(Follow) private followsRepo: Repository<Follow>,
   ) {}
 
   async sendRequest(requesterId: string, addresseeId: string) {
@@ -50,7 +52,23 @@ export class FriendsService {
     if (friendship.status !== FriendshipStatus.PENDING) throw new BadRequestException('Request not pending');
 
     friendship.status = FriendshipStatus.ACCEPTED;
-    return this.friendshipsRepo.save(friendship);
+    const saved = await this.friendshipsRepo.save(friendship);
+
+    // Auto-follow both directions so feed/follower counts reflect the friendship (#652).
+    // Use INSERT ... ON CONFLICT DO NOTHING so pre-existing follows are not duplicated.
+    const { requesterId, addresseeId } = friendship;
+    await this.followsRepo
+      .createQueryBuilder()
+      .insert()
+      .into(Follow)
+      .values([
+        { followerId: requesterId, followingId: addresseeId },
+        { followerId: addresseeId, followingId: requesterId },
+      ])
+      .orIgnore()
+      .execute();
+
+    return saved;
   }
 
   async declineRequest(userId: string, requestId: string) {

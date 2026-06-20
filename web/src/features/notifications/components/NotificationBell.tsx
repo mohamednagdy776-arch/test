@@ -1,38 +1,61 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
+import { Bell } from '@phosphor-icons/react';
 import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useDeleteNotification } from '../hooks';
 import { NotificationList } from './NotificationList';
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
   const { data: unreadData } = useUnreadCount();
-  const markAsRead = useMarkAsRead();
-  
-  const unreadCount = unreadData?.data?.count || 0;
+  const unreadCount = unreadData?.data?.count ?? 0;
+
+  // Close on outside click
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isOpen]);
 
   return (
-    <div className="relative">
+    <div className="relative" ref={panelRef}>
       <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-full hover:bg-[#EAE0CF]/50 transition-colors"
+        onClick={() => setIsOpen((v) => !v)}
+        className="relative p-2 rounded-xl hover:bg-[#EAE0CF]/50 transition-colors"
+        aria-label="الإشعارات"
       >
-        <svg className="h-6 w-6 text-[#547792]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
+        <Bell size={22} weight={isOpen ? 'fill' : 'regular'} className="text-[#547792]" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-medium">
-            {unreadCount > 9 ? '9+' : unreadCount}
+          <span className="absolute -top-0.5 -right-0.5 h-[18px] min-w-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-96 max-h-[80vh] overflow-y-auto bg-[#FDFAF5] rounded-2xl shadow-lg border border-[#C8D8DF]/60 z-50 animate-scale-in">
+        <div
+          className="absolute left-0 top-full mt-2 w-96 max-h-[80vh] flex flex-col bg-[#FDFAF5] rounded-2xl shadow-[0_8px_40px_rgba(19,31,46,0.16)] border border-[#C8D8DF]/60 z-50 overflow-hidden animate-scale-in"
+          style={{ transformOrigin: 'top left' }}
+        >
+          <div className="flex-1 overflow-y-auto overscroll-contain">
             <NotificationPanel onClose={() => setIsOpen(false)} />
           </div>
-        </>
+          <div className="border-t border-[#C8D8DF]/40 px-4 py-2.5">
+            <Link
+              href="/notifications"
+              onClick={() => setIsOpen(false)}
+              className="block text-center text-sm font-semibold text-[#547792] hover:text-[#213448] transition-colors"
+            >
+              عرض كل الإشعارات
+            </Link>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -64,8 +87,9 @@ function NotificationPanel({ onClose }: { onClose: () => void }) {
 
   if (isLoading) {
     return (
-      <div className="p-4 flex items-center justify-center">
+      <div className="p-6 flex flex-col items-center gap-3">
         <div className="h-8 w-8 border-2 border-[#547792] border-t-transparent rounded-full animate-spin" />
+        <p className="text-xs text-[#94B4C1]">جاري التحميل...</p>
       </div>
     );
   }

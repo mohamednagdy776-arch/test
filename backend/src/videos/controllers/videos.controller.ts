@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, HttpException, HttpStatus, ParseBoolPipe, Optional } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { VideosService } from '../services/videos.service';
 import { CdnService } from '../services/cdn.service';
@@ -23,8 +23,9 @@ export class VideosController {
   }
 
   @Get()
-  async findAll(@Query() query: PaginationDto) {
-    const { data, total } = await this.videosService.findAll(query.page!, query.limit!);
+  async findAll(@Query() query: PaginationDto & { isReel?: string }) {
+    const isReel = query.isReel === 'true' ? true : query.isReel === 'false' ? false : undefined;
+    const { data, total } = await this.videosService.findAll(query.page!, query.limit!, isReel);
     return paginated(data, total, query.page!, query.limit!);
   }
 
@@ -70,6 +71,12 @@ export class ReelsController {
     private videosService: VideosService,
     private cdnService: CdnService,
   ) {}
+
+  @Get()
+  async findReels(@Query() query: PaginationDto) {
+    const { data, total } = await this.videosService.findReels(query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
 
   @Get(':id/stream')
   async stream(@Param('id') id: string) {
