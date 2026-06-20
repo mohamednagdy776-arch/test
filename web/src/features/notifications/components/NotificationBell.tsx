@@ -45,7 +45,7 @@ function NotificationPanel({ onClose }: { onClose: () => void }) {
   const deleteNotification = useDeleteNotification();
   const { refetch: refetchUnread } = useUnreadCount();
 
-  const notifications = data?.data?.notifications || [];
+  const notifications = Array.isArray(data?.data) ? data.data : [];
 
   const handleMarkAsRead = async (id: string) => {
     await markAsRead.mutateAsync(id);

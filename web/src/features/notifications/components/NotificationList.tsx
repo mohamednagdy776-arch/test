@@ -1,7 +1,6 @@
 'use client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { User, CheckCircle, ThumbsUp, ChatCircle, Tag, ShareNetwork, Megaphone, Cake, Users, Bell, X } from '@phosphor-icons/react';
 
@@ -15,7 +14,7 @@ interface Notification {
   entityId?: string;
   fromUser?: {
     id: string;
-    profile?: { fullName?: string; avatar?: string };
+    profile?: { fullName?: string; avatarUrl?: string };
   };
 }
 
@@ -26,24 +25,19 @@ interface NotificationListProps {
   onDelete: (id: string) => void;
 }
 
-const ITEM_HEIGHT = 72;
-const OVERSCAN = 3;
-// Use viewport-relative height so the list doesn't overflow on short mobile screens
-const getContainerHeight = () =>
-  typeof window !== 'undefined' ? Math.min(560, window.innerHeight - 220) : 560;
-
 function getNotificationIcon(type: string) {
+  const cls = 'h-5 w-5';
   switch (type) {
-    case 'friend_request': return <User size={20} />;
-    case 'friend_accepted': return <CheckCircle size={20} weight="fill" />;
-    case 'like': return <ThumbsUp size={20} weight="fill" />;
-    case 'comment': return <ChatCircle size={20} />;
-    case 'tag': return <Tag size={20} />;
-    case 'share': return <ShareNetwork size={20} />;
-    case 'mention': return <Megaphone size={20} />;
-    case 'birthday': return <Cake size={20} />;
-    case 'group_invite': return <Users size={20} />;
-    default: return <Bell size={20} />;
+    case 'friend_request':  return <User className={cls} />;
+    case 'friend_accepted': return <CheckCircle className={cls} weight="fill" />;
+    case 'like':            return <ThumbsUp className={cls} weight="fill" />;
+    case 'comment':         return <ChatCircle className={cls} />;
+    case 'tag':             return <Tag className={cls} />;
+    case 'share':           return <ShareNetwork className={cls} />;
+    case 'mention':         return <Megaphone className={cls} />;
+    case 'birthday':        return <Cake className={cls} />;
+    case 'group_invite':    return <Users className={cls} />;
+    default:                return <Bell className={cls} />;
   }
 }
 
@@ -51,125 +45,98 @@ function timeAgo(date: string | Date) {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'الآن';
-  if (mins < 60) return `${mins} د`;
+  if (mins < 60) return `منذ ${mins} د`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} س`;
+  if (hours < 24) return `منذ ${hours} س`;
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} ي`;
+  if (days < 7) return `منذ ${days} ي`;
   return new Date(date).toLocaleDateString('ar-EG');
 }
 
 export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead, onDelete }: NotificationListProps) {
   const router = useRouter();
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const unreadCount = notifications.filter(n => !n.readStatus).length;
+  const unreadCount = notifications.filter((n) => !n.readStatus).length;
 
-  const handleScroll = useCallback(() => {
-    if (containerRef.current) {
-      setScrollTop(containerRef.current.scrollTop);
-    }
-  }, []);
-
-  const containerHeight = getContainerHeight();
-  const totalHeight = notifications.length * ITEM_HEIGHT;
-  const visibleCount = Math.ceil(containerHeight / ITEM_HEIGHT);
-  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
-  const endIndex = Math.min(notifications.length - 1, startIndex + visibleCount + OVERSCAN * 2);
-
-  const visibleNotifications = notifications.slice(startIndex, endIndex + 1);
-  const paddingTop = startIndex * ITEM_HEIGHT;
-  const paddingBottom = Math.max(0, (notifications.length - endIndex - 1) * ITEM_HEIGHT);
+  const handleClick = (n: Notification) => {
+    if (!n.readStatus) onMarkAsRead(n.id);
+    if (n.entityType === 'post' && n.entityId) router.push(`/posts/${n.entityId}`);
+    else if (n.entityType === 'user' && n.entityId) router.push(`/profile/${n.entityId}`);
+    else if (n.fromUser?.id) router.push(`/profile/${n.fromUser.id}`);
+  };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-bold text-[#213448]">الإشعارات</h2>
+    <div className="p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-base font-bold text-[#213448]">الإشعارات</h2>
         {unreadCount > 0 && (
-          <button onClick={onMarkAllAsRead} className="text-sm text-[#547792] hover:underline">
+          <button
+            onClick={onMarkAllAsRead}
+            className="text-xs text-[#547792] hover:text-[#213448] hover:underline transition-colors"
+          >
             تعيين الكل كمقروء
           </button>
         )}
       </div>
 
+      {/* Empty state */}
       {notifications.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-8">
-          <Bell size={32} className="text-[#94B4C1] mb-2" />
+        <div className="flex flex-col items-center justify-center py-10 gap-2">
+          <Bell size={32} className="text-[#94B4C1]" />
           <p className="text-sm text-[#547792]">لا توجد إشعارات</p>
         </div>
       ) : (
-        <div
-          ref={containerRef}
-          onScroll={handleScroll}
-          style={{ height: `${containerHeight}px`, overflowY: 'auto' }}
-          className="relative"
-        >
-          <div style={{ height: `${totalHeight}px`, position: 'relative' }}>
-            <div style={{ paddingTop, paddingBottom }}>
-              <div className="space-y-2">
-                {visibleNotifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    style={{ height: `${ITEM_HEIGHT}px` }}
-                    onClick={() => {
-                      if (!notification.readStatus) {
-                        onMarkAsRead(notification.id);
-                      }
-                      if (notification.entityType === 'post' && notification.entityId) {
-                        router.push(`/posts/${notification.entityId}`);
-                        return;
-                      }
-                      setExpandedId(expandedId === notification.id ? null : notification.id);
-                    }}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all",
-                      notification.readStatus
-                        ? "hover:bg-[#EAE0CF]/30"
-                        : "bg-[#D4E8EE]/50 hover:bg-[#D4E8EE]"
-                    )}
-                  >
-                    <div className="h-10 w-10 rounded-full flex items-center justify-center bg-[#EAE0CF] shrink-0 text-[#547792]">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      {notification.fromUser?.id ? (
-                        <Link
-                          href={`/profile/${notification.fromUser.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className={cn(
-                            "text-sm hover:underline",
-                            notification.readStatus ? "text-[#547792]" : "text-[#131F2E] font-medium"
-                          )}
-                        >
-                          {notification.message}
-                        </Link>
-                      ) : (
-                        <p className={cn(
-                          "text-sm",
-                          notification.readStatus ? "text-[#547792]" : "text-[#131F2E] font-medium"
-                        )}>
-                          {notification.message}
-                        </p>
-                      )}
-                      <p className="text-xs text-[#547792] mt-1">{timeAgo(notification.createdAt)}</p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {!notification.readStatus && (
-                        <div className="h-2 w-2 rounded-full bg-[#547792]" />
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); onDelete(notification.id); }}
-                        className="text-[#547792] hover:text-red-500 p-1"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+        <div className="space-y-1">
+          {notifications.map((n) => (
+            <div
+              key={n.id}
+              onClick={() => handleClick(n)}
+              className={cn(
+                'flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-colors group',
+                n.readStatus
+                  ? 'hover:bg-[#EAE0CF]/40'
+                  : 'bg-[#D4E8EE]/50 hover:bg-[#D4E8EE]/80',
+              )}
+            >
+              {/* Icon */}
+              <div className="h-9 w-9 rounded-full flex items-center justify-center bg-[#EAE0CF] shrink-0 text-[#547792] mt-0.5">
+                {getNotificationIcon(n.type)}
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 min-w-0">
+                <p
+                  className={cn(
+                    'text-sm leading-snug',
+                    n.readStatus ? 'text-[#547792]' : 'text-[#131F2E] font-medium',
+                  )}
+                >
+                  {n.fromUser?.profile?.fullName ? (
+                    <>
+                      <span className="font-semibold">{n.fromUser.profile.fullName}</span>{' '}
+                      {n.message}
+                    </>
+                  ) : (
+                    n.message
+                  )}
+                </p>
+                <p className="text-xs text-[#94B4C1] mt-1">{timeAgo(n.createdAt)}</p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                {!n.readStatus && (
+                  <div className="h-2 w-2 rounded-full bg-[#547792]" />
+                )}
+                <button
+                  onClick={(e) => { e.stopPropagation(); onDelete(n.id); }}
+                  className="text-[#BFB9AD] hover:text-red-400 p-1 rounded-lg hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                >
+                  <X size={14} />
+                </button>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
     </div>
