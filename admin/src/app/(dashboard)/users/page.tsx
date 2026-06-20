@@ -188,12 +188,12 @@ export default function UsersPage() {
       />
     ) : '-'},
     { header: 'Role', accessor: (u: UserProfile) => (
-      <Badge label={u.accountType} variant={u.accountType === 'admin' ? 'danger' : 'default'} />
+      <Badge label={u.accountType ?? 'user'} variant={u.accountType === 'admin' ? 'danger' : 'default'} />
     )},
     { header: 'Status', accessor: (u: UserProfile) => (
-      <Badge label={u.status} variant={u.status === 'active' ? 'success' : u.status === 'banned' ? 'danger' : 'warning'} />
+      <Badge label={u.status ?? 'active'} variant={u.status === 'active' ? 'success' : u.status === 'banned' ? 'danger' : 'warning'} />
     )},
-    { header: 'Joined', accessor: (u: UserProfile) => new Date(u.createdAt).toLocaleDateString() },
+    { header: 'Joined', accessor: (u: UserProfile) => u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '—' },
     { header: 'Actions', accessor: (u: UserProfile) => (
       <div className="flex gap-1">
         <Button
