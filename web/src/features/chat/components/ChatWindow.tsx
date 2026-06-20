@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { getSocket, getCurrentUserId } from '@/lib/socket-client';
 import { useDeleteMessage } from '@/features/chat/hooks';
+import { postsApi } from '@/features/posts/api';
 import type { Match } from '@/types';
 
 interface Message {
@@ -38,12 +39,15 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [showReactions, setShowReactions] = useState<string | null>(null);
   const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const deleteMessage = useDeleteMessage();
   const [isOnline, setIsOnline] = useState(false);
+  const [callToast, setCallToast] = useState<string | null>(null);
   // ISO timestamp up to which the other user has seen my messages (read receipts).
   const [otherSeenAt, setOtherSeenAt] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const { data, isLoading: messagesLoading } = useQuery({
     queryKey: ['messages', match.id],
@@ -264,6 +268,29 @@ export const ChatWindow = ({ match, onBack }: Props) => {
     }
   };
 
+  const sendImageMessage = async (file: File) => {
+    if (!file || uploadingImage) return;
+    setUploadingImage(true);
+    const tempId = `temp-${Date.now()}`;
+    const previewUrl = URL.createObjectURL(file);
+    setMessages(prev => [...prev, { id: tempId, content: '', senderId: myUserId ?? undefined, timestamp: new Date().toISOString(), isOwn: true, type: 'image', mediaUrl: previewUrl }]);
+    try {
+      const uploaded = await postsApi.uploadMedia(file);
+      const mediaUrl: string = uploaded?.data?.url ?? uploaded?.url ?? previewUrl;
+      const { data } = await apiClient.post('/chat/messages', { conversationId: match.id, content: '', type: 'image', mediaUrl });
+      const saved = data.data;
+      URL.revokeObjectURL(previewUrl);
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: saved.id, mediaUrl } : m));
+      const socket = getSocket();
+      socket.emit('relayMessage', { conversationId: match.id, message: { id: saved.id, content: '', senderId: myUserId, type: 'image', mediaUrl, createdAt: saved.createdAt ?? new Date().toISOString() } });
+    } catch {
+      URL.revokeObjectURL(previewUrl);
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
   };
@@ -295,8 +322,23 @@ export const ChatWindow = ({ match, onBack }: Props) => {
           )}
         </div>
         <div className="mr-auto flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-full" title="مكالمة صوتية">📞</button>
-          <button className="p-2 hover:bg-gray-100 rounded-full" title="مكالمة فيديو">📹</button>
+          {callToast && (
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">{callToast}</span>
+          )}
+          <button
+            onClick={() => { setCallToast('المكالمات قيد التطوير'); setTimeout(() => setCallToast(null), 3000); }}
+            className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+            title="مكالمة صوتية"
+          >
+            📞
+          </button>
+          <button
+            onClick={() => { setCallToast('مكالمات الفيديو قيد التطوير'); setTimeout(() => setCallToast(null), 3000); }}
+            className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+            title="مكالمة فيديو"
+          >
+            📹
+          </button>
           <button className="p-2 hover:bg-gray-100 rounded-full" title="مزيد من الخيارات">⋮</button>
         </div>
       </div>
@@ -351,6 +393,8 @@ export const ChatWindow = ({ match, onBack }: Props) => {
               )}
               {msg.isDeletedForEveryone ? (
                 <span className="italic opacity-50">تم حذف الرسالة</span>
+              ) : msg.type === 'image' && msg.mediaUrl ? (
+                <img src={msg.mediaUrl} alt="صورة" className="rounded-xl max-w-[200px] w-full object-cover" />
               ) : (
                 <>
                   <p className="leading-relaxed" dir="auto">{msg.content}</p>
@@ -413,8 +457,21 @@ export const ChatWindow = ({ match, onBack }: Props) => {
 
       <div className="border-t p-3 shrink-0">
         <div className="flex items-end gap-2">
-          <button className="p-2 text-gray-400 hover:text-primary">📎</button>
-          <button className="p-2 text-gray-400 hover:text-primary">📷</button>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) { sendImageMessage(f); e.target.value = ''; } }}
+          />
+          <button
+            className="p-2 text-gray-400 hover:text-primary disabled:opacity-40"
+            title="إرسال صورة"
+            disabled={uploadingImage}
+            onClick={() => imageInputRef.current?.click()}
+          >
+            {uploadingImage ? '⏳' : '📷'}
+          </button>
           <textarea
             value={input}
             onChange={handleInputChange}

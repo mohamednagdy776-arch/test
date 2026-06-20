@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { clsx } from 'clsx';
@@ -20,9 +21,12 @@ interface Props {
 }
 
 export const ChatList = ({ activeMatchId, onSelect }: Props) => {
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
   const { data: matchData, isLoading: matchLoading, isError } = useQuery({
-    queryKey: ['chat-matches'],
-    queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 50 } }).then((r) => r.data),
+    queryKey: ['chat-matches', page],
+    queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: page * PAGE_SIZE } }).then((r) => r.data),
   });
 
   const { data: convData } = useQuery({
@@ -109,6 +113,8 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
     return name.charAt(0).toUpperCase();
   };
 
+  const hasMore = sortedItems.length >= page * PAGE_SIZE;
+
   return (
     <div className="space-y-1 overflow-y-auto">
       {sortedItems.map((item: any) => {
@@ -151,6 +157,14 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
           </button>
         );
       })}
+      {hasMore && (
+        <button
+          onClick={() => setPage(p => p + 1)}
+          className="w-full py-2 text-xs text-gray-400 hover:text-primary text-center transition-colors"
+        >
+          تحميل المزيد
+        </button>
+      )}
     </div>
   );
 };
