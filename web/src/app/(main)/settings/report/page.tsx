@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -20,18 +20,36 @@ export default function ReportPage() {
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [sending, setSending] = useState(false);
+  const [attachments, setAttachments] = useState<File[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setAttachments((prev) => [...prev, ...files].slice(0, 3));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeAttachment = (i: number) => setAttachments((prev) => prev.filter((_, idx) => idx !== i));
 
   const handleSubmit = async () => {
     if (!issueType || !description.trim()) return;
     setSending(true);
     try {
-      await import('@/lib/api-client').then(({ apiClient }) =>
-        apiClient.post('/support/report', {
+      const { apiClient } = await import('@/lib/api-client');
+      if (attachments.length > 0) {
+        const form = new FormData();
+        form.append('type', issueType);
+        form.append('description', description.trim());
+        if (email.trim()) form.append('email', email.trim());
+        attachments.forEach((f) => form.append('attachments', f));
+        await apiClient.post('/support/report', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+      } else {
+        await apiClient.post('/support/report', {
           type: issueType,
           description: description.trim(),
           email: email.trim() || undefined,
-        })
-      );
+        });
+      }
       setSubmitted(true);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'فشل إرسال البلاغ. يرجى المحاولة مجدداً.';
@@ -132,6 +150,35 @@ export default function ReportPage() {
                   className="w-full px-4 py-3 rounded-xl border border-emerald-200 bg-white/80 text-emerald-900 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
                   placeholder="اشرح بالتفصيل ما المشكلة التي تواجهها..."
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-emerald-800 mb-2">لقطات شاشة أو ملفات (اختياري، حتى 3)</label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*,video/*,.pdf"
+                  multiple
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={attachments.length >= 3}
+                  className="flex items-center gap-2 rounded-xl border border-dashed border-emerald-300 px-4 py-3 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center"
+                >
+                  📎 إضافة ملف أو لقطة شاشة
+                </button>
+                {attachments.length > 0 && (
+                  <div className="mt-2 space-y-1">
+                    {attachments.map((f, i) => (
+                      <div key={i} className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm">
+                        <span className="text-emerald-800 truncate">{f.name}</span>
+                        <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 mr-2 shrink-0">✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <Button
                 variant="primary"

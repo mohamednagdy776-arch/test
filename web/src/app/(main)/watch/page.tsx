@@ -24,11 +24,17 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
 
   return (
     <div
+      role="button"
+      tabIndex={0}
+      aria-label={video.title || 'تشغيل الفيديو'}
       className="rounded-2xl overflow-hidden cursor-pointer group transition-all duration-200"
       style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onTouchStart={() => setIsHovered(true)}
+      onTouchEnd={() => setIsHovered(false)}
       onClick={onPlay}
+      onKeyDown={(e) => e.key === 'Enter' && onPlay?.()}
     >
       {/* Thumbnail */}
       <div className="relative aspect-video" style={{ backgroundColor: 'var(--muted)' }}>
@@ -47,10 +53,19 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
           {formatDuration(video.duration || 0)}
         </div>
 
-        {isHovered && (
-          <div className="absolute inset-0 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}>
-            <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-              <PlayCircle size={28} weight="fill" style={{ color: 'var(--primary)' }} />
+        <div
+          className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
+          style={{ backgroundColor: 'rgba(0,0,0,0.25)', opacity: isHovered ? 1 : 0, pointerEvents: 'none' }}
+        >
+          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+            <PlayCircle size={28} weight="fill" style={{ color: 'var(--primary)' }} />
+          </div>
+        </div>
+        {/* Always-visible play icon for touch/mobile */}
+        {!isHovered && (
+          <div className="absolute inset-0 flex items-center justify-center md:hidden">
+            <div className="w-10 h-10 rounded-full bg-black/50 flex items-center justify-center">
+              <PlayCircle size={22} weight="fill" className="text-white" />
             </div>
           </div>
         )}

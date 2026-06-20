@@ -197,8 +197,24 @@ export default function NotificationsPage() {
 
   const isLoading = notificationLoading || newsletterLoading;
 
-  const ToggleSwitch = ({ enabled, onClick, disabled }: { enabled: boolean; onClick: () => void; disabled?: boolean }) => (
+  const [pushPermission, setPushPermission] = useState<NotificationPermission | null>(null);
+  useEffect(() => {
+    if (typeof Notification !== 'undefined') {
+      setPushPermission(Notification.permission);
+    }
+  }, []);
+
+  const requestPushPermission = async () => {
+    if (typeof Notification === 'undefined') return;
+    const result = await Notification.requestPermission();
+    setPushPermission(result);
+  };
+
+  const ToggleSwitch = ({ enabled, onClick, disabled, label }: { enabled: boolean; onClick: () => void; disabled?: boolean; label?: string }) => (
     <button
+      role="switch"
+      aria-checked={enabled}
+      aria-label={label}
       onClick={onClick}
       disabled={disabled}
       className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
@@ -239,6 +255,29 @@ export default function NotificationsPage() {
           </div>
         )}
 
+        {pushPermission !== null && pushPermission !== 'granted' && (
+          <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+            <CardContent className="p-5 flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-semibold text-emerald-900">إشعارات المتصفح</h3>
+                <p className="text-sm text-emerald-700/70 mt-0.5">
+                  {pushPermission === 'denied'
+                    ? 'الإشعارات محظورة في إعدادات المتصفح — يرجى إلغاء الحظر يدوياً'
+                    : 'اسمح بالإشعارات لتلقّي تنبيهات فورية حتى عندما لا يكون التطبيق مفتوحاً'}
+                </p>
+              </div>
+              {pushPermission === 'default' && (
+                <button
+                  onClick={requestPushPermission}
+                  className="shrink-0 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all"
+                >
+                  السماح
+                </button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
           <CardHeader>
             <CardTitle className="text-emerald-900 flex items-center gap-2">
@@ -263,6 +302,7 @@ export default function NotificationsPage() {
                 <ToggleSwitch
                   enabled={masterNotificationsEnabled}
                   onClick={handleMasterToggle}
+                  label="جميع الإشعارات"
                 />
               </div>
 
@@ -290,6 +330,7 @@ export default function NotificationsPage() {
                       enabled={notificationSettings[setting.key] || false}
                       onClick={() => handleNotificationToggle(setting.key)}
                       disabled={!masterNotificationsEnabled}
+                      label={setting.label}
                     />
                   </div>
                 ))}

@@ -90,11 +90,28 @@ const plans = [
   },
 ];
 
+const ALL_FEATURES = [
+  { label: 'إنشاء ملف شخصي', basic: true, premium: true, family: true },
+  { label: 'البحث الأساسي', basic: true, premium: true, family: true },
+  { label: '5 توافقات يومياً', basic: true, premium: false, family: false },
+  { label: 'توافقات غير محدودة', basic: false, premium: true, family: true },
+  { label: 'تحليلات معمقة', basic: false, premium: true, family: true },
+  { label: 'أولوية في البحث', basic: false, premium: true, family: true },
+  { label: 'شارة مميز', basic: false, premium: true, family: true },
+  { label: 'دعم ذو أولوية', basic: false, premium: true, family: true },
+  { label: '3 حسابات فرعية', basic: false, premium: false, family: true },
+  { label: 'إشراف ولي الأمر', basic: false, premium: false, family: true },
+  { label: 'تقارير شهرية', basic: false, premium: false, family: true },
+  { label: 'الانضمام لمجتمعات', basic: true, premium: true, family: true },
+];
+
 export default function UpgradePage() {
   const router = useRouter();
   const [selected, setSelected] = useState('premium');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [paymentPlan, setPaymentPlan] = useState<typeof plans[0] | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'annual'>('monthly');
+  const [showComparison, setShowComparison] = useState(false);
 
   const { data: activeData, isLoading: activeLoading } = useActiveSubscription();
   const activeSub = activeData?.data;
@@ -149,6 +166,22 @@ export default function UpgradePage() {
         </div>
         <h1 className="text-3xl font-bold text-[#059669] mb-2">اختر الخطة المناسبة</h1>
         <p className="text-[#10B981]">احصل على ميزات حصرية للتوافق المتقدم والبحث الذكي</p>
+        {/* Billing period toggle */}
+        <div className="inline-flex mt-5 rounded-xl bg-[#DCFCE7]/50 p-1 gap-1">
+          <button
+            onClick={() => setBillingPeriod('monthly')}
+            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all', billingPeriod === 'monthly' ? 'bg-white text-[#059669] shadow-sm' : 'text-[#10B981] hover:text-[#059669]')}
+          >
+            شهري
+          </button>
+          <button
+            onClick={() => setBillingPeriod('annual')}
+            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5', billingPeriod === 'annual' ? 'bg-white text-[#059669] shadow-sm' : 'text-[#10B981] hover:text-[#059669]')}
+          >
+            سنوي
+            <span className="rounded-full bg-[#10B981] text-white text-[10px] font-bold px-1.5 py-0.5">وفّر 17%</span>
+          </button>
+        </div>
       </div>
 
       {activeLoading ? (
@@ -183,9 +216,23 @@ export default function UpgradePage() {
                 <div className="text-center mb-4 pt-2">
                   <p className="text-sm font-bold text-[#10B981] mb-1">{plan.name}</p>
                   <div className="flex items-baseline justify-center gap-1">
-                    <span className="text-4xl font-bold text-[#059669]">{plan.price}</span>
-                    {plan.period && <span className="text-sm text-[#10B981]">ر.س / {plan.period}</span>}
+                    {plan.price === 'مجاناً' ? (
+                      <span className="text-4xl font-bold text-[#059669]">مجاناً</span>
+                    ) : billingPeriod === 'annual' ? (
+                      <>
+                        <span className="text-4xl font-bold text-[#059669]">{Math.round(Number(plan.price) * 10 / 12)}</span>
+                        <span className="text-sm text-[#10B981]">ر.س / شهر</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-4xl font-bold text-[#059669]">{plan.price}</span>
+                        {plan.period && <span className="text-sm text-[#10B981]">ر.س / {plan.period}</span>}
+                      </>
+                    )}
                   </div>
+                  {billingPeriod === 'annual' && plan.price !== 'مجاناً' && (
+                    <p className="text-xs text-[#10B981] mt-1">يُدفع سنوياً {Math.round(Number(plan.price) * 10)} ر.س</p>
+                  )}
                 </div>
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((f) => (
@@ -226,7 +273,16 @@ export default function UpgradePage() {
       )}
 
       {activeSub && activeSub.planId !== 'basic' && (
-        <div className="text-center mb-4">
+        <div className="text-center mb-4 space-y-1">
+          {(activeSub.endDate || activeSub.currentPeriodEnd) && (
+            <p className="text-xs text-[#10B981]">
+              ينتهي اشتراكك في:{' '}
+              <span className="font-semibold">
+                {new Date(activeSub.endDate || activeSub.currentPeriodEnd).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </span>
+              {' '}— ستبقى ميزاتك متاحة حتى ذلك التاريخ
+            </p>
+          )}
           <button
             onClick={handleCancel}
             disabled={cancelSub.isPending}
@@ -236,6 +292,38 @@ export default function UpgradePage() {
           </button>
         </div>
       )}
+
+      {/* Plan comparison table */}
+      <div className="mb-8">
+        <button onClick={() => setShowComparison(v => !v)} className="w-full flex items-center justify-between rounded-2xl bg-[#FFFBEB] border border-[#DCFCE7] px-5 py-3 text-sm font-semibold text-[#059669]">
+          <span>مقارنة الخطط</span>
+          <span>{showComparison ? '▲' : '▼'}</span>
+        </button>
+        {showComparison && (
+          <div className="mt-2 overflow-x-auto rounded-2xl border border-[#DCFCE7] bg-white">
+            <table className="w-full text-sm text-right">
+              <thead>
+                <tr className="border-b border-[#DCFCE7]">
+                  <th className="px-4 py-3 font-semibold text-[#065F46] w-1/2">الميزة</th>
+                  {plans.map(p => <th key={p.id} className="px-4 py-3 font-bold text-[#059669] text-center">{p.name}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {ALL_FEATURES.map((f, i) => (
+                  <tr key={f.label} className={i % 2 === 0 ? 'bg-[#F0FDF4]' : 'bg-white'}>
+                    <td className="px-4 py-2.5 text-[#065F46]">{f.label}</td>
+                    {(['basic', 'premium', 'family'] as const).map(k => (
+                      <td key={k} className="px-4 py-2.5 text-center">
+                        {f[k] ? <span className="text-[#10B981] font-bold">✓</span> : <span className="text-gray-300">—</span>}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <div className="text-center">
         <button onClick={() => router.back()} className="text-sm text-[#10B981] hover:text-[#059669] transition-colors">

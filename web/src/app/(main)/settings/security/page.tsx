@@ -423,32 +423,6 @@ export default function SecurityPage() {
         <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
           <CardHeader>
             <CardTitle className="text-emerald-900 flex items-center gap-2">
-              <span>🚪</span> تسجيل الخروج
-            </CardTitle>
-            <CardDescription>تسجيل الخروج من جميع الأجهزة</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-start justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50">
-              <div className="flex-1">
-                <h3 className="font-semibold text-emerald-900">تسجيل الخروج من كل الجلسات</h3>
-                <p className="text-emerald-700/70 text-sm mt-0.5">سيتم تسجيل الخروج من جميع الأجهزة باستثناء هذا الجهاز</p>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRevokeAllSessions}
-                loading={revoking === 'all'}
-                className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
-              >
-                تسجيل الخروج
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
-          <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
               <span>🔑</span> تغيير كلمة المرور
             </CardTitle>
             <CardDescription>استخدم كلمة مرور قوية لا تستخدمها في مواقع أخرى</CardDescription>
