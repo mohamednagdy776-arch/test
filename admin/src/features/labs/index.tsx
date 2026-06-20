@@ -200,7 +200,7 @@ export function LabsManagement() {
             {labs.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-gray-400">
-                  No labs registered yet. Click "Create Lab" to add one.
+                  No labs registered yet. Click the Create Lab button to add one.
                 </td>
               </tr>
             )}
