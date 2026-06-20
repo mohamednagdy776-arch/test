@@ -10,6 +10,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { LabPortalService } from '../services/lab-portal.service';
 import { LabStatus } from '../entities/lab.entity';
+import { LabUserRole } from '../entities/lab-user.entity';
 
 @Controller('admin/labs')
 @UseGuards(AuthGuard('jwt'))
@@ -39,5 +40,13 @@ export class LabAdminController {
   @Get(':id/invoices')
   async getLabInvoices(@Param('id') id: string) {
     return this.service.getAllInvoicesForLab(id);
+  }
+
+  @Post(':id/users')
+  async createLabUser(
+    @Param('id') labId: string,
+    @Body() dto: { email: string; password: string; role?: LabUserRole },
+  ) {
+    return this.service.createLabUser(labId, dto.email, dto.password, dto.role ?? LabUserRole.LAB_TECHNICIAN);
   }
 }

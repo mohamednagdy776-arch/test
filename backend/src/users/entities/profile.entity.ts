@@ -122,6 +122,9 @@ export class Profile {
   @Column({ name: 'wants_children', nullable: true })
   wantsChildren: boolean;
 
+  @Column({ name: 'is_health_verified', default: false })
+  isHealthVerified: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

@@ -13,6 +13,8 @@ interface Lab {
   createdAt: string;
 }
 
+interface CreateAccountForm { email: string; password: string; labId: string; labName: string }
+
 const STATUS_CYCLE: Record<Lab['status'], Lab['status']> = {
   pending: 'active',
   active: 'suspended',
@@ -40,6 +42,12 @@ export function LabsManagement() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [accountForm, setAccountForm] = useState<CreateAccountForm | null>(null);
+  const [accEmail, setAccEmail] = useState('');
+  const [accPassword, setAccPassword] = useState('');
+  const [accSubmitting, setAccSubmitting] = useState(false);
+  const [accError, setAccError] = useState('');
+  const [accSuccess, setAccSuccess] = useState('');
 
   const fetchLabs = () => {
     setLoading(true);
@@ -78,6 +86,27 @@ export function LabsManagement() {
       setError('Failed to create lab');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accountForm) return;
+    setAccSubmitting(true);
+    setAccError('');
+    setAccSuccess('');
+    try {
+      await apiClient.post(`/admin/labs/${accountForm.labId}/users`, {
+        email: accEmail.trim(),
+        password: accPassword,
+      });
+      setAccSuccess(`Account created: ${accEmail}`);
+      setAccEmail('');
+      setAccPassword('');
+    } catch {
+      setAccError('Failed to create account');
+    } finally {
+      setAccSubmitting(false);
     }
   };
 
@@ -156,6 +185,59 @@ export function LabsManagement() {
         </div>
       )}
 
+      {/* Create Lab Account Modal */}
+      {accountForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+            <h2 className="text-lg font-semibold mb-1">Create Lab Account</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Lab staff login for <strong>{accountForm.labName}</strong>
+            </p>
+            <form onSubmit={handleCreateAccount} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <input
+                  type="email"
+                  value={accEmail}
+                  onChange={(e) => setAccEmail(e.target.value)}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                <input
+                  type="password"
+                  value={accPassword}
+                  onChange={(e) => setAccPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+              {accError && <p className="text-red-500 text-sm">{accError}</p>}
+              {accSuccess && <p className="text-green-600 text-sm">{accSuccess}</p>}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={accSubmitting}
+                  className="flex-1 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium disabled:opacity-50 hover:opacity-90"
+                >
+                  {accSubmitting ? 'Creating…' : 'Create Account'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountForm(null)}
+                  className="flex-1 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50"
+                >
+                  Close
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-lg border overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
@@ -187,13 +269,21 @@ export function LabsManagement() {
                 </td>
                 <td className="px-4 py-3 text-gray-500">{new Date(lab.createdAt).toLocaleDateString()}</td>
                 <td className="px-4 py-3">
-                  <button
-                    onClick={() => handleStatusChange(lab)}
-                    disabled={updatingId === lab.id}
-                    className="px-3 py-1 rounded-lg border border-gray-300 text-xs font-medium hover:bg-gray-50 disabled:opacity-50"
-                  >
-                    {updatingId === lab.id ? '…' : STATUS_LABEL[lab.status]}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleStatusChange(lab)}
+                      disabled={updatingId === lab.id}
+                      className="px-3 py-1 rounded-lg border border-gray-300 text-xs font-medium hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      {updatingId === lab.id ? '…' : STATUS_LABEL[lab.status]}
+                    </button>
+                    <button
+                      onClick={() => { setAccountForm({ labId: lab.id, labName: lab.name, email: '', password: '' }); setAccEmail(''); setAccPassword(''); setAccError(''); setAccSuccess(''); }}
+                      className="px-3 py-1 rounded-lg border border-blue-300 text-blue-700 text-xs font-medium hover:bg-blue-50"
+                    >
+                      Create Account
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import QRCode from 'react-qr-code';
 import { labsApi, type Lab, type ReferralCode } from '@/features/labs/api';
 
 function StatusBadge({ status }: { status: string }) {
@@ -23,6 +24,44 @@ function codeStatus(code: ReferralCode): 'used' | 'expired' | 'active' {
   return 'active';
 }
 
+function QRModal({ code, onClose }: { code: ReferralCode; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div
+        className="rounded-3xl p-8 w-full max-w-sm text-center shadow-xl"
+        style={{ backgroundColor: 'var(--card)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 className="text-base font-bold mb-1" style={{ color: 'var(--foreground)' }}>
+          اعرض هذا الكود للمختبر
+        </h2>
+        <p className="text-xs mb-6" style={{ color: 'var(--muted-foreground)' }}>
+          سيقوم المختبر بمسح الكود للتحقق من هويتك
+        </p>
+        <div className="flex justify-center mb-4 p-4 rounded-2xl bg-white">
+          <QRCode value={code.code} size={200} />
+        </div>
+        <p
+          className="font-mono text-sm font-bold tracking-widest mb-1 px-3 py-2 rounded-xl"
+          style={{ backgroundColor: 'var(--muted)', color: 'var(--foreground)' }}
+        >
+          {code.code}
+        </p>
+        <p className="text-xs mt-3" style={{ color: 'var(--muted-foreground)' }}>
+          ينتهي {new Date(code.expiresAt).toLocaleDateString('ar-SA')}
+        </p>
+        <button
+          onClick={onClose}
+          className="mt-6 w-full py-2 rounded-xl text-sm font-semibold"
+          style={{ backgroundColor: 'var(--muted)', color: 'var(--foreground)' }}
+        >
+          إغلاق
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function LabPortalPage() {
   const [labs, setLabs] = useState<Lab[]>([]);
   const [referrals, setReferrals] = useState<ReferralCode[]>([]);
@@ -30,6 +69,7 @@ export default function LabPortalPage() {
   const [loadingReferrals, setLoadingReferrals] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeQR, setActiveQR] = useState<ReferralCode | null>(null);
 
   const fetchReferrals = useCallback(() => {
     setLoadingReferrals(true);
@@ -53,8 +93,10 @@ export default function LabPortalPage() {
     setGenerating(labId);
     setError(null);
     try {
-      await labsApi.generateCode(labId);
+      const newCode = await labsApi.generateCode(labId);
+      const code: ReferralCode = (newCode as any)?.data ?? newCode;
       fetchReferrals();
+      setActiveQR(code);
     } catch {
       setError('فشل إنشاء كود الإحالة');
     } finally {
@@ -64,12 +106,14 @@ export default function LabPortalPage() {
 
   return (
     <div className="space-y-6">
+      {activeQR && <QRModal code={activeQR} onClose={() => setActiveQR(null)} />}
+
       <div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
           بوابة المختبرات
         </h1>
         <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-          احصل على كود إحالة لإجراء فحوصاتك في أحد المختبرات المعتمدة
+          أنشئ كود إحالة لإجراء فحوصاتك في أحد المختبرات المعتمدة والحصول على شارة التحقق الصحي
         </p>
       </div>
 
@@ -114,7 +158,7 @@ export default function LabPortalPage() {
                   className="rounded-xl px-3 py-1.5 text-xs font-semibold disabled:opacity-50 transition-colors"
                   style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
                 >
-                  {generating === lab.id ? '...' : 'إنشاء كود'}
+                  {generating === lab.id ? '...' : 'إنشاء كود QR'}
                 </button>
               </div>
             ))}
@@ -152,13 +196,24 @@ export default function LabPortalPage() {
                       className="font-mono text-sm font-bold tracking-widest px-3 py-1 rounded-xl"
                       style={{ backgroundColor: 'var(--muted)', color: 'var(--foreground)' }}
                     >
-                      {ref.code}
+                      {ref.code.slice(0, 8)}…
                     </span>
                     <StatusBadge status={status} />
                   </div>
-                  <div className="text-xs text-right" style={{ color: 'var(--muted-foreground)' }}>
-                    <p>ينتهي {new Date(ref.expiresAt).toLocaleDateString('ar-SA')}</p>
-                    {ref.usedAt && <p>استُخدم {new Date(ref.usedAt).toLocaleDateString('ar-SA')}</p>}
+                  <div className="flex items-center gap-3">
+                    <div className="text-xs text-right" style={{ color: 'var(--muted-foreground)' }}>
+                      <p>ينتهي {new Date(ref.expiresAt).toLocaleDateString('ar-SA')}</p>
+                      {ref.usedAt && <p>استُخدم {new Date(ref.usedAt).toLocaleDateString('ar-SA')}</p>}
+                    </div>
+                    {status === 'active' && (
+                      <button
+                        onClick={() => setActiveQR(ref)}
+                        className="rounded-xl px-3 py-1.5 text-xs font-semibold"
+                        style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                      >
+                        عرض QR
+                      </button>
+                    )}
                   </div>
                 </div>
               );
