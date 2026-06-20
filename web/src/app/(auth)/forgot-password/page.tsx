@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '@/features/auth/api';
@@ -9,7 +9,23 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
+  }, []);
+
+  const startCooldown = () => {
+    setCooldown(60);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((c) => {
+        if (c <= 1) { clearInterval(cooldownRef.current!); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,6 +34,7 @@ export default function ForgotPasswordPage() {
     try {
       await authApi.forgotPassword(email);
       setSuccess(true);
+      startCooldown();
     } catch (err: any) {
       setError(err.response?.data?.message ?? 'حدث خطأ');
     } finally {
@@ -72,11 +89,36 @@ export default function ForgotPasswordPage() {
               </>
             )}
             {success && (
-              <button type="button" onClick={() => router.push('/login')}
-                className="w-full h-11 rounded-xl text-sm font-semibold text-[#FDFAF5] shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98]"
-                style={{ background: 'linear-gradient(to left, #213448, #547792)' }}>
-               العودة لتسجيل الدخول
-              </button>
+              <div className="space-y-3">
+                <div className="rounded-xl bg-[#EAE0CF]/50 border border-[#C8D8DF] px-4 py-3 text-xs text-[#547792]">
+                  💡 لم يصل البريد؟ تحقق من مجلد البريد العشوائي (Spam/Junk)
+                </div>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (cooldown > 0) return;
+                    setError('');
+                    setLoading(true);
+                    try {
+                      await authApi.forgotPassword(email);
+                      startCooldown();
+                    } catch (err: any) {
+                      setError(err.response?.data?.message ?? 'حدث خطأ');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  disabled={cooldown > 0 || loading}
+                  className="w-full h-11 rounded-xl text-sm font-medium text-[#547792] border border-[#C8D8DF] hover:bg-[#EAE0CF]/40 disabled:opacity-50 transition-all"
+                >
+                  {cooldown > 0 ? `إعادة الإرسال بعد ${cooldown} ثانية` : 'إعادة إرسال الرابط'}
+                </button>
+                <button type="button" onClick={() => router.push('/login')}
+                  className="w-full h-11 rounded-xl text-sm font-semibold text-[#FDFAF5] shadow-sm hover:shadow-md transition-all duration-200 active:scale-[0.98]"
+                  style={{ background: 'linear-gradient(to left, #213448, #547792)' }}>
+                  العودة لتسجيل الدخول
+                </button>
+              </div>
             )}
             <p className="text-center text-sm text-[#547792]">
               تذكرت كلمة المرور؟{' '}<Link href="/login" className="font-medium text-[#213448] hover:underline">تسجيل الدخول</Link>

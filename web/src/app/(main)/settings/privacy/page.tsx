@@ -132,8 +132,11 @@ export default function PrivacyPage() {
 
   const settings = privacyData?.data;
 
-  const ToggleSwitch = ({ enabled, onClick, disabled }: { enabled: boolean; onClick: () => void; disabled?: boolean }) => (
+  const ToggleSwitch = ({ enabled, onClick, disabled, label }: { enabled: boolean; onClick: () => void; disabled?: boolean; label?: string }) => (
     <button
+      role="switch"
+      aria-checked={enabled}
+      aria-label={label}
       onClick={onClick}
       disabled={disabled}
       className={`relative w-14 h-7 rounded-full transition-all duration-300 ${

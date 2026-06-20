@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     title: 'طيبت — منصة التوافق الذكي والزواج الإسلامي',
     description: 'منصة ذكية للتعارف والزواج للمسلمين تعتمد على الذكاء الاصطناعي.',
     type: 'website',
-    locale: 'ar_AR',
+    locale: 'ar_SA',
     siteName: 'طيبت',
   },
   robots: { index: true, follow: true },

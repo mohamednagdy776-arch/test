@@ -4,6 +4,34 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '../api';
 
+function PremiumUpsell({ onContinue, onUpgrade }: { onContinue: () => void; onUpgrade: () => void }) {
+  return (
+    <div className="text-center space-y-5">
+      <div className="text-5xl">🎉</div>
+      <h2 className="text-xl font-bold text-[#1F2937]">مرحباً بك في طيبت!</h2>
+      <p className="text-sm text-[#6B7280]">حسابك جاهز. رحلتك نحو شريك الحياة تبدأ الآن.</p>
+      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-5 space-y-3 text-right">
+        <p className="text-sm font-bold text-[#059669]">✨ مع الخطة المتميزة:</p>
+        <ul className="space-y-1.5 text-sm text-[#065F46]">
+          <li>✓ توافقات غير محدودة يومياً</li>
+          <li>✓ تحليلات توافق معمّقة</li>
+          <li>✓ أولوية في نتائج البحث</li>
+          <li>✓ شارة مميز على ملفك</li>
+        </ul>
+        <p className="text-xs text-[#10B981] font-semibold">99 ر.س / شهر فقط</p>
+      </div>
+      <div className="space-y-2">
+        <button onClick={onUpgrade} className="w-full rounded-2xl py-3 text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
+          ترقية للمتميز الآن
+        </button>
+        <button onClick={onContinue} className="w-full text-sm text-[#6B7280] hover:text-[#1F2937] transition-colors py-1">
+          ابدأ مجاناً بدون ترقية
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Translate / format backend errors so the user always sees a clear reason.
 // NestJS validation errors arrive as `message: string[]`; other errors as a string.
 const AR_MESSAGES: Record<string, string> = {
@@ -50,6 +78,7 @@ export const RegisterForm = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showUpsell, setShowUpsell] = useState(false);
   const router = useRouter();
 
   const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => 
@@ -105,12 +134,21 @@ export const RegisterForm = () => {
       // Tokens are set as HttpOnly cookies by the backend — nothing to store
       // client-side (avoids XSS token theft from localStorage).
       await authApi.register(payload);
-      router.push('/dashboard');
+      setShowUpsell(true);
     } catch (err: any) {
       setError(formatAuthError(err));
     }
     finally { setLoading(false); }
   };
+
+  if (showUpsell) {
+    return (
+      <PremiumUpsell
+        onContinue={() => router.push('/dashboard')}
+        onUpgrade={() => router.push('/upgrade')}
+      />
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

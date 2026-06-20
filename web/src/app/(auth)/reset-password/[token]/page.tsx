@@ -11,6 +11,8 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const router = useRouter();
 
   const passwordStrength = useMemo(() => {
@@ -98,9 +100,14 @@ export default function ResetPasswordPage() {
               <>
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-[#213448]">كلمة المرور الجديدة</label>
-                  <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
-                    className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
-                    placeholder="••••••••" />
+                  <div className="relative">
+                    <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)}
+                      className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 pr-10 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
+                      placeholder="••••••••" />
+                    <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#547792] hover:text-[#213448]" aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}>
+                      {showPassword ? '🙈' : '👁'}
+                    </button>
+                  </div>
                   {passwordStrength && (
                     <div className="mt-1.5">
                       <div className="flex gap-1">
@@ -114,9 +121,14 @@ export default function ResetPasswordPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-[#213448]">تأكيد كلمة المرور</label>
-                  <input type="password" required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
-                    placeholder="••••••••" />
+                  <div className="relative">
+                    <input type={showConfirm ? 'text' : 'password'} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 pr-10 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
+                      placeholder="••••••••" />
+                    <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#547792] hover:text-[#213448]" aria-label={showConfirm ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}>
+                      {showConfirm ? '🙈' : '👁'}
+                    </button>
+                  </div>
                 </div>
                 <button type="submit" disabled={loading}
                   className="w-full h-11 rounded-xl text-sm font-semibold text-[#FDFAF5] shadow-sm hover:shadow-md disabled:opacity-50 transition-all duration-200 active:scale-[0.98]"

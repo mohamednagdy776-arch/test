@@ -184,6 +184,9 @@ export default function AppearancePage() {
                 <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{item.desc}</p>
               </div>
               <button
+                role="switch"
+                aria-checked={item.value}
+                aria-label={item.label}
                 onClick={() => item.onChange(!item.value)}
                 className="relative w-12 h-6 rounded-full transition-all duration-300 shrink-0"
                 style={{ backgroundColor: item.value ? 'var(--primary)' : 'var(--border)' }}

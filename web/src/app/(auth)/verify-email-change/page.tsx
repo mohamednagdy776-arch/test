@@ -22,7 +22,6 @@ function VerifyEmailChangeInner() {
       .then((r: any) => {
         setState('success');
         setMessage(r?.message || 'تم تحديث بريدك الإلكتروني. يرجى تسجيل الدخول مرة أخرى.');
-        setTimeout(() => router.push('/login'), 2500);
       })
       .catch((err: any) => {
         setState('error');
@@ -40,9 +39,19 @@ function VerifyEmailChangeInner() {
         {state !== 'loading' && (
           <p className={`text-sm ${state === 'success' ? 'text-[#52B069]' : 'text-red-600'}`}>{message}</p>
         )}
-        <Link href="/login" className="mt-4 inline-block text-sm text-[#547792] hover:underline">
-          الذهاب لتسجيل الدخول
-        </Link>
+        {state === 'success' ? (
+          <button
+            onClick={() => router.push('/login')}
+            className="mt-5 w-full rounded-xl h-11 text-sm font-semibold text-[#FDFAF5] transition-all"
+            style={{ background: 'linear-gradient(to left, #213448, #547792)' }}
+          >
+            تسجيل الدخول
+          </button>
+        ) : state === 'error' ? (
+          <Link href="/login" className="mt-4 inline-block text-sm text-[#547792] hover:underline">
+            العودة لتسجيل الدخول
+          </Link>
+        ) : null}
       </div>
     </div>
   );
