@@ -316,7 +316,9 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const avatarRaw = post.user?.profile?.avatarUrl;
   const authorAvatar = avatarRaw ? (avatarRaw.startsWith('http') ? avatarRaw : `${apiUrl}${avatarRaw}`) : null;
 
-  const mediaUrl = post.mediaUrl?.startsWith('/uploads/') ? `${apiUrl}${post.mediaUrl}` : post.mediaUrl;
+  const mediaUrl = post.mediaUrl
+    ? (post.mediaUrl.startsWith('http') ? post.mediaUrl : `${apiUrl}${post.mediaUrl}`)
+    : undefined;
   const isShared = post.postType === 'shared' || post.originalPostId;
 
   return (
@@ -385,7 +387,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
               ) : post.mediaUrls?.length > 1 ? (
                 <div className="grid grid-cols-2 gap-1">
                   {post.mediaUrls.map((url: string, i: number) => (
-                    <img key={i} src={`${apiUrl}${url}`} alt="" className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
+                    <img key={i} src={url.startsWith('http') ? url : `${apiUrl}${url}`} alt="" className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
                   ))}
                 </div>
               ) : (

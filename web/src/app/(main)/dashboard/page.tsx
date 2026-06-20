@@ -115,13 +115,13 @@ function SuggestedConnections() {
             const initial = name.charAt(0).toUpperCase();
             const mutual = s.mutual ?? 0;
             return (
-              <div
+              <button
                 key={user?.id ?? name}
                 onClick={() => user?.username && router.push(`/${user.username}`)}
-                className="flex items-center gap-3 rounded-2xl p-2.5 transition-colors group cursor-pointer hover:-translate-y-0.5"
-                style={{ '--hover-bg': 'var(--muted)' } as any}
+                className="w-full flex items-center gap-3 rounded-2xl p-2.5 transition-colors group text-right hover:-translate-y-0.5"
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--muted)')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
+                aria-label={`عرض ملف ${name}`}
               >
                 <div className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-base font-bold shadow-soft" style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}>
                   {initial}
@@ -133,8 +133,8 @@ function SuggestedConnections() {
                     {mutual > 0 ? ` · ${mutual} مشترك` : ''}
                   </p>
                 </div>
-                <span className="text-[10px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: 'var(--primary)' }}>عرض</span>
-              </div>
+                <span className="text-[10px] font-semibold" style={{ color: 'var(--primary)' }} aria-hidden="true">←</span>
+              </button>
             );
           })
         )}
@@ -188,11 +188,13 @@ function TrendingTopics() {
             const reactions = (post.likesCount ?? 0) + (post.commentsCount ?? 0);
             const EMOJIS = ['🔥', '💡', '⭐', '💬'];
             return (
-              <div
+              <button
                 key={post.id ?? i}
                 className="w-full text-right rounded-2xl p-2.5 transition-colors"
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--muted)')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
+                onClick={() => post.id && router.push(`/posts/${post.id}`)}
+                aria-label={`منشور رائج: ${title}`}
               >
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-2xl flex items-center justify-center text-xl shadow-inner" style={{ backgroundColor: 'var(--muted)' }}>
@@ -206,7 +208,7 @@ function TrendingTopics() {
                     <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>{reactions} تفاعل</p>
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })
         )}
@@ -245,21 +247,24 @@ function QuickActions() {
 function QuickStats() {
   const { data: matchesData, isLoading: ml, isError: me, refetch: rm, isFetching: fm } = useQuery({
     queryKey: ['dashboard-matches-count'],
-    queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 100 } }).then((r) => r.data),
+    queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 1 } }).then((r) => r.data),
+    staleTime: 60_000,
+  });
+  const { data: acceptedData, isLoading: al, isFetching: af } = useQuery({
+    queryKey: ['dashboard-accepted-count'],
+    queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 1, status: 'accepted' } }).then((r) => r.data),
     staleTime: 60_000,
   });
   const { data: friendsData, isLoading: fl, isError: fe, refetch: rf, isFetching: ff } = useQuery({
     queryKey: ['dashboard-friends-count'],
-    queryFn: () => apiClient.get('/friends', { params: { page: 1, limit: 100 } }).then((r) => r.data),
+    queryFn: () => apiClient.get('/friends', { params: { page: 1, limit: 1 } }).then((r) => r.data),
     staleTime: 60_000,
   });
 
-  const matchesArr = matchesData?.data?.data ?? matchesData?.data ?? [];
-  const friendsArr = friendsData?.data?.data ?? friendsData?.data ?? [];
-  const matchesCount = Array.isArray(matchesArr) ? matchesArr.length : 0;
-  const friendsCount = Array.isArray(friendsArr) ? friendsArr.length : 0;
-  const acceptedCount = Array.isArray(matchesArr) ? matchesArr.filter((m: any) => m.status === 'accepted').length : 0;
-  const isLoading = ml || fl;
+  const matchesCount = matchesData?.meta?.total ?? matchesData?.data?.meta?.total ?? 0;
+  const acceptedCount = acceptedData?.meta?.total ?? acceptedData?.data?.meta?.total ?? 0;
+  const friendsCount = friendsData?.meta?.total ?? friendsData?.data?.meta?.total ?? 0;
+  const isLoading = ml || fl || al;
   const isError = me || fe;
   const isEmpty = !isLoading && !isError && matchesCount === 0 && friendsCount === 0;
 
@@ -272,7 +277,7 @@ function QuickStats() {
         <p className="text-sm font-bold opacity-90">نشاطك</p>
         <button
           onClick={() => { rm(); rf(); }}
-          disabled={fm || ff}
+          disabled={fm || ff || af}
           title="تحديث"
           className="text-xs opacity-80 hover:opacity-100 disabled:opacity-50 transition-opacity"
         >

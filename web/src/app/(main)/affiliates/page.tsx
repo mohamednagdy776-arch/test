@@ -27,8 +27,9 @@ function CopyButton({ text }: { text: string }) {
     <button
       onClick={copy}
       className="shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all bg-[#10B981] text-white hover:bg-[#059669] active:scale-95"
+      aria-label={copied ? 'تم النسخ' : 'نسخ'}
     >
-      {copied ? '✓ تم النسخ' : 'نسخ'}
+      <span aria-live="polite" aria-atomic="true">{copied ? '✓ تم النسخ' : 'نسخ'}</span>
     </button>
   );
 }
@@ -110,6 +111,15 @@ function AffiliateDashboard({ affiliate }: { affiliate: any }) {
         <p className="text-sm opacity-75">شارك رابطك وابدأ في كسب العمولات</p>
       </div>
 
+      {(affiliate.commissionRate !== undefined || affiliate.referralRate !== undefined) && (
+        <div className="rounded-2xl bg-[#FFFBEB] border border-[#DCFCE7]/60 px-4 py-3 flex items-center gap-3">
+          <span className="text-2xl">💎</span>
+          <div>
+            <p className="text-sm font-bold text-[#059669]">معدل العمولة: {affiliate.commissionRate ?? affiliate.referralRate ?? 10}%</p>
+            <p className="text-xs text-[#10B981]">تكسب هذه النسبة من كل اشتراك يأتي عبر رابطك</p>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-3 gap-4">
         <StatCard value={affiliate.totalReferred ?? 0} label="إجمالي الإحالات" icon="👥" />
         <StatCard value={affiliate.totalMarriages ?? 0} label="زيجات ناجحة" icon="💍" />

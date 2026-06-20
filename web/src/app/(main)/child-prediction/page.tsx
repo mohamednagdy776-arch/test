@@ -302,6 +302,22 @@ export default function ChildPredictionPage() {
                 جرّب مجدداً
               </button>
             </div>
+            <div className="mt-3 flex gap-2 flex-wrap">
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت: https://tayyibt.com/child-prediction')}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[#25D366] text-white hover:opacity-90 transition-opacity"
+              >
+                📲 شارك عبر واتساب
+              </a>
+              <a
+                href={`https://t.me/share/url?url=${encodeURIComponent('https://tayyibt.com/child-prediction')}&text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت!')}`}
+                target="_blank" rel="noopener noreferrer"
+                className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[#229ED9] text-white hover:opacity-90 transition-opacity"
+              >
+                ✈️ تليجرام
+              </a>
+            </div>
           </div>
         )}
 
