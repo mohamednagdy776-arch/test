@@ -87,4 +87,19 @@ export class LabPortalService {
       order: { createdAt: 'DESC' },
     });
   }
+
+  async getActiveLabs(): Promise<Lab[]> {
+    return this.labsRepo.find({
+      where: { status: LabStatus.ACTIVE },
+      select: ['id', 'name', 'commercialRegistration', 'status', 'createdAt'],
+      order: { name: 'ASC' },
+    });
+  }
+
+  async getMyReferralCodes(userId: string): Promise<LabReferralCode[]> {
+    return this.codesRepo.find({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+  }
 }

@@ -9,6 +9,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { User } from '../../auth/entities/user.entity';
 import { LabPortalService } from '../services/lab-portal.service';
 
 @Controller('lab-portal')
@@ -39,5 +41,17 @@ export class LabPortalController {
   @UseGuards(AuthGuard('jwt'))
   async getMyInvoices(@Query('labId') labId: string) {
     return this.service.getLabInvoices(labId);
+  }
+
+  @Get('labs')
+  @UseGuards(AuthGuard('jwt'))
+  async getActiveLabs() {
+    return this.service.getActiveLabs();
+  }
+
+  @Get('my-referrals')
+  @UseGuards(AuthGuard('jwt'))
+  async getMyReferrals(@CurrentUser() user: User) {
+    return this.service.getMyReferralCodes(user.id);
   }
 }
