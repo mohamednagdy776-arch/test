@@ -120,7 +120,7 @@ export function LabsManagement() {
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Al-Borg Laboratories"
+                  placeholder="Lab name"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
@@ -130,7 +130,7 @@ export function LabsManagement() {
                   type="text"
                   value={commercialReg}
                   onChange={(e) => setCommercialReg(e.target.value)}
-                  placeholder="e.g. 1234567890"
+                  placeholder="Registration number"
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                 />
               </div>
