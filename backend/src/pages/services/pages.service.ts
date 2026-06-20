@@ -27,11 +27,17 @@ export class PagesService {
   }
 
   async findAll(page: number, limit: number) {
-    const [data, total] = await this.pagesRepo.findAndCount({
+    const [rows, total] = await this.pagesRepo.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
+      relations: ['createdBy'],
     });
+    const data = rows.map((p) => ({
+      ...p,
+      ownerId: p.createdBy?.id ?? null,
+      followersCount: 0,
+    }));
     return { data, total };
   }
 
@@ -160,5 +166,18 @@ export class PagesService {
 
   async getLikeCount(pageId: string): Promise<number> {
     return this.likeRepo.count({ where: { page: { id: pageId } } });
+  }
+
+  async verify(pageId: string) {
+    const page = await this.pagesRepo.findOne({ where: { id: pageId } });
+    if (!page) throw new NotFoundException('Page not found');
+    page.isVerified = true;
+    return this.pagesRepo.save(page);
+  }
+
+  async adminDelete(pageId: string) {
+    const page = await this.pagesRepo.findOne({ where: { id: pageId } });
+    if (!page) throw new NotFoundException('Page not found');
+    await this.pagesRepo.delete(pageId);
   }
 }

@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { PagesService } from '../services/pages.service';
 import { CreatePageDto } from '../dto/create-page.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -82,5 +84,21 @@ export class PagesController {
   async findByUsername(@Param('username') username: string, @CurrentUser() user?: User) {
     const page = await this.pagesService.findByUsername(username, user?.id);
     return ok(page);
+  }
+
+  @Patch(':id/verify')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async verify(@Param('id') id: string) {
+    const page = await this.pagesService.verify(id);
+    return ok(page, 'Page verified');
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async adminDelete(@Param('id') id: string) {
+    await this.pagesService.adminDelete(id);
+    return ok(null, 'Page deleted');
   }
 }

@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, OneToMany, DeleteDateColumn } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 import { PageFollower } from './page-follower.entity';
 
@@ -41,6 +41,9 @@ export class Page {
 
   @Column({ nullable: true })
   hours: string;
+
+  @Column({ name: 'is_verified', default: false })
+  isVerified: boolean;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })
