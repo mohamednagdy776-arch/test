@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { MatchingStats } from '@/features/matching/components/MatchingStats';
 import { MatchingTabs } from '@/features/matching/components/MatchingTabs';
+import { MatchDetailModal } from '@/features/matching/components/MatchDetailModal';
 import { useGenerateMatches } from '@/features/matching/hooks';
 import type { Match } from '@/types';
 
@@ -47,6 +48,7 @@ export default function MatchingPage() {
   const matches: MatchWithUser[] = data?.data || [];
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [detailMatch, setDetailMatch] = useState<MatchWithUser | null>(null);
 
   const handleAction = async (matchId: string, action: 'accept' | 'reject') => {
     setActionLoading(matchId + action);
@@ -73,6 +75,16 @@ export default function MatchingPage() {
 
   return (
     <div className="space-y-5">
+      {detailMatch && (
+        <MatchDetailModal
+          match={detailMatch}
+          onClose={() => setDetailMatch(null)}
+          onAccept={() => { handleAction(detailMatch.id, 'accept'); setDetailMatch(null); }}
+          onReject={() => { handleAction(detailMatch.id, 'reject'); setDetailMatch(null); }}
+          accepting={actionLoading === detailMatch.id + 'accept'}
+          rejecting={actionLoading === detailMatch.id + 'reject'}
+        />
+      )}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold text-emerald-900">التوافق</h1>
         <button
@@ -191,6 +203,12 @@ export default function MatchingPage() {
 
               {match.status === 'pending' ? (
                 <div className="flex flex-col gap-2">
+                  <button
+                    onClick={() => setDetailMatch(match)}
+                    className="w-full rounded-xl border border-emerald-200/50 py-2 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
+                  >
+                    🔍 عرض تفاصيل التوافق
+                  </button>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleAction(match.id, 'accept')}

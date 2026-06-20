@@ -131,3 +131,29 @@ export function useCreatePagePost() {
     },
   });
 }
+
+export function useUpdatePage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; description?: string; category?: string } }) =>
+      pagesApi.updatePage(id, data),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: ['page', id] });
+      qc.invalidateQueries({ queryKey: ['my-pages'] });
+      qc.invalidateQueries({ queryKey: ['created-pages'] });
+      qc.invalidateQueries({ queryKey: ['pages'] });
+    },
+  });
+}
+
+export function useDeletePage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => pagesApi.deletePage(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-pages'] });
+      qc.invalidateQueries({ queryKey: ['created-pages'] });
+      qc.invalidateQueries({ queryKey: ['pages'] });
+    },
+  });
+}

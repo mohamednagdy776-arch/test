@@ -53,4 +53,10 @@ export const pagesApi = {
 
   createPagePost: (pageId: string, content: string) =>
     apiClient.post(`/pages/${pageId}/posts`, { content }).then((r) => r.data),
+
+  updatePage: (id: string, data: { name?: string; description?: string; category?: string }) =>
+    apiClient.patch(`/pages/${id}`, data).then((r) => r.data),
+
+  deletePage: (id: string) =>
+    apiClient.delete(`/pages/${id}`).then((r) => r.data),
 };
