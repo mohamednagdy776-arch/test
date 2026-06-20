@@ -124,7 +124,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[#C8D8DF]/40">
         <div className="flex items-center gap-2">
-          <h2 className="text-base font-bold text-[#213448]">الإشعارات</h2>
+          <h2 className="text-base font-bold text-black">الإشعارات</h2>
           {unreadCount > 0 && (
             <span className="h-5 min-w-5 px-1 rounded-full bg-[#213448] text-[#FDFAF5] text-[10px] font-bold flex items-center justify-center">
               {unreadCount}
@@ -153,7 +153,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
         <div className="py-2">
           {groups.map((group) => (
             <div key={group.label}>
-              <p className="px-4 py-1.5 text-[11px] font-semibold text-[#94B4C1] uppercase tracking-wide">
+              <p className="px-4 py-1.5 text-[11px] font-semibold text-black/50 uppercase tracking-wide">
                 {group.label}
               </p>
               {group.items.map((n) => (
@@ -181,7 +181,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
 
                   {/* Content */}
                   <div className="flex-1 min-w-0 pr-1">
-                    <p className={cn('text-sm leading-snug', n.readStatus ? 'text-[#547792]' : 'text-[#131F2E] font-medium')}>
+                    <p className={cn('text-sm leading-snug text-black', !n.readStatus && 'font-medium')}>
                       {n.fromUser?.profile?.fullName ? (
                         <>
                           <span className="font-semibold">{n.fromUser.profile.fullName}</span>{' '}
