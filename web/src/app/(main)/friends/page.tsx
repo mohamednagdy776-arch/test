@@ -23,7 +23,13 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
           <p className="text-xs text-[#10B981] truncate">{user.profile?.bio || ''}</p>
         </div>
         <div className="relative">
-          <button onClick={() => setShowMenu(!showMenu)} className="p-1 hover:bg-[#DCFCE7] rounded-full">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            onKeyDown={(e) => e.key === 'Escape' && setShowMenu(false)}
+            aria-haspopup="true"
+            aria-expanded={showMenu}
+            className="p-1 hover:bg-[#DCFCE7] rounded-full"
+          >
             <svg className="w-5 h-5 text-[#10B981]" fill="currentColor" viewBox="0 0 24 24">
               <circle cx="12" cy="5" r="2"/>
               <circle cx="12" cy="12" r="2"/>
@@ -31,7 +37,10 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
             </svg>
           </button>
           {showMenu && (
-            <div className="absolute left-0 top-8 bg-white rounded-xl shadow-lg border border-emerald-100 z-10 min-w-[140px]">
+            <div
+              className="absolute left-0 top-8 bg-white rounded-xl shadow-lg border border-emerald-100 z-10 min-w-[140px]"
+              onKeyDown={(e) => e.key === 'Escape' && setShowMenu(false)}
+            >
               <button onClick={() => { onMessage?.(); setShowMenu(false); }} className="w-full px-3 py-2 text-right text-sm text-[#065F46] hover:bg-[#DCFCE7] rounded-t-xl">
                 رسالة
               </button>

@@ -132,9 +132,9 @@ export default function GroupsPage() {
               onChange={(e) => setPrivacy(e.target.value as 'public' | 'private' | 'secret')}
               className="rounded-xl border border-emerald-200/50 px-4 py-3 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 text-emerald-900"
             >
-              <option value="public">عام - Everyone can see and join</option>
-              <option value="private">خاص - Approval required to join</option>
-              <option value="secret">سري - Only members can see</option>
+              <option value="public">عام — يمكن للجميع الرؤية والانضمام</option>
+              <option value="private">خاص — يتطلب موافقة المسؤول</option>
+              <option value="secret">سري — للأعضاء فقط</option>
             </select>
           </div>
           <textarea

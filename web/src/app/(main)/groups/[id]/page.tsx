@@ -113,9 +113,9 @@ export default function GroupDetailPage() {
             <div className="flex items-center gap-2 mb-2">
               <h1 className="text-xl font-bold text-emerald-900">{group.name}</h1>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                group.privacy === 'public' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                group.privacy === 'public' ? 'bg-emerald-100 text-emerald-700' : group.privacy === 'secret' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'
               }`}>
-                {group.privacy === 'public' ? 'عام' : 'خاص'}
+                {group.privacy === 'public' ? 'عام' : group.privacy === 'secret' ? 'سري' : 'خاص'}
               </span>
             </div>
             <p className="text-sm text-emerald-700/70">{group.description || 'لا يوجد وصف'}</p>

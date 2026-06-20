@@ -7,6 +7,7 @@ import { MatchingStats } from '@/features/matching/components/MatchingStats';
 import { MatchingTabs } from '@/features/matching/components/MatchingTabs';
 import { MatchDetailModal } from '@/features/matching/components/MatchDetailModal';
 import { useGenerateMatches } from '@/features/matching/hooks';
+import { useDebounce } from '@/hooks/useDebounce';
 import type { Match } from '@/types';
 
 interface MatchWithUser extends Match {
@@ -29,9 +30,10 @@ export default function MatchingPage() {
   const [prayerLevel, setPrayerLevel] = useState('');
 
   const generateMatches = useGenerateMatches();
+  const debouncedLocation = useDebounce(location, 400);
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['matches-web', ageRange, location, prayerLevel, tab],
+    queryKey: ['matches-web', ageRange, debouncedLocation, prayerLevel, tab],
     queryFn: () => apiClient.get('/matches', {
       params: {
         page: 1,
@@ -39,7 +41,7 @@ export default function MatchingPage() {
         status: tab,
         minAge: ageRange[0],
         maxAge: ageRange[1],
-        location: location || undefined,
+        location: debouncedLocation || undefined,
         prayerLevel: prayerLevel || undefined
       }
     }).then((r) => r.data),

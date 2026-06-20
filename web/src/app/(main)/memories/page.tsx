@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/Spinner';
 
 export default function MemoriesPage() {
   const [activeTab, setActiveTab] = useState<'memories' | 'saved'>('memories');
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
   const { data: memoriesData, isLoading: memoriesLoading } = useMemories();
   const { data: savedData, isLoading: savedLoading } = useSavedItems();
   const removeSaved = useRemoveSaved();
@@ -95,21 +96,48 @@ export default function MemoriesPage() {
                 <p className="text-sm text-emerald-500/60 mt-1">ستظهر هنا منشوراتك من نفس التاريخ في السنوات السابقة</p>
               </CardContent>
             </Card>
-          ) : (
-            memoriesData.data.map((memory: any, index: number) => (
-              <Card key={memory.id || index} className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] shadow-lg shadow-emerald-500/10 border border-emerald-100">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-emerald-900">
-                    <span>📅</span>
-                    <span className="text-amber-600 font-semibold">{getRelativeLabel(memory.createdAt)}</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PostCard post={memory} />
-                </CardContent>
-              </Card>
-            ))
-          )}
+          ) : (() => {
+            const allMemories: any[] = memoriesData.data;
+            const years = [...new Set(allMemories.map((m: any) => new Date(m.createdAt).getFullYear()))].sort((a, b) => b - a);
+            const filtered = selectedYear ? allMemories.filter((m: any) => new Date(m.createdAt).getFullYear() === selectedYear) : allMemories;
+            return (
+              <>
+                {years.length > 1 && (
+                  <div className="flex gap-2 flex-wrap">
+                    <button
+                      onClick={() => setSelectedYear(null)}
+                      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${!selectedYear ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
+                    >
+                      الكل
+                    </button>
+                    {years.map((y) => (
+                      <button
+                        key={y}
+                        onClick={() => setSelectedYear(y)}
+                        className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${selectedYear === y ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
+                      >
+                        {y}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {filtered.map((memory: any, index: number) => (
+                  <Card key={memory.id || index} className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] shadow-lg shadow-emerald-500/10 border border-emerald-100">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-emerald-900">
+                        <span>📅</span>
+                        <span className="text-amber-600 font-semibold">{getRelativeLabel(memory.createdAt)}</span>
+                        <span className="text-xs text-emerald-500/60 font-normal">{formatDate(memory.createdAt)}</span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <PostCard post={memory} />
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            );
+          })()}
         </div>
       )}
 
