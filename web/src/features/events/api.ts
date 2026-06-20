@@ -48,4 +48,7 @@ export const eventsApi = {
 
   rsvpEvent: (id: string, status: 'going' | 'interested' | 'not_going') =>
     apiClient.post(`/events/${id}/rsvp`, { status }).then((r) => r.data.data),
+
+  deleteEvent: (id: string) =>
+    apiClient.delete(`/events/${id}`).then((r) => r.data),
 };

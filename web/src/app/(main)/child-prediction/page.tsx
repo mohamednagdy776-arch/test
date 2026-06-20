@@ -26,9 +26,12 @@ export default function ChildPredictionPage() {
   const [drag2,   setDrag2]   = useState(false);
   const [elapsed, setElapsed] = useState(0);
 
-  const ref1     = useRef<HTMLInputElement>(null);
-  const ref2     = useRef<HTMLInputElement>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ref1        = useRef<HTMLInputElement>(null);
+  const ref2        = useRef<HTMLInputElement>(null);
+  const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
+  const fetchAbortRef = useRef<AbortController | null>(null);
+  const preview1Ref = useRef<string | null>(null);
+  const preview2Ref = useRef<string | null>(null);
 
   const isLoading = ['analyzing', 'generating', 'rendering'].includes(stage);
 
@@ -42,12 +45,21 @@ export default function ChildPredictionPage() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [isLoading]);
 
+  // Revoke any remaining preview URLs when the component unmounts
+  useEffect(() => {
+    return () => {
+      if (preview1Ref.current) URL.revokeObjectURL(preview1Ref.current);
+      if (preview2Ref.current) URL.revokeObjectURL(preview2Ref.current);
+      fetchAbortRef.current?.abort();
+    };
+  }, []);
+
   const setParentImg = (file: File, which: 1 | 2) => {
     const preview = URL.createObjectURL(file);
     if (which === 1) {
-      setParent1(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); return { file, preview }; });
+      setParent1(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview1Ref.current = preview; return { file, preview }; });
     } else {
-      setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); return { file, preview }; });
+      setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview2Ref.current = preview; return { file, preview }; });
     }
   };
 
@@ -69,11 +81,14 @@ export default function ChildPredictionPage() {
 
     const apiBase = (process.env.NEXT_PUBLIC_API_URL ?? '/api/v1').replace(/\/$/, '');
 
-    // Start API call immediately
+    // Start API call immediately — store abort controller so UI cancel button can abort it
+    const fetchAbortCtrl = new AbortController();
+    fetchAbortRef.current = fetchAbortCtrl;
     const fetchPromise = fetch(`${apiBase}/features/child-prediction`, {
       method: 'POST',
       body: fd,
       credentials: 'include',
+      signal: fetchAbortCtrl.signal,
     });
 
     // Cycle stages with bounded delays — advance on fetch completion if it finishes early
@@ -107,9 +122,15 @@ export default function ChildPredictionPage() {
     await stagePromise.catch(() => {});
   };
 
+  const cancelPrediction = () => {
+    fetchAbortRef.current?.abort();
+    setStage('error');
+    setErrMsg('تم الإلغاء');
+  };
+
   const reset = () => {
-    setParent1(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); return null; });
-    setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); return null; });
+    setParent1(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview1Ref.current = null; return null; });
+    setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview2Ref.current = null; return null; });
     setResult(null);  setErrMsg(null);
     setStage('idle');
   };
@@ -152,13 +173,17 @@ export default function ChildPredictionPage() {
             return (
               <div
                 key={which}
+                role="button"
+                tabIndex={0}
+                aria-label={`رفع ${label}`}
                 className={[
-                  'relative flex flex-col items-center justify-center aspect-square rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 overflow-hidden',
+                  'relative flex flex-col items-center justify-center aspect-square rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2',
                   drag  ? 'border-emerald-500 bg-emerald-50 scale-[1.02]'
                   : data ? 'border-emerald-300 bg-white'
                   :        'border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50 hover:border-emerald-300',
                 ].join(' ')}
                 onClick={() => ref.current?.click()}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ref.current?.click(); } }}
                 onDrop={(e) => onDrop(e, which)}
                 onDragOver={(e) => { e.preventDefault(); if (which === 1) setDrag1(true); else setDrag2(true); }}
                 onDragLeave={() => { if (which === 1) setDrag1(false); else setDrag2(false); }}
@@ -194,25 +219,35 @@ export default function ChildPredictionPage() {
           </div>
         )}
 
-        {/* Submit */}
-        <button
-          onClick={handleSubmit}
-          disabled={!parent1 || !parent2 || isLoading}
-          className="w-full h-14 rounded-2xl font-bold text-white text-base transition-all duration-300 shadow-lg shadow-emerald-200/60 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-3 bg-gradient-to-l from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.98]"
-        >
-          {isLoading ? (
-            <>
-              <svg className="animate-spin h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
-              <span>{LABELS[stage] ?? '...'}</span>
-              <span className="text-sm font-mono opacity-70">{fmt(elapsed)}</span>
-            </>
-          ) : (
-            <><span className="text-lg">✨</span>اكتشف شكل طفلكما<span className="text-lg">✨</span></>
+        {/* Submit / Cancel */}
+        <div className="flex gap-3">
+          <button
+            onClick={handleSubmit}
+            disabled={!parent1 || !parent2 || isLoading}
+            className="flex-1 h-14 rounded-2xl font-bold text-white text-base transition-all duration-300 shadow-lg shadow-emerald-200/60 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-3 bg-gradient-to-l from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.98]"
+          >
+            {isLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span>{LABELS[stage] ?? '...'}</span>
+                <span className="text-sm font-mono opacity-70">{fmt(elapsed)}</span>
+              </>
+            ) : (
+              <><span className="text-lg">✨</span>اكتشف شكل طفلكما<span className="text-lg">✨</span></>
+            )}
+          </button>
+          {isLoading && (
+            <button
+              onClick={cancelPrediction}
+              className="h-14 px-5 rounded-2xl font-semibold text-red-600 border-2 border-red-200 bg-red-50 hover:bg-red-100 transition-colors shrink-0"
+            >
+              إلغاء
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Progress steps */}
         {isLoading && (

@@ -81,6 +81,18 @@ export function useRsvpEvent() {
   });
 }
 
+export function useDeleteEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => eventsApi.deleteEvent(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-events'] });
+      qc.invalidateQueries({ queryKey: ['events'] });
+      qc.invalidateQueries({ queryKey: ['upcoming-events'] });
+    },
+  });
+}
+
 export function useCreateEvent() {
   const qc = useQueryClient();
   return useMutation({

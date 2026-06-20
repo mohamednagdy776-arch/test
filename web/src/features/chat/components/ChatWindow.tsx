@@ -382,7 +382,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
               )}
               <button
                 onClick={() => setShowReactions(showReactions === msg.id ? null : msg.id)}
-                className={`absolute top-1/2 -translate-y-1/2 ${msg.isOwn ? 'left-full ml-2' : 'right-full mr-2'} opacity-0 hover:opacity-100 group-hover:opacity-100`}
+                className={`absolute top-1/2 -translate-y-1/2 ${msg.isOwn ? 'left-full ml-2' : 'right-full mr-2'} opacity-0 hover:opacity-100 group-hover:opacity-100 focus:opacity-100`}
               >
                 😀
               </button>

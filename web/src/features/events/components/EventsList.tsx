@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Spinner } from '@/components/ui/Spinner';
-import { useRsvpEvent } from '../hooks';
+import { useRsvpEvent, useDeleteEvent } from '../hooks';
 import { useToast } from '@/components/ui/Toast';
+import { getCurrentUserId } from '@/lib/socket-client';
 
 export const EventsList = () => {
   const { data, isLoading, isError, refetch } = useQuery({
@@ -13,7 +14,9 @@ export const EventsList = () => {
   });
 
   const rsvpEvent = useRsvpEvent();
+  const deleteEvent = useDeleteEvent();
   const { showToast } = useToast();
+  const myUserId = getCurrentUserId();
 
   const handleRsvp = async (eventId: string, status: 'going' | 'interested' | 'not_going', e: React.MouseEvent) => {
     e.preventDefault();
@@ -23,6 +26,17 @@ export const EventsList = () => {
       refetch();
     } catch (err: any) {
       showToast(err?.response?.data?.message || 'فشل تحديث حالة الحضور', 'error');
+    }
+  };
+
+  const handleDelete = async (eventId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!confirm('هل أنت متأكد من حذف هذا الحدث؟')) return;
+    try {
+      await deleteEvent.mutateAsync(eventId);
+      showToast('تم حذف الحدث بنجاح', 'success');
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'فشل حذف الحدث', 'error');
     }
   };
 
@@ -56,11 +70,25 @@ export const EventsList = () => {
           >
             <div className="flex items-start justify-between gap-3 mb-2">
               <h3 className="font-semibold text-[#065F46]">{event.title}</h3>
-              <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-                event.privacy === 'public' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-              }`}>
-                {event.privacy === 'public' ? 'عام' : 'خاص'}
-              </span>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  event.privacy === 'public' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                }`}>
+                  {event.privacy === 'public' ? 'عام' : 'خاص'}
+                </span>
+                {myUserId && (event.creatorId === myUserId || event.userId === myUserId) && (
+                  <button
+                    onClick={(e) => handleDelete(event.id, e)}
+                    disabled={deleteEvent.isPending}
+                    className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-1 transition-colors disabled:opacity-50"
+                    title="حذف الحدث"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </button>
+                )}
+              </div>
             </div>
             <p className="text-xs text-[#10B981] mb-1">
               {event.startDate ? new Date(event.startDate).toLocaleDateString('ar-SA', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : ''}

@@ -28,7 +28,6 @@ export default function EventsPage() {
       setStartDate('');
       setShowCreate(false);
     } catch (err: any) {
-      console.error('[EventsPage] Create error:', err);
       const errorMessage = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'فشل إنشاء الحدث';
       showToast(errorMessage, 'error');
     }
