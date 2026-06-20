@@ -9,7 +9,14 @@ export const usersApi = {
     apiClient.get(`/users/${id}`).then((r) => r.data),
 
   searchUsers: (params: SearchParams) =>
-    apiClient.get('/users/search', { params }).then((r) => r.data),
+    apiClient.get('/users/search', { params }).then((r) => {
+      const d = r.data;
+      // /users/search wraps results in data.data; flatten to match /users shape
+      if (d?.data?.data !== undefined) {
+        return { ...d, data: d.data.data, meta: d.data.meta };
+      }
+      return d;
+    }),
 
   getUserProfile: (id: string) =>
     apiClient.get(`/users/${id}/profile`).then((r) => r.data),

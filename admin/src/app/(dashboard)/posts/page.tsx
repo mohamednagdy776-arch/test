@@ -23,7 +23,7 @@ export default function PostsPage() {
   const { toast } = useToast();
 
   const filtered = (data?.data ?? []).filter((p) =>
-    !search || p.content.toLowerCase().includes(search.toLowerCase())
+    !search || (p.content ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleDelete = async () => {

@@ -175,4 +175,20 @@ export class CommentsService {
     });
     return { data, total };
   }
+
+  async findAll(page = 1, limit = 20) {
+    const [data, total] = await this.commentsRepo.findAndCount({
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['user'],
+    });
+    return { data, total };
+  }
+
+  async adminDelete(commentId: string) {
+    const comment = await this.commentsRepo.findOne({ where: { id: commentId } });
+    if (!comment) throw new NotFoundException('Comment not found');
+    await this.commentsRepo.delete(commentId);
+  }
 }

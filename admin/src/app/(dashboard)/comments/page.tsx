@@ -23,7 +23,7 @@ export default function CommentsPage() {
   const { toast } = useToast();
 
   const filtered = (data?.data ?? []).filter((c) =>
-    !search || c.content.toLowerCase().includes(search.toLowerCase())
+    !search || (c.content ?? '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleDelete = async () => {

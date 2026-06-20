@@ -1,5 +1,7 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, HttpCode } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 import { CommentsService } from '../services/comments.service';
 import { CreateCommentDto, UpdateCommentDto, ReactToCommentDto, PinCommentDto } from '../dto/create-comment.dto';
@@ -110,5 +112,22 @@ export class CommentRepliesController {
   ) {
     const { data, total } = await this.commentsService.getReplies(id, query.page!, query.limit!);
     return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async adminList(@Query() query: PaginationDto) {
+    const { data, total } = await this.commentsService.findAll(query.page ?? 1, query.limit ?? 20);
+    return paginated(data, total, query.page ?? 1, query.limit ?? 20);
+  }
+
+  @Delete(':id')
+  @HttpCode(200)
+  @UseGuards(RolesGuard)
+  @Roles('admin')
+  async adminDelete(@Param('id') id: string) {
+    await this.commentsService.adminDelete(id);
+    return ok(null, 'Comment deleted');
   }
 }
