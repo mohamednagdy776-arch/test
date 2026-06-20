@@ -141,7 +141,7 @@ export default function UsersPage() {
       const conversation = await createConversation.mutateAsync(user.id);
       const userName = user.firstName && user.lastName 
         ? `${user.firstName} ${user.lastName}` 
-        : user.email.split('@')[0];
+        : (user.email?.split('@')[0] ?? user.fullName ?? 'User');
       toast(`Starting chat with ${userName}`);
       // Navigate to chat page with the conversation ID
       router.push(`/chat?conversationId=${conversation.conversationId}&userId=${user.id}`);
@@ -167,7 +167,7 @@ export default function UsersPage() {
           >
             {u.firstName && u.lastName ? `${u.firstName} ${u.lastName}` : (u.fullName || u.email?.split('@')[0] || 'Unknown')}
           </button>
-          <p className="text-xs text-gray-500">{u.email}</p>
+          <p className="text-xs text-gray-500">{u.email ?? ''}</p>
         </div>
       </div>
     )},
