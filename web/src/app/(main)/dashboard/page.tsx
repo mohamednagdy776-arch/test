@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { PostFeed } from '@/features/posts/components/PostFeed';
 import { useSuggestions } from '@/features/friends/hooks';
 import { apiClient } from '@/lib/api-client';
-import { cn, displayName } from '@/lib/utils';
+import { displayName } from '@/lib/utils';
 import { Baby, PencilSimple, MagnifyingGlass, HeartHalf } from '@phosphor-icons/react';
 
 function ProfileCompleteness() {
@@ -215,17 +215,18 @@ function TrendingTopics() {
   );
 }
 
+const QUICK_ACTIONS = [
+  { Icon: PencilSimple,    label: 'إنشاء منشور',    href: '/posts' },
+  { Icon: MagnifyingGlass, label: 'ابحث عن أشخاص', href: '/search' },
+  { Icon: HeartHalf,       label: 'التوافقات',       href: '/matching' },
+  { Icon: Baby,            label: 'توقع شكل طفلك',  href: '/child-prediction' },
+] as const;
+
 function QuickActions() {
   const router = useRouter();
-  const actions: [React.ReactNode, string, string][] = [
-    [<PencilSimple size={18} />,  'إنشاء منشور',    '/posts'],
-    [<MagnifyingGlass size={18} />, 'ابحث عن أشخاص', '/search'],
-    [<HeartHalf size={18} />,    'التوافقات',        '/matching'],
-    [<Baby size={18} />,         'توقع شكل طفلك',   '/child-prediction'],
-  ];
   return (
     <div className="rounded-3xl shadow-soft p-3 space-y-1" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-      {actions.map(([icon, label, href]) => (
+      {QUICK_ACTIONS.map(({ Icon, label, href }) => (
         <button
           key={href}
           onClick={() => router.push(href)}
@@ -233,7 +234,7 @@ function QuickActions() {
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--muted)')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
         >
-          <span style={{ color: 'var(--primary)' }}>{icon}</span>
+          <Icon size={18} style={{ color: 'var(--primary)' }} />
           <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{label}</span>
         </button>
       ))}
