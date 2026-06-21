@@ -291,6 +291,7 @@ const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
 
 // Photos grid for the profile "Photos" tab (was a placeholder).
 const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const { data, isLoading, isError } = useQuery({
     queryKey: ['profile-photos', userId],
     queryFn: () => profileApi.getPhotos(userId),
@@ -300,7 +301,6 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
   if (isLoading) return feedShell('جاري تحميل الصور...');
   if (isError) return feedShell('تعذّر تحميل الصور');
   if (photos.length === 0) return feedShell('لا توجد صور');
-  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   return (
     <>
       {lightboxUrl && (

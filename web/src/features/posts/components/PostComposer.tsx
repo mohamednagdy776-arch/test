@@ -324,9 +324,9 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
             <button type="button" onClick={() => setShowBgPicker(!showBgPicker)} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" title="لون الخلفية">
               <Palette size={20} />
             </button>
-            <button type="button" onClick={() => fileRef.current?.click()} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" title="صورة/فيديو">
+            <button type="button" onClick={() => fileRef.current?.click()} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" aria-label="إرفاق صورة أو فيديو">
               <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFileChange} />
-              <Image size={20} />
+              <Image size={20} aria-hidden="true" />
             </button>
             <button type="button" onClick={() => setShowFeelingPicker(!showFeelingPicker)} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" title="شعور">
               <Smiley size={20} />
