@@ -11,7 +11,7 @@ export default function Search() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-[var(--primary)]">البحث</h1>
-            <p className="text-xs text-[var(--primary)]">ابحث عن أشخاص، مجتمعات، فعاليات، ومنشورات</p>
+            <p className="text-xs text-[var(--muted-foreground)]">ابحث عن أشخاص، مجتمعات، فعاليات، ومنشورات</p>
           </div>
         </div>
       </div>

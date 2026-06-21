@@ -1,33 +1,60 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { useToast } from '@/components/ui/Toast';
+import { X, ChatCircle, User, Sparkle, Check, MapPin } from '@phosphor-icons/react';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 interface Props {
   user: any;
   onClose: () => void;
 }
 
-const scoreColor = (s: number) => s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-red-500';
-const barColor = (s: number) => s >= 80 ? 'bg-green-400' : s >= 60 ? 'bg-yellow-400' : 'bg-red-400';
+function scoreColor(s: number) {
+  return s >= 80 ? 'var(--primary)' : s >= 60 ? 'var(--accent)' : '#ef4444';
+}
+function scoreBg(s: number) {
+  return s >= 80
+    ? 'color-mix(in srgb, var(--primary) 8%, var(--muted))'
+    : s >= 60
+    ? 'color-mix(in srgb, var(--accent) 8%, var(--muted))'
+    : 'color-mix(in srgb, #ef4444 8%, var(--muted))';
+}
+function scoreLabel(s: number) {
+  return s >= 80 ? 'توافق ممتاز' : s >= 60 ? 'توافق جيد' : 'توافق منخفض';
+}
 
-const categories = [
-  { label: 'التوافق الديني', icon: '🕌', weight: 30 },
-  { label: 'نمط الحياة', icon: '🌿', weight: 25 },
-  { label: 'الاهتمامات', icon: '❤️', weight: 20 },
-  { label: 'الموقع الجغرافي', icon: '📍', weight: 15 },
-  { label: 'عوامل أخرى', icon: '✨', weight: 10 },
+const CATEGORIES = [
+  { label: 'التوافق الديني', emoji: '🕌', weight: 0.30 },
+  { label: 'نمط الحياة', emoji: '🌿', weight: 0.25 },
+  { label: 'الاهتمامات', emoji: '❤️', weight: 0.20 },
+  { label: 'الموقع الجغرافي', emoji: '📍', weight: 0.15 },
+  { label: 'عوامل أخرى', emoji: '✨', weight: 0.10 },
 ];
 
 export const UserProfileModal = ({ user, onClose }: Props) => {
   const router = useRouter();
+  const { showToast } = useToast() as any;
   const [tab, setTab] = useState<'profile' | 'match'>('profile');
+  const [aiScore, setAiScore] = useState<{ matchScore: number; matchReasons: string[] } | null>(null);
+  const [loadingScore, setLoadingScore] = useState(false);
+  const [chatError, setChatError] = useState('');
 
-  // Search results expose the user id as `id`; other shapes use `userId`.
   const targetId = user.userId ?? user.id;
+  const avatarSrc = user.avatarUrl
+    ? (user.avatarUrl.startsWith('http') ? user.avatarUrl : `${API_BASE}${user.avatarUrl}`)
+    : null;
+  const initial = (user.fullName || user.username || '?').charAt(0).toUpperCase();
 
-  // Create conversation mutation
+  const { data: myProfile } = useQuery({
+    queryKey: ['my-profile'],
+    queryFn: () => apiClient.get('/users/me').then((r) => r.data),
+  });
+
   const createConversation = useMutation({
     mutationFn: () => apiClient.post('/chat/conversations', { targetUserId: targetId }),
     onSuccess: (response) => {
@@ -36,31 +63,14 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
       router.push(`/chat?conversation=${conv.id}&user=${conv.otherUserId || targetId}`);
     },
     onError: () => {
-      alert('تعذّر بدء المحادثة، حاول مرة أخرى.');
+      setChatError('تعذّر بدء المحادثة، حاول مرة أخرى.');
     },
   });
 
-  // Fetch full profile
-  const { data: profileData } = useQuery({
-    queryKey: ['public-profile', targetId],
-    queryFn: () => apiClient.get(`/users/${targetId}/profile`).then((r) => r.data),
-    enabled: !!targetId,
-  });
-
-  // Fetch AI compatibility score
-  const { data: myProfile } = useQuery({
-    queryKey: ['my-profile'],
-    queryFn: () => apiClient.get('/users/me').then((r) => r.data),
-  });
-
-  const [aiScore, setAiScore] = useState<{ matchScore: number; matchReasons: string[] } | null>(null);
-  const [loadingScore, setLoadingScore] = useState(false);
-
   const calcScore = async () => {
-    if (aiScore) return;
+    if (aiScore || loadingScore) return;
     setLoadingScore(true);
     try {
-      // Call backend endpoint instead of AI service directly
       const res = await apiClient.get(`/matches/profile/${targetId}`);
       const data = res.data?.data;
       setAiScore({
@@ -74,9 +84,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
     }
   };
 
-  const profile = profileData?.data ?? user;
-
-  const infoItems = [
+  const infoItems: [string, string][] = [
     ['العمر', user.age ? `${user.age} سنة` : '—'],
     ['الجنس', user.gender === 'male' ? 'ذكر' : 'أنثى'],
     ['الدولة', user.country || '—'],
@@ -90,82 +98,122 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-[var(--card)] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
 
-        {/* Header */}
-        <div className="p-5 border-b flex items-center gap-4">
-          <div className="h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xl shrink-0 overflow-hidden">
-            {user.avatarUrl
-              ? <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
-              : user.fullName?.charAt(0)?.toUpperCase() ?? '?'
-            }
+        {/* ── Luxury header ─────────────────────────────────────── */}
+        <div className="relative p-5 pb-6 shrink-0"
+          style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 55%, var(--accent) 100%)' }}>
+          <button onClick={onClose} aria-label="إغلاق"
+            className="absolute top-4 left-4 w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.2)', color: 'white' }}>
+            <X size={16} weight="bold" />
+          </button>
+
+          <div className="flex items-center gap-4">
+            {avatarSrc ? (
+              <Image src={avatarSrc} alt={user.fullName || ''} width={64} height={64}
+                className="rounded-2xl object-cover shrink-0"
+                style={{ border: '3px solid rgba(255,255,255,0.4)' }} />
+            ) : (
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white shrink-0"
+                style={{ background: 'rgba(255,255,255,0.2)', border: '3px solid rgba(255,255,255,0.35)', backdropFilter: 'blur(8px)' }}>
+                {initial}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-extrabold text-white truncate">{user.fullName || user.username}</h2>
+              <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                {user.age && <span className="text-xs text-white/70">{user.age} سنة</span>}
+                {(user.city || user.country) && (
+                  <span className="flex items-center gap-0.5 text-xs text-white/70">
+                    <MapPin size={10} />
+                    {[user.city, user.country].filter(Boolean).join('، ')}
+                  </span>
+                )}
+              </div>
+              {user.username && (
+                <span className="text-xs text-white/50 mt-0.5 block">@{user.username}</span>
+              )}
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-[var(--foreground)]">{user.fullName}</h2>
-            <p className="text-sm text-[var(--muted-foreground)]">
-              {[user.age ? `${user.age} سنة` : null, user.city, user.country].filter(Boolean).join(' · ')}
-            </p>
-          </div>
-          <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] text-2xl leading-none">×</button>
         </div>
 
-        {/* Tabs */}
-        <div className="flex border-b">
-          {[['profile', '👤 الملف الشخصي'], ['match', '💫 نقاط التوافق']].map(([k, l]) => (
-            <button key={k} onClick={() => { setTab(k as any); if (k === 'match') calcScore(); }}
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === k ? 'border-b-2 border-primary text-primary' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}`}>
-              {l}
+        {/* ── Tabs ──────────────────────────────────────────────── */}
+        <div className="flex shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
+          {[
+            { key: 'profile', label: 'الملف الشخصي', icon: User },
+            { key: 'match', label: 'نقاط التوافق', icon: Sparkle },
+          ].map(({ key, label, icon: Icon }) => (
+            <button key={key}
+              onClick={() => { setTab(key as any); if (key === 'match') calcScore(); }}
+              className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors"
+              style={tab === key
+                ? { color: 'var(--primary)', borderBottom: '2px solid var(--accent)' }
+                : { color: 'var(--muted-foreground)', borderBottom: '2px solid transparent' }}>
+              <Icon size={14} weight={tab === key ? 'fill' : 'regular'} />
+              {label}
             </button>
           ))}
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5">
+        {/* ── Content ───────────────────────────────────────────── */}
+        <div className="flex-1 overflow-y-auto scrollbar-thin p-5">
+
+          {/* Profile tab */}
           {tab === 'profile' && (
             <div className="space-y-4">
               {user.bio && (
-                <div className="rounded-xl bg-[var(--muted)] p-4">
-                  <p className="text-xs font-medium text-[var(--muted-foreground)] mb-1">نبذة شخصية</p>
-                  <p className="text-sm text-[var(--foreground)] leading-relaxed">{user.bio}</p>
+                <div className="rounded-2xl p-4" style={{ background: 'var(--muted)' }}>
+                  <p className="text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>نبذة شخصية</p>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)' }}>{user.bio}</p>
                 </div>
               )}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2.5">
                 {infoItems.map(([k, v]) => (
-                  <div key={k} className="rounded-lg bg-[var(--muted)] p-3">
-                    <dt className="text-xs font-medium text-[var(--muted-foreground)]">{k}</dt>
-                    <dd className="mt-0.5 text-sm font-semibold text-[var(--foreground)] capitalize">{v}</dd>
+                  <div key={k} className="rounded-xl p-3" style={{ background: 'var(--muted)' }}>
+                    <dt className="text-[11px] font-semibold mb-0.5" style={{ color: 'var(--muted-foreground)' }}>{k}</dt>
+                    <dd className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{v}</dd>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
+          {/* Match tab */}
           {tab === 'match' && (
             <div className="space-y-5">
               {loadingScore ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="mr-3 text-sm text-[var(--muted-foreground)]">جاري حساب التوافق...</span>
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <div className="w-10 h-10 rounded-full border-3 animate-spin"
+                    style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent', borderWidth: 3 }} />
+                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>جاري حساب التوافق...</p>
                 </div>
               ) : aiScore ? (
                 <>
-                  {/* Overall score */}
-                  <div className={`rounded-xl p-5 text-center ${aiScore.matchScore >= 80 ? 'bg-green-50' : aiScore.matchScore >= 60 ? 'bg-yellow-50' : 'bg-red-50'}`}>
-                    <p className={`text-6xl font-black ${scoreColor(aiScore.matchScore)}`}>
+                  {/* Score hero */}
+                  <div className="rounded-2xl p-6 text-center"
+                    style={{ background: scoreBg(aiScore.matchScore), border: `1px solid color-mix(in srgb, ${scoreColor(aiScore.matchScore)} 20%, var(--border))` }}>
+                    <p className="text-6xl font-black leading-none" style={{ color: scoreColor(aiScore.matchScore) }}>
                       {aiScore.matchScore}%
                     </p>
-                    <p className="text-sm text-[var(--muted-foreground)] mt-1">نسبة التوافق الإجمالية</p>
+                    <p className="text-sm font-semibold mt-2" style={{ color: scoreColor(aiScore.matchScore) }}>
+                      {scoreLabel(aiScore.matchScore)}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>نسبة التوافق الإجمالية</p>
                   </div>
 
                   {/* Match reasons */}
                   {aiScore.matchReasons?.length > 0 && (
-                    <div className="rounded-xl bg-blue-50 p-4">
-                      <p className="text-xs font-semibold text-blue-700 mb-2">أسباب التوافق</p>
-                      <ul className="space-y-1">
+                    <div className="rounded-2xl p-4"
+                      style={{ background: 'color-mix(in srgb, var(--accent) 8%, var(--muted))', border: '1px solid color-mix(in srgb, var(--accent) 20%, var(--border))' }}>
+                      <p className="text-xs font-bold mb-2.5" style={{ color: 'var(--accent)' }}>أسباب التوافق</p>
+                      <ul className="space-y-1.5">
                         {aiScore.matchReasons.map((r, i) => (
-                          <li key={i} className="flex items-center gap-2 text-sm text-blue-600">
-                            <span className="text-green-500">✓</span> {r}
+                          <li key={i} className="flex items-start gap-2 text-sm">
+                            <Check size={13} weight="bold" className="mt-0.5 shrink-0" style={{ color: 'var(--primary)' }} />
+                            <span style={{ color: 'var(--foreground)' }}>{r}</span>
                           </li>
                         ))}
                       </ul>
@@ -174,20 +222,24 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
 
                   {/* Category breakdown */}
                   <div>
-                    <p className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">تفصيل التوافق حسب المحاور</p>
-                    <div className="space-y-3">
-                      {categories.map((c) => {
-                        const val = Math.min(100, Math.round(aiScore.matchScore * (0.7 + Math.random() * 0.6)));
+                    <p className="text-xs font-bold mb-3" style={{ color: 'var(--muted-foreground)' }}>تفصيل التوافق حسب المحاور</p>
+                    <div className="space-y-2.5">
+                      {CATEGORIES.map((c) => {
+                        const val = Math.min(100, Math.round(aiScore.matchScore * (0.85 + c.weight / 2)));
+                        const col = scoreColor(val);
                         return (
                           <div key={c.label} className="flex items-center gap-3">
-                            <span className="text-lg w-7 shrink-0">{c.icon}</span>
+                            <span className="text-base w-6 shrink-0">{c.emoji}</span>
                             <div className="flex-1">
                               <div className="flex justify-between mb-1">
-                                <span className="text-xs font-medium text-[var(--foreground)]">{c.label}</span>
-                                <span className="text-xs text-[var(--muted-foreground)]">{val}% · وزن {c.weight}%</span>
+                                <span className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>{c.label}</span>
+                                <span className="text-[11px] tabular-nums" style={{ color: 'var(--muted-foreground)' }}>
+                                  {val}% · وزن {Math.round(c.weight * 100)}%
+                                </span>
                               </div>
-                              <div className="h-2 rounded-full bg-[var(--muted)]">
-                                <div className={`h-2 rounded-full ${barColor(val)}`} style={{ width: `${val}%` }} />
+                              <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--muted)' }}>
+                                <div className="h-full rounded-full transition-all duration-700"
+                                  style={{ width: `${val}%`, background: col }} />
                               </div>
                             </div>
                           </div>
@@ -197,8 +249,9 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                   </div>
 
                   {/* Comparison table */}
-                  <div className="rounded-xl border border-[var(--border)] overflow-hidden">
-                    <div className="grid grid-cols-3 bg-[var(--muted)] px-4 py-2 text-xs font-semibold text-[var(--muted-foreground)]">
+                  <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                    <div className="grid grid-cols-3 px-4 py-2.5 text-xs font-bold"
+                      style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}>
                       <span>المحور</span>
                       <span className="text-center">أنت</span>
                       <span className="text-center">{user.fullName?.split(' ')?.[0] ?? ''}</span>
@@ -208,43 +261,58 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                       ['نمط الحياة', myProfile?.data?.lifestyle, user.lifestyle],
                       ['الصلاة', myProfile?.data?.prayerLevel, user.prayerLevel],
                       ['الدولة', myProfile?.data?.country, user.country],
-                    ].map(([k, a, b]) => (
-                      <div key={k} className="grid grid-cols-3 px-4 py-2.5 text-sm border-t border-[var(--border)]/30">
-                        <span className="text-[var(--muted-foreground)] text-xs">{k}</span>
-                        <span className="text-center text-xs font-medium text-[var(--foreground)]">{a || '—'}</span>
-                        <span className={`text-center text-xs font-medium ${a && b && a === b ? 'text-green-600' : 'text-[var(--foreground)]'}`}>
-                          {b || '—'} {a && b && a === b ? '✓' : ''}
-                        </span>
-                      </div>
-                    ))}
+                    ].map(([k, a, b]) => {
+                      const match = a && b && a === b;
+                      return (
+                        <div key={String(k)} className="grid grid-cols-3 px-4 py-2.5 text-sm"
+                          style={{ borderTop: '1px solid color-mix(in srgb, var(--border) 50%, transparent)' }}>
+                          <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{k}</span>
+                          <span className="text-center text-xs font-medium" style={{ color: 'var(--foreground)' }}>{a || '—'}</span>
+                          <span className="text-center text-xs font-medium flex items-center justify-center gap-1"
+                            style={{ color: match ? 'var(--primary)' : 'var(--foreground)' }}>
+                            {b || '—'}
+                            {match && <Check size={10} weight="bold" />}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-[var(--muted-foreground)]">
-                  <p className="text-3xl mb-2">💫</p>
-                  <p className="text-sm">اضغط على تبويب نقاط التوافق لحساب التوافق</p>
+                <div className="text-center py-10">
+                  <div className="mx-auto mb-3 w-14 h-14 rounded-2xl flex items-center justify-center"
+                    style={{ background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))' }}>
+                    <Sparkle size={28} weight="light" style={{ color: 'var(--primary)', opacity: 0.5 }} />
+                  </div>
+                  <p className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>حساب التوافق</p>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                    اضغط على تبويب نقاط التوافق لحساب التوافق معه
+                  </p>
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {/* Footer with Start Chat button */}
-        <div className="p-4 border-t bg-[var(--card)]">
+        {/* ── Footer ────────────────────────────────────────────── */}
+        <div className="shrink-0 p-4" style={{ borderTop: '1px solid var(--border)' }}>
+          {chatError && (
+            <p className="text-xs text-center mb-2" style={{ color: '#ef4444' }}>{chatError}</p>
+          )}
           <button
             onClick={() => createConversation.mutate()}
             disabled={createConversation.isPending}
-            className="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold text-white transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-60"
+            style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', boxShadow: '0 4px 16px color-mix(in srgb, var(--primary) 30%, transparent)' }}>
             {createConversation.isPending ? (
               <>
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                <span>جاري بدء المحادثة...</span>
+                <div className="w-4 h-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                جاري بدء المحادثة...
               </>
             ) : (
               <>
-                <span>💬</span>
-                <span>ابدأ المحادثة</span>
+                <ChatCircle size={16} weight="fill" />
+                ابدأ المحادثة
               </>
             )}
           </button>
