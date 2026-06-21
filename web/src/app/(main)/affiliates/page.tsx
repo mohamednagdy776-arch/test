@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useMyAffiliate, useCreateAffiliate } from '@/features/affiliates/hooks';
 import { apiClient } from '@/lib/api-client';
 
@@ -120,7 +121,7 @@ function AffiliateDashboard({ affiliate }: { affiliate: any }) {
           </div>
         </div>
       )}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard value={affiliate.totalReferred ?? 0} label="إجمالي الإحالات" icon="👥" />
         <StatCard value={affiliate.totalMarriages ?? 0} label="زيجات ناجحة" icon="💍" />
         <button onClick={() => setShowWithdraw(true)} className="rounded-2xl bg-white border border-[#DCFCE7]/60 p-5 text-center shadow-sm hover:shadow-md transition-all active:scale-95">
@@ -170,6 +171,8 @@ function AffiliateDashboard({ affiliate }: { affiliate: any }) {
         </div>
       </div>
 
+      <ReferralHistory />
+
       <div className="rounded-2xl bg-[#FFFBEB] border border-[#DCFCE7]/60 p-5">
         <h3 className="text-sm font-bold text-[#059669] mb-3">كيف يعمل البرنامج؟</h3>
         <ol className="space-y-2 text-sm text-[#065F46]">
@@ -179,6 +182,53 @@ function AffiliateDashboard({ affiliate }: { affiliate: any }) {
           <li className="flex gap-2"><span className="font-bold text-[#10B981]">٤.</span> يُصرف رصيد العمولة عند الطلب</li>
         </ol>
       </div>
+    </div>
+  );
+}
+
+function ReferralHistory() {
+  const { data, isLoading } = useQuery({
+    queryKey: ['affiliate-referrals'],
+    queryFn: () => apiClient.get('/affiliates/referrals').then(r => r.data),
+  });
+  const referrals: any[] = (data as any)?.data ?? [];
+
+  if (isLoading) return (
+    <div className="rounded-2xl bg-[#FFFBEB] border border-[#DCFCE7]/60 p-5">
+      <h3 className="text-sm font-bold text-[#059669] mb-3">سجل الإحالات</h3>
+      <div className="space-y-2">{[1,2,3].map(i => <div key={i} className="h-10 rounded-xl bg-[#DCFCE7]/40 animate-pulse" />)}</div>
+    </div>
+  );
+
+  return (
+    <div className="rounded-2xl bg-[#FFFBEB] border border-[#DCFCE7]/60 p-5">
+      <h3 className="text-sm font-bold text-[#059669] mb-3">سجل الإحالات ({referrals.length})</h3>
+      {referrals.length === 0 ? (
+        <p className="text-center text-xs text-[#10B981] py-4">لا توجد إحالات بعد. شارك رابطك لتبدأ!</p>
+      ) : (
+        <div className="space-y-2 max-h-72 overflow-y-auto">
+          {referrals.map((r: any, i: number) => (
+            <div key={r.id ?? i} className="flex items-center justify-between py-2 border-b border-[#DCFCE7]/40 last:border-0">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-full bg-[#DCFCE7] flex items-center justify-center text-sm font-bold text-[#059669]">
+                  {r.referred?.fullName?.charAt(0) ?? r.referred?.firstName?.charAt(0) ?? '؟'}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-[#065F46]">{r.referred?.fullName ?? r.referred?.firstName ?? 'مستخدم'}</p>
+                  <p className="text-[10px] text-[#10B981]">{r.createdAt ? new Date(r.createdAt).toLocaleDateString('ar-SA') : ''}</p>
+                </div>
+              </div>
+              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                r.status === 'married' ? 'bg-emerald-100 text-emerald-700' :
+                r.status === 'subscribed' ? 'bg-blue-100 text-blue-700' :
+                'bg-gray-100 text-gray-600'
+              }`}>
+                {r.status === 'married' ? '💍 زواج' : r.status === 'subscribed' ? '⭐ مشترك' : '👤 مسجل'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -203,7 +253,7 @@ function JoinAffiliate() {
       </div>
 
       <div className="rounded-2xl bg-[#FFFBEB] border border-[#DCFCE7]/60 p-6 space-y-4 text-right">
-        <div className="grid grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
           <div className="p-3">
             <p className="text-2xl mb-1">👥</p>
             <p className="text-sm font-bold text-[#059669]">إحالة مجانية</p>

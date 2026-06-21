@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePage, useLikePage, useUnlikePage, useFollowPage, useUnfollowPage, usePagePosts, useCreatePagePost, useUpdatePage, useDeletePage } from '@/features/pages/hooks';
 import { Spinner } from '@/components/ui/Spinner';
+import { Modal } from '@/components/ui/Modal';
 import { useParams } from 'next/navigation';
 
 const PAGE_CATEGORIES = ['دراسة', 'صحة', 'رياضة', 'تكنولوجيا', 'فنون', 'موسيقى', 'ألعاب', 'طعام', 'سفر', 'أعمال', 'أخرى'];
@@ -45,6 +46,7 @@ export default function PageDetailPage() {
   const [postError, setPostError] = useState('');
 
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   const [editCategory, setEditCategory] = useState('');
@@ -90,12 +92,12 @@ export default function PageDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!confirm('هل أنت متأكد من حذف هذه الصفحة؟ لا يمكن التراجع عن هذا الإجراء.')) return;
     try {
       await deletePage.mutateAsync(id);
+      setShowDeleteModal(false);
       router.push('/pages');
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'فشل حذف الصفحة');
+      setShowDeleteModal(false);
     }
   };
 
@@ -188,6 +190,18 @@ export default function PageDetailPage() {
         </div>
       )}
 
+      <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="حذف الصفحة">
+        <div className="space-y-4">
+          <p className="text-sm text-emerald-700">هل أنت متأكد من حذف هذه الصفحة؟ لا يمكن التراجع عن هذا الإجراء.</p>
+          <div className="flex gap-3">
+            <button onClick={() => setShowDeleteModal(false)} className="flex-1 rounded-xl border border-emerald-200 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">إلغاء</button>
+            <button onClick={handleDelete} disabled={deletePage.isPending} className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
+              {deletePage.isPending ? '...' : 'تأكيد الحذف'}
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       <div className="relative h-48 md:h-64 rounded-2xl overflow-hidden mb-5">
         {page.coverPhoto ? (
           <img src={page.coverPhoto} alt={`صورة غلاف ${page.name}`} className="w-full h-full object-cover" />
@@ -210,7 +224,7 @@ export default function PageDetailPage() {
               ✏️ تعديل
             </button>
             <button
-              onClick={handleDelete}
+              onClick={() => setShowDeleteModal(true)}
               disabled={deletePage.isPending}
               className="rounded-xl bg-white/80 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-white transition-colors shadow-sm disabled:opacity-50"
             >

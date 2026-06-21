@@ -360,12 +360,12 @@ export const ChatWindow = ({ match, onBack }: Props) => {
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`group flex ${msg.isOwn ? 'justify-start' : 'justify-end'}`}
+            className={`group flex ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
             onMouseEnter={() => setHoveredMsgId(msg.id)}
             onMouseLeave={() => setHoveredMsgId(null)}
           >
             {msg.isOwn && hoveredMsgId === msg.id && !msg.isDeletedForEveryone && !String(msg.id).startsWith('temp-') && (
-              <div className="flex items-center gap-1 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex items-center gap-1 mr-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => handleDelete(msg.id, false)}
                   title="حذف للي"
@@ -383,7 +383,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
               </div>
             )}
             <div className={`relative max-w-xs lg:max-w-md rounded-2xl px-4 py-2.5 text-sm ${
-              msg.isOwn ? 'bg-primary text-white rounded-br-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+              msg.isOwn ? 'bg-primary text-white rounded-tl-sm' : 'bg-gray-100 text-gray-800 rounded-tr-sm'
             }`}>
               {replyTo && msg.replyToId && (
                 <div className={`mb-2 p-2 rounded-lg text-xs ${msg.isOwn ? 'bg-blue-600/30' : 'bg-gray-200'}`}>

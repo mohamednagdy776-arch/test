@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup } from '@/features/groups/hooks';
 import { useGroupPosts, useCreatePostWithMedia, useCreatePost } from '@/features/posts/hooks';
 import { PostCard } from '@/features/posts/components/PostCard';
+import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 
 export default function GroupDetailPage() {
@@ -17,6 +18,7 @@ export default function GroupDetailPage() {
   const createPost = useCreatePost();
   const createPostWithMedia = useCreatePostWithMedia();
   const { showToast } = useToast();
+  const [showDeleteGroupModal, setShowDeleteGroupModal] = useState(false);
 
   const [content, setContent] = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
@@ -124,16 +126,7 @@ export default function GroupDetailPage() {
           <div className="shrink-0 flex items-center gap-2">
             {(group.isOwner || group.isAdmin) && (
               <button
-                onClick={async () => {
-                  if (!confirm('هل أنت متأكد من حذف هذا المجتمع؟ لا يمكن التراجع عن هذا الإجراء.')) return;
-                  try {
-                    await deleteGroup.mutateAsync(id);
-                    showToast('تم حذف المجتمع', 'success');
-                    router.push('/groups');
-                  } catch (err: any) {
-                    showToast(err?.response?.data?.message || 'فشل حذف المجتمع', 'error');
-                  }
-                }}
+                onClick={() => setShowDeleteGroupModal(true)}
                 disabled={deleteGroup.isPending}
                 className="rounded-xl border border-red-200 px-3 py-2 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
               >
@@ -258,6 +251,31 @@ export default function GroupDetailPage() {
           posts.map((p: any) => <PostCard key={p.id} post={p} showGroupLink={false} />)
         )}
       </div>
+
+      <Modal open={showDeleteGroupModal} onClose={() => setShowDeleteGroupModal(false)} title="حذف المجتمع">
+        <div className="space-y-4">
+          <p className="text-sm text-emerald-700">هل أنت متأكد من حذف هذا المجتمع؟ لا يمكن التراجع عن هذا الإجراء.</p>
+          <div className="flex gap-3">
+            <button onClick={() => setShowDeleteGroupModal(false)} className="flex-1 rounded-xl border border-emerald-200 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">إلغاء</button>
+            <button
+              onClick={async () => {
+                setShowDeleteGroupModal(false);
+                try {
+                  await deleteGroup.mutateAsync(id);
+                  showToast('تم حذف المجتمع', 'success');
+                  router.push('/groups');
+                } catch (err: any) {
+                  showToast(err?.response?.data?.message || 'فشل حذف المجتمع', 'error');
+                }
+              }}
+              disabled={deleteGroup.isPending}
+              className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+            >
+              تأكيد الحذف
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

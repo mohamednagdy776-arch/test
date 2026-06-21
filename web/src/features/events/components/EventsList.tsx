@@ -1,13 +1,16 @@
 'use client';
 import Link from 'next/link';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Spinner } from '@/components/ui/Spinner';
+import { Modal } from '@/components/ui/Modal';
 import { useRsvpEvent, useDeleteEvent } from '../hooks';
 import { useToast } from '@/components/ui/Toast';
 import { getCurrentUserId } from '@/lib/socket-client';
 
 export const EventsList = () => {
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: () => apiClient.get('/events').then(res => res.data),
@@ -29,14 +32,15 @@ export const EventsList = () => {
     }
   };
 
-  const handleDelete = async (eventId: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!confirm('هل أنت متأكد من حذف هذا الحدث؟')) return;
+  const handleDelete = async () => {
+    if (!confirmDeleteId) return;
     try {
-      await deleteEvent.mutateAsync(eventId);
+      await deleteEvent.mutateAsync(confirmDeleteId);
       showToast('تم حذف الحدث بنجاح', 'success');
     } catch (err: any) {
       showToast(err?.response?.data?.message || 'فشل حذف الحدث', 'error');
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -78,7 +82,7 @@ export const EventsList = () => {
                 </span>
                 {myUserId && (event.creatorId === myUserId || event.userId === myUserId) && (
                   <button
-                    onClick={(e) => handleDelete(event.id, e)}
+                    onClick={(e) => { e.preventDefault(); setConfirmDeleteId(event.id); }}
                     disabled={deleteEvent.isPending}
                     className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg p-1 transition-colors disabled:opacity-50"
                     title="حذف الحدث"
@@ -116,6 +120,17 @@ export const EventsList = () => {
           </Link>
         ))
       )}
+      <Modal open={!!confirmDeleteId} onClose={() => setConfirmDeleteId(null)} title="حذف الحدث">
+        <div className="space-y-4">
+          <p className="text-sm text-[#10B981]">هل أنت متأكد من حذف هذا الحدث؟ لا يمكن التراجع عن هذا الإجراء.</p>
+          <div className="flex gap-3">
+            <button onClick={() => setConfirmDeleteId(null)} className="flex-1 rounded-xl border border-emerald-200 py-2.5 text-sm text-[#10B981] hover:bg-[#ECFDF5] transition-colors">إلغاء</button>
+            <button onClick={handleDelete} disabled={deleteEvent.isPending} className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
+              {deleteEvent.isPending ? '...' : 'تأكيد الحذف'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
