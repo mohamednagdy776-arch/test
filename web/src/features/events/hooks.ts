@@ -96,8 +96,8 @@ export function useDeleteEvent() {
 export function useCreateEvent() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ title, description, location, startDate, privacy, coverPhoto }: { title: string; description?: string; location?: string; startDate?: string; privacy?: string; coverPhoto?: File }) =>
-      coverPhoto ? eventsApi.createEventWithCover(title, description || '', location || '', startDate || '', privacy || 'public', coverPhoto) : eventsApi.createEvent(title, description, location, startDate, privacy),
+    mutationFn: ({ title, description, location, startDate, endDate, privacy, coverPhoto }: { title: string; description?: string; location?: string; startDate?: string; endDate?: string; privacy?: string; coverPhoto?: File }) =>
+      coverPhoto ? eventsApi.createEventWithCover(title, description || '', location || '', startDate || '', privacy || 'public', coverPhoto) : eventsApi.createEvent(title, description, location, startDate, privacy, endDate),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['my-events'] });
       qc.invalidateQueries({ queryKey: ['events'] });

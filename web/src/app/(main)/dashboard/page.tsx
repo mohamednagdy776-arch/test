@@ -155,6 +155,7 @@ function SuggestedConnections() {
 }
 
 function TrendingTopics() {
+  const router = useRouter();
   const { data, isLoading } = useQuery({
     queryKey: ['trending-posts'],
     queryFn: () =>

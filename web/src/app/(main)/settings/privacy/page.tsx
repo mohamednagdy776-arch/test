@@ -88,15 +88,57 @@ interface BlockedUser {
   };
 }
 
+function DataExportButton() {
+  const [exporting, setExporting] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      const res = await apiClient.get('/users/me/export', { responseType: 'blob' });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tayyibt-data-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setDone(true);
+      setTimeout(() => setDone(false), 4000);
+    } catch {
+      alert('تعذّر تصدير البيانات. يرجى المحاولة مجدداً.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50">
+      <div>
+        <h3 className="font-semibold text-emerald-900">تحميل نسخة من بياناتك</h3>
+        <p className="text-emerald-700/70 text-sm mt-0.5">ملف JSON يحتوي على ملفك الشخصي، منشوراتك، وإعداداتك</p>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleExport}
+        loading={exporting}
+        className={done ? 'text-emerald-600 border-emerald-400' : 'text-emerald-700 border-emerald-300 hover:bg-emerald-50'}
+      >
+        {done ? '✓ تم التحميل' : '⬇ تصدير'}
+      </Button>
+    </div>
+  );
+}
+
 export default function PrivacyPage() {
   const { data: privacyData, isLoading: privacyLoading } = usePrivacySettings();
   const { data: blocksData, isLoading: blocksLoading } = useBlocks();
   const updatePrivacy = useUpdatePrivacySettings();
   const unblockUser = useUnblockUser();
-  
+
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<BlockedUser | null>(null);
-
   const [privacyError, setPrivacyError] = useState<string | null>(null);
 
   const handleVisibilityChange = async (key: string, value: string) => {
@@ -164,49 +206,6 @@ export default function PrivacyPage() {
       ))}
     </select>
   );
-}
-
-function DataExportButton() {
-  const [exporting, setExporting] = useState(false);
-  const [done, setDone] = useState(false);
-
-  const handleExport = async () => {
-    setExporting(true);
-    try {
-      const { apiClient } = await import('@/lib/api-client');
-      const res = await apiClient.get('/users/me/export', { responseType: 'blob' });
-      const url = URL.createObjectURL(res.data);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `tayyibt-data-${Date.now()}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      setDone(true);
-      setTimeout(() => setDone(false), 4000);
-    } catch {
-      alert('تعذّر تصدير البيانات. يرجى المحاولة مجدداً.');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  return (
-    <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50">
-      <div>
-        <h3 className="font-semibold text-emerald-900">تحميل نسخة من بياناتك</h3>
-        <p className="text-emerald-700/70 text-sm mt-0.5">ملف JSON يحتوي على ملفك الشخصي، منشوراتك، وإعداداتك</p>
-      </div>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleExport}
-        loading={exporting}
-        className={done ? 'text-emerald-600 border-emerald-400' : 'text-emerald-700 border-emerald-300 hover:bg-emerald-50'}
-      >
-        {done ? '✓ تم التحميل' : '⬇ تصدير'}
-      </Button>
-    </div>
-  );
 
   if (privacyLoading) {
     return (
@@ -254,7 +253,7 @@ function DataExportButton() {
                     )}
                   </div>
                   <SelectInput
-                    value={settings?.[field.key as keyof typeof settings] || 'friends'}
+                    value={settings?.[field.key as keyof typeof settings] as string || 'friends'}
                     onChange={(value) => handleVisibilityChange(field.key, value)}
                     options={field.options}
                   />
@@ -269,6 +268,7 @@ function DataExportButton() {
                 <ToggleSwitch
                   enabled={settings?.allowSearchEngines || false}
                   onClick={handleSearchEnginesToggle}
+                  label="السماح لمحركات البحث"
                 />
               </div>
             </div>
@@ -321,7 +321,6 @@ function DataExportButton() {
           </CardContent>
         </Card>
 
-        {/* Data Export (GDPR/PDPA) */}
         <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
           <CardHeader>
             <CardTitle className="text-emerald-900 flex items-center gap-2">
