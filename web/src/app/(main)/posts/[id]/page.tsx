@@ -10,7 +10,9 @@ export default function PostDetailPage() {
   const post = (data as any)?.data ?? data;
 
   const handleBack = () => {
-    if (window.history.length > 1) {
+    const referrer = document.referrer;
+    const isSameOrigin = referrer && new URL(referrer).origin === window.location.origin;
+    if (isSameOrigin) {
       router.back();
     } else {
       router.push('/posts');

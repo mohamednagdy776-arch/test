@@ -6,6 +6,11 @@ import Link from 'next/link';
 const LANGUAGES = [
   { code: 'ar', name: 'العربية', native: 'العربية', flag: '🇸🇦', dir: 'rtl' },
   { code: 'en', name: 'English', native: 'English', flag: '🇺🇸', dir: 'ltr' },
+  { code: 'ur', name: 'Urdu', native: 'اردو', flag: '🇵🇰', dir: 'rtl' },
+  { code: 'tr', name: 'Türkçe', native: 'Türkçe', flag: '🇹🇷', dir: 'ltr' },
+  { code: 'id', name: 'Indonesian', native: 'Bahasa Indonesia', flag: '🇮🇩', dir: 'ltr' },
+  { code: 'ms', name: 'Malay', native: 'Bahasa Melayu', flag: '🇲🇾', dir: 'ltr' },
+  { code: 'fr', name: 'Français', native: 'Français', flag: '🇫🇷', dir: 'ltr' },
 ];
 
 const STORAGE_KEY = 'tayyibt_lang';

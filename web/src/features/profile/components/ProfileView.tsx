@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import { apiClient } from '@/lib/api-client';
 import { profileApi } from '../api';
 import { ProfileHeader } from './ProfileHeader';
@@ -68,6 +69,11 @@ export const ProfileView = ({ userId }: Props) => {
   const unfriend = useMutation({
     mutationFn: () => profileApi.unfriend(profileUserId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['friendship-status', profileUserId] }),
+  });
+
+  const blockUser = useMutation({
+    mutationFn: () => profileApi.blockUser(profileUserId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: userId ? ['user-profile', userId] : ['my-profile'] }),
   });
 
   const friendActionPending =
@@ -203,6 +209,7 @@ export const ProfileView = ({ userId }: Props) => {
         onCancelRequest={!isSelf ? () => cancelRequest.mutate() : undefined}
         onAcceptRequest={!isSelf ? () => acceptRequest.mutate() : undefined}
         onUnfriend={!isSelf ? () => unfriend.mutate() : undefined}
+        onBlock={!isSelf ? () => blockUser.mutate() : undefined}
         friendActionPending={!isSelf ? friendActionPending : false}
       />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
@@ -214,12 +221,16 @@ export const ProfileView = ({ userId }: Props) => {
 // Posts tab — fetches and renders the profile user's own posts. (Was a static
 // "coming soon" placeholder; the backend GET /users/:id/posts is implemented.)
 const ProfilePostsFeed = ({ userId }: { userId: string }) => {
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['profile-posts', userId],
-    queryFn: () => apiClient.get(`/users/${userId}/posts`).then((r) => r.data),
+    queryKey: ['profile-posts', userId, page],
+    queryFn: () => apiClient.get(`/users/${userId}/posts`, { params: { page, limit: PAGE_SIZE } }).then((r) => r.data),
     enabled: !!userId,
   });
-  const posts: any[] = (data as any)?.data ?? [];
+  const posts: any[] = (data as any)?.data?.data ?? (data as any)?.data ?? [];
+  const total: number = (data as any)?.data?.total ?? posts.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const shell = (msg: string) => (
     <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-10 text-center">
@@ -229,13 +240,20 @@ const ProfilePostsFeed = ({ userId }: { userId: string }) => {
 
   if (isLoading) return shell('جاري تحميل المنشورات...');
   if (isError) return shell('تعذّر تحميل المنشورات');
-  if (posts.length === 0) return shell('لا توجد منشورات');
+  if (posts.length === 0 && page === 1) return shell('لا توجد منشورات');
 
   return (
     <div className="space-y-4">
-      {posts.map((post) => (
+      {posts.map((post: any) => (
         <PostCard key={post.id} post={post} />
       ))}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[#547792] border border-[#C8D8DF] hover:bg-[#D4E8EE]/40 disabled:opacity-40 transition-colors">السابق</button>
+          <span className="text-sm text-[#547792]">{page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[#547792] border border-[#C8D8DF] hover:bg-[#D4E8EE]/40 disabled:opacity-40 transition-colors">التالي</button>
+        </div>
+      )}
     </div>
   );
 };
@@ -260,12 +278,12 @@ const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
   return (
     <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-3 gap-4">
       {friends.map((f: any, i: number) => (
-        <a key={f.id ?? i} href={f.username ? `/${f.username}` : f.id ? `/profile/${f.id}` : '#'} className="rounded-lg bg-gray-50 p-3 text-center hover:bg-[#D4E8EE]/40 transition-colors">
+        <Link key={f.id ?? i} href={f.username ? `/${f.username}` : f.id ? `/profile/${f.id}` : '#'} className="rounded-lg bg-gray-50 p-3 text-center hover:bg-[#D4E8EE]/40 transition-colors">
           <div className="h-16 w-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
             {f.avatarUrl ? <img src={f.avatarUrl} alt="" className="h-full w-full object-cover" /> : <span className="text-xl font-bold text-[#547792]">{f.fullName?.charAt(0)}</span>}
           </div>
           <p className="mt-2 text-sm font-semibold text-gray-800 truncate">{f.fullName}</p>
-        </a>
+        </Link>
       ))}
     </div>
   );
@@ -337,11 +355,23 @@ const ProfileVideosFeed = ({ userId }: { userId: string }) => {
   if (isError) return feedShell('تعذّر تحميل الفيديوهات');
   if (videos.length === 0) return feedShell('لا توجد فيديوهات');
   return (
-    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-3 gap-4">
+    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
       {videos.map((v: any, i: number) => (
-        <div key={i} className="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center p-4">
-          <p className="text-gray-500 text-center text-sm">{v.description}</p>
-        </div>
+        <Link key={v.id ?? i} href={`/watch/${v.id}`} className="group relative aspect-video bg-gray-100 rounded-lg overflow-hidden block hover:opacity-90 transition-opacity">
+          {v.thumbnail ? (
+            <img src={v.thumbnail} alt={v.title || ''} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-3xl text-gray-400">🎬</div>
+          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
+            <span className="text-white opacity-0 group-hover:opacity-100 text-2xl">▶️</span>
+          </div>
+          {v.title && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 p-2">
+              <p className="text-white text-xs line-clamp-1">{v.title}</p>
+            </div>
+          )}
+        </Link>
       ))}
     </div>
   );
