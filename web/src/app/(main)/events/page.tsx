@@ -3,19 +3,23 @@ import { EventsList } from '@/features/events/components/EventsList';
 import { useCreateEvent } from '@/features/events/hooks';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
-
-const INPUT_CLASS = "w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)]";
-const LABEL_CLASS = "block text-xs font-semibold text-[var(--primary)] mb-1";
+import { CalendarBlank, Plus, X, MapPin, Clock } from '@phosphor-icons/react';
 
 export default function EventsPage() {
   const [showCreate, setShowCreate] = useState(false);
-  const [title, setTitle] = useState('');
+  const [title,       setTitle]       = useState('');
   const [description, setDescription] = useState('');
-  const [location, setLocation] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const createEvent = useCreateEvent();
-  const { showToast } = useToast();
+  const [location,    setLocation]    = useState('');
+  const [startDate,   setStartDate]   = useState('');
+  const [endDate,     setEndDate]     = useState('');
+  const createEvent   = useCreateEvent();
+  const { showToast } = useToast() as any;
+
+  const resetForm = () => {
+    setTitle(''); setDescription(''); setLocation('');
+    setStartDate(''); setEndDate('');
+    setShowCreate(false);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,59 +28,124 @@ export default function EventsPage() {
       return;
     }
     try {
-      await createEvent.mutateAsync({ title: title.trim(), description: description.trim(), location: location.trim(), startDate, endDate: endDate || undefined, privacy: 'public' });
+      await createEvent.mutateAsync({
+        title: title.trim(),
+        description: description.trim(),
+        location: location.trim(),
+        startDate,
+        endDate: endDate || undefined,
+        privacy: 'public',
+      });
       showToast('تم إنشاء الحدث بنجاح', 'success');
-      setTitle('');
-      setDescription('');
-      setLocation('');
-      setStartDate('');
-      setEndDate('');
-      setShowCreate(false);
+      resetForm();
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'فشل إنشاء الحدث';
-      showToast(errorMessage, 'error');
+      showToast(err?.response?.data?.message || err?.message || 'فشل إنشاء الحدث', 'error');
     }
   };
 
+  const inputStyle = { background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' };
+  const inputClass = "w-full rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--ring)]";
+
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">الأحداث</h1>
-        <button onClick={() => setShowCreate(!showCreate)} className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all">
-          {showCreate ? 'إلغاء' : '+ إنشاء حدث'}
-        </button>
+    <div className="space-y-5 max-w-4xl mx-auto">
+      {/* ── Luxury Hero Header ─────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl p-5"
+        style={{
+          background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 55%, var(--accent) 100%)',
+          boxShadow: '0 8px 32px color-mix(in srgb, var(--primary) 30%, transparent)',
+        }}>
+        <div className="absolute -top-6 -left-6 w-24 h-24 rounded-full bg-white opacity-10" />
+        <div className="absolute -bottom-8 -right-4 w-32 h-32 rounded-full bg-white opacity-10" />
+        <div className="relative z-10 flex items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <CalendarBlank size={14} weight="fill" className="text-white/70" />
+              <span className="text-[11px] font-semibold text-white/70">الأحداث</span>
+            </div>
+            <h1 className="text-xl font-extrabold text-white">الأحداث والفعاليات</h1>
+            <p className="text-xs text-white/70 mt-0.5">اكتشف وشارك في الأحداث القادمة</p>
+          </div>
+          <button onClick={() => setShowCreate((v) => !v)}
+            className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}>
+            {showCreate ? <X size={15} /> : <Plus size={15} />}
+            {showCreate ? 'إلغاء' : 'إنشاء حدث'}
+          </button>
+        </div>
       </div>
 
+      {/* ── Create Event Form ───────────────────────────────── */}
       {showCreate && (
-        <form onSubmit={handleCreate} className="mb-6 rounded-2xl p-5 border space-y-3" style={{ background: 'var(--card)', borderColor: 'var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
+        <form onSubmit={handleCreate} className="rounded-2xl p-5 space-y-4"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
           <div>
-            <label htmlFor="event-title" className={LABEL_CLASS}>عنوان الحدث <span className="text-red-400">*</span></label>
-            <input id="event-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="أدخل عنوان الحدث" className={INPUT_CLASS} required />
+            <label htmlFor="event-title" className="block text-xs font-semibold mb-1.5"
+              style={{ color: 'var(--muted-foreground)' }}>
+              عنوان الحدث <span style={{ color: 'var(--destructive)' }}>*</span>
+            </label>
+            <input id="event-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)}
+              placeholder="أدخل عنوان الحدث" required
+              className={inputClass} style={inputStyle} />
           </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label htmlFor="event-start" className={LABEL_CLASS}>تاريخ البداية <span className="text-red-400">*</span></label>
-              <input id="event-start" type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={INPUT_CLASS} required />
+              <label htmlFor="event-start" className="block text-xs font-semibold mb-1.5"
+                style={{ color: 'var(--muted-foreground)' }}>
+                <span className="flex items-center gap-1">
+                  <CalendarBlank size={11} /> تاريخ البداية <span style={{ color: 'var(--destructive)' }}>*</span>
+                </span>
+              </label>
+              <input id="event-start" type="datetime-local" value={startDate}
+                onChange={(e) => setStartDate(e.target.value)} required
+                className={inputClass} style={inputStyle} />
             </div>
             <div>
-              <label htmlFor="event-end" className={LABEL_CLASS}>تاريخ النهاية</label>
-              <input id="event-end" type="datetime-local" value={endDate} onChange={(e) => setEndDate(e.target.value)} className={INPUT_CLASS} min={startDate} />
+              <label htmlFor="event-end" className="block text-xs font-semibold mb-1.5"
+                style={{ color: 'var(--muted-foreground)' }}>
+                <span className="flex items-center gap-1"><Clock size={11} /> تاريخ النهاية</span>
+              </label>
+              <input id="event-end" type="datetime-local" value={endDate}
+                onChange={(e) => setEndDate(e.target.value)} min={startDate}
+                className={inputClass} style={inputStyle} />
             </div>
           </div>
+
           <div>
-            <label htmlFor="event-location" className={LABEL_CLASS}>الموقع</label>
-            <input id="event-location" type="text" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="أدخل موقع الحدث" className={INPUT_CLASS} />
+            <label htmlFor="event-location" className="block text-xs font-semibold mb-1.5"
+              style={{ color: 'var(--muted-foreground)' }}>
+              <span className="flex items-center gap-1"><MapPin size={11} /> الموقع</span>
+            </label>
+            <input id="event-location" type="text" value={location}
+              onChange={(e) => setLocation(e.target.value)} placeholder="أدخل موقع الحدث"
+              className={inputClass} style={inputStyle} />
           </div>
+
           <div>
-            <label htmlFor="event-description" className={LABEL_CLASS}>الوصف</label>
-            <textarea id="event-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="أدخل وصف الحدث" rows={2} className={`${INPUT_CLASS} resize-none`} />
+            <label htmlFor="event-description" className="block text-xs font-semibold mb-1.5"
+              style={{ color: 'var(--muted-foreground)' }}>الوصف</label>
+            <textarea id="event-description" value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="أدخل وصف الحدث..." rows={2}
+              className={`${inputClass} resize-none`} style={inputStyle} />
           </div>
-          <button type="submit" disabled={createEvent.isPending} className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all">
-            {createEvent.isPending ? 'جاري...' : 'إنشاء'}
-          </button>
+
+          <div className="flex gap-2 justify-end pt-1">
+            <button type="button" onClick={resetForm}
+              className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95"
+              style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
+              إلغاء
+            </button>
+            <button type="submit" disabled={createEvent.isPending}
+              className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
+              {createEvent.isPending ? 'جاري...' : (<><Plus size={14} /> إنشاء</>)}
+            </button>
+          </div>
         </form>
       )}
 
+      {/* ── Events list ─────────────────────────────────────── */}
       <EventsList />
     </div>
   );
