@@ -2,161 +2,199 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { authApi } from '@/features/auth/api';
+import { useMyProfile } from '@/features/profile/hooks';
+import {
+  House, Heart, MagnifyingGlass, UsersThree, ChatCircle,
+  SignOut, List, X, User, CaretDown, CalendarBlank, Sparkle
+} from '@phosphor-icons/react';
 
-const Icons = {
-  home: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg>,
-  search: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>,
-  heart: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"/></svg>,
-  group: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/></svg>,
-  chat: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>,
-  user: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>,
-  logout: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9"/></svg>,
-  menu: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"/></svg>,
-  close: <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>,
-};
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 const navLinks = [
-  { href: '/matching', label: 'التوافق', icon: Icons.heart },
-  { href: '/search', label: 'البحث', icon: Icons.search },
-  { href: '/groups', label: 'المجتمعات', icon: Icons.group },
-  { href: '/chat', label: 'المحادثات', icon: Icons.chat },
+  { href: '/dashboard', label: 'الرئيسية', icon: House },
+  { href: '/matching', label: 'التوافق', icon: Heart },
+  { href: '/search', label: 'البحث', icon: MagnifyingGlass },
+  { href: '/groups', label: 'المجتمعات', icon: UsersThree },
+  { href: '/events', label: 'الفعاليات', icon: CalendarBlank },
+  { href: '/chat', label: 'المحادثات', icon: ChatCircle },
 ];
 
 export const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: profileData } = useMyProfile();
+  const user = (profileData as any)?.data;
+  const avatarUrl = user?.avatar ? `${API_BASE}${user.avatar}` : null;
+  const displayName = user?.name || user?.username || 'حسابي';
+
   const logout = async () => {
-    // Cookies are HttpOnly — only the backend can clear them.
-    try { await authApi.logout(); } catch { /* clear client state regardless */ }
+    try { await authApi.logout(); } catch {}
     router.push('/login');
   };
 
   return (
-    <nav
-      className="sticky top-0 z-40 border-b backdrop-blur-xl shadow-soft transition-colors duration-300"
-      style={{
-        backgroundColor: 'color-mix(in srgb, var(--card) 92%, transparent)',
-        borderColor: 'var(--border)',
-      }}
-    >
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        {/* Logo */}
-        <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-2xl font-bold text-sm shadow-soft"
-            style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
-          >
-            ط
-          </div>
-          <span className="text-xl font-bold transition-colors" style={{ color: 'var(--primary)' }}>طيبت</span>
-        </Link>
+    <>
+      <nav className="sticky top-0 z-40 border-b transition-all duration-300"
+        style={{
+          background: 'color-mix(in srgb, var(--card) 85%, transparent)',
+          borderColor: 'var(--border)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          boxShadow: '0 1px 20px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.4) inset',
+        }}
+      >
+        <div className="mx-auto flex h-[3.75rem] max-w-7xl items-center justify-between px-3 sm:px-6">
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => {
-            const isActive = pathname === link.href;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-200"
-                style={
-                  isActive
-                    ? { backgroundColor: 'var(--muted)', color: 'var(--primary)' }
-                    : { color: 'var(--muted-foreground)' }
-                }
-              >
-                <span>{link.icon}</span>
-                {link.label}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Right actions */}
-        <div className="hidden md:flex items-center gap-2">
-          <NotificationBell />
-
-          <Link
-            href="/profile"
-            className="rounded-xl p-2 transition-all duration-200"
-            style={
-              pathname === '/profile'
-                ? { color: 'var(--primary)', backgroundColor: 'var(--muted)' }
-                : { color: 'var(--muted-foreground)' }
-            }
-          >
-            {Icons.user}
+          {/* Logo */}
+          <Link href="/dashboard" className="flex items-center gap-2.5 group shrink-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl font-bold text-sm shadow-md transition-transform duration-200 group-hover:scale-105"
+              style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)', color: 'var(--primary-foreground)' }}>
+              ط
+            </div>
+            <span className="hidden sm:block text-lg font-extrabold tracking-tight transition-colors"
+              style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+              طيبت
+            </span>
           </Link>
 
-          <button
-            onClick={logout}
-            className="flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition-all duration-200"
-            style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}
-          >
-            {Icons.logout}
-            <span className="hidden lg:inline">خروج</span>
-          </button>
-        </div>
-
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden rounded-xl p-2 transition-colors"
-          style={{ color: 'var(--primary)' }}
-        >
-          {mobileOpen ? Icons.close : Icons.menu}
-        </button>
-      </div>
-
-      {/* Mobile menu */}
-      {mobileOpen && (
-        <div
-          className="md:hidden border-t animate-slide-down"
-          style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
-        >
-          <div className="space-y-1 px-4 py-3">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
+          {/* Desktop nav */}
+          <div className="hidden lg:flex items-center gap-0.5">
+            {navLinks.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname === href || pathname.startsWith(href + '/');
               return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-                  style={
+                <Link key={href} href={href}
+                  className={cn(
+                    'flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all duration-200 group min-w-[56px]',
                     isActive
-                      ? { backgroundColor: 'var(--muted)', color: 'var(--primary)' }
-                      : { color: 'var(--muted-foreground)' }
-                  }
+                      ? 'text-[var(--primary)]'
+                      : 'text-[var(--muted-foreground)] hover:text-[var(--primary)]'
+                  )}
+                  style={isActive ? { background: 'color-mix(in srgb, var(--primary) 10%, transparent)' } : {}}
                 >
-                  <span>{link.icon}</span>
-                  {link.label}
+                  <Icon size={22} weight={isActive ? 'fill' : 'regular'}
+                    className="transition-transform duration-200 group-hover:scale-110" />
+                  {label}
+                  {isActive && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full" style={{ background: 'var(--primary)' }} />}
                 </Link>
               );
             })}
-            <Link
-              href="/profile"
-              onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-              style={{ color: 'var(--muted-foreground)' }}
-            >
-              {Icons.user} الملف الشخصي
+          </div>
+
+          {/* Right side */}
+          <div className="hidden md:flex items-center gap-2">
+            <NotificationBell />
+
+            {/* Upgrade badge */}
+            <Link href="/upgrade"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 hover:scale-105"
+              style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff', boxShadow: '0 2px 8px rgba(245,158,11,0.3)' }}>
+              <Sparkle size={14} weight="fill" />
+              ترقية
             </Link>
-            <button
-              onClick={logout}
-              className="w-full flex items-center gap-2 text-right px-3 py-2.5 rounded-xl text-sm font-medium transition-colors"
-              style={{ color: 'var(--destructive)' }}
-            >
-              {Icons.logout} خروج
+
+            {/* User avatar dropdown */}
+            <Link href="/profile" className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all duration-200 hover:bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]">
+              <div className="relative">
+                {avatarUrl ? (
+                  <Image src={avatarUrl} alt={displayName} width={32} height={32}
+                    className="w-8 h-8 rounded-xl object-cover ring-2 ring-[var(--primary)] ring-offset-1" />
+                ) : (
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-bold shadow-sm"
+                    style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: 'var(--primary-foreground)' }}>
+                    {displayName.charAt(0)}
+                  </div>
+                )}
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white" style={{ background: '#22c55e' }} />
+              </div>
+              <span className="hidden xl:block text-xs font-semibold max-w-[80px] truncate" style={{ color: 'var(--foreground)' }}>
+                {displayName}
+              </span>
+              <CaretDown size={12} className="hidden xl:block opacity-50" />
+            </Link>
+
+            <button onClick={logout}
+              className="flex items-center gap-1 px-2 py-2 rounded-xl text-xs transition-all duration-200 hover:bg-red-50 hover:text-red-500"
+              style={{ color: 'var(--muted-foreground)' }}
+              aria-label="تسجيل الخروج">
+              <SignOut size={18} />
+            </button>
+          </div>
+
+          {/* Mobile: notification + hamburger */}
+          <div className="flex md:hidden items-center gap-2">
+            <NotificationBell />
+            <button onClick={() => setMobileOpen(!mobileOpen)}
+              className="p-2 rounded-xl transition-colors"
+              style={{ color: 'var(--primary)' }}
+              aria-label="القائمة">
+              {mobileOpen ? <X size={22} weight="bold" /> : <List size={22} weight="bold" />}
             </button>
           </div>
         </div>
-      )}
-    </nav>
+
+        {/* Mobile menu */}
+        {mobileOpen && (
+          <div className="md:hidden border-t animate-slide-down overflow-hidden"
+            style={{ background: 'var(--card)', borderColor: 'var(--border)' }}>
+            {/* User info strip */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--border)' }}>
+              {avatarUrl ? (
+                <Image src={avatarUrl} alt={displayName} width={36} height={36} className="w-9 h-9 rounded-xl object-cover" />
+              ) : (
+                <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold"
+                  style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: 'var(--primary-foreground)' }}>
+                  {displayName.charAt(0)}
+                </div>
+              )}
+              <div>
+                <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{displayName}</p>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>مرحباً بك في طيبت</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1 p-3">
+              {navLinks.map(({ href, label, icon: Icon }) => {
+                const isActive = pathname === href;
+                return (
+                  <Link key={href} href={href} onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      'flex flex-col items-center gap-1 p-3 rounded-xl text-xs font-semibold transition-all duration-200',
+                      isActive ? 'text-[var(--primary)]' : 'text-[var(--muted-foreground)]'
+                    )}
+                    style={isActive ? { background: 'color-mix(in srgb, var(--primary) 10%, transparent)' } : {}}>
+                    <Icon size={22} weight={isActive ? 'fill' : 'regular'} />
+                    {label}
+                  </Link>
+                );
+              })}
+              <Link href="/profile" onClick={() => setMobileOpen(false)}
+                className="flex flex-col items-center gap-1 p-3 rounded-xl text-xs font-semibold transition-all duration-200"
+                style={{ color: 'var(--muted-foreground)' }}>
+                <User size={22} />
+                الملف
+              </Link>
+            </div>
+
+            <div className="px-3 pb-3 flex gap-2">
+              <Link href="/upgrade" onClick={() => setMobileOpen(false)}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all"
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff' }}>
+                <Sparkle size={16} weight="fill" /> ترقية الحساب
+              </Link>
+              <button onClick={() => { setMobileOpen(false); logout(); }}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border transition-all hover:bg-red-50 hover:text-red-500 hover:border-red-200"
+                style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}>
+                <SignOut size={16} /> خروج
+              </button>
+            </div>
+          </div>
+        )}
+      </nav>
+    </>
   );
 };

@@ -692,43 +692,46 @@
  /* Card variants */
  .card-theme-default {
    background-color: var(--card);
-   border-color: var(--border);
+   border: 1px solid var(--border);
    color: var(--card-foreground);
-   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+   box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 16px rgba(0,0,0,0.05), 0 0 0 1px rgba(255,255,255,0.5) inset;
  }
  .card-theme-elevated {
    background-color: var(--card);
-   border-color: var(--border);
+   border: 1px solid var(--border);
    color: var(--card-foreground);
-   box-shadow: 0 30px 45px -20px rgba(33, 52, 72, 0.2), 0 18px 36px -14px rgba(19, 31, 46, 0.1);
+   box-shadow: 0 8px 32px -4px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.5) inset;
  }
  .card-theme-warm {
-   background-color: var(--card);
-   border-color: var(--border);
+   background: linear-gradient(135deg, var(--card) 0%, color-mix(in srgb, var(--card) 90%, var(--muted)) 100%);
+   border: 1px solid var(--border);
    color: var(--card-foreground);
+   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
  }
  .card-theme-dark {
-   background-color: var(--primary);
+   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
    color: var(--primary-foreground);
-   border-color: var(--secondary);
-   box-shadow: 0 30px 45px -20px rgba(33, 52, 72, 0.2), 0 18px 36px -14px rgba(19, 31, 46, 0.1);
+   border: 1px solid color-mix(in srgb, var(--primary) 60%, transparent);
+   box-shadow: 0 8px 32px color-mix(in srgb, var(--primary) 30%, transparent);
  }
  .card-theme-glass {
-   background-color: color-mix(in srgb, var(--card) 60%, transparent);
-   backdrop-filter: blur(12px);
-   border-color: var(--border);
+   background: color-mix(in srgb, var(--card) 70%, transparent);
+   backdrop-filter: blur(16px) saturate(180%);
+   -webkit-backdrop-filter: blur(16px) saturate(180%);
+   border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
    color: var(--card-foreground);
+   box-shadow: 0 4px 24px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.6) inset;
  }
  .card-theme-premium {
    background-color: var(--card);
-   border-color: var(--border);
+   border: 1px solid var(--border);
    color: var(--card-foreground);
-   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(84, 119, 146, 0.05);
-   transition: all 0.3s ease;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.6) inset;
+   transition: all 0.25s ease;
  }
  .card-theme-premium:hover {
-   transform: translateY(-2px);
-   box-shadow: 0 15px 35px -8px rgba(33, 52, 72, 0.18), 0 10px 20px -8px rgba(33, 52, 72, 0.1), 0 0 30px rgba(84, 119, 146, 0.15);
+   transform: translateY(-3px);
+   box-shadow: 0 12px 32px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(255,255,255,0.6) inset;
  }
 
   /* Input focus enhanced */
@@ -1063,30 +1066,48 @@ html {
 
  /* Button theme variants */
  .btn-theme-primary {
-   background-color: var(--primary);
+   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
    color: var(--primary-foreground);
+   box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 30%, transparent);
  }
- .btn-theme-primary:hover {
-   background-color: var(--primary-hover);
+ .btn-theme-primary:hover:not(:disabled) {
+   background: linear-gradient(135deg, var(--primary-hover, var(--primary)) 0%, var(--primary) 100%);
+   box-shadow: 0 4px 16px color-mix(in srgb, var(--primary) 40%, transparent);
  }
  .btn-theme-secondary {
    background-color: var(--secondary);
    color: var(--secondary-foreground);
+   box-shadow: 0 2px 8px color-mix(in srgb, var(--secondary) 20%, transparent);
  }
  .btn-theme-accent {
    background-color: var(--accent);
    color: var(--accent-foreground);
+   box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 25%, transparent);
  }
  .btn-theme-outline {
-   border-color: var(--border);
+   border: 1px solid var(--border);
    color: var(--primary);
+   background-color: transparent;
+ }
+ .btn-theme-outline:hover:not(:disabled) {
+   background-color: color-mix(in srgb, var(--primary) 6%, transparent);
+   border-color: var(--primary);
  }
  .btn-theme-ghost {
    color: var(--primary);
    background-color: transparent;
  }
- .btn-theme-ghost:hover {
-   background-color: var(--muted);
+ .btn-theme-ghost:hover:not(:disabled) {
+   background-color: color-mix(in srgb, var(--primary) 8%, transparent);
+ }
+ .btn-theme-danger {
+   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+   color: #fff;
+   box-shadow: 0 2px 8px rgba(239,68,68,0.3);
+ }
+ .btn-theme-danger:hover:not(:disabled) {
+   background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+   box-shadow: 0 4px 16px rgba(239,68,68,0.4);
  }
 
  /* Input theme */

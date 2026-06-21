@@ -6,13 +6,13 @@ import { OfflineBanner } from '@/components/ui/OfflineBanner';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <OfflineBanner />
-      <div className="min-h-screen" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)', transition: 'background-color 0.3s ease, color 0.3s ease' }}>
+      <div data-theme="light-green" className="min-h-screen transition-colors duration-300" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+        <OfflineBanner />
         <Navbar />
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-6">
-          <div className="flex gap-6">
+        <div className="mx-auto max-w-7xl px-3 sm:px-6 py-5">
+          <div className="flex gap-5">
             <aside className="hidden w-64 shrink-0 lg:block">
-              <div className="sticky top-[5.5rem]"><Sidebar /></div>
+              <div className="sticky top-[4.5rem]"><Sidebar /></div>
             </aside>
             <main className="flex-1 min-w-0 animate-fade-in">{children}</main>
           </div>

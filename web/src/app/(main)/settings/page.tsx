@@ -1,103 +1,136 @@
 'use client';
 
 import Link from 'next/link';
+import {
+  User, ShieldCheck, Lock, Bell, Palette, Globe,
+  Question, Bug, Fingerprint, CaretLeft,
+} from '@phosphor-icons/react';
+
+const sections = [
+  {
+    title: 'الملف الشخصي',
+    icon: User,
+    description: 'عرض وتعديل ملفك الشخصي وصورتك',
+    href: '/profile',
+    accent: '#059669',
+    bg: 'color-mix(in srgb, #059669 8%, transparent)',
+  },
+  {
+    title: 'الأمان',
+    icon: ShieldCheck,
+    description: 'كلمات المرور، الجلسات، والتحقق بخطوتين',
+    href: '/settings/security',
+    accent: '#f59e0b',
+    bg: 'color-mix(in srgb, #f59e0b 8%, transparent)',
+  },
+  {
+    title: 'الخصوصية',
+    icon: Lock,
+    description: 'من يرى معلوماتك ويتواصل معك',
+    href: '/settings/privacy',
+    accent: '#06b6d4',
+    bg: 'color-mix(in srgb, #06b6d4 8%, transparent)',
+  },
+  {
+    title: 'الإشعارات',
+    icon: Bell,
+    description: 'تحكم في إشعاراتك وتنبيهاتك',
+    href: '/settings/notifications',
+    accent: '#8b5cf6',
+    bg: 'color-mix(in srgb, #8b5cf6 8%, transparent)',
+  },
+  {
+    title: 'المظهر',
+    icon: Palette,
+    description: 'تخصيص ألوان ومظهر التطبيق',
+    href: '/settings/appearance',
+    accent: '#ec4899',
+    bg: 'color-mix(in srgb, #ec4899 8%, transparent)',
+  },
+  {
+    title: 'اللغة',
+    icon: Globe,
+    description: 'اختر لغة الواجهة المفضلة',
+    href: '/settings/language',
+    accent: '#0284c7',
+    bg: 'color-mix(in srgb, #0284c7 8%, transparent)',
+  },
+  {
+    title: 'إدارة الموافقات',
+    icon: Fingerprint,
+    description: 'طلبات مشاركة البيانات الطبية والجينية',
+    href: '/settings/consent',
+    accent: '#10b981',
+    bg: 'color-mix(in srgb, #10b981 8%, transparent)',
+  },
+  {
+    title: 'المساعدة',
+    icon: Question,
+    description: 'احصل على مساعدة ودعم',
+    href: '/settings/help',
+    accent: '#64748b',
+    bg: 'color-mix(in srgb, #64748b 8%, transparent)',
+  },
+  {
+    title: 'الإبلاغ عن مشكلة',
+    icon: Bug,
+    description: 'أخبرنا عن خطأ أو مشكلة تقنية',
+    href: '/settings/report',
+    accent: '#ef4444',
+    bg: 'color-mix(in srgb, #ef4444 8%, transparent)',
+  },
+];
 
 export default function SettingsPage() {
-  const settingsSections = [
-    {
-      title: 'الملف الشخصي',
-      icon: '👤',
-      description: 'عرض وتعديل ملفك الشخصي',
-      href: '/profile',
-      color: 'bg-emerald-50',
-    },
-    {
-      title: 'الأمان',
-      icon: '🔐',
-      description: 'كلمات المرور والجلسات والتحقق',
-      href: '/settings/security',
-      color: 'bg-amber-50',
-    },
-    {
-      title: 'الخصوصية',
-      icon: '🔒',
-      description: 'من يرى معلوماتك ويتواصل معك',
-      href: '/settings/privacy',
-      color: 'bg-sage-50',
-    },
-    {
-      title: 'الإشعارات',
-      icon: '🔔',
-      description: 'تحكم في الإشعارات',
-      href: '/settings/notifications',
-      color: 'bg-blue-50',
-    },
-    {
-      title: 'المظهر',
-      icon: '🎨',
-      description: 'تخصيص مظهر التطبيق',
-      href: '/settings/appearance',
-      color: 'bg-purple-50',
-    },
-    {
-      title: 'اللغة',
-      icon: '🌐',
-      description: 'اختر لغة الواجهة',
-      href: '/settings/language',
-      color: 'bg-rose-50',
-    },
-    {
-      title: 'المساعدة',
-      icon: '❓',
-      description: 'احصل على المساعدة',
-      href: '/settings/help',
-      color: 'bg-orange-50',
-    },
-    {
-      title: 'الإبلاغ',
-      icon: '🐛',
-      description: 'أخبرنا عن مشكلة',
-      href: '/settings/report',
-      color: 'bg-red-50',
-    },
-    {
-      title: 'إدارة الموافقات',
-      icon: '🔏',
-      description: 'طلبات مشاركة البيانات الطبية والجينية',
-      href: '/settings/consent',
-      color: 'bg-teal-50',
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-emerald-900">الإعدادات</h1>
-          <p className="text-emerald-700/70 mt-2">إدارة حسابك وتخصيص تجربتك</p>
-        </div>
+    <div className="max-w-2xl mx-auto pb-10">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-extrabold" style={{ color: 'var(--foreground)' }}>الإعدادات</h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
+          إدارة حسابك وتخصيص تجربتك في طيبت
+        </p>
+      </div>
 
-        <div className="grid gap-4">
-          {settingsSections.map((section) => (
-            <Link
-              key={section.href}
-              href={section.href}
-              className="group relative overflow-hidden p-5 rounded-2xl bg-white/80 backdrop-blur-sm border border-emerald-200/50 hover:border-emerald-300 hover:shadow-lg hover:shadow-emerald-100 transition-all duration-300"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-emerald-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <div className="relative flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl ${section.color} flex items-center justify-center text-2xl shadow-inner`}>
-                  {section.icon}
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-emerald-900 text-lg">{section.title}</h3>
-                  <p className="text-emerald-700/70 text-sm">{section.description}</p>
-                </div>
-                <span className="text-emerald-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" aria-hidden="true">→</span>
-              </div>
-            </Link>
-          ))}
-        </div>
+      <div className="space-y-2">
+        {sections.map(({ title, icon: Icon, description, href, accent, bg }) => (
+          <Link
+            key={href}
+            href={href}
+            className="group flex items-center gap-4 p-4 rounded-2xl transition-all duration-200 hover:shadow-md"
+            style={{
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.borderColor = accent;
+              (e.currentTarget as HTMLElement).style.background = `color-mix(in srgb, ${accent} 3%, var(--card))`;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)';
+              (e.currentTarget as HTMLElement).style.background = 'var(--card)';
+            }}
+          >
+            <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-transform duration-200 group-hover:scale-110"
+              style={{ background: bg }}>
+              <Icon size={22} weight="fill" style={{ color: accent }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold transition-colors duration-200"
+                style={{ color: 'var(--foreground)' }}>
+                {title}
+              </p>
+              <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--muted-foreground)' }}>
+                {description}
+              </p>
+            </div>
+            <CaretLeft
+              size={16}
+              className="shrink-0 transition-transform duration-200 group-hover:-translate-x-1"
+              style={{ color: 'var(--muted-foreground)' }}
+            />
+          </Link>
+        ))}
       </div>
     </div>
   );

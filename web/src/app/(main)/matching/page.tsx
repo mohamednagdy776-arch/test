@@ -8,7 +8,15 @@ import { MatchingTabs } from '@/features/matching/components/MatchingTabs';
 import { MatchDetailModal } from '@/features/matching/components/MatchDetailModal';
 import { useGenerateMatches } from '@/features/matching/hooks';
 import { useDebounce } from '@/hooks/useDebounce';
+import { Avatar } from '@/components/ui/Avatar';
+import { Button } from '@/components/ui/Button';
+import {
+  Sparkle, MagnifyingGlass, MapPin, Scales,
+  Check, X, Eye, ChatCircle, ArrowCounterClockwise,
+} from '@phosphor-icons/react';
 import type { Match } from '@/types';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 interface MatchWithUser extends Match {
   user?: {
@@ -22,28 +30,172 @@ interface MatchWithUser extends Match {
   };
 }
 
+function ScoreBadge({ score }: { score: number }) {
+  const color = score >= 80 ? '#059669' : score >= 60 ? '#f59e0b' : '#ef4444';
+  const label = score >= 80 ? 'ممتاز' : score >= 60 ? 'جيد' : 'منخفض';
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative w-14 h-14">
+        <svg viewBox="0 0 56 56" className="w-full h-full -rotate-90">
+          <circle cx="28" cy="28" r="22" fill="none" stroke="var(--muted)" strokeWidth="4" />
+          <circle cx="28" cy="28" r="22" fill="none" stroke={color} strokeWidth="4"
+            strokeDasharray={`${(score / 100) * 138} 138`}
+            strokeLinecap="round" style={{ transition: 'stroke-dasharray 1s ease' }} />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-extrabold" style={{ color }}>{score}%</span>
+        </div>
+      </div>
+      <span className="text-[10px] font-semibold mt-0.5" style={{ color: 'var(--muted-foreground)' }}>{label}</span>
+    </div>
+  );
+}
+
+function MatchCard({ match, onAccept, onReject, onViewProfile, onSendMessage, onViewDetail, actionLoading }: {
+  match: MatchWithUser;
+  onAccept: () => void;
+  onReject: () => void;
+  onViewProfile: () => void;
+  onSendMessage: () => void;
+  onViewDetail: () => void;
+  actionLoading: string | null;
+}) {
+  const u = match.user;
+  const avatarSrc = u?.avatarUrl ? `${API_BASE}${u.avatarUrl}` : null;
+
+  return (
+    <div className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg group"
+      style={{
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+      }}>
+      {/* Top gradient strip */}
+      <div className="h-1 w-full" style={{
+        background: match.score >= 80
+          ? 'linear-gradient(90deg, var(--primary), var(--accent))'
+          : match.score >= 60
+            ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+            : 'linear-gradient(90deg, #ef4444, #dc2626)',
+      }} />
+
+      <div className="p-5">
+        {/* Avatar + score */}
+        <div className="flex items-start justify-between mb-4">
+          <Avatar
+            src={avatarSrc}
+            name={u?.fullName || 'م'}
+            size="lg"
+            shape="rounded"
+            online={match.status === 'accepted'}
+          />
+          <ScoreBadge score={match.score} />
+        </div>
+
+        {/* User info */}
+        <div className="mb-4">
+          <h3 className="font-bold text-base truncate" style={{ color: 'var(--foreground)' }}>
+            {u?.fullName || 'مستخدم'}
+          </h3>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-1">
+            {u?.age && (
+              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{u.age} سنة</span>
+            )}
+            {u?.location && (
+              <span className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                <MapPin size={11} /> {u.location}
+              </span>
+            )}
+          </div>
+          {u?.prayerLevel && (
+            <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+              style={{ background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }}>
+              <Scales size={11} /> الالتزام: {u.prayerLevel === 'high' ? 'عالي' : u.prayerLevel === 'medium' ? 'متوسط' : 'منخفض'}
+            </span>
+          )}
+        </div>
+
+        {/* Status badge for accepted/rejected */}
+        {match.status !== 'pending' && (
+          <div className="mb-3 flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold"
+            style={match.status === 'accepted'
+              ? { background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }
+              : { background: 'color-mix(in srgb, #ef4444 10%, transparent)', color: '#ef4444' }}>
+            {match.status === 'accepted' ? <Check size={14} weight="bold" /> : <X size={14} weight="bold" />}
+            {match.status === 'accepted' ? 'تم القبول' : 'تم الرفض'}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2">
+          {match.status === 'pending' && (
+            <>
+              <button onClick={onViewDetail}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]"
+                style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                <Eye size={14} /> عرض تفاصيل التوافق
+              </button>
+              <div className="flex gap-2">
+                <Button variant="primary" size="sm" className="flex-1"
+                  onClick={onAccept}
+                  loading={actionLoading === match.id + 'accept'}
+                  disabled={actionLoading !== null}>
+                  <Check size={14} weight="bold" /> قبول
+                </Button>
+                <Button variant="outline" size="sm" className="flex-1"
+                  onClick={onReject}
+                  loading={actionLoading === match.id + 'reject'}
+                  disabled={actionLoading !== null}>
+                  <X size={14} weight="bold" /> رفض
+                </Button>
+              </div>
+            </>
+          )}
+          {match.status === 'rejected' && (
+            <Button variant="outline" size="sm" onClick={onAccept}
+              loading={actionLoading === match.id + 'accept'}
+              disabled={actionLoading !== null}>
+              <ArrowCounterClockwise size={14} /> تراجع عن الرفض
+            </Button>
+          )}
+          {(match.status === 'pending' || match.status === 'accepted') && (
+            <div className="flex gap-2">
+              {u?.username && (
+                <button onClick={onViewProfile}
+                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]"
+                  style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
+                  <Eye size={12} /> الملف
+                </button>
+              )}
+              {u?.id && (
+                <button onClick={onSendMessage}
+                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold transition-all"
+                  style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', color: '#fff' }}>
+                  <ChatCircle size={12} weight="fill" /> رسالة
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MatchingPage() {
   const router = useRouter();
   const [tab, setTab] = useState<'pending' | 'accepted' | 'rejected'>('pending');
   const [ageRange, setAgeRange] = useState<[number, number]>([18, 35]);
   const [location, setLocation] = useState('');
   const [prayerLevel, setPrayerLevel] = useState('');
-
   const generateMatches = useGenerateMatches();
   const debouncedLocation = useDebounce(location, 400);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['matches-web', ageRange, debouncedLocation, prayerLevel, tab],
     queryFn: () => apiClient.get('/matches', {
-      params: {
-        page: 1,
-        limit: 20,
-        status: tab,
-        minAge: ageRange[0],
-        maxAge: ageRange[1],
-        location: debouncedLocation || undefined,
-        prayerLevel: prayerLevel || undefined
-      }
+      params: { page: 1, limit: 20, status: tab, minAge: ageRange[0], maxAge: ageRange[1],
+        location: debouncedLocation || undefined, prayerLevel: prayerLevel || undefined }
     }).then((r) => r.data),
   });
 
@@ -60,20 +212,8 @@ export default function MatchingPage() {
       refetch();
     } catch (err: any) {
       setActionError(err?.response?.data?.message || 'فشلت العملية، يرجى المحاولة مجدداً');
-    } finally {
-      setActionLoading(null);
-    }
+    } finally { setActionLoading(null); }
   };
-
-  const handleViewProfile = (username: string) => {
-    router.push(`/${username}`);
-  };
-
-  const handleSendMessage = (userId: string) => {
-    router.push(`/chat?user=${userId}`);
-  };
-
-  const scoreColor = (score: number) => score >= 80 ? 'text-emerald-600' : score >= 60 ? 'text-amber-600' : 'text-rose-500';
 
   return (
     <div className="space-y-5">
@@ -87,65 +227,57 @@ export default function MatchingPage() {
           rejecting={actionLoading === detailMatch.id + 'reject'}
         />
       )}
+
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-emerald-900">التوافق</h1>
-        <button
-          onClick={() => generateMatches.mutate()}
-          disabled={generateMatches.isPending}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white text-sm font-semibold shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all disabled:opacity-60"
-        >
-          {generateMatches.isPending ? (
-            <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-            </svg>
-          ) : (
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-          )}
-          {generateMatches.isPending ? 'جاري البحث...' : 'إيجاد توافقات جديدة'}
-        </button>
+        <div>
+          <h1 className="text-2xl font-extrabold" style={{ color: 'var(--foreground)' }}>التوافق</h1>
+          <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>اكتشف توافقاتك المثالية</p>
+        </div>
+        <Button variant="primary" size="sm" onClick={() => generateMatches.mutate()} loading={generateMatches.isPending}>
+          <Sparkle size={15} weight="fill" />
+          {generateMatches.isPending ? 'جاري البحث...' : 'إيجاد توافقات'}
+        </Button>
       </div>
 
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Filters */}
+      <div className="rounded-2xl p-4"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+        <p className="text-xs font-bold mb-3 flex items-center gap-1.5" style={{ color: 'var(--muted-foreground)' }}>
+          <MagnifyingGlass size={13} /> فلاتر البحث
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
-            <label className="block text-sm font-semibold text-emerald-800 mb-2">العمر</label>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>العمر</label>
             <div className="flex gap-2">
-              <input
-                type="number"
-                value={ageRange[0]}
-                onChange={(e) => setAgeRange([parseInt(e.target.value) || 18, ageRange[1]])}
-                className="w-full px-4 py-3 rounded-xl border border-emerald-200/50 text-sm bg-white/80 text-emerald-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                placeholder="من"
-              />
-              <input
-                type="number"
-                value={ageRange[1]}
-                onChange={(e) => setAgeRange([ageRange[0], parseInt(e.target.value) || 35])}
-                className="w-full px-4 py-3 rounded-xl border border-emerald-200/50 text-sm bg-white/80 text-emerald-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                placeholder="إلى"
-              />
+              {[['من', ageRange[0], (v: number) => setAgeRange([v, ageRange[1]])],
+                ['إلى', ageRange[1], (v: number) => setAgeRange([ageRange[0], v])]].map(([ph, val, cb]) => (
+                <input key={String(ph)} type="number" value={val as number}
+                  onChange={(e) => (cb as Function)(parseInt(e.target.value) || 18)}
+                  placeholder={ph as string}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2"
+                  style={{
+                    background: 'var(--background)', border: '1px solid var(--border)',
+                    color: 'var(--foreground)',
+                  }} />
+              ))}
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-emerald-800 mb-2">الموقع</label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-emerald-200/50 text-sm bg-white/80 text-emerald-900 placeholder-emerald-400/50 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              placeholder="المدينة"
-            />
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>الموقع</label>
+            <div className="relative">
+              <MapPin size={14} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--muted-foreground)' }} />
+              <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
+                placeholder="المدينة"
+                className="w-full pr-8 pl-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2"
+                style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-emerald-800 mb-2">مستوى الالتزام الديني</label>
-            <select
-              value={prayerLevel}
-              onChange={(e) => setPrayerLevel(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-emerald-200/50 text-sm bg-white/80 text-emerald-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-            >
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>الالتزام الديني</label>
+            <select value={prayerLevel} onChange={(e) => setPrayerLevel(e.target.value)}
+              className="w-full px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 cursor-pointer"
+              style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
               <option value="">الكل</option>
               <option value="high">عالي</option>
               <option value="medium">متوسط</option>
@@ -156,127 +288,40 @@ export default function MatchingPage() {
       </div>
 
       {actionError && (
-        <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 flex items-center gap-2">
-          <span>⚠️</span><span>{actionError}</span>
-          <button onClick={() => setActionError(null)} className="mr-auto text-red-400 hover:text-red-600">✕</button>
+        <div className="rounded-xl px-4 py-3 flex items-center gap-2 text-sm"
+          style={{ background: 'color-mix(in srgb, #ef4444 8%, transparent)', border: '1px solid color-mix(in srgb, #ef4444 25%, transparent)', color: '#ef4444' }}>
+          <span className="flex-1">{actionError}</span>
+          <button onClick={() => setActionError(null)} className="opacity-60 hover:opacity-100 transition-opacity">✕</button>
         </div>
       )}
+
       <MatchingStats />
       <MatchingTabs activeTab={tab} onTabChange={setTab} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? (
-          <>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="h-64 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse shadow-lg shadow-emerald-500/10 border border-emerald-100" />
-            ))}
-          </>
+          Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-72 rounded-2xl animate-pulse" style={{ background: 'var(--muted)' }} />
+          ))
         ) : matches.length === 0 ? (
-          <div className="col-span-3 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-8 text-center text-emerald-600/60 shadow-lg shadow-emerald-500/10 border border-emerald-100">
-            لا توجد توافقات
+          <div className="col-span-full rounded-2xl p-12 text-center"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <Sparkle size={40} weight="light" className="mx-auto mb-3 opacity-30" style={{ color: 'var(--primary)' }} />
+            <p className="font-semibold" style={{ color: 'var(--foreground)' }}>لا توجد توافقات حالياً</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>جرّب تغيير الفلاتر أو البحث عن توافقات جديدة</p>
           </div>
         ) : (
           matches.map((match) => (
-            <div key={match.id} className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="h-14 w-14 rounded-full bg-gradient-to-br from-emerald-400 to-amber-400 flex items-center justify-center text-white font-bold text-xl">
-                  {match.user?.avatarUrl ? (
-                    <img src={match.user.avatarUrl} alt="" className="h-full w-full object-cover rounded-full" />
-                  ) : (
-                    match.user?.fullName?.charAt(0) || match.user2Id?.slice(0, 2).toUpperCase()
-                  )}
-                </div>
-                <div className="text-center">
-                  <p className={`text-3xl font-bold ${scoreColor(match.score)}`}>{match.score}%</p>
-                  <p className="text-xs text-emerald-500/60">توافق</p>
-                </div>
-              </div>
-              
-              <div className="mb-3 text-center">
-                <p className="font-semibold text-emerald-900">{match.user?.fullName || 'مستخدم'}</p>
-                <p className="text-xs text-emerald-600/60">
-                  {match.user?.age && `العمر: ${match.user.age} · `}
-                  {match.user?.location || 'غير محدد'}
-                </p>
-                {match.user?.prayerLevel && (
-                  <p className="text-xs text-amber-600 font-medium">الالتزام: {match.user.prayerLevel}</p>
-                )}
-              </div>
-
-              {match.status === 'pending' ? (
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => setDetailMatch(match)}
-                    className="w-full rounded-xl border border-emerald-200/50 py-2 text-xs font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
-                  >
-                    🔍 عرض تفاصيل التوافق
-                  </button>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleAction(match.id, 'accept')}
-                      disabled={actionLoading !== null}
-                      className="flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all disabled:opacity-60"
-                    >
-                      {actionLoading === match.id + 'accept' ? '...' : 'قبول'}
-                    </button>
-                    <button
-                      onClick={() => handleAction(match.id, 'reject')}
-                      disabled={actionLoading !== null}
-                      className="flex-1 rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-60"
-                    >
-                      {actionLoading === match.id + 'reject' ? '...' : 'رفض'}
-                    </button>
-                  </div>
-                  {match.user?.username && (
-                    <button
-                      onClick={() => handleViewProfile(match.user!.username)}
-                      className="w-full rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors"
-                    >
-                      عرض الملف
-                    </button>
-                  )}
-                  {match.user?.id && (
-                    <button
-                      onClick={() => handleSendMessage(match.user!.id)}
-                      className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all"
-                    >
-                      إرسال رسالة
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  <div className={`rounded-xl py-2.5 text-center text-sm font-medium ${match.status === 'accepted' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                    {match.status === 'accepted' ? '✓ تم القبول' : '✗ تم الرفض'}
-                  </div>
-                  {match.status === 'rejected' && (
-                    <button
-                      onClick={() => handleAction(match.id, 'accept')}
-                      disabled={actionLoading !== null}
-                      className="w-full rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-60"
-                    >
-                      {actionLoading === match.id + 'accept' ? '...' : '↩ تراجع عن الرفض'}
-                    </button>
-                  )}
-                  {match.status === 'accepted' && match.user?.username && (
-                    <>
-                      <button
-                        onClick={() => handleViewProfile(match.user!.username)}
-                        className="w-full rounded-xl border border-emerald-200/50 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors"
-                      >
-                        عرض الملف
-                      </button>
-                      <button
-                        onClick={() => handleSendMessage(match.user!.id)}
-                        className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 transition-all"
-                      >
-                        إرسال رسالة
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+            <MatchCard
+              key={match.id}
+              match={match}
+              onAccept={() => handleAction(match.id, 'accept')}
+              onReject={() => handleAction(match.id, 'reject')}
+              onViewProfile={() => match.user?.username && router.push(`/${match.user.username}`)}
+              onSendMessage={() => match.user?.id && router.push(`/chat?user=${match.user.id}`)}
+              onViewDetail={() => setDetailMatch(match)}
+              actionLoading={actionLoading}
+            />
           ))
         )}
       </div>
