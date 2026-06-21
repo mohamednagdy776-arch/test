@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRecommendedVideos, useTrendingVideos, useVideos, useContinueWatching } from '@/features/videos/hooks';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -191,7 +191,13 @@ const TABS = [
 ] as const;
 
 export default function WatchPage() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'recommended' | 'trending' | 'following'>('recommended');
+
+  useEffect(() => {
+    document.title = 'الفيديوهات | طيبت';
+    return () => { document.title = 'طيبت'; };
+  }, []);
 
   const { data: recommendedData, isLoading: rLoading } = useRecommendedVideos(activeTab === 'recommended');
   const { data: trendingData,   isLoading: tLoading } = useTrendingVideos(activeTab === 'trending');
@@ -208,9 +214,18 @@ export default function WatchPage() {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Page Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>الفيديوهات</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>اكتشف فيديوهات جديدة من مجتمعاتك</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>الفيديوهات</h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>اكتشف فيديوهات جديدة من مجتمعاتك</p>
+        </div>
+        <button
+          onClick={() => router.push('/videos/upload')}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
+          style={{ background: 'var(--primary)' }}
+        >
+          <span>+</span> رفع فيديو
+        </button>
       </div>
 
       {/* Tabs */}

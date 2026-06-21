@@ -5,12 +5,48 @@ import { useState } from 'react';
 import { useVideo, useVideoComments, useAddVideoComment, useLikeVideo, useUnlikeVideo, useRecommendedVideos } from '@/features/videos/hooks';
 import { Avatar } from '@/components/ui/Avatar';
 import { Spinner } from '@/components/ui/Spinner';
+import { Modal } from '@/components/ui/Modal';
 
 function VideoPlayer({ video }: { video: any }) {
   const [liked, setLiked] = useState<boolean>(() => !!video?.isLiked);
   const [shared, setShared] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [savingVideo, setSavingVideo] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportSent, setReportSent] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
   const likeVideo = useLikeVideo();
   const unlikeVideo = useUnlikeVideo();
+
+  const handleSave = async () => {
+    setSavingVideo(true);
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      await apiClient.post('/saved', { entityType: 'video', entityId: video.id });
+      setSaved(true);
+    } catch {
+      // already saved or error — treat as success
+      setSaved(true);
+    } finally {
+      setSavingVideo(false);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!reportReason.trim()) return;
+    setReportLoading(true);
+    try {
+      const { apiClient } = await import('@/lib/api-client');
+      await apiClient.post('/reports', { entityType: 'video', entityId: video.id, reason: reportReason });
+      setReportSent(true);
+      setTimeout(() => { setShowReport(false); setReportSent(false); setReportReason(''); }, 2000);
+    } catch {
+      setShowReport(false);
+    } finally {
+      setReportLoading(false);
+    }
+  };
 
   const handleShare = async () => {
     const url = window.location.href;
@@ -63,7 +99,7 @@ function VideoPlayer({ video }: { video: any }) {
             {formatViews(video.viewCount ?? 0)} مشاهدة
             {video.createdAt ? ` · ${new Date(video.createdAt).toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}
           </p>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={handleLike}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
@@ -80,9 +116,49 @@ function VideoPlayer({ video }: { video: any }) {
             >
               {shared ? '✓ تم النسخ' : '🔗 مشاركة'}
             </button>
+            <button
+              onClick={handleSave}
+              disabled={saved || savingVideo}
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[#DCFCE7]/40 text-[#10B981] hover:bg-[#DCFCE7]/70 border border-emerald-100 transition-all disabled:opacity-60"
+            >
+              {saved ? '✓ محفوظ' : savingVideo ? '...' : '🔖 حفظ'}
+            </button>
+            <button
+              onClick={() => setShowReport(true)}
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 transition-all"
+            >
+              🚩 إبلاغ
+            </button>
           </div>
         </div>
       </div>
+
+      <Modal open={showReport} onClose={() => setShowReport(false)} title="الإبلاغ عن الفيديو">
+        <div className="space-y-4">
+          {reportSent ? (
+            <p className="text-sm text-emerald-700 text-center py-2">✓ تم إرسال البلاغ. شكراً لك.</p>
+          ) : (
+            <>
+              <p className="text-sm text-[#10B981]">حدد سبب الإبلاغ:</p>
+              <div className="space-y-2">
+                {['محتوى غير لائق', 'انتهاك الخصوصية', 'معلومات مضللة', 'محتوى عنيف', 'بريد مزعج', 'سبب آخر'].map((r) => (
+                  <button key={r} onClick={() => setReportReason(r)}
+                    className={`w-full text-right px-4 py-2.5 rounded-xl text-sm border transition-all ${reportReason === r ? 'border-red-400 bg-red-50 text-red-700 font-semibold' : 'border-emerald-100 bg-[#ECFDF5] text-[#065F46] hover:border-emerald-300'}`}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+              <div className="flex gap-3 pt-1">
+                <button onClick={() => setShowReport(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-emerald-200 text-[#10B981] hover:bg-[#ECFDF5] transition-colors">إلغاء</button>
+                <button onClick={handleReport} disabled={!reportReason || reportLoading}
+                  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
+                  {reportLoading ? '...' : 'إرسال البلاغ'}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </Modal>
 
       <div className="flex items-center gap-3 py-3 border-y border-emerald-100">
         <Avatar src={video.user?.avatar} name={video.user?.name} size="md" />
