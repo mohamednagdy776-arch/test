@@ -32,6 +32,7 @@ Read the relevant skill BEFORE starting work in each area — they contain non-n
 | `security-audit` | Auth, user data, payments, chat — run checklist before shipping |
 | `deployment` | VPS deploy, service restart, container logs — Docker Compose commands |
 | `database-migration` | Any schema change — `synchronize: false` means raw ALTER TABLE on VPS |
+| `ui-ux` | New pages, component design/refactor, color/layout choices, UI quality review |
 | `mobile-flutter` | Any `mobile/` change |
 | `ai-matching` | Any `ai-service/` change |
 

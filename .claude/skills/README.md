@@ -14,9 +14,11 @@ Read the relevant skill before starting work on that area. Follow its rules as n
 | `security-audit` | Reviewing for vulnerabilities, or touching auth, user data, chat, or payments. |
 | `deployment` | Deploying to VPS, restarting services, checking container logs, running production commands. |
 | `database-migration` | Adding/changing DB columns, indexes, or constraints in production (TypeORM `synchronize: false`). |
+| `ui-ux` | Designing pages, creating/refactoring UI components, choosing colors/layouts, reviewing UI quality. |
 
 ## Sources
 - `backend-nestjs`, `frontend-nextjs`, `mobile-flutter`, `ai-matching`, `security-audit` — project-native
 - `deployment`, `database-migration` — adapted from [alirezarezvani/claude-skills](https://github.com/alirezarezvani/claude-skills) engineering skills
+- `ui-ux` — adapted from [nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) (50+ rules, distilled for Next.js + Tailwind + Arabic RTL)
 
 These complement the slash commands in `.claude/commands/` and the external skill packs in `CLAUDE.md` (GStack, Superpowers, etc.).
