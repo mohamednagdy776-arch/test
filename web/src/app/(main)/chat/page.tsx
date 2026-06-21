@@ -5,6 +5,7 @@ import { ChatList } from '@/features/chat/components/ChatList';
 import { ChatWindow } from '@/features/chat/components/ChatWindow';
 import { apiClient } from '@/lib/api-client';
 import type { Match } from '@/types';
+import { ChatCircle } from '@phosphor-icons/react';
 
 interface DirectMatch extends Match {
   user2Id: string;
@@ -22,7 +23,6 @@ export default function ChatPage() {
   const handledRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // Open/create a conversation when arriving with ?user=<id>.
     // POST /chat/conversations is idempotent (returns the existing 1:1 chat).
     if (!userId || handledRef.current === userId) return;
     handledRef.current = userId;
@@ -55,42 +55,59 @@ export default function ChatPage() {
 
   return (
     <div className="flex gap-4 h-[calc(100dvh-8rem)]">
-      <div className={`${activeMatch ? 'hidden lg:block' : 'block'} w-full lg:w-80 shrink-0`}>
-        <h1 className="mb-4 text-xl font-bold text-[var(--foreground)]">المحادثات</h1>
+      {/* Conversation list sidebar */}
+      <div className={`${activeMatch ? 'hidden lg:block' : 'block'} w-full lg:w-80 shrink-0 flex flex-col gap-3`}>
+        <h1 className="text-xl font-extrabold" style={{ color: 'var(--foreground)' }}>المحادثات</h1>
         <ChatList activeMatchId={activeMatch?.id} onSelect={setActiveMatch as any} />
       </div>
 
+      {/* Chat window / placeholder */}
       <div className={`${activeMatch ? 'block' : 'hidden lg:block'} flex-1 min-w-0`}>
         {deepLinkError ? (
-          <div className="flex h-full items-center justify-center rounded-2xl bg-[var(--card)] border border-[var(--border)] shadow-lg shadow-black/5">
-            <div className="text-center p-8">
-              <p className="text-4xl mb-3">⚠️</p>
-              <p className="text-sm font-medium text-[var(--primary)] mb-4">{deepLinkError}</p>
+          <div className="flex h-full items-center justify-center rounded-2xl shadow-sm"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <div className="text-center p-8 max-w-xs">
+              <div className="mx-auto mb-4 w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ background: 'color-mix(in srgb, var(--destructive) 8%, var(--muted))' }}>
+                <span className="text-2xl">⚠️</span>
+              </div>
+              <p className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
+                تعذّر فتح المحادثة
+              </p>
+              <p className="text-xs mb-5" style={{ color: 'var(--muted-foreground)' }}>{deepLinkError}</p>
               <button
                 onClick={() => { setDeepLinkError(null); handledRef.current = null; }}
-                className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl transition-all"
-              >
+                className="rounded-xl px-5 py-2 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95"
+                style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
                 إعادة المحاولة
               </button>
             </div>
           </div>
         ) : loading ? (
-          <div className="flex h-full items-center justify-center rounded-2xl bg-[var(--card)] border border-[var(--border)]">
-            <div className="text-center">
-              <svg className="animate-spin h-8 w-8 text-[var(--primary)] mx-auto mb-3" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-              </svg>
-              <p className="text-sm text-[var(--primary)]">جاري فتح المحادثة...</p>
+          <div className="flex h-full items-center justify-center rounded-2xl"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <div className="text-center flex flex-col items-center gap-3">
+              <div className="w-10 h-10 rounded-full border-2 border-transparent animate-spin"
+                style={{ borderTopColor: 'var(--primary)', borderRightColor: 'var(--secondary)' }} />
+              <p className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
+                جاري فتح المحادثة...
+              </p>
             </div>
           </div>
         ) : activeMatch ? (
           <ChatWindow match={activeMatch as unknown as Match} onBack={() => setActiveMatch(null)} />
         ) : (
-          <div className="flex h-full items-center justify-center rounded-2xl bg-[var(--card)] text-[var(--primary)]/50 shadow-lg shadow-black/5 border border-[var(--border)]">
+          <div className="flex h-full items-center justify-center rounded-2xl shadow-sm"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <div className="text-center">
-              <p className="text-5xl mb-4">💬</p>
-              <p className="text-sm font-medium text-[var(--primary)]">اختر محادثة للبدء</p>
+              <div className="mx-auto mb-4 w-16 h-16 rounded-2xl flex items-center justify-center"
+                style={{ background: 'color-mix(in srgb, var(--primary) 8%, var(--muted))' }}>
+                <ChatCircle size={30} weight="light" style={{ color: 'var(--primary)', opacity: 0.5 }} />
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>اختر محادثة للبدء</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                اختر محادثة من القائمة أو ابحث عن شخص
+              </p>
             </div>
           </div>
         )}
