@@ -1,118 +1,234 @@
 'use client';
+import Image from 'next/image';
+import { MapPin, Scales, Check, X, Eye, ChatCircle, ArrowCounterClockwise, Heart } from '@phosphor-icons/react';
 import type { Match } from '@/types';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
+
+function scoreColor(s: number) {
+  return s >= 80 ? 'var(--primary)' : s >= 60 ? 'var(--accent)' : '#ef4444';
+}
+function scoreLabel(s: number) {
+  return s >= 80 ? 'توافق ممتاز' : s >= 60 ? 'توافق جيد' : 'توافق منخفض';
+}
+function scoreGradient(s: number) {
+  return s >= 80
+    ? 'linear-gradient(90deg, var(--primary), var(--accent))'
+    : s >= 60
+    ? 'linear-gradient(90deg, var(--accent), #d97706)'
+    : 'linear-gradient(90deg, #ef4444, #dc2626)';
+}
+
+function ScoreGauge({ score }: { score: number }) {
+  const color = scoreColor(score);
+  const circumference = 2 * Math.PI * 22;
+  const dash = (score / 100) * circumference;
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative w-14 h-14">
+        <svg viewBox="0 0 56 56" className="w-full h-full -rotate-90">
+          <circle cx="28" cy="28" r="22" fill="none" stroke="var(--muted)" strokeWidth="4" />
+          <circle cx="28" cy="28" r="22" fill="none" stroke={color} strokeWidth="4"
+            strokeDasharray={`${dash} ${circumference}`}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dasharray 1s ease-out' }} />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-xs font-extrabold tabular-nums" style={{ color }}>{score}%</span>
+        </div>
+      </div>
+      <span className="text-[10px] font-semibold mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+        {scoreLabel(score)}
+      </span>
+    </div>
+  );
+}
+
+const categories = [
+  { label: 'الدين', weight: 0.30 },
+  { label: 'نمط الحياة', weight: 0.25 },
+  { label: 'الاهتمامات', weight: 0.20 },
+  { label: 'الموقع', weight: 0.15 },
+  { label: 'أخرى', weight: 0.10 },
+];
+
+function ScoreBreakdown({ score }: { score: number }) {
+  return (
+    <div className="space-y-1.5 mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+      {categories.map((c) => {
+        const val = Math.min(100, Math.round(score * (0.85 + c.weight / 2)));
+        const col = scoreColor(val);
+        return (
+          <div key={c.label} className="flex items-center gap-2">
+            <span className="w-20 text-[11px] shrink-0" style={{ color: 'var(--muted-foreground)' }}>{c.label}</span>
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--muted)' }}>
+              <div className="h-full rounded-full transition-all duration-700"
+                style={{ width: `${val}%`, background: col }} />
+            </div>
+            <span className="text-[10px] w-7 text-left tabular-nums" style={{ color: 'var(--muted-foreground)' }}>{val}%</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 interface Props {
   match: Match;
-  onView: () => void;
+  onView?: () => void;
   onAccept?: () => void;
   onReject?: () => void;
+  onViewProfile?: () => void;
+  onSendMessage?: () => void;
   accepting?: boolean;
   rejecting?: boolean;
 }
 
-const scoreColor = (s: number) =>
-  s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-red-500';
-
-const scoreRing = (s: number) =>
-  s >= 80 ? 'ring-green-400' : s >= 60 ? 'ring-yellow-400' : 'ring-red-400';
-
-const scoreLabel = (s: number) =>
-  s >= 80 ? 'توافق ممتاز' : s >= 60 ? 'توافق جيد' : 'توافق منخفض';
-
-export const MatchCard = ({ match, onView, onAccept, onReject, accepting, rejecting }: Props) => {
+export const MatchCard = ({
+  match, onView, onAccept, onReject, onViewProfile, onSendMessage,
+  accepting, rejecting,
+}: Props) => {
+  const displayName = (match as any).otherUserName || (match as any).user?.fullName || 'مستخدم';
+  const avatarRaw = (match as any).otherUserAvatar || (match as any).user?.avatarUrl;
+  const avatarSrc = avatarRaw
+    ? (avatarRaw.startsWith('http') ? avatarRaw : `${API_BASE}${avatarRaw}`)
+    : null;
+  const age = (match as any).user?.age || (match as any).otherUserAge;
+  const location = (match as any).user?.location || (match as any).otherUserLocation;
+  const prayerLevel = (match as any).user?.prayerLevel || (match as any).otherUserPrayerLevel;
+  const initial = displayName.trim().charAt(0).toUpperCase();
   const isPending = match.status === 'pending';
-  const displayName = (match as any).otherUserName || 'مستخدم طيبت';
-  const avatar = (match as any).otherUserAvatar as string | undefined;
-  const initials = displayName.trim().slice(0, 2).toUpperCase();
+  const isAccepted = match.status === 'accepted';
 
   return (
-    <div className="rounded-xl bg-[var(--card)] shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      {/* Score banner */}
-      <div className={`h-1.5 ${match.score >= 80 ? 'bg-green-400' : match.score >= 60 ? 'bg-yellow-400' : 'bg-red-400'}`} />
+    <div className="rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5 group"
+      style={{
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+      }}>
+      {/* Score strip */}
+      <div className="h-1 w-full" style={{ background: scoreGradient(match.score) }} />
 
       <div className="p-5">
-        {/* Avatar + score */}
-        <div className="flex items-center justify-between mb-4">
-          <div className={`h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center text-primary font-bold text-xl ring-4 overflow-hidden ${scoreRing(match.score)}`}>
-            {avatar ? <img src={avatar} alt="" className="h-full w-full object-cover" /> : initials}
+        {/* Avatar + score ring */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="relative">
+            {avatarSrc ? (
+              <Image src={avatarSrc} alt={displayName} width={52} height={52}
+                className="w-13 h-13 rounded-2xl object-cover"
+                style={{ width: 52, height: 52 }} />
+            ) : (
+              <div className="w-13 h-13 rounded-2xl flex items-center justify-center text-lg font-bold text-white"
+                style={{ width: 52, height: 52, background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
+                {initial}
+              </div>
+            )}
+            {isAccepted && (
+              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 flex items-center justify-center"
+                style={{ background: 'var(--primary)', borderColor: 'var(--card)' }}>
+                <Check size={9} weight="bold" className="text-white" />
+              </div>
+            )}
           </div>
-          <div className="text-center">
-            <p className={`text-4xl font-black ${scoreColor(match.score)}`}>{match.score}%</p>
-            <p className="text-xs text-[var(--muted-foreground)]">{scoreLabel(match.score)}</p>
-          </div>
+          <ScoreGauge score={match.score} />
         </div>
 
-        {/* Name */}
-        <p className="text-base font-semibold text-[var(--foreground)] mb-1 truncate">{displayName}</p>
-
-        {/* Score breakdown bars */}
-        <ScoreBreakdown score={match.score} />
-
-        {/* Date */}
-        <p className="text-xs text-[var(--muted-foreground)] mt-3 mb-4">
-          {new Date(match.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
-
-        {/* Actions */}
-        <div className="flex gap-2">
-          <button onClick={onView}
-            className="flex-1 rounded-lg border border-[var(--border)] py-2 text-xs font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors">
-            عرض التفاصيل
-          </button>
-          {isPending && onAccept && onReject && (
-            <>
-              <button onClick={onReject} disabled={rejecting}
-                className="rounded-lg border border-red-200 px-3 py-2 text-xs font-medium text-red-500 hover:bg-red-50 disabled:opacity-50 transition-colors">
-                ✕
-              </button>
-              <button onClick={onAccept} disabled={accepting}
-                className="rounded-lg bg-primary px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                ✓ قبول
-              </button>
-            </>
-          )}
-          {!isPending && (
-            <span className={`flex-1 rounded-lg py-2 text-center text-xs font-medium ${
-              match.status === 'accepted' ? 'bg-green-50 text-green-700' : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
-            }`}>
-              {match.status === 'accepted' ? '✓ مقبول' : '✕ مرفوض'}
+        {/* Name + meta */}
+        <div className="mb-3">
+          <h3 className="font-bold text-base truncate" style={{ color: 'var(--foreground)' }}>{displayName}</h3>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
+            {age && (
+              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{age} سنة</span>
+            )}
+            {location && (
+              <span className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                <MapPin size={10} /> {location}
+              </span>
+            )}
+          </div>
+          {prayerLevel && (
+            <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold"
+              style={{ background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }}>
+              <Scales size={10} />
+              الالتزام: {prayerLevel === 'high' ? 'عالي' : prayerLevel === 'medium' ? 'متوسط' : 'منخفض'}
             </span>
           )}
         </div>
-      </div>
-    </div>
-  );
-};
 
-// Deterministic per-category approximation from the overall score and category
-// weight. (Was Math.random() — different numbers every render, a hydration
-// mismatch and invented data. Real per-category scores need a Match API change.)
-const ScoreBreakdown = ({ score }: { score: number }) => {
-  const categories = [
-    { label: 'الدين', weight: 0.30 },
-    { label: 'نمط الحياة', weight: 0.25 },
-    { label: 'الاهتمامات', weight: 0.20 },
-    { label: 'الموقع', weight: 0.15 },
-    { label: 'أخرى', weight: 0.10 },
-  ];
+        <ScoreBreakdown score={match.score} />
 
-  return (
-    <div className="space-y-1.5">
-      {categories.map((c) => {
-        const val = Math.min(100, Math.round(score * (0.85 + c.weight / 2)));
-        return (
-          <div key={c.label} className="flex items-center gap-2">
-            <span className="w-20 text-xs text-[var(--muted-foreground)] shrink-0">{c.label}</span>
-            <div className="flex-1 h-1.5 rounded-full bg-[var(--muted)]">
-              <div
-                className={`h-1.5 rounded-full ${val >= 80 ? 'bg-green-400' : val >= 60 ? 'bg-yellow-400' : 'bg-red-400'}`}
-                style={{ width: `${val}%` }}
-              />
-            </div>
-            <span className="text-xs text-[var(--muted-foreground)] w-8 text-left">{val}%</span>
+        {/* Status badge for non-pending */}
+        {!isPending && (
+          <div className="mt-3 flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold"
+            style={isAccepted
+              ? { background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }
+              : { background: 'color-mix(in srgb, #ef4444 10%, transparent)', color: '#ef4444' }}>
+            {isAccepted ? <Heart size={13} weight="fill" /> : <X size={13} weight="bold" />}
+            {isAccepted ? 'تم القبول' : 'تم الرفض'}
           </div>
-        );
-      })}
+        )}
+
+        {/* Actions */}
+        <div className="flex flex-col gap-2 mt-4">
+          {isPending && (
+            <>
+              {onView && (
+                <button onClick={onView}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]"
+                  style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
+                  <Eye size={13} /> عرض تفاصيل التوافق
+                </button>
+              )}
+              {(onAccept || onReject) && (
+                <div className="flex gap-2">
+                  {onAccept && (
+                    <button onClick={onAccept} disabled={accepting}
+                      className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+                      style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white', boxShadow: '0 2px 8px color-mix(in srgb, var(--primary) 30%, transparent)' }}>
+                      <Check size={13} weight="bold" />
+                      {accepting ? 'جاري...' : 'قبول'}
+                    </button>
+                  )}
+                  {onReject && (
+                    <button onClick={onReject} disabled={rejecting}
+                      className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,#ef4444_8%,transparent)] active:scale-95 disabled:opacity-50"
+                      style={{ border: '1px solid color-mix(in srgb, #ef4444 30%, var(--border))', color: '#ef4444' }}>
+                      <X size={13} weight="bold" />
+                      {rejecting ? 'جاري...' : 'رفض'}
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+          {match.status === 'rejected' && onAccept && (
+            <button onClick={onAccept} disabled={accepting}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] disabled:opacity-50"
+              style={{ border: '1px solid var(--border)', color: 'var(--accent)' }}>
+              <ArrowCounterClockwise size={13} /> تراجع عن الرفض
+            </button>
+          )}
+          {(isPending || isAccepted) && (onViewProfile || onSendMessage) && (
+            <div className="flex gap-2">
+              {onViewProfile && (
+                <button onClick={onViewProfile}
+                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,var(--primary)_6%,transparent)]"
+                  style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
+                  <Eye size={12} /> الملف
+                </button>
+              )}
+              {onSendMessage && (
+                <button onClick={onSendMessage}
+                  className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, var(--accent), #c8952e)', color: 'white' }}>
+                  <ChatCircle size={12} weight="fill" /> رسالة
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

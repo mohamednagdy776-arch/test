@@ -1,16 +1,18 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { Heart, HourglassHigh, CheckCircle, ChartBar, ArrowClockwise } from '@phosphor-icons/react';
 import type { Match } from '@/types';
 
 export const MatchingStats = () => {
-  const { data } = useQuery({
-    queryKey: ['matches-web'],
+  const { data, isLoading, refetch, isFetching } = useQuery({
+    queryKey: ['matches-stats'],
     queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 100 } }).then((r) => r.data),
+    staleTime: 60_000,
   });
 
   const matches: Match[] = data?.data ?? [];
-  const total = data?.meta?.total ?? 0;
+  const total = data?.meta?.total ?? matches.length;
   const accepted = matches.filter((m) => m.status === 'accepted').length;
   const pending = matches.filter((m) => m.status === 'pending').length;
   const avgScore = matches.length
@@ -18,19 +20,74 @@ export const MatchingStats = () => {
     : 0;
 
   const stats = [
-    { label: 'إجمالي التوافقات', value: total, color: 'bg-blue-50 text-blue-700', icon: '💫' },
-    { label: 'في الانتظار', value: pending, color: 'bg-yellow-50 text-yellow-700', icon: '⏳' },
-    { label: 'تم القبول', value: accepted, color: 'bg-green-50 text-green-700', icon: '✅' },
-    { label: 'متوسط التوافق', value: `${avgScore}%`, color: 'bg-purple-50 text-purple-700', icon: '📊' },
+    {
+      label: 'إجمالي التوافقات',
+      value: total,
+      icon: Heart,
+      gradient: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
+      textColor: 'white',
+      iconBg: 'rgba(255,255,255,0.2)',
+    },
+    {
+      label: 'في الانتظار',
+      value: pending,
+      icon: HourglassHigh,
+      gradient: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+      textColor: 'white',
+      iconBg: 'rgba(255,255,255,0.2)',
+    },
+    {
+      label: 'تم القبول',
+      value: accepted,
+      icon: CheckCircle,
+      gradient: 'linear-gradient(135deg, var(--accent) 0%, #c8952e 100%)',
+      textColor: 'white',
+      iconBg: 'rgba(255,255,255,0.2)',
+    },
+    {
+      label: 'متوسط التوافق',
+      value: `${avgScore}%`,
+      icon: ChartBar,
+      gradient: 'var(--card)',
+      textColor: 'var(--foreground)',
+      iconBg: 'color-mix(in srgb, var(--primary) 10%, transparent)',
+      border: true,
+    },
   ];
 
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-24 rounded-2xl animate-pulse" style={{ background: 'var(--muted)' }} />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {stats.map((s) => (
-        <div key={s.label} className={`rounded-xl p-4 ${s.color}`}>
-          <p className="text-xl mb-1">{s.icon}</p>
-          <p className="text-2xl font-bold">{s.value}</p>
-          <p className="text-xs opacity-70 mt-0.5">{s.label}</p>
+        <div key={s.label} className="relative rounded-2xl p-4 overflow-hidden"
+          style={{
+            background: s.gradient,
+            border: s.border ? '1px solid var(--border)' : 'none',
+            boxShadow: s.border ? 'none' : '0 4px 16px rgba(0,0,0,0.1)',
+          }}>
+          <div className="flex items-start justify-between mb-2">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+              style={{ background: s.iconBg }}>
+              <s.icon size={18} weight="fill" style={{ color: s.textColor }} />
+            </div>
+            {s.border && (
+              <button onClick={() => refetch()} aria-label="تحديث" disabled={isFetching}
+                className="opacity-40 hover:opacity-80 transition-opacity disabled:opacity-20">
+                <ArrowClockwise size={13} className={isFetching ? 'animate-spin' : ''} style={{ color: 'var(--muted-foreground)' }} />
+              </button>
+            )}
+          </div>
+          <p className="text-2xl font-extrabold leading-none tabular-nums" style={{ color: s.textColor }}>{s.value}</p>
+          <p className="text-[11px] font-medium mt-1 opacity-80" style={{ color: s.textColor }}>{s.label}</p>
         </div>
       ))}
     </div>
