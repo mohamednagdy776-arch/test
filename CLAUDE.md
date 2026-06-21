@@ -21,6 +21,22 @@
 
 ---
 
+## Project Skills (`.claude/skills/`)
+
+Read the relevant skill BEFORE starting work in each area — they contain non-negotiable rules.
+
+| Skill | Trigger |
+|-------|---------|
+| `frontend-nextjs` | Any `web/` or `admin/` change — RTL, colors, Modal vs confirm(), cookie auth, API shapes |
+| `backend-nestjs` | Any `backend/` change — HttpOnly cookies, TypeORM, RBAC, DTO validation |
+| `security-audit` | Auth, user data, payments, chat — run checklist before shipping |
+| `deployment` | VPS deploy, service restart, container logs — Docker Compose commands |
+| `database-migration` | Any schema change — `synchronize: false` means raw ALTER TABLE on VPS |
+| `mobile-flutter` | Any `mobile/` change |
+| `ai-matching` | Any `ai-service/` change |
+
+---
+
 ## AI Development Tools
 
 This project uses 5 AI tools for comprehensive development workflow.
