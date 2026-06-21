@@ -31,12 +31,19 @@ const UserCard = ({ user }: { user: User }) => {
 ```
 
 ## Design guidelines (Tayyibt brand)
-- Emerald palette: `#10B981` (primary), `#059669` (hover/dark), `#065F46` (headings), `#DCFCE7` (borders/tints), `#ECFDF5`/`#F0FDF4` (card bg gradient).
-- Auth pages use a different navy/slate palette: `#213448`, `#547792`, `#94B4C1`, `#EAE0CF`, `#FDFAF5`.
+- **Luxury "Emerald Sanctum" palette** — `data-theme="luxury"` on layout root. Always use CSS variables, never raw hex:
+  - `var(--primary)` #0A3D2B (deep forest green) · `var(--secondary)` #1A6B4A · `var(--accent)` #B8892A (gold)
+  - `var(--background)` #F4EFE4 (parchment) · `var(--card)` #FDFAF3 (pearl ivory) · `var(--foreground)` #0E1912
+  - `var(--muted)` #E8E3D8 · `var(--muted-foreground)` #66756A · `var(--border)` #DDD5BF · `var(--ring)` #B8892A
+  - Full token list, old→new mapping, card/button/shadow utilities: see `ui-ux/SKILL.md`
+- **Auth pages** use navy/slate: `#213448`, `#547792`, `#94B4C1`, `#EAE0CF`, `#FDFAF5` — do NOT mix with luxury.
+- **BANNED in `(main)/`**: `bg-white`, `text-gray-*`, `bg-gray-*`, `border-gray-*`, `emerald-*` Tailwind classes, and all old hex codes.
+- Tailwind arbitrary CSS vars: `bg-[var(--card)]`, `text-[var(--primary)]`, `border-[var(--border)]`
 - Mobile-first responsive. Use `grid-cols-1 sm:grid-cols-N` — **never** bare `grid-cols-N` without responsive override.
-- **Arabic / RTL support**: own chat messages use `justify-end` (right side). Own bubble corner: `rounded-tl-sm`; other: `rounded-tr-sm`. Action buttons use `mr-2` not `ml-2` for RTL.
+- Sidebar: `hidden lg:block` (visible 1024px+). BottomNav: `lg:hidden` (mobile/tablet fixed bar).
+- **Arabic / RTL**: own chat messages `justify-end` (right). Bubble corners: own `rounded-tl-sm`, other `rounded-tr-sm`. RTL spacing: `mr-*` not `ml-*`.
 - Cultural fit: modest, family-friendly, privacy-conscious profile UIs.
-- Accessibility: use `role="switch" aria-checked` for toggles; `aria-label` on icon-only buttons.
+- Accessibility: `role="switch" aria-checked` for toggles; `aria-label` on icon-only buttons.
 
 ## Auth
 - Uses **HttpOnly cookies** (`access_token`, `refresh_token`, `uid`) — **NOT** localStorage tokens.
