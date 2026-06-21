@@ -101,9 +101,9 @@ export const ProfileHeader = ({
   };
 
   return (
-    <div className="rounded-2xl bg-[#FDFAF5] shadow-card-hover border border-[#C8D8DF]/60 overflow-hidden transition-all duration-300 hover:shadow-glow-lg">
+    <div className="rounded-2xl bg-[var(--card)] shadow-card-hover border border-[var(--border)]/60 overflow-hidden transition-all duration-300 hover:shadow-glow-lg">
       {/* Cover Photo with enhanced styling */}
-      <div className="relative h-56 bg-gradient-to-br from-[#D4E8EE] via-[#94B4C1] to-[#547792] overflow-hidden group">
+      <div className="relative h-56 bg-gradient-to-br from-[var(--primary)] via-[var(--secondary)] to-[var(--muted)] overflow-hidden group">
         {mediaUrl(profile.coverUrl) ? (
           // next/image enforces the next.config image allowlist, so a malicious
           // URL from the API can't render an arbitrary external resource (#167).
@@ -114,22 +114,22 @@ export const ProfileHeader = ({
             onClick={() => { if (isSelf) coverRef.current?.click(); }}
           >
             <div className="text-center">
-              <div className="w-16 h-16 rounded-2xl bg-[#FDFAF5]/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
-                <Camera size={32} className="text-[#FDFAF5]/50" />
+              <div className="w-16 h-16 rounded-2xl bg-[var(--card)]/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
+                <Camera size={32} className="text-[var(--card)]/50" />
               </div>
-              <p className="text-sm text-[#FDFAF5]/70 font-medium">{isSelf ? 'أضف صورة غلاف' : 'لا توجد صورة غلاف'}</p>
+              <p className="text-sm text-[var(--card)]/70 font-medium">{isSelf ? 'أضف صورة غلاف' : 'لا توجد صورة غلاف'}</p>
             </div>
           </div>
         )}
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#131F2E]/30 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--foreground)]/30 to-transparent pointer-events-none" />
         {isSelf && (
           <>
             <button
               onClick={() => coverRef.current?.click()}
               disabled={uploading}
               title="يُفضّل صورة غلاف بنسبة 3:1 (مثال 1500×500 بكسل) — حتى 5 ميجابايت" /* #401 */
-              className="absolute bottom-4 left-4 px-4 py-2 bg-[#131F2E]/70 hover:bg-[#131F2E]/90 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105 disabled:opacity-70"
+              className="absolute bottom-4 left-4 px-4 py-2 bg-[var(--primary)]/70 hover:bg-[var(--foreground)]/90 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105 disabled:opacity-70"
             >
               <Camera size={18} />
               <span>{uploading ? 'جاري الرفع...' : 'تعديل غلاف'}</span>
@@ -138,7 +138,7 @@ export const ProfileHeader = ({
               <button
                 onClick={() => setRemoveImageKind('cover')}
                 disabled={uploading}
-                className="absolute bottom-4 left-36 px-3 py-2 bg-[#131F2E]/60 hover:bg-red-600/80 backdrop-blur-sm text-[#FDFAF5] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
+                className="absolute bottom-4 left-36 px-3 py-2 bg-[var(--primary)]/60 hover:bg-red-600/80 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
               >
                 إزالة
               </button>
@@ -159,7 +159,7 @@ export const ProfileHeader = ({
           {/* Avatar with enhanced styling */}
           <div className="relative shrink-0 group">
             <div
-              className={`relative h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center ring-4 ring-[#FDFAF5] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${isSelf ? 'cursor-pointer' : ''}`}
+              className={`relative h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center ring-4 ring-[var(--card)] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${isSelf ? 'cursor-pointer' : ''}`}
               onClick={() => { if (isSelf) avatarRef.current?.click(); }}
             >
               {mediaUrl(profile.avatarUrl) ? (
@@ -175,7 +175,7 @@ export const ProfileHeader = ({
                 <button
                   onClick={() => avatarRef.current?.click()}
                   title="يُفضّل صورة مربعة (مثال 400×400 بكسل) — حتى 5 ميجابايت" /* #406 */
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gradient-to-r from-[#213448] to-[#547792] text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft hover:shadow-glow hover:scale-110 transition-all duration-200"
+                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-[var(--card)] text-xs flex items-center justify-center shadow-soft hover:shadow-glow hover:scale-110 transition-all duration-200"
                 >
                   {uploading ? '...' : <Camera size={14} />}
                 </button>
@@ -191,7 +191,7 @@ export const ProfileHeader = ({
                     onClick={() => setRemoveImageKind('avatar')}
                     disabled={uploading}
                     title="إزالة الصورة"
-                    className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[#131F2E]/70 hover:bg-red-600/80 text-[#FDFAF5] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
+                    className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[var(--primary)]/70 hover:bg-red-600/80 text-[var(--card)] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
                   >
                     ✕
                   </button>
@@ -207,7 +207,7 @@ export const ProfileHeader = ({
               {profile.isHealthVerified && (
                 <span
                   className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm"
-                  style={{ background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', color: '#065F46' }}
+                  style={{ background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', color: 'var(--foreground)' }}
                   title="تم التحقق من السلامة الصحية"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
@@ -218,24 +218,24 @@ export const ProfileHeader = ({
               )}
             </div>
             {profile.username && (
-              <p className="mt-1 text-sm text-[#547792] font-medium">
+              <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium">
                 @{profile.username}
               </p>
             )}
             {profile.userId && <FollowSection userId={profile.userId} isSelf={isSelf} />}
-            <p className="mt-1 text-sm text-[#547792]">
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
               {[profile.location, profile.city, profile.country].filter(Boolean).join('، ')}
             </p>
             {profile.workplace && (
-              <p className="mt-1 text-sm text-[#547792] font-medium"><Briefcase size={14} className="inline mr-1" /> {profile.workplace}</p>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Briefcase size={14} className="inline mr-1" /> {profile.workplace}</p>
             )}
             {profile.relationshipStatus && (
-              <p className="mt-1 text-sm text-[#547792] font-medium"><Heart size={14} className="inline mr-1" weight="fill" /> {profile.relationshipStatus}</p>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Heart size={14} className="inline mr-1" weight="fill" /> {profile.relationshipStatus}</p>
             )}
             {profile.bio && (
-              <p className="mt-2 text-sm text-[#131F2E]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
+              <p className="mt-2 text-sm text-[var(--foreground)]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
             )}
-            <p className="mt-2 text-xs text-[#BFB9AD]">
+            <p className="mt-2 text-xs text-[var(--muted-foreground)]">
               انضم في {formatDate(profile.joinDate || profile.createdAt)}
               {!!profile.friendCount && (
                 <span className="mr-2">• {profile.friendCount} صديق</span>
@@ -250,7 +250,7 @@ export const ProfileHeader = ({
           {isSelf && onEdit && (
             <button
               onClick={onEdit}
-              className="shrink-0 mt-16 rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-[#D4E8EE] hover:border-[#547792] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
+              className="shrink-0 mt-16 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
             >
               <PencilSimple size={16} className="inline mr-1" />
               تعديل الملف
@@ -266,7 +266,7 @@ export const ProfileHeader = ({
                 <button
                   onClick={onAddFriend}
                   disabled={friendActionPending}
-                  className="rounded-xl bg-gradient-to-r from-[#213448] to-[#547792] px-4 py-2 text-sm font-medium text-[#FDFAF5] hover:shadow-glow hover:scale-105 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2 text-sm font-medium text-[var(--card)] hover:shadow-glow hover:scale-105 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <UserPlus size={16} />
                   {friendActionPending ? '...' : 'إضافة صديق'}
@@ -278,7 +278,7 @@ export const ProfileHeader = ({
                 <button
                   onClick={onCancelRequest}
                   disabled={friendActionPending}
-                  className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#547792] hover:bg-[#EAE0CF] hover:border-[#547792] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Clock size={16} />
                   {friendActionPending ? '...' : 'تم الإرسال'}
@@ -290,7 +290,7 @@ export const ProfileHeader = ({
                 <button
                   onClick={onAcceptRequest}
                   disabled={friendActionPending}
-                  className="rounded-xl bg-gradient-to-r from-[#213448] to-[#547792] px-4 py-2 text-sm font-medium text-[#FDFAF5] hover:shadow-glow transition-all duration-300 flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2 text-sm font-medium text-[var(--card)] hover:shadow-glow transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CheckCircle size={16} />
                   {friendActionPending ? '...' : 'قبول الطلب'}
@@ -302,7 +302,7 @@ export const ProfileHeader = ({
                 <button
                   onClick={onUnfriend}
                   disabled={friendActionPending}
-                  className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Users size={16} />
                   {friendActionPending ? '...' : 'أصدقاء'}
@@ -312,7 +312,7 @@ export const ProfileHeader = ({
               {/* Message — always visible */}
               <button
                 onClick={() => router.push(`/chat?user=${profile.userId}`)}
-                className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm font-medium text-[#213448] hover:bg-[#D4E8EE] hover:border-[#547792] transition-all duration-300 flex items-center gap-1.5"
+                className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] transition-all duration-300 flex items-center gap-1.5"
               >
                 <ChatCircle size={16} />
                 رسالة
@@ -357,11 +357,11 @@ export const ProfileHeader = ({
 
       <Modal open={!!removeImageKind} onClose={() => setRemoveImageKind(null)} title="إزالة الصورة">
         <div className="space-y-4">
-          <p className="text-sm text-emerald-700">
+          <p className="text-sm text-[var(--primary)]">
             {removeImageKind === 'avatar' ? 'هل أنت متأكد من إزالة صورة الملف الشخصي؟' : 'هل أنت متأكد من إزالة صورة الغلاف؟'}
           </p>
           <div className="flex gap-3">
-            <button onClick={() => setRemoveImageKind(null)} className="flex-1 rounded-xl border border-emerald-200 px-4 py-2.5 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 transition-colors">إلغاء</button>
+            <button onClick={() => setRemoveImageKind(null)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
             <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">إزالة</button>
           </div>
         </div>
@@ -377,14 +377,14 @@ const ProfileCompletion = ({ profile }: { profile: any }) => {
   const filled = fields.filter((f) => profile[f] != null && profile[f] !== '').length;
   const pct = Math.round((filled / fields.length) * 100);
   return (
-    <div className="mt-6 border-t border-[#C8D8DF]/40 pt-4">
+    <div className="mt-6 border-t border-[var(--border)]/40 pt-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-[#547792] font-medium">اكتمال الملف الشخصي</span>
+        <span className="text-xs text-[var(--muted-foreground)] font-medium">اكتمال الملف الشخصي</span>
         <span className="text-xs font-bold text-gradient">{pct}%</span>
       </div>
-      <div className="h-2 rounded-full bg-[#EAE0CF] overflow-hidden">
+      <div className="h-2 rounded-full bg-[var(--muted)] overflow-hidden">
         <div 
-          className="h-2 rounded-full bg-gradient-to-r from-[#213448] to-[#547792] transition-all duration-500 shadow-soft" 
+          className="h-2 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] transition-all duration-500 shadow-soft" 
           style={{ width: `${pct}%` }} 
         />
       </div>

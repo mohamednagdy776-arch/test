@@ -25,7 +25,7 @@ export function VideoGrid() {
 
   if (!data?.data?.length) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-[var(--muted-foreground)]">
         No videos yet
       </div>
     );
@@ -50,7 +50,7 @@ export function VideoCard({ video, onClick }: { video: any; onClick?: () => void
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="aspect-video relative bg-gray-900">
+      <div className="aspect-video relative bg-[var(--foreground)]">
         {video.thumbnailUrl ? (
           <Image
             src={video.thumbnailUrl}
@@ -59,7 +59,7 @@ export function VideoCard({ video, onClick }: { video: any; onClick?: () => void
             className="object-cover"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+          <div className="absolute inset-0 flex items-center justify-center text-[var(--muted-foreground)]">
             ▶️
           </div>
         )}
@@ -80,7 +80,7 @@ export function VideoCard({ video, onClick }: { video: any; onClick?: () => void
       </div>
       <div className="p-2">
         <h3 className="font-semibold text-sm line-clamp-2">{video.title}</h3>
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-[var(--muted-foreground)] mt-1">
           {video.viewsCount || 0} views • {video.createdAt ? new Date(video.createdAt).toLocaleDateString() : ''}
         </p>
       </div>

@@ -209,22 +209,22 @@ export default function SecurityPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 flex justify-center items-center">
+      <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] flex justify-center items-center">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
           <span>←</span> <span>العودة للإعدادات</span>
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-emerald-900">الأمان</h1>
-          <p className="text-emerald-700/70 mt-2">إدارة جلساتك وتوثيق حسابك</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">الأمان</h1>
+          <p className="text-[var(--primary)]/70 mt-2">إدارة جلساتك وتوثيق حسابك</p>
         </div>
 
         {error && (
@@ -240,14 +240,14 @@ export default function SecurityPage() {
                 key={alert.id}
                 className={`p-3 rounded-xl border flex items-center justify-between ${
                   alert.type === 'success'
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                    ? 'bg-[var(--muted)] border-[var(--border)] text-[var(--primary)]'
                     : 'bg-red-50 border-red-200 text-red-700'
                 }`}
               >
                 <span className="text-sm">{alert.message}</span>
                 <button
                   onClick={() => setAlerts(prev => prev.filter(a => a.id !== alert.id))}
-                  className="text-emerald-700/50 hover:text-emerald-900 transition-colors"
+                  className="text-[var(--primary)]/50 hover:text-[var(--foreground)] transition-colors"
                 >
                   ✕
                 </button>
@@ -256,9 +256,9 @@ export default function SecurityPage() {
           </div>
         )}
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>📱</span> إدارة الجلسات
             </CardTitle>
             <CardDescription>الجلسات النشطة على حسابك</CardDescription>
@@ -266,26 +266,26 @@ export default function SecurityPage() {
           <CardContent>
             <div className="space-y-3">
               {sessions.length === 0 ? (
-                <p className="text-center text-emerald-700/70 py-4">لا توجد جلسات</p>
+                <p className="text-center text-[var(--primary)]/70 py-4">لا توجد جلسات</p>
               ) : (
                 sessions.map((session) => (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50 hover:border-emerald-300 transition-colors"
+                    className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50 hover:border-[var(--border)] transition-colors"
                   >
                     <div className="flex items-center gap-4">
                       <div className="text-2xl">{getBrowserIcon(session.browser)}</div>
                       <div>
-                        <p className="font-semibold text-emerald-900">
+                        <p className="font-semibold text-[var(--foreground)]">
                           {session.deviceName || 'جهاز غير معروف'}
                           {session.isCurrent && (
-                            <span className="mr-2 text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+                            <span className="mr-2 text-xs px-2 py-0.5 rounded-full bg-[var(--muted)] text-[var(--primary)]">
                               الحالي
                             </span>
                           )}
                         </p>
-                        <p className="text-emerald-700/70 text-sm">{session.browser || 'متصفح غير معروف'} · {session.ipAddress || '-'}</p>
-                        <p className="text-xs text-emerald-600/50">آخر نشاط: {formatDate(session.lastActive)}</p>
+                        <p className="text-[var(--primary)]/70 text-sm">{session.browser || 'متصفح غير معروف'} · {session.ipAddress || '-'}</p>
+                        <p className="text-xs text-[var(--primary)]/50">آخر نشاط: {formatDate(session.lastActive)}</p>
                       </div>
                     </div>
                     {!session.isCurrent && (
@@ -305,7 +305,7 @@ export default function SecurityPage() {
             </div>
 
             {sessions.length > 1 && (
-              <div className="mt-4 pt-4 border-t border-emerald-200/30">
+              <div className="mt-4 pt-4 border-t border-[var(--border)]/30">
                 <Button
                   variant="outline"
                   size="sm"
@@ -320,22 +320,22 @@ export default function SecurityPage() {
           </CardContent>
         </Card>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>🔐</span> التحقق بخطوتين
             </CardTitle>
             <CardDescription>أضف طبقة إضافية من الأمان</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50">
               <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl ${twoFactorEnabled ? 'bg-emerald-100' : 'bg-amber-100'}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl ${twoFactorEnabled ? 'bg-[var(--muted)]' : 'bg-amber-100'}`}>
                   {twoFactorEnabled ? '✓' : '🔒'}
                 </div>
                 <div>
-                  <p className="font-semibold text-emerald-900">التحقق بخطوتين</p>
-                  <p className="text-emerald-700/70 text-sm">
+                  <p className="font-semibold text-[var(--foreground)]">التحقق بخطوتين</p>
+                  <p className="text-[var(--primary)]/70 text-sm">
                     {twoFactorEnabled ? 'مفعّل · حسابك محمي' : 'غير مفعّل'}
                   </p>
                 </div>
@@ -355,7 +355,7 @@ export default function SecurityPage() {
                   size="sm"
                   loading={twoFactorLoading}
                   onClick={handleSetup2FA}
-                  className="bg-emerald-600 hover:bg-emerald-700"
+                  className="bg-[var(--primary)] hover:bg-[var(--primary-hover)]"
                 >
                   تفعيل
                 </Button>
@@ -367,14 +367,14 @@ export default function SecurityPage() {
         <Modal open={show2FASetup} onClose={() => setShow2FASetup(false)} title="تفعيل التحقق بخطوتين">
           <div className="space-y-4">
             {setupData?.qrCode && (
-              <div className="flex justify-center p-4 bg-white rounded-xl">
+              <div className="flex justify-center p-4 bg-[var(--card)] rounded-xl">
                 <img src={setupData.qrCode} alt="QR Code" className="w-48 h-48" />
               </div>
             )}
             {setupData?.secret && (
               <div className="text-center">
-                <p className="text-sm text-emerald-700 mb-1">أو أدخل هذا الرمز يدوياً:</p>
-                <p className="font-mono text-lg font-bold text-emerald-900 bg-emerald-50 px-4 py-2 rounded-lg inline-block">
+                <p className="text-sm text-[var(--primary)] mb-1">أو أدخل هذا الرمز يدوياً:</p>
+                <p className="font-mono text-lg font-bold text-[var(--foreground)] bg-[var(--muted)] px-4 py-2 rounded-lg inline-block">
                   {setupData.secret}
                 </p>
               </div>
@@ -387,10 +387,10 @@ export default function SecurityPage() {
               maxLength={6}
             />
             <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => { setShow2FASetup(false); setVerifyCode(''); }} className="flex-1 text-emerald-700">
+              <Button variant="ghost" onClick={() => { setShow2FASetup(false); setVerifyCode(''); }} className="flex-1 text-[var(--primary)]">
                 إلغاء
               </Button>
-              <Button variant="primary" onClick={handleVerify2FA} loading={twoFactorLoading} disabled={!verifyCode.trim()} className="flex-1 bg-emerald-600 hover:bg-emerald-700">
+              <Button variant="primary" onClick={handleVerify2FA} loading={twoFactorLoading} disabled={!verifyCode.trim()} className="flex-1 bg-[var(--primary)] hover:bg-[var(--primary-hover)]">
                 تأكيد
               </Button>
             </div>
@@ -399,7 +399,7 @@ export default function SecurityPage() {
 
         <Modal open={showDisable2FA} onClose={() => setShowDisable2FA(false)} title="إلغاء التحقق بخطوتين">
           <div className="space-y-4">
-            <p className="text-sm text-emerald-700">
+            <p className="text-sm text-[var(--primary)]">
               لإلغاء التحقق بخطوتين، أدخل رمز التحقق من التطبيق
             </p>
             <Input
@@ -410,7 +410,7 @@ export default function SecurityPage() {
               maxLength={6}
             />
             <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => { setShowDisable2FA(false); setDisableCode(''); }} className="flex-1 text-emerald-700">
+              <Button variant="ghost" onClick={() => { setShowDisable2FA(false); setDisableCode(''); }} className="flex-1 text-[var(--primary)]">
                 إلغاء
               </Button>
               <Button variant="danger" onClick={handleDisable2FA} loading={twoFactorLoading} disabled={!disableCode.trim()} className="flex-1">
@@ -420,9 +420,9 @@ export default function SecurityPage() {
           </div>
         </Modal>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>🔑</span> تغيير كلمة المرور
             </CardTitle>
             <CardDescription>استخدم كلمة مرور قوية لا تستخدمها في مواقع أخرى</CardDescription>
@@ -458,14 +458,14 @@ export default function SecurityPage() {
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{changePwdError}</p>
               )}
               {changePwdSuccess && (
-                <p className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">تم تغيير كلمة المرور بنجاح</p>
+                <p className="text-sm text-[var(--primary)] bg-[var(--muted)] border border-[var(--border)] rounded-lg px-3 py-2">تم تغيير كلمة المرور بنجاح</p>
               )}
               <Button
                 type="submit"
                 variant="primary"
                 loading={changePwdLoading}
                 disabled={!oldPassword || !newPassword || !confirmPassword}
-                className="bg-emerald-600 hover:bg-emerald-700"
+                className="bg-[var(--primary)] hover:bg-[var(--primary-hover)]"
               >
                 تغيير كلمة المرور
               </Button>
@@ -473,7 +473,7 @@ export default function SecurityPage() {
           </CardContent>
         </Card>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-red-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-red-200/50">
           <CardHeader>
             <CardTitle className="text-red-700 flex items-center gap-2">
               <span>⚠️</span> منطقة خطرة
@@ -499,9 +499,9 @@ export default function SecurityPage() {
 
         <Modal open={showRevokeAllModal} onClose={() => setShowRevokeAllModal(false)} title="إلغاء جميع الجلسات">
           <div className="space-y-4">
-            <p className="text-sm text-emerald-700">هل أنت متأكد من إلغاء جميع الجلسات الأخرى؟ ستحتاج إلى تسجيل الدخول من جديد على الأجهزة الأخرى.</p>
+            <p className="text-sm text-[var(--primary)]">هل أنت متأكد من إلغاء جميع الجلسات الأخرى؟ ستحتاج إلى تسجيل الدخول من جديد على الأجهزة الأخرى.</p>
             <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => setShowRevokeAllModal(false)} className="flex-1 text-emerald-700">إلغاء</Button>
+              <Button variant="ghost" onClick={() => setShowRevokeAllModal(false)} className="flex-1 text-[var(--primary)]">إلغاء</Button>
               <Button variant="danger" onClick={handleRevokeAllSessions} loading={revoking === 'all'} className="flex-1">تأكيد</Button>
             </div>
           </div>
@@ -509,7 +509,7 @@ export default function SecurityPage() {
 
         <Modal open={showDeleteModal} onClose={() => { setShowDeleteModal(false); setDeletePassword(''); }} title="حذف الحساب">
           <div className="space-y-4">
-            <p className="text-sm text-emerald-700">
+            <p className="text-sm text-[var(--primary)]">
               هل أنت متأكد من طلب حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه.
             </p>
             <div className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">
@@ -523,7 +523,7 @@ export default function SecurityPage() {
               onChange={(e) => setDeletePassword(e.target.value)}
             />
             <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }} className="flex-1 text-emerald-700">
+              <Button variant="ghost" onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }} className="flex-1 text-[var(--primary)]">
                 إلغاء
               </Button>
               <Button

@@ -84,7 +84,7 @@ export const ProfileView = ({ userId }: Props) => {
     return (
       <div className="space-y-4">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-32 rounded-xl bg-[#FDFAF5] animate-pulse border border-[#C8D8DF]/40" />
+          <div key={i} className="h-32 rounded-xl bg-[var(--card)] animate-pulse border border-[var(--border)]/40" />
         ))}
       </div>
     );
@@ -94,11 +94,11 @@ export const ProfileView = ({ userId }: Props) => {
   // error renders the "profile not found" message with no way to retry.
   if (isError) {
     return (
-      <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-12 text-center">
-        <p className="text-[#547792] text-sm mb-4">تعذّر تحميل الملف الشخصي</p>
+      <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-12 text-center">
+        <p className="text-[var(--muted-foreground)] text-sm mb-4">تعذّر تحميل الملف الشخصي</p>
         <button
           onClick={() => refetch()}
-          className="rounded-xl border border-[#C8D8DF] px-4 py-2 text-sm text-[#213448] hover:bg-[#D4E8EE] transition-colors"
+          className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
         >
           أعد المحاولة
         </button>
@@ -121,8 +121,8 @@ export const ProfileView = ({ userId }: Props) => {
 
   if (!profile) {
     return (
-      <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-12 text-center">
-        <p className="text-[#547792] text-sm">لم يتم العثور على هذا الملف الشخصي</p>
+      <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-12 text-center">
+        <p className="text-[var(--muted-foreground)] text-sm">لم يتم العثور على هذا الملف الشخصي</p>
       </div>
     );
   }
@@ -139,7 +139,7 @@ export const ProfileView = ({ userId }: Props) => {
           ['عدد الأطفال', String(profile.childrenCount ?? 0)],
         ]} />
         {profile.bio && (
-          <p className="mt-3 text-sm text-gray-600 leading-relaxed border-t border-[#C8D8DF]/40 pt-3">
+          <p className="mt-3 text-sm text-[var(--muted-foreground)] leading-relaxed border-t border-[var(--border)]/40 pt-3">
             {profile.bio}
           </p>
         )}
@@ -177,8 +177,8 @@ export const ProfileView = ({ userId }: Props) => {
   );
 
   const placeholder = (label: string) => (
-    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-10 text-center">
-      <p className="text-sm text-[#547792]">{label} قريباً</p>
+    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-10 text-center">
+      <p className="text-sm text-[var(--muted-foreground)]">{label} قريباً</p>
     </div>
   );
 
@@ -233,8 +233,8 @@ const ProfilePostsFeed = ({ userId }: { userId: string }) => {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const shell = (msg: string) => (
-    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-10 text-center">
-      <p className="text-sm text-[#547792]">{msg}</p>
+    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-10 text-center">
+      <p className="text-sm text-[var(--muted-foreground)]">{msg}</p>
     </div>
   );
 
@@ -249,9 +249,9 @@ const ProfilePostsFeed = ({ userId }: { userId: string }) => {
       ))}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[#547792] border border-[#C8D8DF] hover:bg-[#D4E8EE]/40 disabled:opacity-40 transition-colors">السابق</button>
-          <span className="text-sm text-[#547792]">{page} / {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[#547792] border border-[#C8D8DF] hover:bg-[#D4E8EE]/40 disabled:opacity-40 transition-colors">التالي</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]/40 disabled:opacity-40 transition-colors">السابق</button>
+          <span className="text-sm text-[var(--muted-foreground)]">{page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]/40 disabled:opacity-40 transition-colors">التالي</button>
         </div>
       )}
     </div>
@@ -259,8 +259,8 @@ const ProfilePostsFeed = ({ userId }: { userId: string }) => {
 };
 
 const feedShell = (msg: string) => (
-  <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-10 text-center">
-    <p className="text-sm text-[#547792]">{msg}</p>
+  <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-10 text-center">
+    <p className="text-sm text-[var(--muted-foreground)]">{msg}</p>
   </div>
 );
 
@@ -276,13 +276,13 @@ const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
   if (isError) return feedShell('تعذّر تحميل الأصدقاء');
   if (friends.length === 0) return feedShell('لا توجد أصدقاء');
   return (
-    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-3 gap-4">
+    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-3 gap-4">
       {friends.map((f: any, i: number) => (
-        <Link key={f.id ?? i} href={f.username ? `/${f.username}` : f.id ? `/profile/${f.id}` : '#'} className="rounded-lg bg-gray-50 p-3 text-center hover:bg-[#D4E8EE]/40 transition-colors">
+        <Link key={f.id ?? i} href={f.username ? `/${f.username}` : f.id ? `/profile/${f.id}` : '#'} className="rounded-lg bg-[var(--muted)] p-3 text-center hover:bg-[var(--muted)]/40 transition-colors">
           <div className="h-16 w-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
-            {f.avatarUrl ? <img src={f.avatarUrl} alt="" className="h-full w-full object-cover" /> : <span className="text-xl font-bold text-[#547792]">{f.fullName?.charAt(0)}</span>}
+            {f.avatarUrl ? <img src={f.avatarUrl} alt="" className="h-full w-full object-cover" /> : <span className="text-xl font-bold text-[var(--muted-foreground)]">{f.fullName?.charAt(0)}</span>}
           </div>
-          <p className="mt-2 text-sm font-semibold text-gray-800 truncate">{f.fullName}</p>
+          <p className="mt-2 text-sm font-semibold text-[var(--foreground)] truncate">{f.fullName}</p>
         </Link>
       ))}
     </div>
@@ -311,7 +311,7 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
           <button
             onClick={() => setLightboxUrl(null)}
             aria-label="إغلاق"
-            className="absolute top-4 left-4 text-white text-2xl hover:text-gray-300 transition-colors"
+            className="absolute top-4 left-4 text-white text-2xl hover:text-[var(--muted-foreground)]/70 transition-colors"
           >
             ✕
           </button>
@@ -323,19 +323,19 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
           />
         </div>
       )}
-      <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-4 gap-2">
+      <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-4 gap-2">
         {photos.map((p: any, i: number) =>
           p.metadata?.url ? (
             <button
               key={i}
               onClick={() => setLightboxUrl(p.metadata.url)}
-              className="aspect-square bg-gray-100 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-[#547792]"
+              className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
               aria-label={`عرض الصورة ${i + 1}`}
             >
               <img src={p.metadata.url} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
             </button>
           ) : (
-            <div key={i} className="aspect-square bg-gray-100 rounded-lg overflow-hidden" />
+            <div key={i} className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden" />
           )
         )}
       </div>
@@ -355,13 +355,13 @@ const ProfileVideosFeed = ({ userId }: { userId: string }) => {
   if (isError) return feedShell('تعذّر تحميل الفيديوهات');
   if (videos.length === 0) return feedShell('لا توجد فيديوهات');
   return (
-    <div className="rounded-xl bg-[#FDFAF5] border border-[#C8D8DF]/60 p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
+    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
       {videos.map((v: any, i: number) => (
-        <Link key={v.id ?? i} href={`/watch/${v.id}`} className="group relative aspect-video bg-gray-100 rounded-lg overflow-hidden block hover:opacity-90 transition-opacity">
+        <Link key={v.id ?? i} href={`/watch/${v.id}`} className="group relative aspect-video bg-[var(--muted)] rounded-lg overflow-hidden block hover:opacity-90 transition-opacity">
           {v.thumbnail ? (
             <img src={v.thumbnail} alt={v.title || ''} className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-3xl text-gray-400">🎬</div>
+            <div className="w-full h-full flex items-center justify-center text-3xl text-[var(--muted-foreground)]">🎬</div>
           )}
           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
             <span className="text-white opacity-0 group-hover:opacity-100 text-2xl">▶️</span>
@@ -380,9 +380,9 @@ const ProfileVideosFeed = ({ userId }: { userId: string }) => {
 const Grid = ({ items }: { items: [string, string][] }) => (
   <div className="grid grid-cols-2 gap-3">
     {items.map(([k, v]) => (
-      <div key={k} className="rounded-lg bg-gray-50 p-3">
-        <dt className="text-xs font-medium text-gray-400">{k}</dt>
-        <dd className="mt-0.5 text-sm font-semibold text-gray-800">{v}</dd>
+      <div key={k} className="rounded-lg bg-[var(--muted)] p-3">
+        <dt className="text-xs font-medium text-[var(--muted-foreground)]">{k}</dt>
+        <dd className="mt-0.5 text-sm font-semibold text-[var(--foreground)]">{v}</dd>
       </div>
     ))}
   </div>

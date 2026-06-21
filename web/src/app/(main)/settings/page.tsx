@@ -12,8 +12,8 @@ const sections = [
     icon: User,
     description: 'عرض وتعديل ملفك الشخصي وصورتك',
     href: '/profile',
-    accent: '#059669',
-    bg: 'color-mix(in srgb, #059669 8%, transparent)',
+    accent: 'var(--primary)',
+    bg: 'color-mix(in srgb, var(--primary) 8%, transparent)',
   },
   {
     title: 'الأمان',

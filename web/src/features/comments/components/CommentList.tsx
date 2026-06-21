@@ -63,7 +63,7 @@ function getInitials(user: Comment['user']) {
 
 function ReactionPicker({ onSelect, onClose }: { onSelect: (type: string) => void; onClose: () => void }) {
   return (
-    <div className="absolute bottom-full mb-2 left-0 bg-[#FDFAF5] rounded-2xl shadow-lg border border-[#C8D8DF]/60 p-3 z-20">
+    <div className="absolute bottom-full mb-2 left-0 bg-[var(--card)] rounded-2xl shadow-lg border border-[var(--border)]/60 p-3 z-20">
       <div className="flex gap-1">
         {REACTIONS.map((r) => {
           const Icon = r.icon;
@@ -71,7 +71,7 @@ function ReactionPicker({ onSelect, onClose }: { onSelect: (type: string) => voi
             <button
               key={r.type}
               onClick={() => { onSelect(r.type); onClose(); }}
-              className="p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125"
+              className="p-2 hover:bg-[var(--muted)]/50 rounded-full transition-transform hover:scale-125"
               title={r.label}
             >
               <Icon size={24} weight="fill" />
@@ -135,36 +135,36 @@ function CommentItem({
 
   return (
     <div className="flex gap-3">
-      <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[#213448] text-xs font-bold ring-2 ring-[#FDFAF5]" style={{ background: 'linear-gradient(135deg, #D4E8EE, #94B4C1)' }}>
+      <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[var(--foreground)] text-xs font-bold ring-2 ring-[var(--card)]" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
         {getInitials(comment.user)}
       </div>
       <div className="flex-1">
-        <div className="rounded-2xl px-4 py-2.5" style={{ backgroundColor: '#D4E8EE' }}>
+        <div className="rounded-2xl px-4 py-2.5" style={{ backgroundColor: 'var(--muted)' }}>
           {isEditing ? (
             <form onSubmit={handleSubmitEdit} className="flex gap-2">
               <input
                 type="text"
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
-                className="flex-1 bg-transparent text-sm text-[#131F2E] focus:outline-none"
+                className="flex-1 bg-transparent text-sm text-[var(--foreground)] focus:outline-none"
                 autoFocus
               />
-              <button type="submit" className="text-xs text-[#547792] font-medium">حفظ</button>
-              <button type="button" onClick={() => setIsEditing(false)} className="text-xs text-[#547792]">إلغاء</button>
+              <button type="submit" className="text-xs text-[var(--muted-foreground)] font-medium">حفظ</button>
+              <button type="button" onClick={() => setIsEditing(false)} className="text-xs text-[var(--muted-foreground)]">إلغاء</button>
             </form>
           ) : (
             <>
               <div className="flex items-center gap-2">
                 {comment.user?.id ? (
-                  <Link href={comment.user?.username ? `/${comment.user.username}` : `/profile/${comment.user.id}`} className="text-xs font-bold text-[#213448] hover:underline">{displayName(comment.user)}</Link>
+                  <Link href={comment.user?.username ? `/${comment.user.username}` : `/profile/${comment.user.id}`} className="text-xs font-bold text-[var(--foreground)] hover:underline">{displayName(comment.user)}</Link>
                 ) : (
-                  <p className="text-xs font-bold text-[#213448]">{displayName(comment.user)}</p>
+                  <p className="text-xs font-bold text-[var(--foreground)]">{displayName(comment.user)}</p>
                 )}
-                {comment.isPinned && <MapPin size={12} className="text-[#547792]" />}
-                <span className="text-[10px] text-[#547792]">{timeAgo(comment.createdAt)}</span>
-                {comment.editedAt && <span className="text-[10px] text-[#547792]">(معدل)</span>}
+                {comment.isPinned && <MapPin size={12} className="text-[var(--muted-foreground)]" />}
+                <span className="text-[10px] text-[var(--muted-foreground)]">{timeAgo(comment.createdAt)}</span>
+                {comment.editedAt && <span className="text-[10px] text-[var(--muted-foreground)]">(معدل)</span>}
               </div>
-              <p className="text-sm text-[#131F2E] mt-0.5 leading-relaxed">{comment.content}</p>
+              <p className="text-sm text-[var(--foreground)] mt-0.5 leading-relaxed">{comment.content}</p>
             </>
           )}
         </div>
@@ -173,7 +173,7 @@ function CommentItem({
           <div className="relative">
             <button 
               onClick={() => setShowReactions(!showReactions)}
-              className="text-xs text-[#547792] hover:underline flex items-center gap-1"
+              className="text-xs text-[var(--muted-foreground)] hover:underline flex items-center gap-1"
             >
               <ThumbsUp size={14} weight="fill" />
               إعجاب
@@ -187,35 +187,35 @@ function CommentItem({
           </div>
           
           {canReply && (
-            <button onClick={() => setShowReplyForm(!showReplyForm)} className="text-xs text-[#547792] hover:underline">
+            <button onClick={() => setShowReplyForm(!showReplyForm)} className="text-xs text-[var(--muted-foreground)] hover:underline">
               رد
             </button>
           )}
 
           {(isOwnComment || isAuthor) && (
             <div className="relative">
-              <button onClick={() => setShowMenu(!showMenu)} className="text-xs text-[#547792]">
+              <button onClick={() => setShowMenu(!showMenu)} className="text-xs text-[var(--muted-foreground)]">
                 <DotsThree size={16} />
               </button>
               {showMenu && (
-                <div className="absolute left-0 top-full mt-1 bg-[#FDFAF5] rounded-lg shadow-lg border border-[#C8D8DF]/60 py-1 z-10 min-w-[120px]">
+                <div className="absolute left-0 top-full mt-1 bg-[var(--card)] rounded-lg shadow-lg border border-[var(--border)]/60 py-1 z-10 min-w-[120px]">
                   {isOwnComment && (
                     <>
-                      <button onClick={() => { setIsEditing(true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50 flex items-center gap-2">
+                      <button onClick={() => { setIsEditing(true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[var(--muted)]/50 flex items-center gap-2">
                         <Pencil size={14} /> تعديل
                       </button>
-                      <button onClick={() => { onDelete(comment.id); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm text-red-500 hover:bg-[#EAE0CF]/50 flex items-center gap-2">
+                      <button onClick={() => { onDelete(comment.id); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm text-red-500 hover:bg-[var(--muted)]/50 flex items-center gap-2">
                         <Trash size={14} /> حذف
                       </button>
                     </>
                   )}
                   {isAuthor && !comment.isPinned && (
-                    <button onClick={() => { onPin(comment.id, true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50 flex items-center gap-2">
+                    <button onClick={() => { onPin(comment.id, true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[var(--muted)]/50 flex items-center gap-2">
                       <MapPin size={14} /> تثبيت
                     </button>
                   )}
                   {isAuthor && comment.isPinned && (
-                    <button onClick={() => { onPin(comment.id, false); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[#EAE0CF]/50 flex items-center gap-2">
+                    <button onClick={() => { onPin(comment.id, false); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[var(--muted)]/50 flex items-center gap-2">
                       <CaretRight size={14} /> إلغاء التثبيت
                     </button>
                   )}
@@ -232,17 +232,17 @@ function CommentItem({
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
               placeholder="اكتب رداً..."
-              className="flex-1 rounded-full border border-[#C8D8DF] bg-[#EAE0CF]/40 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#547792]/20"
+              className="flex-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
               autoFocus
             />
-            <button type="submit" disabled={!replyContent.trim()} className="text-xs text-[#547792] font-medium disabled:opacity-40">
+            <button type="submit" disabled={!replyContent.trim()} className="text-xs text-[var(--muted-foreground)] font-medium disabled:opacity-40">
               إرسال
             </button>
           </form>
         )}
 
         {comment.replies && comment.replies.length > 0 && (
-          <div className="mt-3 space-y-3 pl-4 border-l-2 border-[#C8D8DF]/40">
+          <div className="mt-3 space-y-3 pl-4 border-l-2 border-[var(--border)]/40">
             {comment.replies.map((reply) => (
               <CommentItem
                 key={reply.id}
@@ -269,8 +269,8 @@ export function CommentList({ comments, postId, currentUserId, onReply, onEdit, 
   if (!comments || comments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-4">
-        <ChatCircle size={32} className="text-[#94B4C1] mb-1" />
-        <p className="text-xs text-[#547792]">لا توجد تعليقات بعد — كن أول من يعلق</p>
+        <ChatCircle size={32} className="text-[var(--muted-foreground)] mb-1" />
+        <p className="text-xs text-[var(--muted-foreground)]">لا توجد تعليقات بعد — كن أول من يعلق</p>
       </div>
     );
   }

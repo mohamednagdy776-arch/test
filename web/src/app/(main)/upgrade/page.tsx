@@ -17,16 +17,16 @@ function PaymentModal({ plan, onClose, onConfirm, isPending }: { plan: { id: str
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-5" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-sm rounded-3xl bg-[var(--card)] p-6 shadow-2xl space-y-5" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-[#065F46]">إتمام الاشتراك — {plan.name}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
+          <h3 className="font-bold text-[var(--foreground)]">إتمام الاشتراك — {plan.name}</h3>
+          <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] text-xl">✕</button>
         </div>
-        <p className="text-2xl font-bold text-[#059669] text-center">{plan.price} ر.س <span className="text-sm font-normal text-gray-400">/ شهر</span></p>
+        <p className="text-2xl font-bold text-[var(--primary)] text-center">{plan.price} ر.س <span className="text-sm font-normal text-[var(--muted-foreground)]">/ شهر</span></p>
 
         <div className="flex gap-2">
           {(['card', 'apple_pay', 'bank'] as const).map(m => (
-            <button key={m} onClick={() => setMethod(m)} className={cn('flex-1 rounded-xl py-2 text-xs font-semibold transition-all', method === m ? 'bg-[#10B981] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200')}>
+            <button key={m} onClick={() => setMethod(m)} className={cn('flex-1 rounded-xl py-2 text-xs font-semibold transition-all', method === m ? 'bg-[var(--primary)] text-white' : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]')}>
               {m === 'card' ? '💳 بطاقة' : m === 'apple_pay' ? ' Apple Pay' : '🏦 تحويل'}
             </button>
           ))}
@@ -34,10 +34,10 @@ function PaymentModal({ plan, onClose, onConfirm, isPending }: { plan: { id: str
 
         {method === 'card' && (
           <div className="space-y-3">
-            <input value={cardNumber} onChange={e => setCardNumber(formatCard(e.target.value))} placeholder="رقم البطاقة" dir="ltr" className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[#10B981]" />
+            <input value={cardNumber} onChange={e => setCardNumber(formatCard(e.target.value))} placeholder="رقم البطاقة" dir="ltr" className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[var(--primary)]" />
             <div className="flex gap-3">
-              <input value={expiry} onChange={e => setExpiry(formatExpiry(e.target.value))} placeholder="MM/YY" dir="ltr" className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[#10B981]" />
-              <input value={cvv} onChange={e => setCvv(e.target.value.replace(/\D/g,'').slice(0,4))} placeholder="CVV" dir="ltr" className="w-20 rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[#10B981]" />
+              <input value={expiry} onChange={e => setExpiry(formatExpiry(e.target.value))} placeholder="MM/YY" dir="ltr" className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[var(--primary)]" />
+              <input value={cvv} onChange={e => setCvv(e.target.value.replace(/\D/g,'').slice(0,4))} placeholder="CVV" dir="ltr" className="w-20 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-[var(--primary)]" />
             </div>
           </div>
         )}
@@ -45,18 +45,18 @@ function PaymentModal({ plan, onClose, onConfirm, isPending }: { plan: { id: str
           <div className="rounded-xl bg-black text-white py-3 text-center text-sm font-semibold cursor-pointer hover:opacity-90">🍎 الدفع بـ Apple Pay</div>
         )}
         {method === 'bank' && (
-          <div className="rounded-xl bg-gray-50 p-4 text-sm text-gray-600 space-y-1 text-right">
-            <p className="font-bold text-[#065F46]">تحويل بنكي</p>
+          <div className="rounded-xl bg-[var(--muted)] p-4 text-sm text-[var(--muted-foreground)] space-y-1 text-right">
+            <p className="font-bold text-[var(--foreground)]">تحويل بنكي</p>
             <p>رقم الآيبان: SA00 1234 5678 9012 3456 7890</p>
             <p>اسم المستفيد: طيبت للتقنية</p>
-            <p className="text-xs text-gray-400">أرسل إشعار التحويل للدعم بعد إتمامه</p>
+            <p className="text-xs text-[var(--muted-foreground)]">أرسل إشعار التحويل للدعم بعد إتمامه</p>
           </div>
         )}
 
-        <button onClick={onConfirm} disabled={!canSubmit || isPending} className="w-full rounded-2xl bg-gradient-to-r from-[#10B981] to-[#059669] py-3 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed">
+        <button onClick={onConfirm} disabled={!canSubmit || isPending} className="w-full rounded-2xl btn-theme-primary py-3 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed">
           {isPending ? 'جارٍ المعالجة...' : 'تأكيد الدفع'}
         </button>
-        <p className="text-center text-[10px] text-gray-400">🔒 بياناتك محمية بتشفير SSL 256-bit</p>
+        <p className="text-center text-[10px] text-[var(--muted-foreground)]">🔒 بياناتك محمية بتشفير SSL 256-bit</p>
       </div>
     </div>
   );
@@ -69,7 +69,7 @@ const plans = [
     price: 'مجاناً',
     period: '',
     features: ['إنشاء ملف شخصي', 'البحث الأساسي', '5 توافقات يومياً', 'الانضمام لمجتمعات'],
-    color: '#10B981',
+    color: 'var(--primary)',
   },
   {
     id: 'premium',
@@ -78,7 +78,7 @@ const plans = [
     period: 'شهرياً',
     features: ['كل ميزات الأساسي', 'توافقات غير محدودة', 'تحليلات معمقة', 'أولوية في البحث', 'شارة مميز', 'دعم ذو أولوية'],
     popular: true,
-    color: '#059669',
+    color: 'var(--primary)',
   },
   {
     id: 'family',
@@ -160,33 +160,33 @@ export default function UpgradePage() {
         />
       )}
       <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 rounded-full bg-[#DCFCE7] px-4 py-1.5 text-sm font-semibold text-[#059669] mb-4">
+        <div className="inline-flex items-center gap-2 rounded-full bg-[var(--muted)] px-4 py-1.5 text-sm font-semibold text-[var(--primary)] mb-4">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z"/></svg>
           ترقية حسابك
         </div>
-        <h1 className="text-3xl font-bold text-[#059669] mb-2">اختر الخطة المناسبة</h1>
-        <p className="text-[#10B981]">احصل على ميزات حصرية للتوافق المتقدم والبحث الذكي</p>
+        <h1 className="text-3xl font-bold text-[var(--primary)] mb-2">اختر الخطة المناسبة</h1>
+        <p className="text-[var(--primary)]">احصل على ميزات حصرية للتوافق المتقدم والبحث الذكي</p>
         {/* Billing period toggle */}
-        <div className="inline-flex mt-5 rounded-xl bg-[#DCFCE7]/50 p-1 gap-1">
+        <div className="inline-flex mt-5 rounded-xl bg-[var(--muted)] p-1 gap-1">
           <button
             onClick={() => setBillingPeriod('monthly')}
-            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all', billingPeriod === 'monthly' ? 'bg-white text-[#059669] shadow-sm' : 'text-[#10B981] hover:text-[#059669]')}
+            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all', billingPeriod === 'monthly' ? 'bg-[var(--card)] text-[var(--primary)] shadow-sm' : 'text-[var(--primary)] hover:text-[var(--primary)]')}
           >
             شهري
           </button>
           <button
             onClick={() => setBillingPeriod('annual')}
-            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5', billingPeriod === 'annual' ? 'bg-white text-[#059669] shadow-sm' : 'text-[#10B981] hover:text-[#059669]')}
+            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5', billingPeriod === 'annual' ? 'bg-[var(--card)] text-[var(--primary)] shadow-sm' : 'text-[var(--primary)] hover:text-[var(--primary)]')}
           >
             سنوي
-            <span className="rounded-full bg-[#10B981] text-white text-[10px] font-bold px-1.5 py-0.5">وفّر 17%</span>
+            <span className="rounded-full bg-[var(--primary)] text-white text-[10px] font-bold px-1.5 py-0.5">وفّر 17%</span>
           </button>
         </div>
       </div>
 
       {activeLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {[1, 2, 3].map(i => <div key={i} className="h-80 rounded-3xl bg-[#DCFCE7]/30 animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="h-80 rounded-3xl bg-[var(--muted)] animate-pulse" />)}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -199,44 +199,44 @@ export default function UpgradePage() {
                 className={cn(
                   'relative rounded-3xl border-2 p-6 cursor-pointer transition-all duration-300',
                   selected === plan.id
-                    ? 'border-[#10B981] shadow-lg bg-[#FFFBEB] scale-[1.02]'
-                    : 'border-[#DCFCE7] bg-[#FFFBEB] shadow-soft hover:shadow-lg hover:border-[#6EE7B7]'
+                    ? 'border-[var(--primary)] shadow-lg bg-[var(--card)] scale-[1.02]'
+                    : 'border-[var(--border)] bg-[var(--card)] shadow-soft hover:shadow-lg hover:border-[#6EE7B7]'
                 )}
               >
                 {plan.popular && !isCurrent && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-bold text-[#FFFBEB]" style={{ background: '#10B981' }}>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[10px] font-bold text-[var(--card)]" style={{ background: 'var(--primary)' }}>
                     الأكثر شعبية
                   </div>
                 )}
                 {isCurrent && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[#DCFCE7] px-3 py-1 text-[10px] font-bold text-[#10B981]">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-[var(--muted)] px-3 py-1 text-[10px] font-bold text-[var(--primary)]">
                     خطتك الحالية
                   </div>
                 )}
                 <div className="text-center mb-4 pt-2">
-                  <p className="text-sm font-bold text-[#10B981] mb-1">{plan.name}</p>
+                  <p className="text-sm font-bold text-[var(--primary)] mb-1">{plan.name}</p>
                   <div className="flex items-baseline justify-center gap-1">
                     {plan.price === 'مجاناً' ? (
-                      <span className="text-4xl font-bold text-[#059669]">مجاناً</span>
+                      <span className="text-4xl font-bold text-[var(--primary)]">مجاناً</span>
                     ) : billingPeriod === 'annual' ? (
                       <>
-                        <span className="text-4xl font-bold text-[#059669]">{Math.round(Number(plan.price) * 10 / 12)}</span>
-                        <span className="text-sm text-[#10B981]">ر.س / شهر</span>
+                        <span className="text-4xl font-bold text-[var(--primary)]">{Math.round(Number(plan.price) * 10 / 12)}</span>
+                        <span className="text-sm text-[var(--primary)]">ر.س / شهر</span>
                       </>
                     ) : (
                       <>
-                        <span className="text-4xl font-bold text-[#059669]">{plan.price}</span>
-                        {plan.period && <span className="text-sm text-[#10B981]">ر.س / {plan.period}</span>}
+                        <span className="text-4xl font-bold text-[var(--primary)]">{plan.price}</span>
+                        {plan.period && <span className="text-sm text-[var(--primary)]">ر.س / {plan.period}</span>}
                       </>
                     )}
                   </div>
                   {billingPeriod === 'annual' && plan.price !== 'مجاناً' && (
-                    <p className="text-xs text-[#10B981] mt-1">يُدفع سنوياً {Math.round(Number(plan.price) * 10)} ر.س</p>
+                    <p className="text-xs text-[var(--primary)] mt-1">يُدفع سنوياً {Math.round(Number(plan.price) * 10)} ر.س</p>
                   )}
                 </div>
                 <ul className="space-y-3 mb-6">
                   {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-[#065F46]">
+                    <li key={f} className="flex items-center gap-2 text-sm text-[var(--foreground)]">
                       <svg className="h-4 w-4 shrink-0" style={{ color: plan.color }} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                       {f}
                     </li>
@@ -248,10 +248,10 @@ export default function UpgradePage() {
                   className={cn(
                     'w-full rounded-2xl py-2.5 text-sm font-semibold transition-all duration-200',
                     isCurrent || plan.id === 'basic'
-                      ? 'bg-[#DCFCE7] text-[#10B981] cursor-default'
+                      ? 'bg-[var(--muted)] text-[var(--primary)] cursor-default'
                       : selected === plan.id
-                      ? 'text-[#FFFBEB] shadow-sm hover:shadow-md hover:opacity-90'
-                      : 'border border-[#DCFCE7] text-[#10B981] hover:bg-[#DCFCE7]/50'
+                      ? 'text-[var(--card)] shadow-sm hover:shadow-md hover:opacity-90'
+                      : 'border border-[var(--border)] text-[var(--primary)] hover:bg-[var(--muted)]'
                   )}
                   style={!isCurrent && plan.id !== 'basic' && selected === plan.id ? { background: plan.color } : {}}
                 >
@@ -266,7 +266,7 @@ export default function UpgradePage() {
       {feedback && (
         <div className={cn(
           'mb-6 rounded-2xl px-5 py-3 text-sm text-center font-medium',
-          feedback.includes('خطأ') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-[#DCFCE7] text-[#059669] border border-[#A7F3D0]'
+          feedback.includes('خطأ') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-[var(--muted)] text-[var(--primary)] border border-[#A7F3D0]'
         )}>
           {feedback}
         </div>
@@ -275,7 +275,7 @@ export default function UpgradePage() {
       {activeSub && activeSub.planId !== 'basic' && (
         <div className="text-center mb-4 space-y-1">
           {(activeSub.endDate || activeSub.currentPeriodEnd) && (
-            <p className="text-xs text-[#10B981]">
+            <p className="text-xs text-[var(--primary)]">
               ينتهي اشتراكك في:{' '}
               <span className="font-semibold">
                 {new Date(activeSub.endDate || activeSub.currentPeriodEnd).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
@@ -295,26 +295,26 @@ export default function UpgradePage() {
 
       {/* Plan comparison table */}
       <div className="mb-8">
-        <button onClick={() => setShowComparison(v => !v)} className="w-full flex items-center justify-between rounded-2xl bg-[#FFFBEB] border border-[#DCFCE7] px-5 py-3 text-sm font-semibold text-[#059669]">
+        <button onClick={() => setShowComparison(v => !v)} className="w-full flex items-center justify-between rounded-2xl bg-[var(--card)] border border-[var(--border)] px-5 py-3 text-sm font-semibold text-[var(--primary)]">
           <span>مقارنة الخطط</span>
           <span>{showComparison ? '▲' : '▼'}</span>
         </button>
         {showComparison && (
-          <div className="mt-2 overflow-x-auto rounded-2xl border border-[#DCFCE7] bg-white">
+          <div className="mt-2 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--card)]">
             <table className="w-full text-sm text-right">
               <thead>
-                <tr className="border-b border-[#DCFCE7]">
-                  <th className="px-4 py-3 font-semibold text-[#065F46] w-1/2">الميزة</th>
-                  {plans.map(p => <th key={p.id} className="px-4 py-3 font-bold text-[#059669] text-center">{p.name}</th>)}
+                <tr className="border-b border-[var(--border)]">
+                  <th className="px-4 py-3 font-semibold text-[var(--foreground)] w-1/2">الميزة</th>
+                  {plans.map(p => <th key={p.id} className="px-4 py-3 font-bold text-[var(--primary)] text-center">{p.name}</th>)}
                 </tr>
               </thead>
               <tbody>
                 {ALL_FEATURES.map((f, i) => (
-                  <tr key={f.label} className={i % 2 === 0 ? 'bg-[#F0FDF4]' : 'bg-white'}>
-                    <td className="px-4 py-2.5 text-[#065F46]">{f.label}</td>
+                  <tr key={f.label} className={i % 2 === 0 ? 'bg-[var(--card)]' : 'bg-[var(--card)]'}>
+                    <td className="px-4 py-2.5 text-[var(--foreground)]">{f.label}</td>
                     {(['basic', 'premium', 'family'] as const).map(k => (
                       <td key={k} className="px-4 py-2.5 text-center">
-                        {f[k] ? <span className="text-[#10B981] font-bold">✓</span> : <span className="text-gray-300">—</span>}
+                        {f[k] ? <span className="text-[var(--primary)] font-bold">✓</span> : <span className="text-[var(--muted-foreground)]/70">—</span>}
                       </td>
                     ))}
                   </tr>
@@ -326,7 +326,7 @@ export default function UpgradePage() {
       </div>
 
       <div className="text-center">
-        <button onClick={() => router.back()} className="text-sm text-[#10B981] hover:text-[#059669] transition-colors">
+        <button onClick={() => router.back()} className="text-sm text-[var(--primary)] hover:text-[var(--primary)] transition-colors">
           ← العودة للرئيسية
         </button>
       </div>

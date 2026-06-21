@@ -4,8 +4,8 @@ import { useCreateEvent } from '@/features/events/hooks';
 import { useState } from 'react';
 import { useToast } from '@/components/ui/Toast';
 
-const INPUT_CLASS = "w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400/50 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80";
-const LABEL_CLASS = "block text-xs font-semibold text-emerald-700 mb-1";
+const INPUT_CLASS = "w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)]";
+const LABEL_CLASS = "block text-xs font-semibold text-[var(--primary)] mb-1";
 
 export default function EventsPage() {
   const [showCreate, setShowCreate] = useState(false);
@@ -41,8 +41,8 @@ export default function EventsPage() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-emerald-900">الأحداث</h1>
-        <button onClick={() => setShowCreate(!showCreate)} className="rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all">
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">الأحداث</h1>
+        <button onClick={() => setShowCreate(!showCreate)} className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all">
           {showCreate ? 'إلغاء' : '+ إنشاء حدث'}
         </button>
       </div>
@@ -71,7 +71,7 @@ export default function EventsPage() {
             <label htmlFor="event-description" className={LABEL_CLASS}>الوصف</label>
             <textarea id="event-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="أدخل وصف الحدث" rows={2} className={`${INPUT_CLASS} resize-none`} />
           </div>
-          <button type="submit" disabled={createEvent.isPending} className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all">
+          <button type="submit" disabled={createEvent.isPending} className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all">
             {createEvent.isPending ? 'جاري...' : 'إنشاء'}
           </button>
         </form>

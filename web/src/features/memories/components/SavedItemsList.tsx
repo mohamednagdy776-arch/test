@@ -25,7 +25,7 @@ export function SavedItemsList() {
 
   if (!savedItems?.length) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-[var(--muted-foreground)]">
         No saved items yet
       </div>
     );
@@ -47,10 +47,10 @@ export function SavedItemsList() {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm text-gray-900 truncate">
+              <p className="text-sm text-[var(--foreground)] truncate">
                 {item.entity?.content || 'Saved content'}
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">
                 Saved on {new Date(item.savedAt).toLocaleDateString()}
               </p>
             </div>

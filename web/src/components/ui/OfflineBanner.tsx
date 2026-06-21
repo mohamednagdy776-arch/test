@@ -30,7 +30,7 @@ export function OfflineBanner() {
 
   if (showReconnected) {
     return (
-      <div className="fixed top-0 inset-x-0 z-50 flex items-center justify-center gap-2 bg-emerald-500 px-4 py-2 text-white text-sm font-medium shadow-lg">
+      <div className="fixed top-0 inset-x-0 z-50 flex items-center justify-center gap-2 bg-[var(--primary)] px-4 py-2 text-white text-sm font-medium shadow-lg">
         <span>✓</span>
         <span>تم استعادة الاتصال بالإنترنت</span>
       </div>

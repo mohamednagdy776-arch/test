@@ -73,8 +73,8 @@ export default function GroupDetailPage() {
   if (isLoading) {
     return (
       <div className="max-w-2xl mx-auto space-y-4">
-        <div className="h-48 rounded-2xl bg-gradient-to-br from-emerald-100/50 to-amber-100/30 animate-pulse" />
-        <div className="h-48 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse" />
+        <div className="h-48 rounded-2xl bg-gradient-to-br from-[var(--muted)]/50 to-amber-100/30 animate-pulse" />
+        <div className="h-48 rounded-2xl bg-[var(--card)] animate-pulse" />
       </div>
     );
   }
@@ -83,10 +83,10 @@ export default function GroupDetailPage() {
     return (
       <div className="max-w-2xl mx-auto text-center py-12">
         <p className="text-3xl mb-3">⚠️</p>
-        <p className="text-emerald-700">حدث خطأ في تحميل المجتمع</p>
+        <p className="text-[var(--primary)]">حدث خطأ في تحميل المجتمع</p>
         <button
           onClick={() => router.push('/groups')}
-          className="mt-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all"
+          className="mt-5 rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all"
         >
           العودة للمجتمعات
         </button>
@@ -101,7 +101,7 @@ export default function GroupDetailPage() {
     <div className="max-w-2xl mx-auto">
       <button
         onClick={() => router.push('/groups')}
-        className="mb-4 flex items-center gap-2 text-sm text-emerald-600/70 hover:text-emerald-700 transition-colors font-medium"
+        className="mb-4 flex items-center gap-2 text-sm text-[var(--primary)]/70 hover:text-[var(--primary)] transition-colors font-medium"
       >
         <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -109,19 +109,19 @@ export default function GroupDetailPage() {
         عودة للمجتمعات
       </button>
 
-      <div className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-6 shadow-lg shadow-emerald-500/10 border border-emerald-100 mb-5">
+      <div className="bg-[var(--card)] rounded-2xl p-6 shadow-lg shadow-black/5 border border-[var(--border)] mb-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <h1 className="text-xl font-bold text-emerald-900">{group.name}</h1>
+              <h1 className="text-xl font-bold text-[var(--foreground)]">{group.name}</h1>
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                group.privacy === 'public' ? 'bg-emerald-100 text-emerald-700' : group.privacy === 'secret' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'
+                group.privacy === 'public' ? 'bg-[var(--muted)] text-[var(--primary)]' : group.privacy === 'secret' ? 'bg-slate-100 text-slate-600' : 'bg-amber-100 text-amber-700'
               }`}>
                 {group.privacy === 'public' ? 'عام' : group.privacy === 'secret' ? 'سري' : 'خاص'}
               </span>
             </div>
-            <p className="text-sm text-emerald-700/70">{group.description || 'لا يوجد وصف'}</p>
-            <p className="mt-2 text-xs text-emerald-600/50">{group.memberCount ?? 0} عضو · {posts.length} منشور</p>
+            <p className="text-sm text-[var(--primary)]/70">{group.description || 'لا يوجد وصف'}</p>
+            <p className="mt-2 text-xs text-[var(--primary)]/50">{group.memberCount ?? 0} عضو · {posts.length} منشور</p>
           </div>
           <div className="shrink-0 flex items-center gap-2">
             {(group.isOwner || group.isAdmin) && (
@@ -137,7 +137,7 @@ export default function GroupDetailPage() {
               <button
                 onClick={() => leaveGroup.mutate(id)}
                 disabled={leaveGroup.isPending}
-                className="rounded-xl border border-emerald-200/50 px-4 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                className="rounded-xl border border-[var(--border)]/50 px-4 py-2 text-sm font-medium text-[var(--primary)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
               >
                 مغادرة
               </button>
@@ -145,7 +145,7 @@ export default function GroupDetailPage() {
               <button
                 onClick={() => joinGroup.mutate(id)}
                 disabled={joinGroup.isPending}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all disabled:opacity-50"
               >
                 انضم
               </button>
@@ -159,18 +159,18 @@ export default function GroupDetailPage() {
           {!showForm ? (
             <button
               onClick={() => setShowForm(true)}
-              className="w-full rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-4 text-right text-sm text-emerald-600/60 shadow-lg shadow-emerald-500/10 border border-emerald-100 hover:border-emerald-200 transition-colors font-medium"
+              className="w-full rounded-2xl bg-[var(--card)] p-4 text-right text-sm text-[var(--primary)]/60 shadow-lg shadow-black/5 border border-[var(--border)] hover:border-[var(--border)] transition-colors font-medium"
             >
               ✏️ شارك شيئاً في هذا المجتمع...
             </button>
           ) : (
-            <form onSubmit={handleSubmit} className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
+            <form onSubmit={handleSubmit} className="rounded-2xl bg-[var(--card)] p-5 shadow-lg shadow-black/5 border border-[var(--border)]">
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="ماذا تفكر؟"
                 rows={3}
-                className="w-full resize-none rounded-xl border border-emerald-200/50 px-4 py-3 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 text-emerald-900 placeholder-emerald-400/50"
+                className="w-full resize-none rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50"
               />
 
               {mediaPreview && (
@@ -195,14 +195,14 @@ export default function GroupDetailPage() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 rounded-xl border border-emerald-200/50 px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors"
+                    className="flex items-center gap-2 rounded-xl border border-[var(--border)]/50 px-4 py-2 text-sm text-[var(--primary)] hover:bg-[var(--muted)] transition-colors"
                   >
                     🖼️ صورة
                   </button>
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 rounded-xl border border-emerald-200/50 px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors"
+                    className="flex items-center gap-2 rounded-xl border border-[var(--border)]/50 px-4 py-2 text-sm text-[var(--primary)] hover:bg-[var(--muted)] transition-colors"
                   >
                     🎬 فيديو
                   </button>
@@ -218,14 +218,14 @@ export default function GroupDetailPage() {
                   <button
                     type="button"
                     onClick={() => { setShowForm(false); setContent(''); removeMedia(); }}
-                    className="rounded-xl px-4 py-2 text-sm text-emerald-600/70 hover:bg-emerald-50 transition-colors"
+                    className="rounded-xl px-4 py-2 text-sm text-[var(--primary)]/70 hover:bg-[var(--muted)] transition-colors"
                   >
                     إلغاء
                   </button>
                   <button
                     type="submit"
                     disabled={(!content.trim() && !mediaFile) || createPost.isPending || createPostWithMedia.isPending}
-                    className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all disabled:opacity-50"
+                    className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all disabled:opacity-50"
                   >
                     {createPost.isPending || createPostWithMedia.isPending ? 'جاري النشر...' : 'نشر'}
                   </button>
@@ -239,13 +239,13 @@ export default function GroupDetailPage() {
       <div className="space-y-4">
         {isLoadingPosts ? (
           [1, 2, 3].map((i) => (
-            <div key={i} className="h-40 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse border border-emerald-100" />
+            <div key={i} className="h-40 rounded-2xl bg-[var(--card)] animate-pulse border border-[var(--border)]" />
           ))
         ) : posts.length === 0 ? (
-          <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-8 text-center text-emerald-600/60 border border-emerald-100">
+          <div className="rounded-2xl bg-[var(--card)] p-8 text-center text-[var(--primary)]/60 border border-[var(--border)]">
             <p className="text-3xl mb-2">📝</p>
             <p className="text-sm font-medium">لا توجد منشورات بعد</p>
-            <p className="text-xs mt-1 text-emerald-500/50">كن أول من يشارك في هذا المجتمع</p>
+            <p className="text-xs mt-1 text-[var(--primary)]/50">كن أول من يشارك في هذا المجتمع</p>
           </div>
         ) : (
           posts.map((p: any) => <PostCard key={p.id} post={p} showGroupLink={false} />)
@@ -254,9 +254,9 @@ export default function GroupDetailPage() {
 
       <Modal open={showDeleteGroupModal} onClose={() => setShowDeleteGroupModal(false)} title="حذف المجتمع">
         <div className="space-y-4">
-          <p className="text-sm text-emerald-700">هل أنت متأكد من حذف هذا المجتمع؟ لا يمكن التراجع عن هذا الإجراء.</p>
+          <p className="text-sm text-[var(--primary)]">هل أنت متأكد من حذف هذا المجتمع؟ لا يمكن التراجع عن هذا الإجراء.</p>
           <div className="flex gap-3">
-            <button onClick={() => setShowDeleteGroupModal(false)} className="flex-1 rounded-xl border border-emerald-200 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">إلغاء</button>
+            <button onClick={() => setShowDeleteGroupModal(false)} className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
             <button
               onClick={async () => {
                 setShowDeleteGroupModal(false);

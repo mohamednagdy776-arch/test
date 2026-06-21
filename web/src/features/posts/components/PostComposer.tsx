@@ -155,20 +155,20 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
   };
 
   return (
-    <div className="rounded-2xl bg-[#FDFAF5] shadow-card border border-[#C8D8DF]/60 p-4">
+    <div className="rounded-2xl bg-[var(--card)] shadow-card border border-[var(--border)]/60 p-4">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-3">
-          <div className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-[#FDFAF5] font-bold" style={{ background: 'linear-gradient(135deg, #213448, #547792)' }}>أ</div>
+          <div className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-[var(--card)] font-bold" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>أ</div>
           <div className="flex-1">
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder="على ما يدور ذهنك؟"
               className={cn(
-                'w-full resize-none border-none bg-transparent text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none transition-all',
+                'w-full resize-none border-none bg-transparent text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none transition-all',
                 bgColor ? 'text-center text-lg font-medium py-8' : 'py-2 min-h-[80px]'
               )}
-              style={bgColor ? { backgroundColor: bgColor, borderRadius: '12px', color: '#FDFAF5' } : {}}
+              style={bgColor ? { backgroundColor: bgColor, borderRadius: '12px', color: 'var(--card)' } : {}}
               rows={bgColor ? 3 : 3}
             />
           </div>
@@ -186,7 +186,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                 <button
                   type="button"
                   onClick={() => { setMediaPreviews(mediaPreviews.filter((_, j) => j !== i)); setMediaFiles(mediaFiles.filter((_, j) => j !== i)); }}
-                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-[#131F2E]/60 text-[#FDFAF5] flex items-center justify-center"
+                  className="absolute top-2 right-2 h-8 w-8 rounded-full bg-[var(--primary)]/60 text-[var(--card)] flex items-center justify-center"
                 >
                   <X size={18} />
                 </button>
@@ -202,11 +202,11 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                 key={color}
                 type="button"
                 onClick={() => { setBgColor(color); setShowBgPicker(false); }}
-                className={cn('w-8 h-8 rounded-full border-2 transition-transform hover:scale-110', bgColor === color ? 'border-[#213448]' : 'border-transparent')}
+                className={cn('w-8 h-8 rounded-full border-2 transition-transform hover:scale-110', bgColor === color ? 'border-[var(--primary)]' : 'border-transparent')}
                 style={{ backgroundColor: color }}
               />
             ))}
-            <button type="button" onClick={() => { setBgColor(null); setShowBgPicker(false); }} className="w-8 h-8 rounded-full border-2 border-[#C8D8DF] flex items-center justify-center text-[#547792]">
+            <button type="button" onClick={() => { setBgColor(null); setShowBgPicker(false); }} className="w-8 h-8 rounded-full border-2 border-[var(--border)] flex items-center justify-center text-[var(--muted-foreground)]">
               <X size={16} />
             </button>
           </div>
@@ -221,7 +221,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                   key={f.label}
                   type="button"
                   onClick={() => { setFeeling(f); setShowFeelingPicker(false); }}
-                  className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1', feeling?.label === f.label ? 'bg-[#547792] text-[#FDFAF5]' : 'bg-[#EAE0CF] text-[#547792] hover:bg-[#D4E8EE]')}
+                  className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1', feeling?.label === f.label ? 'bg-[var(--muted-foreground)] text-[var(--card)]' : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]')}
                 >
                   <Icon size={16} weight="fill" />
                   <span>{f.label}</span>
@@ -240,7 +240,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                   key={a.value}
                   type="button"
                   onClick={() => { setAudience(a.value); setShowAudiencePicker(false); }}
-                  className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1', audience === a.value ? 'bg-[#547792] text-[#FDFAF5]' : 'bg-[#EAE0CF] text-[#547792] hover:bg-[#D4E8EE]')}
+                  className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1', audience === a.value ? 'bg-[var(--muted-foreground)] text-[var(--card)]' : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]')}
                 >
                   <Icon size={16} />
                   <span>{a.label}</span>
@@ -251,46 +251,46 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
         )}
 
         {showSchedule && (
-          <div className="mt-3 p-3 bg-[#EAE0CF]/40 rounded-xl">
+          <div className="mt-3 p-3 bg-[var(--muted)]/40 rounded-xl">
             <div className="flex gap-2 items-center">
-              <Clock size={20} className="text-[#547792]" />
-              <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="bg-transparent text-sm text-black focus:outline-none" />
-              <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="bg-transparent text-sm text-black focus:outline-none" />
-              <button type="button" onClick={() => setShowSchedule(false)} className="ml-auto text-[#547792]">
+              <Clock size={20} className="text-[var(--muted-foreground)]" />
+              <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} className="bg-transparent text-sm text-[var(--foreground)] focus:outline-none" />
+              <input type="time" value={scheduleTime} onChange={(e) => setScheduleTime(e.target.value)} className="bg-transparent text-sm text-[var(--foreground)] focus:outline-none" />
+              <button type="button" onClick={() => setShowSchedule(false)} className="ml-auto text-[var(--muted-foreground)]">
                 <X size={16} />
               </button>
             </div>
             {/* Times are entered in the viewer's local timezone (#389). */}
-            <p className="mt-1.5 text-[11px] text-[#547792]">
+            <p className="mt-1.5 text-[11px] text-[var(--muted-foreground)]">
               بتوقيتك المحلي ({Intl.DateTimeFormat().resolvedOptions().timeZone})
             </p>
           </div>
         )}
 
         {showLocation && (
-          <div className="mt-3 p-3 bg-[#EAE0CF]/40 rounded-xl flex gap-2 items-center">
-            <MapPin size={20} className="text-[#547792]" />
+          <div className="mt-3 p-3 bg-[var(--muted)]/40 rounded-xl flex gap-2 items-center">
+            <MapPin size={20} className="text-[var(--muted-foreground)]" />
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="أين أنت؟"
-              className="flex-1 bg-transparent text-sm text-black placeholder:text-[#BFB9AD] focus:outline-none"
+              className="flex-1 bg-transparent text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none"
             />
-            <button type="button" onClick={() => { setLocation(''); setShowLocation(false); }} className="ml-auto text-[#547792]">
+            <button type="button" onClick={() => { setLocation(''); setShowLocation(false); }} className="ml-auto text-[var(--muted-foreground)]">
               <X size={16} />
             </button>
           </div>
         )}
 
         {showPollCreator && (
-          <div className="mt-3 p-3 bg-[#EAE0CF]/40 rounded-xl space-y-3">
+          <div className="mt-3 p-3 bg-[var(--muted)]/40 rounded-xl space-y-3">
             <input
               type="text"
               value={pollQuestion}
               onChange={(e) => setPollQuestion(e.target.value)}
               placeholder="ما هو سؤالك؟"
-              className="w-full bg-transparent text-sm text-black placeholder:text-[#BFB9AD] focus:outline-none border-b border-[#C8D8DF] pb-2"
+              className="w-full bg-transparent text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none border-b border-[var(--border)] pb-2"
             />
             <div className="space-y-2">
               {pollOptions.map((opt, i) => (
@@ -300,7 +300,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                     value={opt}
                     onChange={(e) => updatePollOption(i, e.target.value)}
                     placeholder={`خيار ${i + 1}`}
-                    className="flex-1 bg-[#FDFAF5] rounded-lg px-3 py-2 text-sm text-black placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20"
+                    className="flex-1 bg-[var(--card)] rounded-lg px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
                   />
                   {pollOptions.length > 2 && (
                     <button type="button" onClick={() => removePollOption(i)} className="text-[#B05252]">
@@ -310,45 +310,45 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                 </div>
               ))}
             </div>
-            <button type="button" onClick={addPollOption} className="text-sm text-[#547792] hover:text-[#213448] flex items-center gap-1">
+            <button type="button" onClick={addPollOption} className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-1">
               <Plus size={16} /> إضافة خيار
             </button>
-            <button type="button" onClick={() => { setShowPollCreator(false); setPollQuestion(''); setPollOptions(['', '']); }} className="ml-auto text-[#547792] text-sm">
+            <button type="button" onClick={() => { setShowPollCreator(false); setPollQuestion(''); setPollOptions(['', '']); }} className="ml-auto text-[var(--muted-foreground)] text-sm">
               <X size={16} />
             </button>
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-4 pt-3 border-t border-[#C8D8DF]/40">
+        <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border)]/40">
           <div className="flex gap-2 flex-wrap">
-            <button type="button" onClick={() => setShowBgPicker(!showBgPicker)} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" title="لون الخلفية">
+            <button type="button" onClick={() => setShowBgPicker(!showBgPicker)} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" title="لون الخلفية">
               <Palette size={20} />
             </button>
-            <button type="button" onClick={() => fileRef.current?.click()} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" aria-label="إرفاق صورة أو فيديو">
+            <button type="button" onClick={() => fileRef.current?.click()} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" aria-label="إرفاق صورة أو فيديو">
               <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFileChange} />
               <Image size={20} aria-hidden="true" />
             </button>
-            <button type="button" onClick={() => setShowFeelingPicker(!showFeelingPicker)} className="p-2 rounded-lg text-[#547792] hover:bg-[#EAE0CF]/50" title="شعور">
+            <button type="button" onClick={() => setShowFeelingPicker(!showFeelingPicker)} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" title="شعور">
               <Smiley size={20} />
             </button>
-            <button type="button" onClick={() => setShowLocation((v) => !v)} className={cn('p-2 rounded-lg hover:bg-[#EAE0CF]/50', (showLocation || location) ? 'bg-[#D4E8EE] text-[#213448]' : 'text-[#547792]')} title="موقع">
+            <button type="button" onClick={() => setShowLocation((v) => !v)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', (showLocation || location) ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title="موقع">
               <MapPin size={20} />
             </button>
-            <button type="button" onClick={() => setShowAudiencePicker(!showAudiencePicker)} className={cn('p-2 rounded-lg hover:bg-[#EAE0CF]/50', showAudiencePicker ? 'bg-[#D4E8EE]' : 'text-[#547792]')} title="الجمهور">
+            <button type="button" onClick={() => setShowAudiencePicker(!showAudiencePicker)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showAudiencePicker ? 'bg-[var(--muted)]' : 'text-[var(--muted-foreground)]')} title="الجمهور">
               <Users size={20} />
             </button>
-            <button type="button" onClick={() => setShowSchedule(!showSchedule)} className={cn('p-2 rounded-lg hover:bg-[#EAE0CF]/50', showSchedule ? 'bg-[#D4E8EE] text-[#213448]' : 'text-[#547792]')} title="جدولة">
+            <button type="button" onClick={() => setShowSchedule(!showSchedule)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showSchedule ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title="جدولة">
               <Clock size={20} />
             </button>
-            <button type="button" onClick={() => setShowPollCreator(!showPollCreator)} className={cn('p-2 rounded-lg hover:bg-[#EAE0CF]/50', showPollCreator ? 'bg-[#D4E8EE] text-[#213448]' : 'text-[#547792]')} title="استطلاع">
+            <button type="button" onClick={() => setShowPollCreator(!showPollCreator)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showPollCreator ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title="استطلاع">
               <ChartBar size={20} />
             </button>
           </div>
           <button
             type="submit"
             disabled={(!content.trim() && mediaFiles.length === 0) || createPost.isPending}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-[#FDFAF5] hover:shadow-md disabled:opacity-40 transition-all"
-            style={{ background: 'linear-gradient(to right, #213448, #547792)' }}
+            className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--card)] hover:shadow-md disabled:opacity-40 transition-all"
+            style={{ background: 'linear-gradient(to right, var(--primary), var(--secondary))' }}
           >
             {createPost.isPending ? 'جاري النشر...' : scheduleDate ? 'جدولة' : 'نشر'}
           </button>

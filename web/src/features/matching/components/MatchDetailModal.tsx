@@ -27,22 +27,22 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
+      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-[var(--card)] shadow-2xl overflow-hidden max-h-[90vh] overflow-y-auto">
 
         {/* Score header */}
         <div className={`p-6 text-center ${match.score >= 80 ? 'bg-green-50' : match.score >= 60 ? 'bg-yellow-50' : 'bg-red-50'}`}>
-          <button onClick={onClose} className="absolute top-4 left-4 text-gray-400 hover:text-gray-600 text-xl">×</button>
-          <div className="h-20 w-20 rounded-full bg-white mx-auto mb-3 flex items-center justify-center text-primary font-black text-2xl shadow-md overflow-hidden">
+          <button onClick={onClose} className="absolute top-4 left-4 text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] text-xl">×</button>
+          <div className="h-20 w-20 rounded-full bg-[var(--card)] mx-auto mb-3 flex items-center justify-center text-primary font-black text-2xl shadow-md overflow-hidden">
             {(match as any).otherUserAvatar
               ? <img src={(match as any).otherUserAvatar} alt="" className="h-full w-full object-cover" />
               : ((match as any).otherUserName || 'مستخدم').trim().slice(0, 2).toUpperCase()}
           </div>
-          <p className="text-lg font-bold text-gray-900">{(match as any).otherUserName || 'مستخدم طيبت'}</p>
+          <p className="text-lg font-bold text-[var(--foreground)]">{(match as any).otherUserName || 'مستخدم طيبت'}</p>
           <p className={`text-5xl font-black mt-1 ${scoreColor(match.score)}`}>{match.score}%</p>
-          <p className="text-sm text-gray-500 mt-1">نسبة التوافق</p>
+          <p className="text-sm text-[var(--muted-foreground)] mt-1">نسبة التوافق</p>
           {match.status !== 'pending' && (
             <span className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${
-              match.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+              match.status === 'accepted' ? 'bg-green-100 text-green-700' : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
             }`}>
               {match.status === 'accepted' ? '✓ تم القبول' : '✕ تم الرفض'}
             </span>
@@ -52,7 +52,7 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
         <div className="p-6 space-y-5">
           {/* Match reasons */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">أسباب التوافق</h3>
+            <h3 className="text-sm font-semibold text-[var(--foreground)] mb-3">أسباب التوافق</h3>
             <div className="space-y-2">
               {categories.map((c) => {
                 const val = Math.min(100, Math.round(match.score * (0.75 + Math.random() * 0.5)));
@@ -61,10 +61,10 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
                     <span className="text-lg w-7 shrink-0">{c.icon}</span>
                     <div className="flex-1">
                       <div className="flex justify-between mb-1">
-                        <span className="text-xs font-medium text-gray-700">{c.label}</span>
-                        <span className="text-xs text-gray-500">{val}% · وزن {c.weight}%</span>
+                        <span className="text-xs font-medium text-[var(--foreground)]">{c.label}</span>
+                        <span className="text-xs text-[var(--muted-foreground)]">{val}% · وزن {c.weight}%</span>
                       </div>
-                      <div className="h-2 rounded-full bg-gray-100">
+                      <div className="h-2 rounded-full bg-[var(--muted)]">
                         <div
                           className={`h-2 rounded-full transition-all ${val >= 80 ? 'bg-green-400' : val >= 60 ? 'bg-yellow-400' : 'bg-red-400'}`}
                           style={{ width: `${val}%` }}
@@ -78,16 +78,16 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
           </div>
 
           {/* Match info */}
-          <div className="rounded-xl bg-gray-50 p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2">معلومات التوافق</h3>
+          <div className="rounded-xl bg-[var(--muted)] p-4 space-y-2">
+            <h3 className="text-sm font-semibold text-[var(--foreground)] mb-2">معلومات التوافق</h3>
             {[
               ['معرّف التوافق', match.id.slice(0, 16) + '…'],
               ['تاريخ الإنشاء', new Date(match.createdAt).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })],
               ['الحالة', match.status === 'pending' ? 'في الانتظار' : match.status === 'accepted' ? 'مقبول' : 'مرفوض'],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between text-sm">
-                <span className="text-gray-500">{k}</span>
-                <span className="font-medium text-gray-800">{v}</span>
+                <span className="text-[var(--muted-foreground)]">{k}</span>
+                <span className="font-medium text-[var(--foreground)]">{v}</span>
               </div>
             ))}
           </div>

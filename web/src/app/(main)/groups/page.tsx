@@ -53,18 +53,18 @@ export default function GroupsPage() {
   return (
     <div className="max-w-6xl mx-auto">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-emerald-900">المجتمعات</h1>
+        <h1 className="text-2xl font-bold text-[var(--foreground)]">المجتمعات</h1>
         <button
           onClick={() => setShowCreate(!showCreate)}
-          className="rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all"
+          className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all"
         >
           {showCreate ? 'إلغاء' : '+ إنشاء مجتمع'}
         </button>
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="mb-6 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
-          <div className="relative h-36 mb-4 rounded-2xl overflow-hidden bg-emerald-100/50">
+        <form onSubmit={handleCreate} className="mb-6 rounded-2xl bg-[var(--card)] p-5 shadow-lg shadow-black/5 border border-[var(--border)]">
+          <div className="relative h-36 mb-4 rounded-2xl overflow-hidden bg-[var(--muted)]/50">
             {coverPreview ? (
               <>
                 <img src={coverPreview} alt="" className="w-full h-full object-cover" />
@@ -82,7 +82,7 @@ export default function GroupsPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 flex flex-col items-center justify-center text-emerald-600/60 hover:text-emerald-700 transition-colors"
+                className="absolute inset-0 flex flex-col items-center justify-center text-[var(--primary)]/60 hover:text-[var(--primary)] transition-colors"
               >
                 <svg className="w-10 h-10 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -104,13 +104,13 @@ export default function GroupsPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="اسم المجتمع"
-              className="rounded-xl border border-emerald-200/50 px-4 py-3 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 text-emerald-900 placeholder-emerald-400/50"
+              className="rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50"
               required
             />
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-xl border border-emerald-200/50 px-4 py-3 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 text-emerald-900"
+              className="rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] text-[var(--foreground)]"
             >
               <option value="">اختر الفئة</option>
               <option value="دراسة">دراسة</option>
@@ -130,7 +130,7 @@ export default function GroupsPage() {
             <select
               value={privacy}
               onChange={(e) => setPrivacy(e.target.value as 'public' | 'private' | 'secret')}
-              className="rounded-xl border border-emerald-200/50 px-4 py-3 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 text-emerald-900"
+              className="rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] text-[var(--foreground)]"
             >
               <option value="public">عام — يمكن للجميع الرؤية والانضمام</option>
               <option value="private">خاص — يتطلب موافقة المسؤول</option>
@@ -142,12 +142,12 @@ export default function GroupsPage() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="وصف المجتمع (اختياري)"
             rows={2}
-            className="mt-3 w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 text-emerald-900 placeholder-emerald-400/50 resize-none"
+            className="mt-3 w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 resize-none"
           />
           <button
             type="submit"
             disabled={createGroup.isPending || !name.trim()}
-            className="mt-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:shadow-xl hover:shadow-emerald-500/30 transition-all disabled:opacity-50"
+            className="mt-3 rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white hover:shadow-xl hover:shadow-black/10 transition-all disabled:opacity-50"
           >
             {createGroup.isPending ? 'جاري الإنشاء...' : 'إنشاء'}
           </button>

@@ -3,7 +3,7 @@ import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 const REACTIONS = [
-  { type: 'like', emoji: '👍', label: 'إعجاب', activeBg: 'bg-[#D4E8EE]', activeText: 'text-[#213448]' },
+  { type: 'like', emoji: '👍', label: 'إعجاب', activeBg: 'bg-[var(--muted)]', activeText: 'text-[var(--foreground)]' },
   { type: 'love', emoji: '❤️', label: 'حب', activeBg: 'bg-[#B05252]/15', activeText: 'text-[#B05252]' },
   { type: 'haha', emoji: '😂', label: 'ضحك', activeBg: 'bg-[#F9D71C]/20', activeText: 'text-[#F9D71C]' },
   { type: 'wow', emoji: '😮', label: 'مثير', activeBg: 'bg-[#F9A825]/20', activeText: 'text-[#F9A825]' },
@@ -20,7 +20,7 @@ export function ReactionPicker({ onSelect, position = 'bottom' }: ReactionPicker
   return (
     <div 
       className={cn(
-        "absolute left-0 bg-[#FDFAF5] rounded-2xl shadow-lg border border-[#C8D8DF]/60 p-3 animate-scale-in z-20",
+        "absolute left-0 bg-[var(--card)] rounded-2xl shadow-lg border border-[var(--border)]/60 p-3 animate-scale-in z-20",
         position === 'top' ? "bottom-full mb-2" : "top-full mt-2"
       )}
     >
@@ -29,7 +29,7 @@ export function ReactionPicker({ onSelect, position = 'bottom' }: ReactionPicker
           <button
             key={r.type}
             onClick={() => onSelect(r.type)}
-            className="text-2xl p-2 hover:bg-[#EAE0CF]/50 rounded-full transition-transform hover:scale-125"
+            className="text-2xl p-2 hover:bg-[var(--muted)]/50 rounded-full transition-transform hover:scale-125"
             title={r.label}
           >
             {r.emoji}
@@ -69,7 +69,7 @@ export function ReactionDisplay({ reactions = [], totalCount = 0, userReaction, 
 
   if (totalCount === 0) {
     return (
-      <button onClick={onClick} className="text-sm text-[#547792] hover:underline flex items-center gap-1">
+      <button onClick={onClick} className="text-sm text-[var(--muted-foreground)] hover:underline flex items-center gap-1">
         <span className="text-base">{defaultEmoji}</span>
         إعجاب
       </button>
@@ -87,7 +87,7 @@ export function ReactionDisplay({ reactions = [], totalCount = 0, userReaction, 
           "flex items-center gap-1.5 px-3 py-1 rounded-full text-sm transition-all",
           userReaction 
             ? REACTIONS.find(r => r.type === userReaction)?.activeBg + " " + REACTIONS.find(r => r.type === userReaction)?.activeText
-            : "hover:bg-[#EAE0CF]/50 text-[#547792]"
+            : "hover:bg-[var(--muted)]/50 text-[var(--muted-foreground)]"
         )}
       >
         <span className="text-base">{mainReactionEmoji}</span>

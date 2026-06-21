@@ -373,7 +373,7 @@ export default function FriendsPage() {
                   placeholder="البحث عن الأصدقاء..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2.5 pr-10 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder-emerald-400/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
                 />
                 <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -382,7 +382,7 @@ export default function FriendsPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'name' | 'recent')}
-                className="px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] focus:outline-none focus:border-emerald-400"
+                className="px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--ring)]"
               >
                 <option value="name">ترتيب حسب الاسم</option>
                 <option value="recent">الأحدث إضافة</option>
@@ -523,12 +523,12 @@ export default function FriendsPage() {
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateList()}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder-emerald-400/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
               />
               <button
                 onClick={handleCreateList}
                 disabled={!newListName.trim()}
-                className="px-4 py-2.5 rounded-xl bg-[#10B981] text-white text-sm font-medium hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-emerald-500/25"
+                className="px-4 py-2.5 rounded-xl bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-black/10"
               >
                 إنشاء
               </button>
@@ -608,7 +608,7 @@ export default function FriendsPage() {
                       type="checkbox"
                       checked={selected}
                       onChange={() => toggleMember(fid)}
-                      className="w-4 h-4 rounded accent-emerald-500"
+                      className="w-4 h-4 rounded accent-[var(--primary)]"
                     />
                     <span className="text-sm text-[var(--foreground)]">{fname}</span>
                   </label>
@@ -624,7 +624,7 @@ export default function FriendsPage() {
             <button
               onClick={handleSaveList}
               disabled={!editListName.trim()}
-              className="flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-emerald-500/25"
+              className="flex-1 rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-black/10"
             >
               حفظ
             </button>

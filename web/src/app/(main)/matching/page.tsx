@@ -31,7 +31,7 @@ interface MatchWithUser extends Match {
 }
 
 function ScoreBadge({ score }: { score: number }) {
-  const color = score >= 80 ? '#059669' : score >= 60 ? '#f59e0b' : '#ef4444';
+  const color = score >= 80 ? 'var(--primary)' : score >= 60 ? '#f59e0b' : '#ef4444';
   const label = score >= 80 ? 'ممتاز' : score >= 60 ? 'جيد' : 'منخفض';
   return (
     <div className="flex flex-col items-center">

@@ -46,7 +46,7 @@ export const ActivityLogViewer = ({ userId }: Props) => {
   };
 
   return (
-    <div className="rounded-xl bg-white p-6 space-y-4">
+    <div className="rounded-xl bg-[var(--card)] p-6 space-y-4">
       <div className="flex gap-4 flex-wrap">
         <select
           value={year}
@@ -75,20 +75,20 @@ export const ActivityLogViewer = ({ userId }: Props) => {
       </div>
 
       {isLoading ? (
-        <p className="text-center text-gray-500">جاري التحميل...</p>
+        <p className="text-center text-[var(--muted-foreground)]">جاري التحميل...</p>
       ) : activities.length === 0 ? (
-        <p className="text-center text-gray-400">لا يوجد نشاط</p>
+        <p className="text-center text-[var(--muted-foreground)]">لا يوجد نشاط</p>
       ) : (
         <div className="space-y-3">
           {activities.map((activity: any, i: number) => (
             <div
               key={i}
-              className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+              className="flex items-start gap-3 p-3 rounded-lg bg-[var(--muted)] hover:bg-[var(--muted)] transition-colors"
             >
               <span className="text-xl">{activityIcons[activity.type] || '📌'}</span>
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-800">{activity.description}</p>
-                <p className="text-xs text-gray-400 mt-1">{formatDate(activity.createdAt)}</p>
+                <p className="text-sm font-medium text-[var(--foreground)]">{activity.description}</p>
+                <p className="text-xs text-[var(--muted-foreground)] mt-1">{formatDate(activity.createdAt)}</p>
               </div>
             </div>
           ))}

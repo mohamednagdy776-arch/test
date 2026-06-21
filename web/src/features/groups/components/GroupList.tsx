@@ -45,7 +45,7 @@ function GroupCard({ group, isMember, isPending, onJoin, onLeave, isJoining, isL
   const privacy = getPrivacyBadge();
 
   return (
-    <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden">
+    <div className="rounded-xl bg-[var(--card)] shadow-sm hover:shadow-md transition-shadow border border-[var(--border)] overflow-hidden">
       <div className="relative h-24 bg-gradient-to-br from-primary/20 to-primary/5">
         {group.coverPhoto && (
           <img src={group.coverPhoto} alt="" className="absolute inset-0 w-full h-full object-cover" />
@@ -55,19 +55,19 @@ function GroupCard({ group, isMember, isPending, onJoin, onLeave, isJoining, isL
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 truncate">{group.name}</h3>
+            <h3 className="font-semibold text-[var(--foreground)] truncate">{group.name}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${privacy.class}`}>
                 {privacy.text}
               </span>
               {group.category && (
-                <span className="text-xs text-gray-400">{group.category}</span>
+                <span className="text-xs text-[var(--muted-foreground)]">{group.category}</span>
               )}
             </div>
           </div>
         </div>
-        <p className="text-sm text-gray-500 line-clamp-2 mb-2">{group.description || 'لا يوجد وصف'}</p>
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
+        <p className="text-sm text-[var(--muted-foreground)] line-clamp-2 mb-2">{group.description || 'لا يوجد وصف'}</p>
+        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)] mb-3">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
@@ -92,7 +92,7 @@ function GroupCard({ group, isMember, isPending, onJoin, onLeave, isJoining, isL
               <button
                 onClick={() => onLeave(group.id)}
                 disabled={isLeaving}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
               >
                 {isLeaving ? '...' : 'مغادرة'}
               </button>
@@ -227,9 +227,9 @@ export const GroupList = () => {
               onFocus={() => setShowAutocomplete(true)}
               onKeyDown={handleKeyDown}
               placeholder="ابحث عن مجتمع..."
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 pr-10 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
-            <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             {searchQuery && (
@@ -238,7 +238,7 @@ export const GroupList = () => {
                   setSearchQuery('');
                   setShowAutocomplete(false);
                 }}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)]"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -248,12 +248,12 @@ export const GroupList = () => {
           </div>
 
           {showAutocomplete && suggestions.length > 0 && (
-            <div className="absolute z-50 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden">
+            <div className="absolute z-50 mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--card)] shadow-lg overflow-hidden">
               {suggestions.map((s: any, i: number) => (
                 <button
                   key={s.id}
                   className={`w-full text-right px-4 py-2.5 text-sm transition-colors ${
-                    i === selectedIndex ? 'bg-primary/10 text-primary' : 'text-gray-700 hover:bg-gray-50'
+                    i === selectedIndex ? 'bg-primary/10 text-primary' : 'text-[var(--foreground)] hover:bg-[var(--muted)]'
                   }`}
                   onClick={() => {
                     setSearchQuery(s.name);
@@ -261,7 +261,7 @@ export const GroupList = () => {
                   }}
                 >
                   <span className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-4 w-4 text-[var(--muted-foreground)] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
                     {s.name}
@@ -281,12 +281,12 @@ export const GroupList = () => {
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   activeTab === tab.key
                     ? 'bg-primary text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] border border-[var(--border)]'
                 }`}
               >
                 {tab.label}
                 {tab.count > 0 && (
-                  <span className={`mr-1 ${activeTab === tab.key ? 'text-white/80' : 'text-gray-400'}`}>
+                  <span className={`mr-1 ${activeTab === tab.key ? 'text-white/80' : 'text-[var(--muted-foreground)]'}`}>
                     ({tab.count})
                   </span>
                 )}
@@ -300,7 +300,7 @@ export const GroupList = () => {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -310,7 +310,7 @@ export const GroupList = () => {
         )}
 
         <div>
-          <h2 className="mb-3 text-lg font-bold text-gray-900">
+          <h2 className="mb-3 text-lg font-bold text-[var(--foreground)]">
             {isSearching 
               ? activeTab === 'my' 
                 ? 'مجموعاتي المطابقة' 
@@ -327,11 +327,11 @@ export const GroupList = () => {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <div key={i} className="h-64 rounded-xl bg-white animate-pulse" />
+                <div key={i} className="h-64 rounded-xl bg-[var(--card)] animate-pulse" />
               ))}
             </div>
           ) : displayedGroups.length === 0 ? (
-            <div className="rounded-xl bg-white p-8 text-center text-gray-400 border border-gray-100">
+            <div className="rounded-xl bg-[var(--card)] p-8 text-center text-[var(--muted-foreground)] border border-[var(--border)]">
               <p className="text-3xl mb-2">👥</p>
               <p className="text-sm">
                 {isSearching 
@@ -366,8 +366,8 @@ export const GroupList = () => {
       <div className="w-80 shrink-0 hidden lg:block">
         <div className="sticky top-6 space-y-4">
           {(suggestedData?.data as any[]) && (suggestedData?.data as any[]).length > 0 && (
-            <div className="rounded-xl bg-white p-4 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-3">مجموعات مقترحة</h3>
+            <div className="rounded-xl bg-[var(--card)] p-4 shadow-sm border border-[var(--border)]">
+              <h3 className="font-semibold text-[var(--foreground)] mb-3">مجموعات مقترحة</h3>
               <div className="space-y-3">
                 {((suggestedData?.data as any[]) || []).slice(0, 5).map((g: any) => (
                   <div key={g.id} className="flex items-center gap-3">
@@ -381,13 +381,13 @@ export const GroupList = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">{g.name}</p>
-                      <p className="text-xs text-gray-400">{g.memberCount || 0} عضو</p>
+                      <p className="font-medium text-sm text-[var(--foreground)] truncate">{g.name}</p>
+                      <p className="text-xs text-[var(--muted-foreground)]">{g.memberCount || 0} عضو</p>
                     </div>
                     <button
                       onClick={() => handleJoin(g.id)}
                       disabled={joinGroup.isPending || myGroupIds.has(g.id)}
-                      className="text-xs text-primary hover:text-blue-700 font-medium disabled:text-gray-400"
+                      className="text-xs text-primary hover:text-blue-700 font-medium disabled:text-[var(--muted-foreground)]"
                     >
                       {myGroupIds.has(g.id) ? 'joined' : 'انضم'}
                     </button>
@@ -409,7 +409,7 @@ export const GroupList = () => {
                       </svg>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">{g.name}</p>
+                      <p className="font-medium text-sm text-[var(--foreground)] truncate">{g.name}</p>
                       <p className="text-xs text-yellow-600">في انتظار الموافقة</p>
                     </div>
                   </div>

@@ -30,7 +30,7 @@ interface PageCardProps {
 
 function PageCard({ page, isFollowing, onFollow, onUnfollow, isFollowingLoading }: PageCardProps) {
   return (
-    <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden">
+    <div className="rounded-xl bg-[var(--card)] shadow-sm hover:shadow-md transition-shadow border border-[var(--border)] overflow-hidden">
       <div className="relative h-24 bg-gradient-to-br from-blue-500/20 to-blue-600/5">
         {page.coverPhoto ? (
           <img src={page.coverPhoto} alt="" className="absolute inset-0 w-full h-full object-cover" />
@@ -42,16 +42,16 @@ function PageCard({ page, isFollowing, onFollow, onUnfollow, isFollowingLoading 
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 truncate">{page.name}</h3>
+            <h3 className="font-semibold text-[var(--foreground)] truncate">{page.name}</h3>
             {page.category && (
-              <span className="text-xs text-gray-400">{page.category}</span>
+              <span className="text-xs text-[var(--muted-foreground)]">{page.category}</span>
             )}
           </div>
         </div>
         {page.description && (
-          <p className="text-sm text-gray-500 line-clamp-2 mb-2">{page.description}</p>
+          <p className="text-sm text-[var(--muted-foreground)] line-clamp-2 mb-2">{page.description}</p>
         )}
-        <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
+        <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)] mb-3">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
@@ -67,7 +67,7 @@ function PageCard({ page, isFollowing, onFollow, onUnfollow, isFollowingLoading 
             <button
               onClick={() => onUnfollow(page.id)}
               disabled={isFollowingLoading}
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex-1 rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
             >
               {isFollowingLoading ? '...' : 'إلغاء المتابعة'}
             </button>
@@ -82,7 +82,7 @@ function PageCard({ page, isFollowing, onFollow, onUnfollow, isFollowingLoading 
           )}
           <Link
             href={`/pages/${page.id}`}
-            className="rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+            className="rounded-lg border border-[var(--border)] px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors"
           >
             عرض
           </Link>
@@ -159,15 +159,15 @@ export const PagesList = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="ابحث عن صفحة..."
-              className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-3 pr-10 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
-            <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--muted-foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)]"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -186,12 +186,12 @@ export const PagesList = () => {
                 className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   activeTab === tab.key
                     ? 'bg-primary text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
+                    : 'bg-[var(--card)] text-[var(--muted-foreground)] hover:bg-[var(--muted)] border border-[var(--border)]'
                 }`}
               >
                 {tab.label}
                 {tab.count > 0 && (
-                  <span className={`mr-1 ${activeTab === tab.key ? 'text-white/80' : 'text-gray-400'}`}>
+                  <span className={`mr-1 ${activeTab === tab.key ? 'text-white/80' : 'text-[var(--muted-foreground)]'}`}>
                     ({tab.count})
                   </span>
                 )}
@@ -205,7 +205,7 @@ export const PagesList = () => {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              className="rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -215,7 +215,7 @@ export const PagesList = () => {
         )}
 
         <div>
-          <h2 className="mb-3 text-lg font-bold text-gray-900">
+          <h2 className="mb-3 text-lg font-bold text-[var(--foreground)]">
             {isSearching
               ? activeTab === 'liked'
                 ? 'الصفحات المعجب بها'
@@ -234,7 +234,7 @@ export const PagesList = () => {
               <Spinner />
             </div>
           ) : displayedPages.length === 0 ? (
-            <div className="rounded-xl bg-white p-8 text-center text-gray-400 border border-gray-100">
+            <div className="rounded-xl bg-[var(--card)] p-8 text-center text-[var(--muted-foreground)] border border-[var(--border)]">
               <p className="text-3xl mb-2">📄</p>
               <p className="text-sm">
                 {isSearching
@@ -267,8 +267,8 @@ export const PagesList = () => {
       <div className="w-80 shrink-0 hidden lg:block">
         <div className="sticky top-6 space-y-4">
           {(suggestedData?.data as any[]) && (suggestedData?.data as any[]).length > 0 && (
-            <div className="rounded-xl bg-white p-4 shadow-sm border border-gray-100">
-              <h3 className="font-semibold text-gray-900 mb-3">صفحات مقترحة</h3>
+            <div className="rounded-xl bg-[var(--card)] p-4 shadow-sm border border-[var(--border)]">
+              <h3 className="font-semibold text-[var(--foreground)] mb-3">صفحات مقترحة</h3>
               <div className="space-y-3">
                 {((suggestedData?.data as any[]) || []).slice(0, 5).map((p: any) => (
                   <div key={p.id} className="flex items-center gap-3">
@@ -280,13 +280,13 @@ export const PagesList = () => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-gray-900 truncate">{p.name}</p>
-                      <p className="text-xs text-gray-400">{p.followerCount || 0} متابع</p>
+                      <p className="font-medium text-sm text-[var(--foreground)] truncate">{p.name}</p>
+                      <p className="text-xs text-[var(--muted-foreground)]">{p.followerCount || 0} متابع</p>
                     </div>
                     <button
                       onClick={() => handleFollow(p.id)}
                       disabled={followPage.isPending || followingPageIds.has(p.id)}
-                      className="text-xs text-primary hover:text-blue-700 font-medium disabled:text-gray-400"
+                      className="text-xs text-primary hover:text-blue-700 font-medium disabled:text-[var(--muted-foreground)]"
                     >
                       {followingPageIds.has(p.id) ? 'متابعة' : 'متابعة'}
                     </button>

@@ -39,7 +39,7 @@ const TYPE_CONFIG: Record<string, { icon: React.ElementType; bg: string; fg: str
   birthday:        { icon: Cake,         bg: 'bg-pink-100',   fg: 'text-pink-500'   },
   group_invite:    { icon: UsersThree,   bg: 'bg-teal-100',   fg: 'text-teal-600'   },
 };
-const DEFAULT_TYPE = { icon: Bell, bg: 'bg-[#EAE0CF]', fg: 'text-[#547792]' };
+const DEFAULT_TYPE = { icon: Bell, bg: 'bg-[var(--muted)]', fg: 'text-[var(--muted-foreground)]' };
 
 function NotifIcon({ type }: { type: string }) {
   const cfg = TYPE_CONFIG[type] ?? DEFAULT_TYPE;
@@ -60,11 +60,11 @@ function SenderAvatar({ fromUser }: { fromUser?: Notification['fromUser'] }) {
   return avatar ? (
     <img src={avatar} alt={name} className="h-9 w-9 rounded-full object-cover shrink-0" />
   ) : (
-    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center shrink-0">
+    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[var(--muted)] to-[var(--muted-foreground)] flex items-center justify-center shrink-0">
       {initial !== '?' ? (
-        <span className="text-sm font-bold text-[#213448]">{initial}</span>
+        <span className="text-sm font-bold text-[var(--foreground)]">{initial}</span>
       ) : (
-        <UserCircle size={20} className="text-[#547792]" />
+        <UserCircle size={20} className="text-[var(--muted-foreground)]" />
       )}
     </div>
   );
@@ -124,11 +124,11 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[#C8D8DF]/40">
+      <div className="flex items-center justify-between px-4 pt-4 pb-3 border-b border-[var(--border)]/40">
         <div className="flex items-center gap-2">
-          <h2 className="text-base font-bold text-black">الإشعارات</h2>
+          <h2 className="text-base font-bold text-[var(--foreground)]">الإشعارات</h2>
           {unreadCount > 0 && (
-            <span className="h-5 min-w-5 px-1 rounded-full bg-[#213448] text-[#FDFAF5] text-[10px] font-bold flex items-center justify-center">
+            <span className="h-5 min-w-5 px-1 rounded-full bg-[var(--primary)] text-[var(--card)] text-[10px] font-bold flex items-center justify-center">
               {unreadCount}
             </span>
           )}
@@ -136,7 +136,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
         {unreadCount > 0 && (
           <button
             onClick={onMarkAllAsRead}
-            className="text-xs text-[#547792] hover:text-[#213448] font-medium transition-colors"
+            className="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] font-medium transition-colors"
           >
             قراءة الكل
           </button>
@@ -146,16 +146,16 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
       {/* Body */}
       {notifications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 gap-3">
-          <div className="h-14 w-14 rounded-2xl bg-[#EAE0CF]/60 flex items-center justify-center">
-            <Bell size={28} className="text-[#94B4C1]" />
+          <div className="h-14 w-14 rounded-2xl bg-[var(--muted)]/60 flex items-center justify-center">
+            <Bell size={28} className="text-[var(--muted-foreground)]" />
           </div>
-          <p className="text-sm text-[#547792]">لا توجد إشعارات</p>
+          <p className="text-sm text-[var(--muted-foreground)]">لا توجد إشعارات</p>
         </div>
       ) : (
         <div className="py-2">
           {groups.map((group) => (
             <div key={group.label}>
-              <p className="px-4 py-1.5 text-[11px] font-semibold text-black/50 uppercase tracking-wide">
+              <p className="px-4 py-1.5 text-[11px] font-semibold text-[var(--foreground)]/50 uppercase tracking-wide">
                 {group.label}
               </p>
               {group.items.map((n) => (
@@ -164,13 +164,13 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
                   onClick={() => handleClick(n)}
                   className={cn(
                     'relative flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors group',
-                    'hover:bg-[#EAE0CF]/30',
-                    !n.readStatus && 'bg-[#D4E8EE]/30',
+                    'hover:bg-[var(--muted)]/30',
+                    !n.readStatus && 'bg-[var(--muted)]/30',
                   )}
                 >
                   {/* Unread accent bar */}
                   {!n.readStatus && (
-                    <div className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[#547792]" />
+                    <div className="absolute right-0 top-2 bottom-2 w-1 rounded-l-full bg-[var(--muted-foreground)]" />
                   )}
 
                   {/* Avatar + Icon overlay */}
@@ -183,7 +183,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
 
                   {/* Content */}
                   <div className="flex-1 min-w-0 pr-1">
-                    <p className={cn('text-sm leading-snug text-black', !n.readStatus && 'font-medium')}>
+                    <p className={cn('text-sm leading-snug text-[var(--foreground)]', !n.readStatus && 'font-medium')}>
                       {n.fromUser?.profile?.fullName ? (
                         <>
                           <span className="font-semibold">{n.fromUser.profile.fullName}</span>{' '}
@@ -193,7 +193,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
                         n.message
                       )}
                     </p>
-                    <p className="text-[11px] text-[#94B4C1] mt-0.5">{timeAgo(n.createdAt)}</p>
+                    <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{timeAgo(n.createdAt)}</p>
                   </div>
 
                   {/* Delete */}
@@ -205,7 +205,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
                     }}
                     disabled={deletingId === n.id}
                     aria-label="حذف الإشعار"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-[#BFB9AD] hover:text-red-400 hover:bg-red-50 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-[var(--muted-foreground)] hover:text-red-400 hover:bg-red-50 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {deletingId === n.id ? (
                       <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">

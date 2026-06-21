@@ -113,17 +113,17 @@ function DataExportButton() {
   };
 
   return (
-    <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50">
+    <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50">
       <div>
-        <h3 className="font-semibold text-emerald-900">تحميل نسخة من بياناتك</h3>
-        <p className="text-emerald-700/70 text-sm mt-0.5">ملف JSON يحتوي على ملفك الشخصي، منشوراتك، وإعداداتك</p>
+        <h3 className="font-semibold text-[var(--foreground)]">تحميل نسخة من بياناتك</h3>
+        <p className="text-[var(--primary)]/70 text-sm mt-0.5">ملف JSON يحتوي على ملفك الشخصي، منشوراتك، وإعداداتك</p>
       </div>
       <Button
         variant="outline"
         size="sm"
         onClick={handleExport}
         loading={exporting}
-        className={done ? 'text-emerald-600 border-emerald-400' : 'text-emerald-700 border-emerald-300 hover:bg-emerald-50'}
+        className={done ? 'text-[var(--primary)] border-[var(--ring)]' : 'text-[var(--primary)] border-[var(--border)] hover:bg-[var(--muted)]'}
       >
         {done ? '✓ تم التحميل' : '⬇ تصدير'}
       </Button>
@@ -182,11 +182,11 @@ export default function PrivacyPage() {
       onClick={onClick}
       disabled={disabled}
       className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
-        enabled ? 'bg-emerald-500 shadow-inner' : 'bg-sage-300'
+        enabled ? 'bg-[var(--muted)]0 shadow-inner' : 'bg-sage-300'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span
-        className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
+        className={`absolute top-1 w-5 h-5 rounded-full bg-[var(--card)] shadow-md transition-transform duration-300 ${
           enabled ? 'right-8' : 'right-1'
         }`}
       />
@@ -197,7 +197,7 @@ export default function PrivacyPage() {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="px-4 py-2 rounded-xl border border-emerald-200 bg-white/80 text-emerald-900 text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all cursor-pointer"
+      className="px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--muted)] transition-all cursor-pointer"
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
@@ -209,22 +209,22 @@ export default function PrivacyPage() {
 
   if (privacyLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 flex justify-center items-center">
+      <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] flex justify-center items-center">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
           <span>←</span> <span>العودة للإعدادات</span>
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-emerald-900">الخصوصية</h1>
-          <p className="text-emerald-700/70 mt-2">تحكم في من يرى معلوماتك</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">الخصوصية</h1>
+          <p className="text-[var(--primary)]/70 mt-2">تحكم في من يرى معلوماتك</p>
         </div>
 
         {privacyError && (
@@ -235,9 +235,9 @@ export default function PrivacyPage() {
           </div>
         )}
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>🔒</span> إعدادات الخصوصية
             </CardTitle>
             <CardDescription>تحكم في من يرى محتوى حسابك</CardDescription>
@@ -245,11 +245,11 @@ export default function PrivacyPage() {
           <CardContent>
             <div className="space-y-6">
               {PRIVACY_FIELDS.map((field) => (
-                <div key={field.key} className="flex items-start justify-between py-3 border-b border-emerald-100/50 last:border-0">
+                <div key={field.key} className="flex items-start justify-between py-3 border-b border-[var(--border)]/50 last:border-0">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-emerald-900">{field.label}</h3>
+                    <h3 className="font-semibold text-[var(--foreground)]">{field.label}</h3>
                     {field.description && (
-                      <p className="text-emerald-700/70 text-sm mt-0.5">{field.description}</p>
+                      <p className="text-[var(--primary)]/70 text-sm mt-0.5">{field.description}</p>
                     )}
                   </div>
                   <SelectInput
@@ -262,8 +262,8 @@ export default function PrivacyPage() {
 
               <div className="flex items-start justify-between py-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-emerald-900">محركات البحث</h3>
-                  <p className="text-emerald-700/70 text-sm mt-0.5">السماح لمحركات البحث بالربط إلى ملفك</p>
+                  <h3 className="font-semibold text-[var(--foreground)]">محركات البحث</h3>
+                  <p className="text-[var(--primary)]/70 text-sm mt-0.5">السماح لمحركات البحث بالربط إلى ملفك</p>
                 </div>
                 <ToggleSwitch
                   enabled={settings?.allowSearchEngines || false}
@@ -275,9 +275,9 @@ export default function PrivacyPage() {
           </CardContent>
         </Card>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>🚫</span> المستخدمين المحظورين
             </CardTitle>
             <CardDescription>الأشخاص الذين حظرتهم</CardDescription>
@@ -286,21 +286,21 @@ export default function PrivacyPage() {
             {blocksLoading ? (
               <Spinner />
             ) : blocksData?.data?.length === 0 ? (
-              <p className="text-center text-emerald-700/70 py-4">لا يوجد مستخدمون محظورون</p>
+              <p className="text-center text-[var(--primary)]/70 py-4">لا يوجد مستخدمون محظورون</p>
             ) : (
               <div className="space-y-3">
                 {blocksData?.data?.map((block: any) => (
                   <div
                     key={block.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50"
+                    className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center text-emerald-700 font-semibold">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--muted)] to-[var(--border)] flex items-center justify-center text-[var(--primary)] font-semibold">
                         {block.blocked?.name?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p className="font-semibold text-emerald-900">{block.blocked?.name || 'مستخدم محظور'}</p>
-                        <p className="text-emerald-700/70 text-sm">@{block.blocked?.username || 'unknown'}</p>
+                        <p className="font-semibold text-[var(--foreground)]">{block.blocked?.name || 'مستخدم محظور'}</p>
+                        <p className="text-[var(--primary)]/70 text-sm">@{block.blocked?.username || 'unknown'}</p>
                       </div>
                     </div>
                     <Button
@@ -310,7 +310,7 @@ export default function PrivacyPage() {
                         setSelectedBlock(block);
                         setShowBlockModal(true);
                       }}
-                      className="text-emerald-600 border-emerald-300 hover:bg-emerald-50"
+                      className="text-[var(--primary)] border-[var(--border)] hover:bg-[var(--muted)]"
                     >
                       إلغاء الحظر
                     </Button>
@@ -321,9 +321,9 @@ export default function PrivacyPage() {
           </CardContent>
         </Card>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>📦</span> تصدير بياناتك
             </CardTitle>
             <CardDescription>احصل على نسخة من جميع بياناتك الشخصية (GDPR / PDPA)</CardDescription>
@@ -335,14 +335,14 @@ export default function PrivacyPage() {
 
         <Modal open={showBlockModal} onClose={() => setShowBlockModal(false)} title="إلغاء حظر مستخدم">
           <div className="space-y-4">
-            <p className="text-sm text-emerald-700">
+            <p className="text-sm text-[var(--primary)]">
               هل أنت متأكد من إلغاء حظر {selectedBlock?.blocked?.name || 'هذا المستخدم'}؟
             </p>
             <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => setShowBlockModal(false)} className="flex-1 text-emerald-700">
+              <Button variant="ghost" onClick={() => setShowBlockModal(false)} className="flex-1 text-[var(--primary)]">
                 إلغاء
               </Button>
-              <Button variant="primary" onClick={handleUnblock} className="flex-1 bg-emerald-600 hover:bg-emerald-700">
+              <Button variant="primary" onClick={handleUnblock} className="flex-1 bg-[var(--primary)] hover:bg-[var(--primary-hover)]">
                 تأكيد
               </Button>
             </div>

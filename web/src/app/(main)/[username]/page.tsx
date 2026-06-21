@@ -282,8 +282,8 @@ function FriendsTab({ userId }: { userId: string }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {friends.map((friend: any, i: number) => (
-          <Link key={i} href={friend.username ? `/${friend.username}` : '#'} className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 text-center shadow-sm hover:shadow-md hover:shadow-emerald-500/10 transition-all">
-            <div className="h-16 w-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center mb-2">
+          <Link key={i} href={friend.username ? `/${friend.username}` : '#'} className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 text-center shadow-sm hover:shadow-md hover:shadow-black/5 transition-all">
+            <div className="h-16 w-16 mx-auto rounded-full bg-[var(--muted)] flex items-center justify-center mb-2">
               {friend.avatarUrl ? (
                 <img src={friend.avatarUrl} alt="" className="h-full w-full object-cover rounded-full" />
               ) : (

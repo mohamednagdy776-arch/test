@@ -218,11 +218,11 @@ export default function NotificationsPage() {
       onClick={onClick}
       disabled={disabled}
       className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
-        enabled ? 'bg-emerald-500 shadow-inner' : 'bg-sage-300'
+        enabled ? 'bg-[var(--muted)]0 shadow-inner' : 'bg-sage-300'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span
-        className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${
+        className={`absolute top-1 w-5 h-5 rounded-full bg-[var(--card)] shadow-md transition-transform duration-300 ${
           enabled ? 'right-8' : 'right-1'
         }`}
       />
@@ -231,36 +231,36 @@ export default function NotificationsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 flex justify-center items-center">
+      <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] flex justify-center items-center">
         <Spinner size="lg" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
           <span>←</span> <span>العودة للإعدادات</span>
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-emerald-900">الإشعارات</h1>
-          <p className="text-emerald-700/70 mt-2">تحكم في الإشعارات التي تستلمها</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">الإشعارات</h1>
+          <p className="text-[var(--primary)]/70 mt-2">تحكم في الإشعارات التي تستلمها</p>
         </div>
 
         {message && (
-          <div className={`p-4 rounded-xl ${message.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+          <div className={`p-4 rounded-xl ${message.type === 'success' ? 'bg-[var(--muted)] border border-[var(--border)] text-[var(--primary)]' : 'bg-red-50 border border-red-200 text-red-700'}`}>
             {message.text}
           </div>
         )}
 
         {pushPermission !== null && pushPermission !== 'granted' && (
-          <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+          <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
             <CardContent className="p-5 flex items-center justify-between gap-4">
               <div>
-                <h3 className="font-semibold text-emerald-900">إشعارات المتصفح</h3>
-                <p className="text-sm text-emerald-700/70 mt-0.5">
+                <h3 className="font-semibold text-[var(--foreground)]">إشعارات المتصفح</h3>
+                <p className="text-sm text-[var(--primary)]/70 mt-0.5">
                   {pushPermission === 'denied'
                     ? 'الإشعارات محظورة في إعدادات المتصفح — يرجى إلغاء الحظر يدوياً'
                     : 'اسمح بالإشعارات لتلقّي تنبيهات فورية حتى عندما لا يكون التطبيق مفتوحاً'}
@@ -269,7 +269,7 @@ export default function NotificationsPage() {
               {pushPermission === 'default' && (
                 <button
                   onClick={requestPushPermission}
-                  className="shrink-0 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all"
+                  className="shrink-0 rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl transition-all"
                 >
                   السماح
                 </button>
@@ -278,9 +278,9 @@ export default function NotificationsPage() {
           </Card>
         )}
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>🔔</span> إعدادات الإشعارات
             </CardTitle>
             <CardDescription>
@@ -289,14 +289,14 @@ export default function NotificationsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center text-lg">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--muted)] flex items-center justify-center text-lg">
                     🔔
                   </div>
                   <div>
-                    <h3 className="font-semibold text-emerald-900">جميع الإشعارات</h3>
-                    <p className="text-emerald-700/70 text-sm">تفعيل/تعطيل جميع الإشعارات</p>
+                    <h3 className="font-semibold text-[var(--foreground)]">جميع الإشعارات</h3>
+                    <p className="text-[var(--primary)]/70 text-sm">تفعيل/تعطيل جميع الإشعارات</p>
                   </div>
                 </div>
                 <ToggleSwitch
@@ -306,24 +306,24 @@ export default function NotificationsPage() {
                 />
               </div>
 
-              <div className="border-t border-emerald-200/50 pt-3 mt-3">
-                <p className="text-sm text-emerald-700/70 mb-3">إعدادات محددة</p>
+              <div className="border-t border-[var(--border)]/50 pt-3 mt-3">
+                <p className="text-sm text-[var(--primary)]/70 mb-3">إعدادات محددة</p>
                 {NOTIFICATION_SETTINGS.map((setting) => (
                   <div
                     key={setting.key}
                     className={`flex items-start justify-between p-3 rounded-xl border transition-all ${
                       !masterNotificationsEnabled
                         ? 'bg-sage-50/50 border-sage-200/50 opacity-60'
-                        : 'bg-white/50 border-emerald-100/50'
+                        : 'bg-white/50 border-[var(--border)]/50'
                     }`}
                   >
                     <div className="flex items-start gap-3 flex-1">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center text-sm">
+                      <div className="w-8 h-8 rounded-lg bg-[var(--muted)] flex items-center justify-center text-sm">
                         {setting.icon}
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-emerald-900 text-sm">{setting.label}</h3>
-                        <p className="text-emerald-700/70 text-xs mt-0.5">{setting.description}</p>
+                        <h3 className="font-semibold text-[var(--foreground)] text-sm">{setting.label}</h3>
+                        <p className="text-[var(--primary)]/70 text-xs mt-0.5">{setting.description}</p>
                       </div>
                     </div>
                     <ToggleSwitch
@@ -339,9 +339,9 @@ export default function NotificationsPage() {
           </CardContent>
         </Card>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>📧</span> النشرة البريدية
             </CardTitle>
             <CardDescription>
@@ -350,14 +350,14 @@ export default function NotificationsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/50">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-lg">
                     📧
                   </div>
                   <div>
-                    <h3 className="font-semibold text-emerald-900">النشرة البريدية</h3>
-                    <p className="text-emerald-700/70 text-sm">تلقي التحديثات عبر البريد الإلكتروني</p>
+                    <h3 className="font-semibold text-[var(--foreground)]">النشرة البريدية</h3>
+                    <p className="text-[var(--primary)]/70 text-sm">تلقي التحديثات عبر البريد الإلكتروني</p>
                   </div>
                 </div>
                 <ToggleSwitch
@@ -367,19 +367,19 @@ export default function NotificationsPage() {
               </div>
 
               {newsletterEnabled && (
-                <div className="border-t border-emerald-200/50 pt-3 mt-3 space-y-2">
+                <div className="border-t border-[var(--border)]/50 pt-3 mt-3 space-y-2">
                   {NEWSLETTER_SETTINGS.map((setting) => (
                     <div
                       key={setting.key}
-                      className="flex items-start justify-between p-3 rounded-xl bg-white/50 border border-emerald-100/50"
+                      className="flex items-start justify-between p-3 rounded-xl bg-white/50 border border-[var(--border)]/50"
                     >
                       <div className="flex items-start gap-3 flex-1">
                         <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-sm">
                           {setting.icon}
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-emerald-900 text-sm">{setting.label}</h3>
-                          <p className="text-emerald-700/70 text-xs mt-0.5">{setting.description}</p>
+                          <h3 className="font-semibold text-[var(--foreground)] text-sm">{setting.label}</h3>
+                          <p className="text-[var(--primary)]/70 text-xs mt-0.5">{setting.description}</p>
                         </div>
                       </div>
                       <ToggleSwitch

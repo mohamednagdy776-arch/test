@@ -17,7 +17,7 @@ const tabs: { id: Tab; label: string; icon: string }[] = [
 ];
 
 export const ProfileTabs = ({ activeTab, onTabChange }: Props) => (
-  <div className="rounded-xl bg-[#FDFAF5] shadow-sm border border-[#C8D8DF]/60 overflow-x-auto">
+  <div className="rounded-xl bg-[var(--card)] shadow-sm border border-[var(--border)]/60 overflow-x-auto">
     <div className="flex whitespace-nowrap">
       {tabs.map((tab) => (
         <button
@@ -25,8 +25,8 @@ export const ProfileTabs = ({ activeTab, onTabChange }: Props) => (
           onClick={() => onTabChange(tab.id)}
           className={`flex-1 min-w-fit px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
             activeTab === tab.id
-              ? 'border-[#213448] text-[#213448]'
-              : 'border-transparent text-[#547792] hover:text-[#213448] hover:border-[#94B4C1]'
+              ? 'border-[var(--accent)] text-[var(--foreground)]'
+              : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[var(--ring)]'
           }`}
         >
           <span className="ml-1">{tab.icon}</span>

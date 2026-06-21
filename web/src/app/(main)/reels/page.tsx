@@ -57,7 +57,7 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
       ) : (
         <div
           className="w-full h-full flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg, #065F46, #10B981)' }}
+          style={{ background: 'linear-gradient(135deg, var(--foreground), var(--primary))' }}
         >
           {reel.thumbnailUrl ? (
             <img src={reel.thumbnailUrl} alt="" className="w-full h-full object-cover" />
@@ -136,7 +136,7 @@ export default function ReelsPage() {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-full border-4 border-emerald-500 border-t-transparent animate-spin mx-auto mb-4" />
+          <div className="w-16 h-16 rounded-full border-4 border-[var(--ring)] border-t-transparent animate-spin mx-auto mb-4" />
           <p className="text-white text-sm">جار تحميل الريلز...</p>
         </div>
       </div>
@@ -145,7 +145,7 @@ export default function ReelsPage() {
 
   if (isError || reels.length === 0) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #065F46, #10B981)' }}>
+      <div className="fixed inset-0 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--foreground), var(--primary))' }}>
         <div className="text-center text-white px-8">
           <div className="text-7xl mb-4">🎬</div>
           <h2 className="text-2xl font-bold mb-2">لا توجد ريلز حالياً</h2>

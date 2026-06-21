@@ -15,7 +15,7 @@ function StoriesBar() {
 
   return (
     <>
-      <div className="mb-6 rounded-2xl bg-[#FDFAF5] shadow-card border border-[#C8D8DF]/60 p-4">
+      <div className="mb-6 rounded-2xl bg-[var(--card)] shadow-card border border-[var(--border)]/60 p-4">
         <div className="flex gap-3 overflow-x-auto pb-1">
           {/* Add story */}
           <button
@@ -23,20 +23,20 @@ function StoriesBar() {
             className="flex flex-col items-center gap-1.5 shrink-0 group"
           >
             <div className="relative h-16 w-16">
-              <div className="h-full w-full rounded-full bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
+              <div className="h-full w-full rounded-full bg-gradient-to-br from-[var(--muted)] to-[var(--border)] flex items-center justify-center transition-transform duration-200 group-hover:scale-105 group-active:scale-95">
                 {/* Camera icon — corner badge already shows + */}
-                <svg className="h-7 w-7 text-[#213448]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <svg className="h-7 w-7 text-[var(--foreground)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
                 </svg>
               </div>
-              <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-[#547792] border-2 border-[#FDFAF5] flex items-center justify-center">
+              <div className="absolute bottom-0 right-0 h-5 w-5 rounded-full bg-[var(--primary)] border-2 border-[var(--card)] flex items-center justify-center">
                 <svg className="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
               </div>
             </div>
-            <span className="text-[11px] font-medium text-[#547792] group-hover:text-[#213448] transition-colors w-16 text-center truncate">
+            <span className="text-[11px] font-medium text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] transition-colors w-16 text-center truncate">
               إضافة قصة
             </span>
           </button>
@@ -51,19 +51,19 @@ function StoriesBar() {
               <div className="relative h-16 w-16">
                 <div
                   className="absolute inset-0 rounded-full p-[2.5px] transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, #547792, #94B4C1, #D4E8EE)' }}
+                  style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary), var(--muted))' }}
                 >
-                  <div className="h-full w-full rounded-full bg-[#FDFAF5] flex items-center justify-center">
-                    <span className="text-xl font-bold text-[#213448]">{displayName(group.user).charAt(0)}</span>
+                  <div className="h-full w-full rounded-full bg-[var(--card)] flex items-center justify-center">
+                    <span className="text-xl font-bold text-[var(--foreground)]">{displayName(group.user).charAt(0)}</span>
                   </div>
                 </div>
                 {group.stories?.length > 1 && (
-                  <div className="absolute bottom-0 right-0 h-5 min-w-[20px] px-1 rounded-full bg-[#213448] border-2 border-[#FDFAF5] flex items-center justify-center">
+                  <div className="absolute bottom-0 right-0 h-5 min-w-[20px] px-1 rounded-full bg-[var(--primary)] border-2 border-[var(--card)] flex items-center justify-center">
                     <span className="text-[9px] font-bold text-white tabular-nums">{group.stories.length}</span>
                   </div>
                 )}
               </div>
-              <span className="text-[11px] font-medium text-[#547792] group-hover:text-[#213448] transition-colors w-16 text-center truncate">
+              <span className="text-[11px] font-medium text-[var(--muted-foreground)] group-hover:text-[var(--foreground)] transition-colors w-16 text-center truncate">
                 {displayName(group.user)}
               </span>
             </button>
@@ -115,8 +115,8 @@ export function PostFeed() {
 
   if (isLoading) return (
     <div className="space-y-6">
-      <div className="h-24 rounded-2xl bg-[#FDFAF5] shadow-card border border-[#C8D8DF]/60 animate-pulse" />
-      {[1, 2, 3].map(i => <div key={i} className="h-40 rounded-2xl bg-[#FDFAF5] shadow-card border border-[#C8D8DF]/60 animate-pulse" />)}
+      <div className="h-24 rounded-2xl bg-[var(--card)] shadow-card border border-[var(--border)]/60 animate-pulse" />
+      {[1, 2, 3].map(i => <div key={i} className="h-40 rounded-2xl bg-[var(--card)] shadow-card border border-[var(--border)]/60 animate-pulse" />)}
     </div>
   );
 
@@ -132,16 +132,16 @@ export function PostFeed() {
       <StoriesBar />
 
       <div className="flex items-center justify-between mb-4">
-        <div className="flex bg-[#EAE0CF]/50 rounded-xl p-1">
+        <div className="flex bg-[var(--muted)]/50 rounded-xl p-1">
           <button
             onClick={() => setFeedType('ranked')}
-            className={cn('px-4 py-2 rounded-lg text-sm font-medium transition-colors', feedType === 'ranked' ? 'bg-[#547792] text-[#FDFAF5]' : 'text-[#547792]')}
+            className={cn('px-4 py-2 rounded-lg text-sm font-medium transition-colors', feedType === 'ranked' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--muted-foreground)]')}
           >
             الأهم
           </button>
           <button
             onClick={() => setFeedType('recent')}
-            className={cn('px-4 py-2 rounded-lg text-sm font-medium transition-colors', feedType === 'recent' ? 'bg-[#547792] text-[#FDFAF5]' : 'text-[#547792]')}
+            className={cn('px-4 py-2 rounded-lg text-sm font-medium transition-colors', feedType === 'recent' ? 'bg-[var(--primary)] text-white shadow-sm' : 'text-[var(--muted-foreground)]')}
           >
             الأحدث
           </button>
@@ -149,16 +149,16 @@ export function PostFeed() {
       </div>
 
       {posts.length === 0 ? (
-        <div className="rounded-2xl bg-[#FDFAF5] shadow-card border border-[#C8D8DF]/60 p-10 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl" style={{ background: 'linear-gradient(135deg, #D4E8EE, #94B4C1)' }}>📝</div>
-          <p className="text-base font-bold text-[#213448]">لا توجد منشورات بعد</p>
-          <p className="text-sm text-[#547792] mt-1">انضم لمجتمعات وشارك منشورات لرؤيتها هنا</p>
+        <div className="rounded-2xl bg-[var(--card)] shadow-card border border-[var(--border)]/60 p-10 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl text-3xl" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>📝</div>
+          <p className="text-base font-bold text-[var(--foreground)]">لا توجد منشورات بعد</p>
+          <p className="text-sm text-[var(--muted-foreground)] mt-1">انضم لمجتمعات وشارك منشورات لرؤيتها هنا</p>
         </div>
       ) : (
         <>
           {posts.map((p: any) => <PostCard key={p.id} post={p} />)}
           <div ref={loaderRef} className="h-10 flex items-center justify-center">
-            {isFetchingNextPage && <div className="h-8 w-8 border-2 border-[#547792] border-t-transparent rounded-full animate-spin" />}
+            {isFetchingNextPage && <div className="h-8 w-8 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin" />}
           </div>
         </>
       )}

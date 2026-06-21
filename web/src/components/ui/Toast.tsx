@@ -10,7 +10,7 @@ export function useToast() { return useContext(ToastContext); }
 const styles: Record<string, string> = {
   success: 'bg-[#4A8C6F]/15 text-[#4A8C6F] border-[#4A8C6F]/30',
   error:   'bg-[#B05252]/15 text-[#B05252] border-[#B05252]/30',
-  info:    'bg-[#D4E8EE] text-[#213448] border-[#94B4C1]/30',
+  info:    'bg-[var(--muted)] text-[var(--foreground)] border-[var(--muted-foreground)]/30',
   warning: 'bg-[#C9923A]/15 text-[#C9923A] border-[#C9923A]/30',
 };
 

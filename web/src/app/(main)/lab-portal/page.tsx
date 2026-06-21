@@ -7,12 +7,12 @@ import { labsApi, type Lab, type ReferralCode } from '@/features/labs/api';
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     active: 'bg-green-100 text-green-700',
-    used: 'bg-gray-100 text-gray-500',
+    used: 'bg-[var(--muted)] text-[var(--muted-foreground)]',
     expired: 'bg-red-100 text-red-600',
     pending: 'bg-yellow-100 text-yellow-700',
   };
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${map[status] ?? 'bg-gray-100 text-gray-600'}`}>
+    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${map[status] ?? 'bg-[var(--muted)] text-[var(--muted-foreground)]'}`}>
       {status}
     </span>
   );
@@ -38,7 +38,7 @@ function QRModal({ code, onClose }: { code: ReferralCode; onClose: () => void })
         <p className="text-xs mb-6" style={{ color: 'var(--muted-foreground)' }}>
           سيقوم المختبر بمسح الكود للتحقق من هويتك
         </p>
-        <div className="flex justify-center mb-4 p-4 rounded-2xl bg-white">
+        <div className="flex justify-center mb-4 p-4 rounded-2xl bg-[var(--card)]">
           <QRCode value={code.code} size={200} />
         </div>
         <p

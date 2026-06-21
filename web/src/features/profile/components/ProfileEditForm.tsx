@@ -25,7 +25,7 @@ const tabs = ['الأساسية', 'التعليم والعمل', 'الدين', '
 // inputs every keystroke and drop focus (H-08).
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
-    <label className="mb-1 block text-xs font-medium text-gray-600">{label}</label>
+    <label className="mb-1 block text-xs font-medium text-[var(--muted-foreground)]">{label}</label>
     {children}
   </div>
 );
@@ -76,14 +76,14 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const inp = (k: keyof typeof form, label: string, type = 'text', ph = '', maxLength?: number) => (
     <Field label={label}>
       <input type={type} value={(form as any)[k] ?? ''} onChange={type === 'number' ? num(k) : str(k)} placeholder={ph} maxLength={maxLength}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none focus:ring-1 focus:ring-[#547792]/30" />
+        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]/30" />
     </Field>
   );
 
   const sel = (k: keyof typeof form, label: string, opts: [string, string][]) => (
     <Field label={label}>
       <select value={(form as any)[k] ?? ''} onChange={str(k)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none">
+        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none">
         <option value="">اختر...</option>
         {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
@@ -93,7 +93,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const boolSel = (k: keyof typeof form, label: string) => (
     <Field label={label}>
       <select value={String((form as any)[k])} onChange={bool(k)}
-        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none">
+        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none">
         <option value="true">نعم</option>
         <option value="false">لا</option>
       </select>
@@ -120,10 +120,10 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
       {inp('workplace', 'مكان العمل', 'text', 'شركة تقنية')}
       {inp('website', 'الموقع الإلكتروني', 'url', 'https://example.com')}
       <div className="sm:col-span-2">
-        <label className="mb-1 block text-xs font-medium text-gray-600">نبذة شخصية</label>
+        <label className="mb-1 block text-xs font-medium text-[var(--muted-foreground)]">نبذة شخصية</label>
         <textarea value={form.bio} onChange={str('bio')} rows={3} maxLength={500} placeholder="اكتب نبذة مختصرة عن نفسك..."
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black focus:border-[#547792] focus:outline-none focus:ring-1 focus:ring-[#547792]/30 resize-none" />
-        <p className="text-xs text-gray-400 mt-1">{form.bio?.length || 0}/500</p>
+          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]/30 resize-none" />
+        <p className="text-xs text-[var(--muted-foreground)] mt-1">{form.bio?.length || 0}/500</p>
       </div>
     </div>,
 
@@ -169,13 +169,13 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   ];
 
   return (
-    <div className="rounded-xl bg-[#FDFAF5] shadow-card-hover border border-[#C8D8DF]/60 overflow-hidden">
-      <div className="border-b border-[#C8D8DF]/40 px-6 py-4 flex items-center justify-between">
-        <h2 className="text-lg font-bold text-[#213448]">
+    <div className="rounded-xl bg-[var(--card)] shadow-card-hover border border-[var(--border)]/60 overflow-hidden">
+      <div className="border-b border-[var(--border)]/40 px-6 py-4 flex items-center justify-between">
+        <h2 className="text-lg font-bold text-[var(--foreground)]">
           {initial?.fullName ? 'تعديل الملف الشخصي' : 'أكمل ملفك الشخصي'}
         </h2>
         {onCancel && (
-          <button onClick={onCancel} className="text-sm text-gray-400 hover:text-gray-600">إلغاء</button>
+          <button onClick={onCancel} className="text-sm text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)]">إلغاء</button>
         )}
       </div>
 
@@ -184,7 +184,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
         {tabs.map((t, i) => (
           <button key={t} onClick={() => setTab(i)}
             className={`shrink-0 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-              tab === i ? 'border-[#213448] text-[#213448]' : 'border-transparent text-[#547792] hover:text-[#213448]'
+              tab === i ? 'border-[var(--accent)] text-[var(--foreground)]' : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
             }`}>
             {t}
           </button>
@@ -204,19 +204,19 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
           <div className="flex gap-2">
             {tab > 0 && (
               <button type="button" onClick={() => setTab(t => t - 1)}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">
+                className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm text-[var(--muted-foreground)] hover:bg-[var(--muted)]">
                 ← السابق
               </button>
             )}
             {tab < tabs.length - 1 && (
               <button type="button" onClick={() => setTab(t => t + 1)}
-                className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200">
+                className="rounded-lg bg-[var(--muted)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)]">
                 التالي →
               </button>
             )}
           </div>
           <button type="submit" disabled={save.isPending}
-            className="rounded-lg bg-gradient-to-r from-[#213448] to-[#547792] px-6 py-2 text-sm font-semibold text-[#FDFAF5] hover:shadow-glow disabled:opacity-50">
+            className="rounded-lg bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-6 py-2 text-sm font-semibold text-[var(--card)] hover:shadow-glow disabled:opacity-50">
             {save.isPending ? 'جاري الحفظ...' : 'حفظ الملف الشخصي'}
           </button>
         </div>

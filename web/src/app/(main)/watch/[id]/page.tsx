@@ -93,9 +93,9 @@ function VideoPlayer({ video }: { video: any }) {
       </div>
 
       <div>
-        <h1 className="text-lg font-bold text-[#065F46]">{video.title}</h1>
+        <h1 className="text-lg font-bold text-[var(--foreground)]">{video.title}</h1>
         <div className="flex items-center justify-between mt-2 flex-wrap gap-3">
-          <p className="text-sm text-[#10B981]">
+          <p className="text-sm text-[var(--primary)]">
             {formatViews(video.viewCount ?? 0)} مشاهدة
             {video.createdAt ? ` · ${new Date(video.createdAt).toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}
           </p>
@@ -105,21 +105,21 @@ function VideoPlayer({ video }: { video: any }) {
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                 liked
                   ? 'bg-red-50 text-red-500 border border-red-200'
-                  : 'bg-[#DCFCE7]/40 text-[#10B981] hover:bg-[#DCFCE7]/70 border border-emerald-100'
+                  : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border border-[var(--border)]'
               }`}
             >
               {liked ? '❤️' : '🤍'} {liked ? 'أعجبني' : 'إعجاب'}
             </button>
             <button
               onClick={handleShare}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[#DCFCE7]/40 text-[#10B981] hover:bg-[#DCFCE7]/70 border border-emerald-100 transition-all"
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border border-[var(--border)] transition-all"
             >
               {shared ? '✓ تم النسخ' : '🔗 مشاركة'}
             </button>
             <button
               onClick={handleSave}
               disabled={saved || savingVideo}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[#DCFCE7]/40 text-[#10B981] hover:bg-[#DCFCE7]/70 border border-emerald-100 transition-all disabled:opacity-60"
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border border-[var(--border)] transition-all disabled:opacity-50"
             >
               {saved ? '✓ محفوظ' : savingVideo ? '...' : '🔖 حفظ'}
             </button>
@@ -136,20 +136,20 @@ function VideoPlayer({ video }: { video: any }) {
       <Modal open={showReport} onClose={() => setShowReport(false)} title="الإبلاغ عن الفيديو">
         <div className="space-y-4">
           {reportSent ? (
-            <p className="text-sm text-emerald-700 text-center py-2">✓ تم إرسال البلاغ. شكراً لك.</p>
+            <p className="text-sm text-[var(--primary)] text-center py-2">✓ تم إرسال البلاغ. شكراً لك.</p>
           ) : (
             <>
-              <p className="text-sm text-[#10B981]">حدد سبب الإبلاغ:</p>
+              <p className="text-sm text-[var(--primary)]">حدد سبب الإبلاغ:</p>
               <div className="space-y-2">
                 {['محتوى غير لائق', 'انتهاك الخصوصية', 'معلومات مضللة', 'محتوى عنيف', 'بريد مزعج', 'سبب آخر'].map((r) => (
                   <button key={r} onClick={() => setReportReason(r)}
-                    className={`w-full text-right px-4 py-2.5 rounded-xl text-sm border transition-all ${reportReason === r ? 'border-red-400 bg-red-50 text-red-700 font-semibold' : 'border-emerald-100 bg-[#ECFDF5] text-[#065F46] hover:border-emerald-300'}`}>
+                    className={`w-full text-right px-4 py-2.5 rounded-xl text-sm border transition-all ${reportReason === r ? 'border-red-400 bg-red-50 text-red-700 font-semibold' : 'border-[var(--border)] bg-[var(--muted)] text-[var(--foreground)] hover:border-[var(--border)]'}`}>
                     {r}
                   </button>
                 ))}
               </div>
               <div className="flex gap-3 pt-1">
-                <button onClick={() => setShowReport(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-emerald-200 text-[#10B981] hover:bg-[#ECFDF5] transition-colors">إلغاء</button>
+                <button onClick={() => setShowReport(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--border)] text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
                 <button onClick={handleReport} disabled={!reportReason || reportLoading}
                   className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
                   {reportLoading ? '...' : 'إرسال البلاغ'}
@@ -160,24 +160,24 @@ function VideoPlayer({ video }: { video: any }) {
         </div>
       </Modal>
 
-      <div className="flex items-center gap-3 py-3 border-y border-emerald-100">
+      <div className="flex items-center gap-3 py-3 border-y border-[var(--border)]">
         <Avatar src={video.user?.avatar} name={video.user?.name} size="md" />
         <div>
-          <p className="font-semibold text-[#065F46] text-sm">{video.user?.name ?? 'مستخدم'}</p>
+          <p className="font-semibold text-[var(--foreground)] text-sm">{video.user?.name ?? 'مستخدم'}</p>
           {video.user?.username && (
-            <p className="text-xs text-[#10B981]">@{video.user.username}</p>
+            <p className="text-xs text-[var(--primary)]">@{video.user.username}</p>
           )}
         </div>
       </div>
 
       {video.description && (
-        <p className="text-sm text-[#10B981] leading-relaxed">{video.description}</p>
+        <p className="text-sm text-[var(--primary)] leading-relaxed">{video.description}</p>
       )}
 
       {video.tags?.length > 0 && (
         <div className="flex gap-2 flex-wrap">
           {video.tags.map((tag: string) => (
-            <span key={tag} className="text-xs px-3 py-1 bg-[#DCFCE7]/60 text-[#059669] rounded-full">
+            <span key={tag} className="text-xs px-3 py-1 bg-[var(--muted)] text-[var(--primary)] rounded-full">
               #{tag}
             </span>
           ))}
@@ -203,19 +203,19 @@ function CommentsSection({ videoId }: { videoId: string }) {
 
   return (
     <div className="space-y-4">
-      <h3 className="font-bold text-[#065F46]">التعليقات {comments.length > 0 ? `(${comments.length})` : ''}</h3>
+      <h3 className="font-bold text-[var(--foreground)]">التعليقات {comments.length > 0 ? `(${comments.length})` : ''}</h3>
 
       <form onSubmit={handleSubmit} className="flex gap-3">
         <input
           value={text}
           onChange={e => setText(e.target.value)}
           placeholder="أضف تعليقاً..."
-          className="flex-1 rounded-xl border border-emerald-200 px-4 py-2.5 text-sm text-[#065F46] focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 bg-[#FFFBEB]"
+          className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)]"
         />
         <button
           type="submit"
           disabled={!text.trim() || addComment.isPending}
-          className="rounded-xl px-4 py-2.5 text-sm font-semibold bg-[#10B981] text-white hover:bg-[#059669] disabled:opacity-50 transition-colors shadow-lg shadow-emerald-500/25"
+          className="rounded-xl px-4 py-2.5 text-sm font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary)] disabled:opacity-50 transition-colors shadow-lg shadow-black/10"
         >
           إرسال
         </button>
@@ -224,15 +224,15 @@ function CommentsSection({ videoId }: { videoId: string }) {
       {isLoading ? (
         <div className="flex justify-center py-6"><Spinner /></div>
       ) : comments.length === 0 ? (
-        <p className="text-center text-sm text-[#10B981] py-6">لا توجد تعليقات بعد. كن أول من يعلّق!</p>
+        <p className="text-center text-sm text-[var(--primary)] py-6">لا توجد تعليقات بعد. كن أول من يعلّق!</p>
       ) : (
         <div className="space-y-3">
           {comments.map((c: any) => (
             <div key={c.id} className="flex gap-3">
               <Avatar src={c.user?.avatar} name={c.user?.name} size="sm" />
-              <div className="flex-1 rounded-2xl bg-[#ECFDF5] border border-emerald-100 px-4 py-3">
-                <p className="text-xs font-semibold text-[#065F46] mb-1">{c.user?.name ?? 'مستخدم'}</p>
-                <p className="text-sm text-[#10B981]">{c.content}</p>
+              <div className="flex-1 rounded-2xl bg-[var(--muted)] border border-[var(--border)] px-4 py-3">
+                <p className="text-xs font-semibold text-[var(--foreground)] mb-1">{c.user?.name ?? 'مستخدم'}</p>
+                <p className="text-sm text-[var(--primary)]">{c.content}</p>
               </div>
             </div>
           ))}
@@ -251,7 +251,7 @@ function RecommendedSidebar({ currentId }: { currentId: string }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-20 rounded-xl bg-[#DCFCE7]/30 animate-pulse" />
+          <div key={i} className="h-20 rounded-xl bg-[var(--muted)] animate-pulse" />
         ))}
       </div>
     );
@@ -259,14 +259,14 @@ function RecommendedSidebar({ currentId }: { currentId: string }) {
 
   return (
     <div className="space-y-3">
-      <h3 className="font-bold text-[#065F46] text-sm">فيديوهات مقترحة</h3>
+      <h3 className="font-bold text-[var(--foreground)] text-sm">فيديوهات مقترحة</h3>
       {videos.map((v: any) => (
         <div
           key={v.id}
           onClick={() => router.push(`/watch/${v.id}`)}
-          className="flex gap-3 cursor-pointer rounded-xl p-2 hover:bg-[#DCFCE7]/40 transition-colors"
+          className="flex gap-3 cursor-pointer rounded-xl p-2 hover:bg-[var(--muted)] transition-colors"
         >
-          <div className="w-28 h-16 shrink-0 rounded-lg bg-[#DCFCE7] overflow-hidden">
+          <div className="w-28 h-16 shrink-0 rounded-lg bg-[var(--muted)] overflow-hidden">
             {v.thumbnail ? (
               <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
             ) : (
@@ -274,8 +274,8 @@ function RecommendedSidebar({ currentId }: { currentId: string }) {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-[#065F46] line-clamp-2">{v.title}</p>
-            <p className="text-[11px] text-[#10B981] mt-1">{v.user?.name ?? 'مستخدم'}</p>
+            <p className="text-xs font-semibold text-[var(--foreground)] line-clamp-2">{v.title}</p>
+            <p className="text-[11px] text-[var(--primary)] mt-1">{v.user?.name ?? 'مستخدم'}</p>
           </div>
         </div>
       ))}
@@ -303,10 +303,10 @@ export default function VideoPlayerPage() {
     return (
       <div className="text-center py-20">
         <div className="text-4xl mb-3">🎬</div>
-        <p className="text-[#10B981] font-medium mb-4">لم يُعثر على الفيديو</p>
+        <p className="text-[var(--primary)] font-medium mb-4">لم يُعثر على الفيديو</p>
         <button
           onClick={() => router.push('/watch')}
-          className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[#10B981] text-white hover:bg-[#059669] transition-colors shadow-lg shadow-emerald-500/25"
+          className="rounded-xl px-5 py-2.5 text-sm font-semibold bg-[var(--primary)] text-white hover:bg-[var(--primary)] transition-colors shadow-lg shadow-black/10"
         >
           تصفّح الفيديوهات
         </button>

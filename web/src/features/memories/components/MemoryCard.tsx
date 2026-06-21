@@ -31,7 +31,7 @@ export function MemoryCard({ memory, onClick }: MemoryCardProps) {
       </div>
       <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
         <p className="font-semibold text-sm truncate">{memory.title}</p>
-        <p className="text-xs text-gray-200">
+        <p className="text-xs text-[var(--border)]">
           {formatDistanceToNow(new Date(memory.createdAt))}
         </p>
       </div>

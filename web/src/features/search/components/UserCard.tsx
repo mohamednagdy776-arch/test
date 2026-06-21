@@ -16,7 +16,7 @@ const prayerLabel: Record<string, string> = {
 };
 
 export const UserCard = ({ user, onView }: Props) => (
-  <div className="rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+  <div className="rounded-xl bg-[var(--card)] shadow-sm hover:shadow-md transition-shadow overflow-hidden">
     {/* Top color strip */}
     <div className="h-1.5 bg-gradient-to-r from-primary to-blue-400" />
 
@@ -30,8 +30,8 @@ export const UserCard = ({ user, onView }: Props) => (
           }
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">{user.fullName}</h3>
-          <p className="text-xs text-gray-400 truncate">
+          <h3 className="font-semibold text-[var(--foreground)] truncate">{user.fullName}</h3>
+          <p className="text-xs text-[var(--muted-foreground)] truncate">
             {[user.age ? `${user.age} سنة` : null, user.city, user.country].filter(Boolean).join(' · ')}
           </p>
         </div>
@@ -45,22 +45,22 @@ export const UserCard = ({ user, onView }: Props) => (
       {/* Tags */}
       <div className="flex flex-wrap gap-1.5 mb-4">
         {user.education && (
-          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600">
+          <span className="rounded-full bg-[var(--muted)] px-2.5 py-0.5 text-xs text-[var(--muted-foreground)]">
             🎓 {educationLabel[user.education] ?? user.education}
           </span>
         )}
         {user.lifestyle && (
-          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600">
+          <span className="rounded-full bg-[var(--muted)] px-2.5 py-0.5 text-xs text-[var(--muted-foreground)]">
             🌿 {lifestyleLabel[user.lifestyle] ?? user.lifestyle}
           </span>
         )}
         {user.prayerLevel && (
-          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600">
+          <span className="rounded-full bg-[var(--muted)] px-2.5 py-0.5 text-xs text-[var(--muted-foreground)]">
             🕌 {prayerLabel[user.prayerLevel] ?? user.prayerLevel}
           </span>
         )}
         {user.jobTitle && (
-          <span className="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600 truncate max-w-full">
+          <span className="rounded-full bg-[var(--muted)] px-2.5 py-0.5 text-xs text-[var(--muted-foreground)] truncate max-w-full">
             💼 {user.jobTitle}
           </span>
         )}
@@ -68,7 +68,7 @@ export const UserCard = ({ user, onView }: Props) => (
 
       {/* Bio preview */}
       {user.bio && (
-        <p className="text-xs text-gray-500 line-clamp-2 mb-4 leading-relaxed">{user.bio}</p>
+        <p className="text-xs text-[var(--muted-foreground)] line-clamp-2 mb-4 leading-relaxed">{user.bio}</p>
       )}
 
       <button

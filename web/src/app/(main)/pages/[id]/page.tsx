@@ -137,10 +137,10 @@ export default function PageDetailPage() {
     <div className="max-w-4xl mx-auto">
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowEditModal(false)}>
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-2xl bg-[var(--card)] p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-emerald-900">تعديل الصفحة</h3>
-              <button onClick={() => setShowEditModal(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+              <h3 className="font-bold text-[var(--foreground)]">تعديل الصفحة</h3>
+              <button onClick={() => setShowEditModal(false)} className="text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)]">✕</button>
             </div>
             <form onSubmit={handleEdit} className="space-y-3">
               <input
@@ -149,12 +149,12 @@ export default function PageDetailPage() {
                 onChange={(e) => setEditName(e.target.value)}
                 placeholder="اسم الصفحة"
                 required
-                className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400/50 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80"
+                className="w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)]"
               />
               <select
                 value={editCategory}
                 onChange={(e) => setEditCategory(e.target.value)}
-                className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80"
+                className="w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)]"
               >
                 <option value="">اختر الفئة (اختياري)</option>
                 {PAGE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
@@ -164,7 +164,7 @@ export default function PageDetailPage() {
                 onChange={(e) => setEditDescription(e.target.value)}
                 placeholder="وصف الصفحة"
                 rows={3}
-                className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400/50 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 resize-none"
+                className="w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] resize-none"
               />
               {editError && (
                 <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{editError}</p>
@@ -173,14 +173,14 @@ export default function PageDetailPage() {
                 <button
                   type="submit"
                   disabled={updatePage.isPending || !editName.trim()}
-                  className="flex-1 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-emerald-500/25 transition-all"
+                  className="flex-1 rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-black/10 transition-all"
                 >
                   {updatePage.isPending ? 'جاري الحفظ...' : 'حفظ التغييرات'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="rounded-xl border border-emerald-200/50 px-4 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors"
+                  className="rounded-xl border border-[var(--border)]/50 px-4 py-2.5 text-sm text-[var(--primary)] hover:bg-[var(--muted)] transition-colors"
                 >
                   إلغاء
                 </button>
@@ -192,9 +192,9 @@ export default function PageDetailPage() {
 
       <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="حذف الصفحة">
         <div className="space-y-4">
-          <p className="text-sm text-emerald-700">هل أنت متأكد من حذف هذه الصفحة؟ لا يمكن التراجع عن هذا الإجراء.</p>
+          <p className="text-sm text-[var(--primary)]">هل أنت متأكد من حذف هذه الصفحة؟ لا يمكن التراجع عن هذا الإجراء.</p>
           <div className="flex gap-3">
-            <button onClick={() => setShowDeleteModal(false)} className="flex-1 rounded-xl border border-emerald-200 py-2.5 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors">إلغاء</button>
+            <button onClick={() => setShowDeleteModal(false)} className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
             <button onClick={handleDelete} disabled={deletePage.isPending} className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
               {deletePage.isPending ? '...' : 'تأكيد الحذف'}
             </button>
@@ -206,9 +206,9 @@ export default function PageDetailPage() {
         {page.coverPhoto ? (
           <img src={page.coverPhoto} alt={`صورة غلاف ${page.name}`} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-emerald-400/30 via-emerald-500/20 to-amber-500/10" />
+          <div className="w-full h-full bg-gradient-to-br from-[var(--muted)] via-[var(--card)] to-amber-500/10" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/60 via-emerald-900/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--primary)]/70 via-[var(--primary)]/20 to-transparent" />
         <div className="absolute bottom-5 right-5">
           <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">{page.name}</h1>
           {page.category && (
@@ -219,14 +219,14 @@ export default function PageDetailPage() {
           <div className="absolute top-4 left-4 flex gap-2">
             <button
               onClick={openEditModal}
-              className="rounded-xl bg-white/80 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-white transition-colors shadow-sm"
+              className="rounded-xl bg-[var(--card)] backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-[var(--primary)] hover:bg-[var(--card)] transition-colors shadow-sm"
             >
               ✏️ تعديل
             </button>
             <button
               onClick={() => setShowDeleteModal(true)}
               disabled={deletePage.isPending}
-              className="rounded-xl bg-white/80 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-white transition-colors shadow-sm disabled:opacity-50"
+              className="rounded-xl bg-[var(--card)] backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-[var(--card)] transition-colors shadow-sm disabled:opacity-50"
             >
               {deletePage.isPending ? '...' : '🗑 حذف'}
             </button>
@@ -234,16 +234,16 @@ export default function PageDetailPage() {
         )}
       </div>
 
-      <div className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100 mb-5">
+      <div className="bg-[var(--card)] rounded-2xl p-5 shadow-lg shadow-black/5 border border-[var(--border)] mb-5">
         <div className="flex flex-wrap items-center gap-5 mb-4">
-          <div className="flex items-center gap-2 text-emerald-700">
+          <div className="flex items-center gap-2 text-[var(--primary)]">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
             </svg>
             <span className="font-semibold">{page.likeCount || 0}</span>
             <span className="text-sm">إعجاب</span>
           </div>
-          <div className="flex items-center gap-2 text-emerald-700">
+          <div className="flex items-center gap-2 text-[var(--primary)]">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
@@ -253,7 +253,7 @@ export default function PageDetailPage() {
         </div>
 
         {page.description && (
-          <p className="text-emerald-800/80 mb-4">{page.description}</p>
+          <p className="text-[var(--foreground)]/80 mb-4">{page.description}</p>
         )}
 
         <div className="flex gap-3 flex-wrap">
@@ -263,7 +263,7 @@ export default function PageDetailPage() {
             className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
               isLiked
                 ? 'bg-gradient-to-r from-rose-100 to-rose-50 text-rose-600 shadow-lg shadow-rose-500/20 hover:shadow-xl hover:shadow-rose-500/30'
-                : 'bg-white/80 text-emerald-700 border border-emerald-200/50 hover:bg-emerald-50 shadow-md'
+                : 'bg-[var(--card)] text-[var(--primary)] border border-[var(--border)]/50 hover:bg-[var(--muted)] shadow-md'
             } disabled:opacity-50`}
           >
             {likePage.isPending || unlikePage.isPending ? '...' : isLiked ? 'إعجاب ❤️' : 'إعجاب'}
@@ -273,8 +273,8 @@ export default function PageDetailPage() {
             disabled={followPage.isPending || unfollowPage.isPending}
             className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
               isFollowing
-                ? 'bg-white/80 text-emerald-700 border border-emerald-200/50 hover:bg-emerald-50 shadow-md'
-                : 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30'
+                ? 'bg-[var(--card)] text-[var(--primary)] border border-[var(--border)]/50 hover:bg-[var(--muted)] shadow-md'
+                : 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10'
             } disabled:opacity-50`}
           >
             {followPage.isPending || unfollowPage.isPending ? '...' : isFollowing ? 'إلغاء المتابعة' : 'متابعة'}
@@ -290,7 +290,7 @@ export default function PageDetailPage() {
                 setTimeout(() => setShareCopied(false), 2000);
               }
             }}
-            className="px-5 py-2.5 rounded-xl font-medium bg-white/80 text-emerald-700 border border-emerald-200/50 hover:bg-emerald-50 shadow-md transition-all"
+            className="px-5 py-2.5 rounded-xl font-medium bg-[var(--card)] text-[var(--primary)] border border-[var(--border)]/50 hover:bg-[var(--muted)] shadow-md transition-all"
           >
             {shareCopied ? '✓ تم النسخ' : '↗ مشاركة'}
           </button>
@@ -298,14 +298,14 @@ export default function PageDetailPage() {
       </div>
 
       {isOwner && (
-        <form onSubmit={handleCreatePost} className="mb-5 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-4 shadow-lg shadow-emerald-500/10">
-          <h3 className="text-sm font-bold text-[#059669] mb-3">نشر على الصفحة</h3>
+        <form onSubmit={handleCreatePost} className="mb-5 rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 shadow-lg shadow-black/5">
+          <h3 className="text-sm font-bold text-[var(--primary)] mb-3">نشر على الصفحة</h3>
           <textarea
             value={postContent}
             onChange={(e) => setPostContent(e.target.value)}
             placeholder="اكتب منشوراً..."
             rows={3}
-            className="w-full rounded-xl border border-emerald-200/50 px-4 py-3 text-sm text-emerald-900 placeholder-emerald-400/50 mb-3 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 bg-white/80 resize-none"
+            className="w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 mb-3 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] resize-none"
           />
           {postError && (
             <p className="mb-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{postError}</p>
@@ -313,7 +313,7 @@ export default function PageDetailPage() {
           <button
             type="submit"
             disabled={createPost.isPending || !postContent.trim()}
-            className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-emerald-500/25 transition-all"
+            className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50 shadow-lg shadow-black/10 transition-all"
           >
             {createPost.isPending ? 'جاري النشر...' : 'نشر'}
           </button>
@@ -321,44 +321,44 @@ export default function PageDetailPage() {
       )}
 
       <div>
-        <h2 className="text-xl font-bold text-emerald-900 mb-4">المنشورات</h2>
+        <h2 className="text-xl font-bold text-[var(--foreground)] mb-4">المنشورات</h2>
         {isLoadingPosts ? (
           <div className="flex justify-center py-8">
             <Spinner />
           </div>
         ) : posts.length === 0 ? (
-          <div className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-8 text-center text-emerald-600/60 border border-emerald-100">
+          <div className="bg-[var(--card)] rounded-2xl p-8 text-center text-[var(--primary)]/60 border border-[var(--border)]">
             <p className="text-3xl mb-2">📝</p>
             <p>لا توجد منشورات بعد</p>
           </div>
         ) : (
           <div className="space-y-4">
             {posts.map((post: any, i: number) => (
-              <div key={post.id ?? i} className="bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] rounded-2xl p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100">
+              <div key={post.id ?? i} className="bg-[var(--card)] rounded-2xl p-5 shadow-lg shadow-black/5 border border-[var(--border)]">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400/20 to-amber-500/10 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--muted)]/50 to-amber-500/10 flex items-center justify-center">
                     {page.coverPhoto ? (
                       <img src={page.coverPhoto} alt={page.name} className="w-full h-full object-cover rounded-full" />
                     ) : (
-                      <span className="text-lg font-bold text-emerald-600">{page.name?.[0]}</span>
+                      <span className="text-lg font-bold text-[var(--primary)]">{page.name?.[0]}</span>
                     )}
                   </div>
                   <div>
-                    <p className="font-semibold text-emerald-900">{page.name}</p>
-                    <p className="text-xs text-emerald-600/60">
+                    <p className="font-semibold text-[var(--foreground)]">{page.name}</p>
+                    <p className="text-xs text-[var(--primary)]/60">
                       {new Date(post.createdAt).toLocaleDateString('ar-EG')}
                     </p>
                   </div>
                 </div>
                 {post.content && (
-                  <p className="text-emerald-800/80 whitespace-pre-wrap">{post.content}</p>
+                  <p className="text-[var(--foreground)]/80 whitespace-pre-wrap">{post.content}</p>
                 )}
                 {post.mediaUrl && (
                   <div className="mt-3">
                     <img src={post.mediaUrl} alt="" className="max-h-96 rounded-xl" />
                   </div>
                 )}
-                <div className="flex items-center gap-4 mt-4 pt-3 border-t border-emerald-100 text-sm text-emerald-600/60">
+                <div className="flex items-center gap-4 mt-4 pt-3 border-t border-[var(--border)] text-sm text-[var(--primary)]/60">
                   <span>❤️ {post.likeCount || 0}</span>
                   <span>💬 {post.commentCount || 0}</span>
                 </div>
@@ -369,7 +369,7 @@ export default function PageDetailPage() {
                 <button
                   onClick={() => setPostsPage((p) => p + 1)}
                   disabled={isLoadingPosts}
-                  className="px-6 py-2.5 rounded-xl text-sm font-medium text-emerald-700 border border-emerald-200/50 hover:bg-emerald-50 transition-colors disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)]/50 hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
                 >
                   {isLoadingPosts ? 'جاري التحميل...' : 'تحميل المزيد'}
                 </button>

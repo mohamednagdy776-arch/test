@@ -48,10 +48,10 @@ export const EventsList = () => {
 
   if (isError) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-8 text-center">
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center">
         <p className="text-2xl mb-2">⚠️</p>
-        <p className="text-[#10B981] text-sm">تعذّر تحميل الأحداث</p>
-        <button onClick={() => refetch()} className="mt-3 text-xs text-[#059669] underline">إعادة المحاولة</button>
+        <p className="text-[var(--primary)] text-sm">تعذّر تحميل الأحداث</p>
+        <button onClick={() => refetch()} className="mt-3 text-xs text-[var(--primary)] underline">إعادة المحاولة</button>
       </div>
     );
   }
@@ -61,22 +61,22 @@ export const EventsList = () => {
   return (
     <div className="space-y-3">
       {events.length === 0 ? (
-        <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-10 text-center">
+        <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
           <p className="text-3xl mb-2">📅</p>
-          <p className="text-[#10B981]">لا توجد أحداث</p>
+          <p className="text-[var(--primary)]">لا توجد أحداث</p>
         </div>
       ) : (
         events.map((event: any) => (
           <Link
             key={event.id}
             href={`/events/${event.id}`}
-            className="block rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-5 shadow-sm hover:shadow-lg hover:shadow-emerald-500/10 transition-all"
+            className="block rounded-2xl bg-[var(--card)] border border-[var(--border)] p-5 shadow-sm hover:shadow-lg hover:shadow-black/5 transition-all"
           >
             <div className="flex items-start justify-between gap-3 mb-2">
-              <h3 className="font-semibold text-[#065F46]">{event.title}</h3>
+              <h3 className="font-semibold text-[var(--foreground)]">{event.title}</h3>
               <div className="flex items-center gap-2 shrink-0">
                 <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  event.privacy === 'public' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                  event.privacy === 'public' ? 'bg-[var(--muted)] text-[var(--primary)]' : 'bg-amber-100 text-amber-700'
                 }`}>
                   {event.privacy === 'public' ? 'عام' : 'خاص'}
                 </span>
@@ -94,18 +94,18 @@ export const EventsList = () => {
                 )}
               </div>
             </div>
-            <p className="text-xs text-[#10B981] mb-1">
+            <p className="text-xs text-[var(--primary)] mb-1">
               {event.startDate ? new Date(event.startDate).toLocaleDateString('ar-SA', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' }) : ''}
               {event.location && ` · 📍 ${event.location}`}
             </p>
             {event.description && (
-              <p className="text-sm text-[#10B981]/70 line-clamp-2 mb-3">{event.description}</p>
+              <p className="text-sm text-[var(--primary)]/70 line-clamp-2 mb-3">{event.description}</p>
             )}
             <div className="flex gap-2 mt-2" onClick={(e) => e.preventDefault()}>
               <button
                 onClick={(e) => handleRsvp(event.id, 'going', e)}
                 disabled={rsvpEvent.isPending}
-                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all disabled:opacity-50 ${event.userRsvp === 'going' ? 'bg-emerald-500 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all disabled:opacity-50 ${event.userRsvp === 'going' ? 'bg-[var(--muted)]0 text-white' : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)]'}`}
               >
                 ✅ ذاهب ({event.goingCount || 0})
               </button>
@@ -122,9 +122,9 @@ export const EventsList = () => {
       )}
       <Modal open={!!confirmDeleteId} onClose={() => setConfirmDeleteId(null)} title="حذف الحدث">
         <div className="space-y-4">
-          <p className="text-sm text-[#10B981]">هل أنت متأكد من حذف هذا الحدث؟ لا يمكن التراجع عن هذا الإجراء.</p>
+          <p className="text-sm text-[var(--primary)]">هل أنت متأكد من حذف هذا الحدث؟ لا يمكن التراجع عن هذا الإجراء.</p>
           <div className="flex gap-3">
-            <button onClick={() => setConfirmDeleteId(null)} className="flex-1 rounded-xl border border-emerald-200 py-2.5 text-sm text-[#10B981] hover:bg-[#ECFDF5] transition-colors">إلغاء</button>
+            <button onClick={() => setConfirmDeleteId(null)} className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
             <button onClick={handleDelete} disabled={deleteEvent.isPending} className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
               {deleteEvent.isPending ? '...' : 'تأكيد الحذف'}
             </button>

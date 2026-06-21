@@ -45,7 +45,7 @@ export const MatchingTabs = ({ activeTab, onTabChange }: Props) => {
   return (
     <div>
       {/* Tab bar */}
-      <div className="flex gap-1 rounded-xl bg-gray-100 p-1 mb-5">
+      <div className="flex gap-1 rounded-xl bg-[var(--muted)] p-1 mb-5">
         {tabs.map((t) => {
           const count = all.filter((m) => m.status === t.key).length;
           return (
@@ -55,8 +55,8 @@ export const MatchingTabs = ({ activeTab, onTabChange }: Props) => {
               className={clsx(
                 'flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-medium transition-all',
                 activeTab === t.key
-                  ? 'bg-white text-primary shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-[var(--card)] text-primary shadow-sm'
+                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               )}
             >
               <span>{t.icon}</span>
@@ -64,7 +64,7 @@ export const MatchingTabs = ({ activeTab, onTabChange }: Props) => {
               {count > 0 && (
                 <span className={clsx(
                   'rounded-full px-1.5 py-0.5 text-xs font-bold',
-                  activeTab === t.key ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-500'
+                  activeTab === t.key ? 'bg-primary/10 text-primary' : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
                 )}>
                   {count}
                 </span>
@@ -77,7 +77,7 @@ export const MatchingTabs = ({ activeTab, onTabChange }: Props) => {
       {/* Content */}
       {isLoading && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => <div key={i} className="h-56 rounded-xl bg-white animate-pulse" />)}
+          {[1, 2, 3].map((i) => <div key={i} className="h-56 rounded-xl bg-[var(--card)] animate-pulse" />)}
         </div>
       )}
 
@@ -86,7 +86,7 @@ export const MatchingTabs = ({ activeTab, onTabChange }: Props) => {
       )}
 
       {!isLoading && !isError && filtered.length === 0 && (
-        <div className="rounded-xl bg-white p-12 text-center text-gray-400">
+        <div className="rounded-xl bg-[var(--card)] p-12 text-center text-[var(--muted-foreground)]">
           <p className="text-4xl mb-3">
             {activeTab === 'pending' ? '⏳' : activeTab === 'accepted' ? '✅' : '❌'}
           </p>

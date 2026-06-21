@@ -298,9 +298,9 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   const getReplyMessage = (replyToId: string) => messages.find(m => m.id === replyToId);
 
   return (
-    <div className="flex flex-col h-full rounded-xl bg-white shadow-sm overflow-hidden">
+    <div className="flex flex-col h-full rounded-xl bg-[var(--card)] shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 border-b px-4 py-3 shrink-0">
-        <button onClick={onBack} className="lg:hidden text-gray-400 hover:text-gray-600 text-lg">←</button>
+        <button onClick={onBack} className="lg:hidden text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] text-lg">←</button>
         <div className="h-9 w-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm overflow-hidden">
           {match.otherUserAvatar ? (
             <img src={match.otherUserAvatar} alt="" className="w-full h-full object-cover" />
@@ -309,37 +309,37 @@ export const ChatWindow = ({ match, onBack }: Props) => {
           )}
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">
+          <p className="text-sm font-semibold text-[var(--foreground)]">
             {match.otherUserName || `مستخدم ${match.user2Id?.slice(0, 8)}`}
           </p>
           {typingUsers.length > 0 ? (
             <p className="text-xs text-primary">يكتب الآن...</p>
           ) : (
-            <p className={`text-xs flex items-center gap-1 ${isOnline ? 'text-green-500' : 'text-gray-400'}`}>
-              <span className={`inline-block h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
+            <p className={`text-xs flex items-center gap-1 ${isOnline ? 'text-green-500' : 'text-[var(--muted-foreground)]'}`}>
+              <span className={`inline-block h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-green-500' : 'bg-[var(--border)]'}`} />
               {isOnline ? 'متصل' : 'غير متصل'}
             </p>
           )}
         </div>
         <div className="mr-auto flex items-center gap-2">
           {callToast && (
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-lg">{callToast}</span>
+            <span className="text-xs text-[var(--muted-foreground)] bg-[var(--muted)] px-2 py-1 rounded-lg">{callToast}</span>
           )}
           <button
             onClick={() => { setCallToast('المكالمات قيد التطوير'); setTimeout(() => setCallToast(null), 3000); }}
-            className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+            className="p-2 hover:bg-[var(--muted)] rounded-full text-[var(--muted-foreground)]"
             title="مكالمة صوتية"
           >
             📞
           </button>
           <button
             onClick={() => { setCallToast('مكالمات الفيديو قيد التطوير'); setTimeout(() => setCallToast(null), 3000); }}
-            className="p-2 hover:bg-gray-100 rounded-full text-gray-500"
+            className="p-2 hover:bg-[var(--muted)] rounded-full text-[var(--muted-foreground)]"
             title="مكالمة فيديو"
           >
             📹
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-full" title="مزيد من الخيارات">⋮</button>
+          <button className="p-2 hover:bg-[var(--muted)] rounded-full" title="مزيد من الخيارات">⋮</button>
         </div>
       </div>
 
@@ -347,13 +347,13 @@ export const ChatWindow = ({ match, onBack }: Props) => {
         {messagesLoading ? (
           <div className="flex h-full items-center justify-center gap-3 flex-col">
             <div className="relative h-8 w-8">
-              <div className="absolute inset-0 rounded-full border-2 border-emerald-100" />
-              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-emerald-500 animate-spin" />
+              <div className="absolute inset-0 rounded-full border-2 border-[var(--border)]" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[var(--primary)] animate-spin" />
             </div>
-            <p className="text-xs text-gray-400">جاري تحميل الرسائل...</p>
+            <p className="text-xs text-[var(--muted-foreground)]">جاري تحميل الرسائل...</p>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex h-full items-center justify-center text-gray-300 text-sm">
+          <div className="flex h-full items-center justify-center text-[var(--muted-foreground)]/70 text-sm">
             ابدأ المحادثة الآن 👋
           </div>
         ) : null}
@@ -369,24 +369,24 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                 <button
                   onClick={() => handleDelete(msg.id, false)}
                   title="حذف للي"
-                  className="text-xs text-gray-400 hover:text-red-500 bg-white rounded-full px-2 py-1 shadow border"
+                  className="text-xs text-[var(--muted-foreground)] hover:text-red-500 bg-[var(--card)] rounded-full px-2 py-1 shadow border"
                 >
                   حذف
                 </button>
                 <button
                   onClick={() => handleDelete(msg.id, true)}
                   title="حذف للجميع"
-                  className="text-xs text-gray-400 hover:text-red-600 bg-white rounded-full px-2 py-1 shadow border"
+                  className="text-xs text-[var(--muted-foreground)] hover:text-red-600 bg-[var(--card)] rounded-full px-2 py-1 shadow border"
                 >
                   حذف للجميع
                 </button>
               </div>
             )}
             <div className={`relative max-w-xs lg:max-w-md rounded-2xl px-4 py-2.5 text-sm ${
-              msg.isOwn ? 'bg-primary text-white rounded-tl-sm' : 'bg-gray-100 text-gray-800 rounded-tr-sm'
+              msg.isOwn ? 'bg-primary text-white rounded-tl-sm' : 'bg-[var(--muted)] text-[var(--foreground)] rounded-tr-sm'
             }`}>
               {replyTo && msg.replyToId && (
-                <div className={`mb-2 p-2 rounded-lg text-xs ${msg.isOwn ? 'bg-blue-600/30' : 'bg-gray-200'}`}>
+                <div className={`mb-2 p-2 rounded-lg text-xs ${msg.isOwn ? 'bg-blue-600/30' : 'bg-[var(--muted)]'}`}>
                   <span className="opacity-70">↩️ رد على: </span>
                   {getReplyMessage(msg.replyToId)?.content?.slice(0, 30)}...
                 </div>
@@ -401,7 +401,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                   {msg.isEdited && <span className="text-xs opacity-60">(تم التعديل)</span>}
                 </>
               )}
-              <div className={`mt-1 flex items-center justify-between gap-2 text-xs ${msg.isOwn ? 'text-blue-200' : 'text-gray-400'}`}>
+              <div className={`mt-1 flex items-center justify-between gap-2 text-xs ${msg.isOwn ? 'text-blue-200' : 'text-[var(--muted-foreground)]'}`}>
                 <span>{formatTime(msg.timestamp)}</span>
                 {msg.isOwn && !String(msg.id).startsWith('temp-') && (() => {
                   // Read receipt: blue ✓✓ once the other user has seen it,
@@ -420,7 +420,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
               {msg.reactions && msg.reactions.length > 0 && (
                 <div className="absolute -bottom-2 flex gap-1">
                   {msg.reactions.map((r, i) => (
-                    <span key={i} className="bg-white rounded-full px-1.5 py-0.5 text-xs shadow">{r.emoji}</span>
+                    <span key={i} className="bg-[var(--card)] rounded-full px-1.5 py-0.5 text-xs shadow">{r.emoji}</span>
                   ))}
                 </div>
               )}
@@ -431,7 +431,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                 😀
               </button>
               {showReactions === msg.id && (
-                <div className={`absolute ${msg.isOwn ? 'left-full ml-2' : 'right-full mr-2'} top-0 bg-white rounded-full shadow-lg p-1 flex gap-1`}>
+                <div className={`absolute ${msg.isOwn ? 'left-full ml-2' : 'right-full mr-2'} top-0 bg-[var(--card)] rounded-full shadow-lg p-1 flex gap-1`}>
                   {EMOJI_REACTIONS.map(emoji => (
                     <button key={emoji} onClick={() => handleReaction(msg.id, emoji)} className="hover:scale-125 transition-transform">{emoji}</button>
                   ))}
@@ -441,7 +441,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
           </div>
         ))}
         {typingUsers.length > 0 && (
-          <div className="text-xs text-gray-400 animate-pulse">
+          <div className="text-xs text-[var(--muted-foreground)] animate-pulse">
             جاري الكتابة...
           </div>
         )}
@@ -449,9 +449,9 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       </div>
 
       {replyTo && (
-        <div className="flex items-center gap-2 px-4 py-2 border-t bg-gray-50">
-          <span className="text-xs text-gray-500">رد على: {replyTo.content?.slice(0, 30)}...</span>
-          <button onClick={() => setReplyTo(null)} className="text-gray-400 hover:text-gray-600">✕</button>
+        <div className="flex items-center gap-2 px-4 py-2 border-t bg-[var(--muted)]">
+          <span className="text-xs text-[var(--muted-foreground)]">رد على: {replyTo.content?.slice(0, 30)}...</span>
+          <button onClick={() => setReplyTo(null)} className="text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)]">✕</button>
         </div>
       )}
 
@@ -465,7 +465,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             onChange={(e) => { const f = e.target.files?.[0]; if (f) { sendImageMessage(f); e.target.value = ''; } }}
           />
           <button
-            className="p-2 text-gray-400 hover:text-primary disabled:opacity-40"
+            className="p-2 text-[var(--muted-foreground)] hover:text-primary disabled:opacity-40"
             title="إرسال صورة"
             disabled={uploadingImage}
             onClick={() => imageInputRef.current?.click()}
@@ -479,7 +479,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             placeholder="اكتب رسالة..."
             rows={1}
             dir="auto"
-            className="flex-1 resize-none rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary max-h-32"
+            className="flex-1 resize-none rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary max-h-32"
           />
           <button
             onClick={sendMessage}
@@ -489,7 +489,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             {sending ? '…' : '➤'}
           </button>
         </div>
-        <p className="mt-1 text-xs text-gray-300 text-center">Enter للإرسال · Shift+Enter لسطر جديد</p>
+        <p className="mt-1 text-xs text-[var(--muted-foreground)]/70 text-center">Enter للإرسال · Shift+Enter لسطر جديد</p>
       </div>
     </div>
   );

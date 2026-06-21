@@ -33,27 +33,27 @@ export default function LanguagePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-md mx-auto space-y-6">
-        <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-emerald-700 hover:text-emerald-900 transition-colors">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
           <span>←</span> العودة للإعدادات
         </Link>
 
         {/* Header */}
-        <div className="rounded-3xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-5">
+        <div className="rounded-3xl bg-[var(--card)] border border-[var(--border)] p-5">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 shrink-0 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/25">
+            <div className="h-11 w-11 shrink-0 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-xl shadow-lg shadow-black/10">
               🌐
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#059669]">اللغة</h1>
-              <p className="text-xs text-[#10B981]">اختر لغة واجهة التطبيق</p>
+              <h1 className="text-xl font-bold text-[var(--primary)]">اللغة</h1>
+              <p className="text-xs text-[var(--primary)]">اختر لغة واجهة التطبيق</p>
             </div>
           </div>
         </div>
 
         {/* Language options */}
-        <div className="rounded-2xl bg-white/80 border border-emerald-100 p-4 space-y-3 shadow-lg shadow-emerald-500/5">
+        <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 space-y-3 shadow-lg shadow-black/5">
           {LANGUAGES.map((lang) => {
             const isActive = currentLang === lang.code;
             return (
@@ -62,17 +62,17 @@ export default function LanguagePage() {
                 onClick={() => { setCurrentLang(lang.code); setSaved(false); }}
                 className={`w-full rounded-2xl border-2 p-4 flex items-center gap-4 transition-all duration-200 text-right ${
                   isActive
-                    ? 'border-emerald-500 bg-emerald-50 shadow-lg shadow-emerald-100'
-                    : 'border-emerald-100 bg-[#FFFBEB] hover:border-emerald-300 hover:shadow-md'
+                    ? 'border-[var(--ring)] bg-[var(--muted)] shadow-lg shadow-black/5'
+                    : 'border-[var(--border)] bg-[var(--card)] hover:border-[var(--border)] hover:shadow-md'
                 }`}
               >
                 <span className="text-3xl">{lang.flag}</span>
                 <div className="flex-1">
-                  <p className="font-semibold text-[#065F46] text-base">{lang.name}</p>
-                  <p className="text-sm text-[#10B981]">{lang.native}</p>
+                  <p className="font-semibold text-[var(--foreground)] text-base">{lang.name}</p>
+                  <p className="text-sm text-[var(--primary)]">{lang.native}</p>
                 </div>
                 <span className={`h-6 w-6 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                  isActive ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-300'
+                  isActive ? 'bg-[var(--muted)]0 text-white' : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
                 }`}>
                   {isActive ? '✓' : ''}
                 </span>
@@ -83,12 +83,12 @@ export default function LanguagePage() {
 
         {/* Save */}
         <div className="flex items-center justify-between">
-          <p className="text-xs text-[#10B981]">
+          <p className="text-xs text-[var(--primary)]">
             {saved ? '✓ تم حفظ اللغة بنجاح' : 'اختر اللغة ثم اضغط حفظ'}
           </p>
           <button
             onClick={handleSave}
-            className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 transition-all"
+            className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all"
           >
             {saved ? '✓ محفوظ' : 'حفظ'}
           </button>

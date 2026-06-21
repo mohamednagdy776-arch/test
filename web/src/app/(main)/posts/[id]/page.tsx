@@ -23,7 +23,7 @@ export default function PostDetailPage() {
     <div className="max-w-2xl mx-auto space-y-4">
       <button
         onClick={handleBack}
-        className="flex items-center gap-2 text-sm font-medium text-[#10B981] hover:text-[#059669] transition-colors"
+        className="flex items-center gap-2 text-sm font-medium text-[var(--primary)] hover:text-[var(--primary)] transition-colors"
       >
         <svg className="w-4 h-4 rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -33,20 +33,20 @@ export default function PostDetailPage() {
 
       {isLoading && (
         <div className="space-y-3">
-          <div className="h-40 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse border border-emerald-100" />
-          <div className="h-24 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse border border-emerald-100" />
+          <div className="h-40 rounded-2xl bg-[var(--card)] animate-pulse border border-[var(--border)]" />
+          <div className="h-24 rounded-2xl bg-[var(--card)] animate-pulse border border-[var(--border)]" />
         </div>
       )}
 
       {isError && (
-        <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-10 text-center">
+        <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
           <p className="text-3xl mb-3">⚠️</p>
-          <p className="text-[#10B981] text-sm leading-relaxed">
+          <p className="text-[var(--primary)] text-sm leading-relaxed">
             تعذّر تحميل المنشور. ربما تم حذفه أو لا تملك صلاحية رؤيته.
           </p>
           <button
             onClick={handleBack}
-            className="mt-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl transition-all"
+            className="mt-4 rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl transition-all"
           >
             العودة
           </button>

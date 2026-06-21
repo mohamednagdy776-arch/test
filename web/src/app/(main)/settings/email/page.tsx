@@ -43,21 +43,21 @@ export default function ChangeEmailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-md mx-auto space-y-6">
-        <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-emerald-700 hover:text-emerald-900 transition-colors">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
           <span>←</span> العودة للإعدادات
         </Link>
 
         {/* Header */}
-        <div className="rounded-3xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-5">
+        <div className="rounded-3xl bg-[var(--card)] border border-[var(--border)] p-5">
           <div className="flex items-center gap-3 mb-3">
-            <div className="h-11 w-11 shrink-0 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-xl shadow-lg shadow-emerald-500/25">
+            <div className="h-11 w-11 shrink-0 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-xl shadow-lg shadow-black/10">
               📧
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#059669]">تغيير البريد الإلكتروني</h1>
-              <p className="text-xs text-[#10B981]">عملية آمنة تتطلب التحقق من هويتك</p>
+              <h1 className="text-xl font-bold text-[var(--primary)]">تغيير البريد الإلكتروني</h1>
+              <p className="text-xs text-[var(--primary)]">عملية آمنة تتطلب التحقق من هويتك</p>
             </div>
           </div>
 
@@ -65,19 +65,19 @@ export default function ChangeEmailPage() {
           <div className="space-y-2 pt-1">
             {STEPS.map((s) => (
               <div key={s.n} className="flex items-center gap-3">
-                <span className="h-6 w-6 shrink-0 rounded-full bg-emerald-100 text-[#059669] text-xs font-bold flex items-center justify-center">
+                <span className="h-6 w-6 shrink-0 rounded-full bg-[var(--muted)] text-[var(--primary)] text-xs font-bold flex items-center justify-center">
                   {s.n}
                 </span>
-                <p className="text-xs text-[#065F46]">{s.label}</p>
+                <p className="text-xs text-[var(--foreground)]">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* Form */}
-        <form onSubmit={submit} className="rounded-2xl bg-white/80 border border-emerald-100 p-5 space-y-4 shadow-lg shadow-emerald-500/5">
+        <form onSubmit={submit} className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-5 space-y-4 shadow-lg shadow-black/5">
           {done && (
-            <div className="flex items-start gap-2 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+            <div className="flex items-start gap-2 rounded-xl bg-[var(--muted)] border border-[var(--border)] px-4 py-3 text-sm text-[var(--primary)]">
               <span className="shrink-0 mt-0.5">✓</span>
               <span>{done}</span>
             </div>
@@ -90,39 +90,39 @@ export default function ChangeEmailPage() {
           )}
 
           {currentEmail && (
-            <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-[#065F46]">
+            <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] px-4 py-3 text-sm text-[var(--foreground)]">
               <span className="font-semibold">البريد الحالي: </span>
               <span className="font-mono">{currentEmail}</span>
             </div>
           )}
           <div>
-            <label className="block text-sm font-semibold text-[#065F46] mb-1.5">البريد الإلكتروني الجديد</label>
+            <label className="block text-sm font-semibold text-[var(--foreground)] mb-1.5">البريد الإلكتروني الجديد</label>
             <input
               type="email"
               required
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               placeholder="example@email.com"
-              className="w-full rounded-xl border border-emerald-200 bg-[#FFFBEB] px-4 py-2.5 text-sm text-[#065F46] placeholder-emerald-400/60 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[#065F46] mb-1.5">كلمة المرور الحالية</label>
+            <label className="block text-sm font-semibold text-[var(--foreground)] mb-1.5">كلمة المرور الحالية</label>
             <input
               type="password"
               required
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full rounded-xl border border-emerald-200 bg-[#FFFBEB] px-4 py-2.5 text-sm text-[#065F46] placeholder-emerald-400/60 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading || !newEmail || !currentPassword}
-            className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 py-2.5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {loading ? 'جارٍ الإرسال...' : 'إرسال رابط التأكيد'}
           </button>

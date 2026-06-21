@@ -91,7 +91,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-[var(--card)] shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
 
         {/* Header */}
         <div className="p-5 border-b flex items-center gap-4">
@@ -102,19 +102,19 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
             }
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold text-gray-900">{user.fullName}</h2>
-            <p className="text-sm text-gray-500">
+            <h2 className="text-lg font-bold text-[var(--foreground)]">{user.fullName}</h2>
+            <p className="text-sm text-[var(--muted-foreground)]">
               {[user.age ? `${user.age} سنة` : null, user.city, user.country].filter(Boolean).join(' · ')}
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] text-2xl leading-none">×</button>
         </div>
 
         {/* Tabs */}
         <div className="flex border-b">
           {[['profile', '👤 الملف الشخصي'], ['match', '💫 نقاط التوافق']].map(([k, l]) => (
             <button key={k} onClick={() => { setTab(k as any); if (k === 'match') calcScore(); }}
-              className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === k ? 'border-b-2 border-primary text-primary' : 'text-gray-500 hover:text-gray-700'}`}>
+              className={`flex-1 py-3 text-sm font-medium transition-colors ${tab === k ? 'border-b-2 border-primary text-primary' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}`}>
               {l}
             </button>
           ))}
@@ -125,16 +125,16 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
           {tab === 'profile' && (
             <div className="space-y-4">
               {user.bio && (
-                <div className="rounded-xl bg-gray-50 p-4">
-                  <p className="text-xs font-medium text-gray-500 mb-1">نبذة شخصية</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{user.bio}</p>
+                <div className="rounded-xl bg-[var(--muted)] p-4">
+                  <p className="text-xs font-medium text-[var(--muted-foreground)] mb-1">نبذة شخصية</p>
+                  <p className="text-sm text-[var(--foreground)] leading-relaxed">{user.bio}</p>
                 </div>
               )}
               <div className="grid grid-cols-2 gap-3">
                 {infoItems.map(([k, v]) => (
-                  <div key={k} className="rounded-lg bg-gray-50 p-3">
-                    <dt className="text-xs font-medium text-gray-400">{k}</dt>
-                    <dd className="mt-0.5 text-sm font-semibold text-gray-800 capitalize">{v}</dd>
+                  <div key={k} className="rounded-lg bg-[var(--muted)] p-3">
+                    <dt className="text-xs font-medium text-[var(--muted-foreground)]">{k}</dt>
+                    <dd className="mt-0.5 text-sm font-semibold text-[var(--foreground)] capitalize">{v}</dd>
                   </div>
                 ))}
               </div>
@@ -146,7 +146,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
               {loadingScore ? (
                 <div className="flex items-center justify-center py-8">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="mr-3 text-sm text-gray-500">جاري حساب التوافق...</span>
+                  <span className="mr-3 text-sm text-[var(--muted-foreground)]">جاري حساب التوافق...</span>
                 </div>
               ) : aiScore ? (
                 <>
@@ -155,7 +155,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                     <p className={`text-6xl font-black ${scoreColor(aiScore.matchScore)}`}>
                       {aiScore.matchScore}%
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">نسبة التوافق الإجمالية</p>
+                    <p className="text-sm text-[var(--muted-foreground)] mt-1">نسبة التوافق الإجمالية</p>
                   </div>
 
                   {/* Match reasons */}
@@ -174,7 +174,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
 
                   {/* Category breakdown */}
                   <div>
-                    <p className="text-xs font-semibold text-gray-600 mb-3">تفصيل التوافق حسب المحاور</p>
+                    <p className="text-xs font-semibold text-[var(--muted-foreground)] mb-3">تفصيل التوافق حسب المحاور</p>
                     <div className="space-y-3">
                       {categories.map((c) => {
                         const val = Math.min(100, Math.round(aiScore.matchScore * (0.7 + Math.random() * 0.6)));
@@ -183,10 +183,10 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                             <span className="text-lg w-7 shrink-0">{c.icon}</span>
                             <div className="flex-1">
                               <div className="flex justify-between mb-1">
-                                <span className="text-xs font-medium text-gray-700">{c.label}</span>
-                                <span className="text-xs text-gray-400">{val}% · وزن {c.weight}%</span>
+                                <span className="text-xs font-medium text-[var(--foreground)]">{c.label}</span>
+                                <span className="text-xs text-[var(--muted-foreground)]">{val}% · وزن {c.weight}%</span>
                               </div>
-                              <div className="h-2 rounded-full bg-gray-100">
+                              <div className="h-2 rounded-full bg-[var(--muted)]">
                                 <div className={`h-2 rounded-full ${barColor(val)}`} style={{ width: `${val}%` }} />
                               </div>
                             </div>
@@ -197,8 +197,8 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                   </div>
 
                   {/* Comparison table */}
-                  <div className="rounded-xl border border-gray-100 overflow-hidden">
-                    <div className="grid grid-cols-3 bg-gray-50 px-4 py-2 text-xs font-semibold text-gray-500">
+                  <div className="rounded-xl border border-[var(--border)] overflow-hidden">
+                    <div className="grid grid-cols-3 bg-[var(--muted)] px-4 py-2 text-xs font-semibold text-[var(--muted-foreground)]">
                       <span>المحور</span>
                       <span className="text-center">أنت</span>
                       <span className="text-center">{user.fullName?.split(' ')?.[0] ?? ''}</span>
@@ -209,10 +209,10 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                       ['الصلاة', myProfile?.data?.prayerLevel, user.prayerLevel],
                       ['الدولة', myProfile?.data?.country, user.country],
                     ].map(([k, a, b]) => (
-                      <div key={k} className="grid grid-cols-3 px-4 py-2.5 text-sm border-t border-gray-50">
-                        <span className="text-gray-500 text-xs">{k}</span>
-                        <span className="text-center text-xs font-medium text-gray-700">{a || '—'}</span>
-                        <span className={`text-center text-xs font-medium ${a && b && a === b ? 'text-green-600' : 'text-gray-700'}`}>
+                      <div key={k} className="grid grid-cols-3 px-4 py-2.5 text-sm border-t border-[var(--border)]/30">
+                        <span className="text-[var(--muted-foreground)] text-xs">{k}</span>
+                        <span className="text-center text-xs font-medium text-[var(--foreground)]">{a || '—'}</span>
+                        <span className={`text-center text-xs font-medium ${a && b && a === b ? 'text-green-600' : 'text-[var(--foreground)]'}`}>
                           {b || '—'} {a && b && a === b ? '✓' : ''}
                         </span>
                       </div>
@@ -220,7 +220,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
                   </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-[var(--muted-foreground)]">
                   <p className="text-3xl mb-2">💫</p>
                   <p className="text-sm">اضغط على تبويب نقاط التوافق لحساب التوافق</p>
                 </div>
@@ -230,7 +230,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
         </div>
 
         {/* Footer with Start Chat button */}
-        <div className="p-4 border-t bg-white">
+        <div className="p-4 border-t bg-[var(--card)]">
           <button
             onClick={() => createConversation.mutate()}
             disabled={createConversation.isPending}

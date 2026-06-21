@@ -26,10 +26,10 @@ const TYPE_LABELS = {
 
 const STATUS_STYLES: Record<ConsentStatus, [string, string]> = {
   pending: ['⏳ في الانتظار', 'bg-amber-100 text-amber-700 border-amber-200'],
-  accepted: ['✓ مقبول', 'bg-emerald-100 text-emerald-700 border-emerald-200'],
+  accepted: ['✓ مقبول', 'bg-[var(--muted)] text-[var(--primary)] border-[var(--border)]'],
   declined: ['✗ مرفوض', 'bg-red-100 text-red-700 border-red-200'],
-  expired: ['منتهي الصلاحية', 'bg-gray-100 text-gray-600 border-gray-200'],
-  revoked: ['ملغي', 'bg-gray-100 text-gray-600 border-gray-200'],
+  expired: ['منتهي الصلاحية', 'bg-[var(--muted)] text-[var(--muted-foreground)] border-[var(--border)]'],
+  revoked: ['ملغي', 'bg-[var(--muted)] text-[var(--muted-foreground)] border-[var(--border)]'],
 };
 
 function ConsentCard({
@@ -45,20 +45,20 @@ function ConsentCard({
   onDecline?: (id: string) => void;
   onRevoke?: (id: string) => void;
 }) {
-  const [statusLabel, statusClass] = STATUS_STYLES[req.status] ?? ['غير معروف', 'bg-gray-100 text-gray-600 border-gray-200'];
+  const [statusLabel, statusClass] = STATUS_STYLES[req.status] ?? ['غير معروف', 'bg-[var(--muted)] text-[var(--muted-foreground)] border-[var(--border)]'];
 
   return (
-    <div className="rounded-2xl bg-white/80 border border-emerald-200/50 p-4 space-y-3">
+    <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)]/50 p-4 space-y-3">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-            <LockSimple size={20} className="text-emerald-600" />
+          <div className="w-10 h-10 rounded-xl bg-[var(--muted)] flex items-center justify-center">
+            <LockSimple size={20} className="text-[var(--primary)]" />
           </div>
           <div>
-            <p className="font-semibold text-emerald-900 text-sm">
+            <p className="font-semibold text-[var(--foreground)] text-sm">
               {TYPE_LABELS[req.consentType] ?? req.consentType}
             </p>
-            <p className="text-xs text-emerald-700/60 mt-0.5">
+            <p className="text-xs text-[var(--primary)]/60 mt-0.5">
               {isIncoming ? `من: ${req.requesterUserId.slice(0, 8)}...` : `إلى: ${req.targetUserId.slice(0, 8)}...`}
             </p>
           </div>
@@ -69,7 +69,7 @@ function ConsentCard({
       </div>
 
       {req.expiresAt && (
-        <p className="text-xs text-emerald-700/50 flex items-center gap-1">
+        <p className="text-xs text-[var(--primary)]/50 flex items-center gap-1">
           <Clock size={11} /> ينتهي: {new Date(req.expiresAt).toLocaleDateString('ar-SA')}
         </p>
       )}
@@ -79,7 +79,7 @@ function ConsentCard({
           <button
             onClick={() => onAccept(req.id)}
             className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}
+            style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
           >
             <Check size={13} weight="bold" /> قبول
           </button>
@@ -135,28 +135,28 @@ export default function ConsentManagementPage() {
   const pendingIncoming = incoming.filter((r) => r.status === 'pending').length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
           <button
             onClick={() => router.back()}
-            className="w-9 h-9 rounded-xl bg-white/80 border border-emerald-200 flex items-center justify-center hover:bg-emerald-50 transition-colors"
+            className="w-9 h-9 rounded-xl bg-[var(--card)] border border-[var(--border)] flex items-center justify-center hover:bg-[var(--muted)] transition-colors"
           >
-            <ArrowLeft size={18} className="text-emerald-600" />
+            <ArrowLeft size={18} className="text-[var(--primary)]" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-emerald-900">إدارة الموافقات</h1>
-            <p className="text-emerald-700/70 text-sm mt-0.5">طلبات مشاركة البيانات الطبية والجينية</p>
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">إدارة الموافقات</h1>
+            <p className="text-[var(--primary)]/70 text-sm mt-0.5">طلبات مشاركة البيانات الطبية والجينية</p>
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 bg-white/60 p-1 rounded-2xl border border-emerald-200/50">
+        <div className="flex gap-2 mb-6 bg-white/60 p-1 rounded-2xl border border-[var(--border)]/50">
           <button
             onClick={() => setTab('incoming')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               tab === 'incoming'
-                ? 'bg-emerald-500 text-white shadow-md'
-                : 'text-emerald-700 hover:bg-emerald-50'
+                ? 'bg-[var(--muted)]0 text-white shadow-md'
+                : 'text-[var(--primary)] hover:bg-[var(--muted)]'
             }`}
           >
             واردة
@@ -170,8 +170,8 @@ export default function ConsentManagementPage() {
             onClick={() => setTab('outgoing')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               tab === 'outgoing'
-                ? 'bg-emerald-500 text-white shadow-md'
-                : 'text-emerald-700 hover:bg-emerald-50'
+                ? 'bg-[var(--muted)]0 text-white shadow-md'
+                : 'text-[var(--primary)] hover:bg-[var(--muted)]'
             }`}
           >
             صادرة
@@ -181,13 +181,13 @@ export default function ConsentManagementPage() {
         {isLoading ? (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="rounded-2xl bg-white/80 border border-emerald-200/50 h-24 animate-pulse" />
+              <div key={i} className="rounded-2xl bg-[var(--card)] border border-[var(--border)]/50 h-24 animate-pulse" />
             ))}
           </div>
         ) : displayed.length === 0 ? (
           <div className="text-center py-16">
-            <LockSimple size={56} className="text-emerald-200 mx-auto mb-4" />
-            <p className="text-emerald-700 font-medium">
+            <LockSimple size={56} className="text-[var(--border)] mx-auto mb-4" />
+            <p className="text-[var(--primary)] font-medium">
               {tab === 'incoming' ? 'لا توجد طلبات واردة' : 'لم ترسل أي طلبات بعد'}
             </p>
           </div>

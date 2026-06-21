@@ -212,7 +212,7 @@ export default function AppearancePage() {
           <button
             onClick={handleSave}
             disabled={updateAppearance.isPending}
-            className="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-60"
+            className="px-6 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
             style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
           >
             {updateAppearance.isPending ? 'جاري الحفظ...' : 'حفظ التغييرات'}

@@ -11,7 +11,7 @@ const ISSUE_TYPES = [
   { value: 'feature', label: 'اقتراح ميزة', icon: '💡', color: 'bg-amber-100' },
   { value: 'account', label: 'مشكلة في الحساب', icon: '👤', color: 'bg-blue-100' },
   { value: 'privacy', label: 'مشكلة في الخصوصية', icon: '🔒', color: 'bg-purple-100' },
-  { value: 'other', label: 'أخرى', icon: '📝', color: 'bg-emerald-100' },
+  { value: 'other', label: 'أخرى', icon: '📝', color: 'bg-[var(--muted)]' },
 ];
 
 export default function ReportPage() {
@@ -61,18 +61,18 @@ export default function ReportPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
+          <Link href="/settings" className="inline-flex items-center gap-2 text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
             <span>←</span> <span>العودة للإعدادات</span>
           </Link>
 
-          <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+          <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
             <CardContent className="py-12 text-center">
               <div className="text-5xl mb-4">✅</div>
-              <h2 className="text-xl font-bold text-emerald-900 mb-2">تم إرسال البلاغ بنجاح</h2>
-              <p className="text-emerald-700/70 mb-6">شكراً لك، سنراجع البلاغ ونعود إليك قريباً</p>
-              <Button variant="primary" onClick={() => { setSubmitted(false); setIssueType(''); setDescription(''); setEmail(''); }} className="bg-emerald-600 hover:bg-emerald-700">
+              <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">تم إرسال البلاغ بنجاح</h2>
+              <p className="text-[var(--primary)]/70 mb-6">شكراً لك، سنراجع البلاغ ونعود إليك قريباً</p>
+              <Button variant="primary" onClick={() => { setSubmitted(false); setIssueType(''); setDescription(''); setEmail(''); }} className="bg-[var(--primary)] hover:bg-[var(--primary-hover)]">
                 إرسال بلاغ جديد
               </Button>
             </CardContent>
@@ -83,20 +83,20 @@ export default function ReportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
           <span>←</span> <span>العودة للإعدادات</span>
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-emerald-900">الإبلاغ عن مشكلة</h1>
-          <p className="text-emerald-700/70 mt-2">أخبرنا عن المشكلة التي تواجهها</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">الإبلاغ عن مشكلة</h1>
+          <p className="text-[var(--primary)]/70 mt-2">أخبرنا عن المشكلة التي تواجهها</p>
         </div>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>🐛</span> نوع المشكلة
             </CardTitle>
           </CardHeader>
@@ -108,15 +108,15 @@ export default function ReportPage() {
                   onClick={() => setIssueType(type.value)}
                   className={`p-4 rounded-xl border-2 transition-all duration-300 ${
                     issueType === type.value
-                      ? 'border-emerald-500 bg-emerald-50/80 shadow-lg shadow-emerald-100'
-                      : 'border-emerald-200/50 bg-white/50 hover:border-emerald-300 hover:shadow-md'
+                      ? 'border-[var(--ring)] bg-[var(--muted)]/80 shadow-lg shadow-black/5'
+                      : 'border-[var(--border)]/50 bg-white/50 hover:border-[var(--border)] hover:shadow-md'
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">
                     <span className={`w-10 h-10 rounded-xl ${type.color} flex items-center justify-center text-xl`}>
                       {type.icon}
                     </span>
-                    <span className="font-semibold text-emerald-900">{type.label}</span>
+                    <span className="font-semibold text-[var(--foreground)]">{type.label}</span>
                   </div>
                 </button>
               ))}
@@ -124,9 +124,9 @@ export default function ReportPage() {
           </CardContent>
         </Card>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>📝</span> التفاصيل
             </CardTitle>
             <CardDescription>اشرح المشكلة بالتفصيل</CardDescription>
@@ -134,7 +134,7 @@ export default function ReportPage() {
           <CardContent>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-emerald-800 mb-1">البريد الإلكتروني (اختياري)</label>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">البريد الإلكتروني (اختياري)</label>
                 <Input
                   placeholder="أدخل بريدك الإلكتروني"
                   value={email}
@@ -142,17 +142,17 @@ export default function ReportPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-emerald-800 mb-1">وصف المشكلة</label>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-1">وصف المشكلة</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={6}
-                  className="w-full px-4 py-3 rounded-xl border border-emerald-200 bg-white/80 text-emerald-900 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all"
+                  className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--muted)] transition-all"
                   placeholder="اشرح بالتفصيل ما المشكلة التي تواجهها..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-emerald-800 mb-2">لقطات شاشة أو ملفات (اختياري، حتى 3)</label>
+                <label className="block text-sm font-medium text-[var(--foreground)] mb-2">لقطات شاشة أو ملفات (اختياري، حتى 3)</label>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -165,15 +165,15 @@ export default function ReportPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={attachments.length >= 3}
-                  className="flex items-center gap-2 rounded-xl border border-dashed border-emerald-300 px-4 py-3 text-sm text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center"
+                  className="flex items-center gap-2 rounded-xl border border-dashed border-[var(--border)] px-4 py-3 text-sm text-[var(--primary)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full justify-center"
                 >
                   📎 إضافة ملف أو لقطة شاشة
                 </button>
                 {attachments.length > 0 && (
                   <div className="mt-2 space-y-1">
                     {attachments.map((f, i) => (
-                      <div key={i} className="flex items-center justify-between rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-2 text-sm">
-                        <span className="text-emerald-800 truncate">{f.name}</span>
+                      <div key={i} className="flex items-center justify-between rounded-lg bg-[var(--muted)] border border-[var(--border)] px-3 py-2 text-sm">
+                        <span className="text-[var(--foreground)] truncate">{f.name}</span>
                         <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 mr-2 shrink-0">✕</button>
                       </div>
                     ))}
@@ -185,7 +185,7 @@ export default function ReportPage() {
                 onClick={handleSubmit}
                 loading={sending}
                 disabled={!issueType || !description.trim()}
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-[var(--primary)] hover:bg-[var(--primary-hover)]"
               >
                 إرسال البلاغ
               </Button>

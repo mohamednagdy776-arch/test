@@ -37,35 +37,35 @@ export default function NotificationsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#ECFDF5] via-[#F0FDF4] to-amber-50/30 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--muted)] via-[var(--card)] to-amber-50/30 p-4 md:p-6">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-emerald-900">الإشعارات</h1>
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">الإشعارات</h1>
           {unreadCount > 0 && (
             <button
               onClick={() => markAllAsRead.mutate()}
               disabled={markAllAsRead.isPending}
-              className="text-sm font-medium text-emerald-600 hover:text-emerald-800 transition-colors disabled:opacity-50"
+              className="text-sm font-medium text-[var(--primary)] hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
             >
               تعيين الكل كمقروء
             </button>
           )}
         </div>
 
-        <div className="flex gap-2 mb-6 border-b border-emerald-100 pb-1">
+        <div className="flex gap-2 mb-6 border-b border-[var(--border)] pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors relative ${
                 activeTab === tab.id
-                  ? 'text-emerald-700 border-b-2 border-emerald-600'
-                  : 'text-emerald-500 hover:text-emerald-700'
+                  ? 'text-[var(--primary)] border-b-2 border-[var(--primary)]'
+                  : 'text-[var(--primary)] hover:text-[var(--primary)]'
               }`}
             >
               {tab.label}
               {tab.count !== undefined && tab.count > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                <span className="ml-1.5 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-[var(--muted)] text-[var(--primary)] text-[10px] font-bold">
                   {tab.count > 99 ? '99+' : tab.count}
                 </span>
               )}
@@ -73,7 +73,7 @@ export default function NotificationsPage() {
           ))}
         </div>
 
-        <div className="rounded-2xl bg-white/80 border border-emerald-100 shadow-lg shadow-emerald-500/10 p-4">
+        <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] shadow-lg shadow-black/5 p-4">
           {isLoading ? (
             <div className="flex justify-center py-12">
               <Spinner />
@@ -90,7 +90,7 @@ export default function NotificationsPage() {
                 <div className="flex justify-center pt-4">
                   <button
                     onClick={() => setLimit((l) => l + 20)}
-                    className="px-5 py-2 text-sm font-medium text-emerald-700 rounded-full border border-emerald-200 hover:bg-emerald-50 transition-colors"
+                    className="px-5 py-2 text-sm font-medium text-[var(--primary)] rounded-full border border-[var(--border)] hover:bg-[var(--muted)] transition-colors"
                   >
                     تحميل المزيد
                   </button>

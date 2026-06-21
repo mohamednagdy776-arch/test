@@ -145,10 +145,10 @@ export function ImageCropper({ file, aspectRatio = 1, circular = false, onCrop, 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-sm">
+      <div className="bg-[var(--card)] rounded-2xl shadow-2xl overflow-hidden w-full max-w-sm">
         <div className="flex items-center justify-between px-4 py-3 border-b">
-          <span className="font-semibold text-[#213448] text-sm">تعديل الصورة</span>
-          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
+          <span className="font-semibold text-[var(--foreground)] text-sm">تعديل الصورة</span>
+          <button onClick={onCancel} className="text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)]">
             <X size={20} />
           </button>
         </div>
@@ -158,7 +158,7 @@ export function ImageCropper({ file, aspectRatio = 1, circular = false, onCrop, 
             ref={canvasRef}
             width={PREVIEW_W}
             height={PREVIEW_H}
-            className="rounded-xl cursor-grab active:cursor-grabbing border border-[#C8D8DF]"
+            className="rounded-xl cursor-grab active:cursor-grabbing border border-[var(--border)]"
             style={{ touchAction: 'none' }}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
@@ -170,7 +170,7 @@ export function ImageCropper({ file, aspectRatio = 1, circular = false, onCrop, 
           />
 
           <div className="flex items-center gap-3 w-full">
-            <MagnifyingGlassMinus size={18} className="text-[#547792] shrink-0" />
+            <MagnifyingGlassMinus size={18} className="text-[var(--muted-foreground)] shrink-0" />
             <input
               type="range"
               min={0.5}
@@ -178,22 +178,22 @@ export function ImageCropper({ file, aspectRatio = 1, circular = false, onCrop, 
               step={0.01}
               value={scale}
               onChange={(e) => setScale(Number(e.target.value))}
-              className="flex-1 accent-[#547792]"
+              className="flex-1 accent-[var(--muted-foreground)]"
             />
-            <MagnifyingGlassPlus size={18} className="text-[#547792] shrink-0" />
+            <MagnifyingGlassPlus size={18} className="text-[var(--muted-foreground)] shrink-0" />
           </div>
         </div>
 
         <div className="flex gap-3 px-4 pb-4">
           <button
             onClick={onCancel}
-            className="flex-1 py-2 rounded-xl border border-[#C8D8DF] text-sm text-[#547792] hover:bg-[#EAE0CF]/40 transition-colors"
+            className="flex-1 py-2 rounded-xl border border-[var(--border)] text-sm text-[var(--muted-foreground)] hover:bg-[var(--muted)]/40 transition-colors"
           >
             إلغاء
           </button>
           <button
             onClick={handleCrop}
-            className="flex-1 py-2 rounded-xl bg-[#213448] text-white text-sm font-medium hover:bg-[#547792] transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-2 rounded-xl bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary-hover)] transition-colors flex items-center justify-center gap-2"
           >
             <Check size={16} />
             حفظ

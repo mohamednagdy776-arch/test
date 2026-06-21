@@ -5,9 +5,9 @@ import { postsApi } from '../api';
 import { cn } from '@/lib/utils';
 
 const COLORS = [
-  '#131F2E', '#213448', '#547792', '#94B4C1',
+  '#0A3D2B', '#1A6B4A', '#B8892A', '#D4A853',
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
-  '#FFEAA7', '#FDFAF5',
+  '#FFEAA7', 'var(--card)',
 ];
 
 interface StoryCreatorProps {
@@ -18,7 +18,7 @@ interface StoryCreatorProps {
 export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
   const [mediaType, setMediaType] = useState<'text' | 'image' | 'video'>('text');
   const [text, setText] = useState('');
-  const [bgColor, setBgColor] = useState('#213448');
+  const [bgColor, setBgColor] = useState('var(--foreground)');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -67,19 +67,19 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
   const previewTextSize =
     text.length > 80 ? 'text-base' : text.length > 40 ? 'text-lg' : 'text-2xl';
 
-  const isLight = bgColor === '#FDFAF5' || bgColor === '#FFEAA7';
+  const isLight = bgColor === 'var(--card)' || bgColor === '#FFEAA7';
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center" dir="rtl">
-      <div className="absolute inset-0 bg-[#131F2E]/80 backdrop-blur-md" onClick={onClose} />
+      <div className="absolute inset-0 bg-[var(--primary)]/80 backdrop-blur-md" onClick={onClose} />
 
-      <div className="relative w-full max-w-sm mx-4 bg-[#FDFAF5] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-sm mx-4 bg-[var(--card)] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#C8D8DF]/50 flex-shrink-0">
-          <h3 className="text-base font-bold text-[#213448]">إنشاء قصة</h3>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]/50 flex-shrink-0">
+          <h3 className="text-base font-bold text-[var(--foreground)]">إنشاء قصة</h3>
           <button
             onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-[#EAE0CF] text-[#547792] hover:text-[#213448] transition-colors"
+            className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-[var(--muted)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -98,8 +98,8 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
                 className={cn(
                   'flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-medium transition-all',
                   mediaType === tab.value
-                    ? 'bg-[#213448] text-[#FDFAF5] shadow-md'
-                    : 'bg-[#EAE0CF] text-[#547792] hover:bg-[#D4E8EE]'
+                    ? 'bg-[var(--foreground)] text-[var(--card)] shadow-md'
+                    : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]'
                 )}
               >
                 <span className="text-sm leading-none">{tab.icon}</span>
@@ -116,12 +116,12 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
                 onChange={e => setText(e.target.value)}
                 placeholder="اكتب شيئاً..."
                 rows={2}
-                className="w-full px-3 py-2.5 rounded-xl border border-[#C8D8DF] bg-white text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 resize-none"
+                className="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 resize-none"
               />
 
               {/* Color picker */}
               <div>
-                <p className="text-[11px] font-semibold text-[#547792] mb-2 uppercase tracking-wide">لون الخلفية</p>
+                <p className="text-[11px] font-semibold text-[var(--muted-foreground)] mb-2 uppercase tracking-wide">لون الخلفية</p>
                 <div className="flex gap-2 flex-wrap">
                   {COLORS.map(c => (
                     <button
@@ -132,12 +132,12 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
                         backgroundColor: c,
                         border: '2px solid transparent',
                         boxShadow: bgColor === c
-                          ? '0 0 0 2px #FDFAF5, 0 0 0 4px #213448'
-                          : '0 0 0 1px #C8D8DF',
+                          ? '0 0 0 2px var(--card), 0 0 0 4px var(--foreground)'
+                          : '0 0 0 1px var(--border)',
                       }}
                     >
                       {bgColor === c && (
-                        <svg className="absolute inset-0 m-auto h-4 w-4" fill="none" viewBox="0 0 24 24" stroke={isLight && c === bgColor ? '#131F2E' : 'white'} strokeWidth={3}>
+                        <svg className="absolute inset-0 m-auto h-4 w-4" fill="none" viewBox="0 0 24 24" stroke={isLight && c === bgColor ? 'var(--foreground)' : 'white'} strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
@@ -153,7 +153,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
               >
                 <p
                   className={cn('font-bold text-center drop-shadow leading-snug transition-all', previewTextSize)}
-                  style={{ color: isLight ? '#131F2E' : '#FDFAF5' }}
+                  style={{ color: isLight ? 'var(--foreground)' : 'var(--card)' }}
                 >
                   {text || 'مثال على النص'}
                 </p>
@@ -174,7 +174,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
               {!mediaPreview ? (
                 <button
                   onClick={() => fileRef.current?.click()}
-                  className="w-full aspect-[3/4] rounded-xl bg-[#EAE0CF] flex flex-col items-center justify-center gap-4 text-[#547792] hover:bg-[#D4E8EE] transition-colors border-2 border-dashed border-[#C8D8DF] hover:border-[#547792]"
+                  className="w-full aspect-[3/4] rounded-xl bg-[var(--muted)] flex flex-col items-center justify-center gap-4 text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors border-2 border-dashed border-[var(--border)] hover:border-[var(--ring)]"
                 >
                   <div className="h-16 w-16 rounded-2xl bg-white/70 flex items-center justify-center shadow-sm">
                     {mediaType === 'video' ? (
@@ -191,7 +191,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
                     <p className="text-sm font-semibold">
                       {mediaType === 'video' ? 'اضغط لإضافة فيديو' : 'اضغط لإضافة صورة'}
                     </p>
-                    <p className="text-xs text-[#547792]/60 mt-1">
+                    <p className="text-xs text-[var(--muted-foreground)]/60 mt-1">
                       {mediaType === 'video' ? 'MP4, WebM, MOV' : 'JPG, PNG, GIF, WebP'}
                     </p>
                   </div>
@@ -222,8 +222,8 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
           <button
             onClick={handleSubmit}
             disabled={isUploading || createStory.isPending || (mediaType === 'text' && !text) || (mediaType !== 'text' && !mediaFile)}
-            className="w-full py-3 rounded-xl text-[#FDFAF5] font-semibold disabled:opacity-40 transition-all flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98]"
-            style={{ background: 'linear-gradient(to right, #213448, #547792)' }}
+            className="w-full py-3 rounded-xl text-[var(--card)] font-semibold disabled:opacity-40 transition-all flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98]"
+            style={{ background: 'linear-gradient(to right, var(--primary), var(--secondary))' }}
           >
             {isUploading ? (
               <>

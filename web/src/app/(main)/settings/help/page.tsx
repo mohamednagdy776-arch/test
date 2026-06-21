@@ -9,7 +9,7 @@ const HELP_ITEMS = [
     title: 'الأسئلة الشائعة',
     description: 'ابحث عن إجابات للأسئلة الشائعة',
     href: '/terms',
-    color: 'bg-emerald-100',
+    color: 'bg-[var(--muted)]',
   },
   {
     icon: '📖',
@@ -37,49 +37,49 @@ const HELP_ITEMS = [
 const ContactItem = ({ icon, title, detail, href }: { icon: string; title: string; detail: string; href: string }) => (
   <Link
     href={href}
-    className="flex items-center gap-4 p-4 rounded-xl bg-white/50 border border-emerald-200/50 hover:border-emerald-300 hover:shadow-md transition-all duration-300"
+    className="flex items-center gap-4 p-4 rounded-xl bg-white/50 border border-[var(--border)]/50 hover:border-[var(--border)] hover:shadow-md transition-all duration-300"
   >
     <span className="text-2xl">{icon}</span>
     <div className="flex-1">
-      <h3 className="font-semibold text-emerald-900">{title}</h3>
-      <p className="text-emerald-700/70 text-sm">{detail}</p>
+      <h3 className="font-semibold text-[var(--foreground)]">{title}</h3>
+      <p className="text-[var(--primary)]/70 text-sm">{detail}</p>
     </div>
-    <span className="text-emerald-400">→</span>
+    <span className="text-[var(--muted-foreground)]">→</span>
   </Link>
 );
 
 const HelpLink = ({ item }: { item: typeof HELP_ITEMS[0] }) => (
   <Link
     href={item.href}
-    className="flex items-center gap-4 p-4 rounded-xl bg-white/50 border border-emerald-200/50 hover:border-emerald-300 hover:shadow-md transition-all duration-300"
+    className="flex items-center gap-4 p-4 rounded-xl bg-white/50 border border-[var(--border)]/50 hover:border-[var(--border)] hover:shadow-md transition-all duration-300"
   >
     <div className={`w-12 h-12 rounded-xl ${item.color} flex items-center justify-center text-xl`}>
       {item.icon}
     </div>
     <div className="flex-1">
-      <h3 className="font-semibold text-emerald-900">{item.title}</h3>
-      <p className="text-emerald-700/70 text-sm">{item.description}</p>
+      <h3 className="font-semibold text-[var(--foreground)]">{item.title}</h3>
+      <p className="text-[var(--primary)]/70 text-sm">{item.description}</p>
     </div>
-    <span className="text-emerald-400">→</span>
+    <span className="text-[var(--muted-foreground)]">→</span>
   </Link>
 );
 
 export default function HelpPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
-        <Link href="/settings" className="inline-flex items-center gap-2 text-emerald-700 hover:text-emerald-900 transition-colors">
+        <Link href="/settings" className="inline-flex items-center gap-2 text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
           <span>←</span> <span>العودة للإعدادات</span>
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-emerald-900">المساعدة والدعم</h1>
-          <p className="text-emerald-700/70 mt-2">احصل على المساعدة وتواصل معنا</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">المساعدة والدعم</h1>
+          <p className="text-[var(--primary)]/70 mt-2">احصل على المساعدة وتواصل معنا</p>
         </div>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>📋</span> المساعدة
             </CardTitle>
             <CardDescription>موارد الدعم والإجابة على استفساراتك</CardDescription>
@@ -93,9 +93,9 @@ export default function HelpPage() {
           </CardContent>
         </Card>
 
-        <Card variant="default" className="bg-white/80 backdrop-blur-sm border-emerald-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
-            <CardTitle className="text-emerald-900 flex items-center gap-2">
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
               <span>💬</span> تواصل معنا
             </CardTitle>
             <CardDescription>لديك سؤال أو اقتراح؟</CardDescription>

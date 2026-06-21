@@ -14,8 +14,8 @@ function FollowButton({ userId }: { userId: string }) {
       disabled={pending}
       className={`rounded-xl px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
         isFollowing
-          ? 'bg-[#EAE0CF]/60 text-[#547792] hover:bg-[#EAE0CF]'
-          : 'bg-gradient-to-r from-[#213448] to-[#547792] text-[#FDFAF5] hover:shadow-glow'
+          ? 'bg-[var(--muted)]/60 text-[var(--muted-foreground)] hover:bg-[var(--muted)]'
+          : 'bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-[var(--card)] hover:shadow-glow'
       }`}
     >
       {isFollowing ? 'إلغاء المتابعة' : 'متابعة'}
@@ -32,21 +32,21 @@ function FollowListModal({ userId, kind, onClose }: { userId: string; kind: 'fol
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-md max-h-[80vh] overflow-y-auto rounded-2xl bg-[#FDFAF5] p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md max-h-[80vh] overflow-y-auto rounded-2xl bg-[var(--card)] p-4 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-bold text-[#213448]">{kind === 'followers' ? 'المتابِعون' : 'يتابِع'}</h3>
-          <button onClick={onClose} className="text-[#547792] hover:text-[#213448]">✕</button>
+          <h3 className="font-bold text-[var(--foreground)]">{kind === 'followers' ? 'المتابِعون' : 'يتابِع'}</h3>
+          <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]">✕</button>
         </div>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="بحث بالاسم أو اسم المستخدم..."
-          className="w-full mb-3 rounded-lg border border-[#C8D8DF] px-3 py-2 text-sm text-black focus:outline-none focus:border-[#547792]"
+          className="w-full mb-3 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--ring)]"
         />
         {query.isLoading ? (
-          <p className="text-center text-sm text-[#547792] py-6">جاري التحميل...</p>
+          <p className="text-center text-sm text-[var(--muted-foreground)] py-6">جاري التحميل...</p>
         ) : users.length === 0 ? (
-          <p className="text-center text-sm text-[#547792] py-6">لا يوجد أحد</p>
+          <p className="text-center text-sm text-[var(--muted-foreground)] py-6">لا يوجد أحد</p>
         ) : (
           <div className="space-y-1">
             {users.map((u) => (
@@ -54,14 +54,14 @@ function FollowListModal({ userId, kind, onClose }: { userId: string; kind: 'fol
                 key={u.id}
                 href={u.username ? `/${u.username}` : `/profile/${u.id}`}
                 onClick={onClose}
-                className="flex items-center gap-3 rounded-xl p-2 hover:bg-[#EAE0CF]/40 transition-colors"
+                className="flex items-center gap-3 rounded-xl p-2 hover:bg-[var(--muted)]/40 transition-colors"
               >
-                <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-[#D4E8EE] to-[#94B4C1] flex items-center justify-center text-sm font-bold text-[#213448]">
+                <div className="h-9 w-9 shrink-0 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-sm font-bold text-[var(--foreground)]">
                   {(u.profile?.fullName || u.username || '؟').charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[#213448] truncate">{u.profile?.fullName || u.username || 'مستخدم'}</p>
-                  {u.username && <p className="text-xs text-[#547792] truncate">@{u.username}</p>}
+                  <p className="text-sm font-medium text-[var(--foreground)] truncate">{u.profile?.fullName || u.username || 'مستخدم'}</p>
+                  {u.username && <p className="text-xs text-[var(--muted-foreground)] truncate">@{u.username}</p>}
                 </div>
               </Link>
             ))}
@@ -82,11 +82,11 @@ export function FollowSection({ userId, isSelf }: { userId: string; isSelf?: boo
     <div className="flex items-center gap-4 mt-2">
       {!isSelf && <FollowButton userId={userId} />}
       {/* Clicking a count opens the corresponding list (#418/#419). */}
-      <button onClick={() => setModal('followers')} className="text-sm text-[#547792] hover:text-[#213448]">
-        <span className="font-bold text-[#213448]">{followers}</span> متابِع
+      <button onClick={() => setModal('followers')} className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+        <span className="font-bold text-[var(--foreground)]">{followers}</span> متابِع
       </button>
-      <button onClick={() => setModal('following')} className="text-sm text-[#547792] hover:text-[#213448]">
-        <span className="font-bold text-[#213448]">{following}</span> يتابِع
+      <button onClick={() => setModal('following')} className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+        <span className="font-bold text-[var(--foreground)]">{following}</span> يتابِع
       </button>
       {modal && <FollowListModal userId={userId} kind={modal} onClose={() => setModal(null)} />}
     </div>

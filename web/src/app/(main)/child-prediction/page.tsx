@@ -138,24 +138,24 @@ export default function ChildPredictionPage() {
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50/60 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-[var(--muted)]/60 to-white">
       <div className="max-w-xl mx-auto px-4 py-10">
 
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-emerald-100 to-teal-100 shadow-lg shadow-emerald-100 mb-4">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[var(--muted)] to-[var(--muted)] shadow-lg shadow-black/5 mb-4">
             <span className="text-4xl">👶</span>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">توقّع شكل طفلكما</h1>
-          <p className="text-gray-500 text-sm leading-relaxed max-w-sm mx-auto">
+          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-2">توقّع شكل طفلكما</h1>
+          <p className="text-[var(--muted-foreground)] text-sm leading-relaxed max-w-sm mx-auto">
             ارفع صورتك وصورة شريكك واكتشف كيف سيبدو طفلكما — بتقنية الذكاء الاصطناعي المحلية 💕
           </p>
           <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100">
-              <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--muted)] border border-[var(--border)]">
+              <svg className="w-3.5 h-3.5 text-[var(--primary)]" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
               </svg>
-              <span className="text-xs text-emerald-600 font-medium">خصوصية تامة — لا يُحفظ أي صور</span>
+              <span className="text-xs text-[var(--primary)] font-medium">خصوصية تامة — لا يُحفظ أي صور</span>
             </div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100">
               <span className="text-xs text-amber-600 font-medium">⏱ يستغرق 2–4 دقائق</span>
@@ -177,10 +177,10 @@ export default function ChildPredictionPage() {
                 tabIndex={0}
                 aria-label={`رفع ${label}`}
                 className={[
-                  'relative flex flex-col items-center justify-center aspect-square rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2',
-                  drag  ? 'border-emerald-500 bg-emerald-50 scale-[1.02]'
-                  : data ? 'border-emerald-300 bg-white'
-                  :        'border-emerald-200 bg-emerald-50/40 hover:bg-emerald-50 hover:border-emerald-300',
+                  'relative flex flex-col items-center justify-center aspect-square rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2',
+                  drag  ? 'border-[var(--ring)] bg-[var(--muted)] scale-[1.02]'
+                  : data ? 'border-[var(--border)] bg-[var(--card)]'
+                  :        'border-[var(--border)] bg-[var(--muted)]/40 hover:bg-[var(--muted)] hover:border-[var(--border)]',
                 ].join(' ')}
                 onClick={() => ref.current?.click()}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ref.current?.click(); } }}
@@ -201,9 +201,9 @@ export default function ChildPredictionPage() {
                   </>
                 ) : (
                   <div className="flex flex-col items-center gap-2 p-4 text-center select-none">
-                    <div className="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center text-2xl">👤</div>
-                    <p className="font-semibold text-emerald-700 text-sm">{label}</p>
-                    <p className="text-xs text-gray-400">اسحب صورة أو اضغط للرفع</p>
+                    <div className="w-14 h-14 rounded-full bg-[var(--card)] shadow-sm flex items-center justify-center text-2xl">👤</div>
+                    <p className="font-semibold text-[var(--primary)] text-sm">{label}</p>
+                    <p className="text-xs text-[var(--muted-foreground)]">اسحب صورة أو اضغط للرفع</p>
                   </div>
                 )}
               </div>
@@ -224,7 +224,7 @@ export default function ChildPredictionPage() {
           <button
             onClick={handleSubmit}
             disabled={!parent1 || !parent2 || isLoading}
-            className="flex-1 h-14 rounded-2xl font-bold text-white text-base transition-all duration-300 shadow-lg shadow-emerald-200/60 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-3 bg-gradient-to-l from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.98]"
+            className="flex-1 h-14 rounded-2xl font-bold text-white text-base transition-all duration-300 shadow-lg shadow-black/5 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-3 bg-gradient-to-l from-[var(--primary)] to-[var(--secondary)] hover:from-[var(--primary-hover)] hover:to-[var(--secondary)] active:scale-[0.98]"
           >
             {isLoading ? (
               <>
@@ -254,13 +254,13 @@ export default function ChildPredictionPage() {
           <>
             <div className="mt-4 flex justify-center gap-5 flex-wrap">
               {STEPS.map((s) => (
-                <div key={s} className={`flex items-center gap-1.5 text-xs transition-colors duration-500 ${stage === s ? 'text-emerald-600 font-semibold' : 'text-gray-300'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full transition-colors ${stage === s ? 'bg-emerald-500 animate-pulse' : 'bg-gray-200'}`} />
+                <div key={s} className={`flex items-center gap-1.5 text-xs transition-colors duration-500 ${stage === s ? 'text-[var(--primary)] font-semibold' : 'text-[var(--muted-foreground)]/70'}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full transition-colors ${stage === s ? 'bg-[var(--muted)]0 animate-pulse' : 'bg-[var(--muted)]'}`} />
                   {LABELS[s]}
                 </div>
               ))}
             </div>
-            <p className="text-center text-xs text-gray-400 mt-3">
+            <p className="text-center text-xs text-[var(--muted-foreground)] mt-3">
               المعالجة تتم محلياً بالكامل — قد تستغرق 2–4 دقائق ⏳
             </p>
           </>
@@ -277,10 +277,10 @@ export default function ChildPredictionPage() {
         {result && stage === 'done' && (
           <div className="mt-8">
             <div className="text-center mb-4">
-              <h2 className="text-lg font-bold text-gray-900">طفلكما المنتظر 🌟</h2>
-              <p className="text-xs text-gray-400 mt-1">ما شاء الله تبارك الله — صورة توقعية للتسلية</p>
+              <h2 className="text-lg font-bold text-[var(--foreground)]">طفلكما المنتظر 🌟</h2>
+              <p className="text-xs text-[var(--muted-foreground)] mt-1">ما شاء الله تبارك الله — صورة توقعية للتسلية</p>
             </div>
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-emerald-100/80 border border-emerald-100">
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/5/80 border border-[var(--border)]">
               <img src={result} alt="صورة الطفل المتوقع" className="w-full object-cover" />
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent p-4 text-center">
                 <p className="text-white text-xs font-medium">بإذن الله 💕</p>
@@ -288,14 +288,14 @@ export default function ChildPredictionPage() {
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3">
               <a href={result} download="طفلنا.jpg"
-                className="h-11 rounded-xl border border-emerald-200 text-emerald-600 font-medium text-sm flex items-center justify-center gap-2 hover:bg-emerald-50 transition-colors">
+                className="h-11 rounded-xl border border-[var(--border)] text-[var(--primary)] font-medium text-sm flex items-center justify-center gap-2 hover:bg-[var(--muted)] transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
                 تنزيل
               </a>
               <button onClick={reset}
-                className="h-11 rounded-xl bg-emerald-500 text-white font-medium text-sm flex items-center justify-center gap-2 hover:bg-emerald-600 transition-colors">
+                className="h-11 rounded-xl bg-[var(--muted)]0 text-white font-medium text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)] transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
@@ -322,9 +322,9 @@ export default function ChildPredictionPage() {
         )}
 
         {/* Privacy */}
-        <div className="mt-8 p-4 rounded-2xl bg-gray-50/80 border border-gray-100">
-          <p className="text-xs font-bold text-gray-500 mb-2">🛡️ سياسة الخصوصية</p>
-          <ul className="text-xs text-gray-400 space-y-1 leading-relaxed">
+        <div className="mt-8 p-4 rounded-2xl bg-[var(--muted)]/80 border border-[var(--border)]">
+          <p className="text-xs font-bold text-[var(--muted-foreground)] mb-2">🛡️ سياسة الخصوصية</p>
+          <ul className="text-xs text-[var(--muted-foreground)] space-y-1 leading-relaxed">
             <li>• المعالجة تتم كلياً في الذاكرة المؤقتة داخل الخادم</li>
             <li>• لا تُحفظ صورك أو نتيجة التوليد على أي قرص صلب</li>
             <li>• الصور تُمسح فور إرجاع النتيجة للمستخدم</li>

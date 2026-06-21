@@ -36,7 +36,7 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
 
   if (matchLoading) return (
     <div className="space-y-2">
-      {[1,2,3].map((i) => <div key={i} className="h-16 rounded-xl bg-white animate-pulse" />)}
+      {[1,2,3].map((i) => <div key={i} className="h-16 rounded-xl bg-[var(--card)] animate-pulse" />)}
     </div>
   );
 
@@ -88,10 +88,10 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
   };
 
   if (sortedItems.length === 0) return (
-    <div className="rounded-xl bg-white p-8 text-center text-gray-400">
+    <div className="rounded-xl bg-[var(--card)] p-8 text-center text-[var(--muted-foreground)]">
       <p className="text-3xl mb-2">💬</p>
       <p className="text-sm font-medium">لا توجد محادثات بعد</p>
-      <p className="text-xs mt-1 text-gray-300">اقبل توافقاً لبدء المحادثة</p>
+      <p className="text-xs mt-1 text-[var(--muted-foreground)]/70">اقبل توافقاً لبدء المحادثة</p>
     </div>
   );
 
@@ -127,7 +127,7 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
             onClick={() => handleSelect(item, isConversation)}
             className={clsx(
               'w-full flex items-center gap-3 rounded-xl p-3 text-right transition-colors',
-              activeMatchId === item.id ? 'bg-primary/10' : 'bg-white hover:bg-gray-50'
+              activeMatchId === item.id ? 'bg-primary/10' : 'bg-[var(--card)] hover:bg-[var(--muted)]'
             )}
           >
             <div className="h-11 w-11 shrink-0 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden">
@@ -138,10 +138,10 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className={clsx('text-sm font-medium truncate', activeMatchId === item.id ? 'text-primary' : 'text-gray-900')}>
+              <p className={clsx('text-sm font-medium truncate', activeMatchId === item.id ? 'text-primary' : 'text-[var(--foreground)]')}>
                 {getOtherUserName(item, match)}
               </p>
-              <p className="text-xs text-gray-400 truncate">
+              <p className="text-xs text-[var(--muted-foreground)] truncate">
                 {item.lastMessage?.content?.slice(0, 40) || 'لا توجد رسائل بعد'}
               </p>
             </div>
@@ -150,7 +150,7 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
                 {item.unreadCount}
               </span>
             ) : (
-              <p className="text-xs text-gray-300">
+              <p className="text-xs text-[var(--muted-foreground)]/70">
                 {new Date(item.lastMessage?.createdAt || item.createdAt).toLocaleDateString('ar-EG')}
               </p>
             )}
@@ -160,7 +160,7 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
       {hasMore && (
         <button
           onClick={() => setPage(p => p + 1)}
-          className="w-full py-2 text-xs text-gray-400 hover:text-primary text-center transition-colors"
+          className="w-full py-2 text-xs text-[var(--muted-foreground)] hover:text-primary text-center transition-colors"
         >
           تحميل المزيد
         </button>

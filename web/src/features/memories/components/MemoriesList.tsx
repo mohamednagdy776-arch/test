@@ -23,7 +23,7 @@ export function MemoriesList() {
 
   if (!memories?.length) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-[var(--muted-foreground)]">
         No memories yet
       </div>
     );
