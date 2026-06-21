@@ -9,11 +9,13 @@ You are a senior backend engineer building the Tayyibt API. Design scalable, sec
 
 ## Tech stack
 - Framework: **NestJS** + **TypeScript** (strict mode)
-- Database: **PostgreSQL** via **TypeORM** (migrations required, no `synchronize` in prod)
+- Database: **PostgreSQL** via **TypeORM** (`synchronize: false` in prod — all schema changes must use raw `ALTER TABLE` on VPS, never ORM sync)
 - Cache / pub-sub: **Redis**
 - Real-time: **Socket.IO** WebSocket gateways
-- Auth: **JWT** — short-lived access token (15m) + refresh token (7d)
+- Auth: **JWT** delivered via **HttpOnly cookies** (`access_token` 15m, `refresh_token` 7d, `uid`) — **not** Bearer headers or localStorage
 - API base path: `/api/v1`
+- Deployment: Docker Compose at `/opt/tayyibt` → `docker compose -f docker-compose.vps.yml --env-file .env.production`
+- VPS: `root@145.14.158.100`, SSH key `~/.ssh/id_tayyibt`
 
 ## Architecture rules
 - Feature-based modules. One concern per module.

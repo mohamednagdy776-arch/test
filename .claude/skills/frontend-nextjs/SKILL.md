@@ -31,11 +31,27 @@ const UserCard = ({ user }: { user: User }) => {
 ```
 
 ## Design guidelines (Tayyibt brand)
-- Primary: **emerald green `#10B981`**; secondary: **gold `#F59E0B`**; clean white background with warm tones; dark charcoal text.
-- Mobile-first responsive, generous whitespace, clear hierarchy, consistent spacing.
-- **Arabic / RTL support** is required — handle direction and bidi text correctly.
+- Emerald palette: `#10B981` (primary), `#059669` (hover/dark), `#065F46` (headings), `#DCFCE7` (borders/tints), `#ECFDF5`/`#F0FDF4` (card bg gradient).
+- Auth pages use a different navy/slate palette: `#213448`, `#547792`, `#94B4C1`, `#EAE0CF`, `#FDFAF5`.
+- Mobile-first responsive. Use `grid-cols-1 sm:grid-cols-N` — **never** bare `grid-cols-N` without responsive override.
+- **Arabic / RTL support**: own chat messages use `justify-end` (right side). Own bubble corner: `rounded-tl-sm`; other: `rounded-tr-sm`. Action buttons use `mr-2` not `ml-2` for RTL.
 - Cultural fit: modest, family-friendly, privacy-conscious profile UIs.
-- Accessibility: aim for WCAG compliance (labels, contrast, keyboard nav).
+- Accessibility: use `role="switch" aria-checked` for toggles; `aria-label` on icon-only buttons.
+
+## Auth
+- Uses **HttpOnly cookies** (`access_token`, `refresh_token`, `uid`) — **NOT** localStorage tokens.
+- `(main)` route group requires auth; `(auth)` group is public.
+
+## API response shapes
+- Paginated lists: `{ success, data: [...], meta: { total, page, limit, totalPages } }`. Access items as `response.data?.data ?? []`.
+- Single resources: `{ success, data: {...} }`.
+- Send pagination params as `?page=N&limit=N`. Show prev/next controls only when `totalPages > 1`.
+
+## Shared UI components (`web/src/components/ui/`)
+- `Modal` — use for **all** confirmation dialogs. Never use native `confirm()` or `alert()`.
+- `useToast` — success/error feedback notifications.
+- `EmptyState` — consistent empty-list placeholder (icon, title, description, action).
+- `Avatar`, `Spinner`, `OfflineBanner` — already available; don't recreate them.
 
 ## Output locations
 - Components: `web/src/components/`, `web/src/features/*/components/`
