@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&family=Noto+Serif+Arabic:wght@400;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -42,6 +42,17 @@
     --input:             #C8D8DF;
     --ring:              #547792;
     --radius:            0.75rem;
+
+    /* ── Sidebar variables (overridden per theme) ── */
+    --sidebar-bg:            var(--card);
+    --sidebar-fg:            var(--muted-foreground);
+    --sidebar-active-fg:     var(--primary);
+    --sidebar-active-bg:     color-mix(in srgb, var(--primary) 10%, transparent);
+    --sidebar-hover-bg:      color-mix(in srgb, var(--primary) 5%, transparent);
+    --sidebar-border:        var(--border);
+    --sidebar-label:         var(--muted-foreground);
+    --sidebar-divider:       var(--border);
+    --sidebar-user-bg:       var(--muted);
   }
 
   .dark {
@@ -104,6 +115,55 @@
      --border: #A7F3D0;
      --input: #A7F3D0;
      --ring: #059669;
+   }
+
+   /* ── Luxury Theme — "Emerald Sanctum" ── */
+   /* Deep forest green + antique gold + warm parchment */
+   [data-theme="luxury"] {
+     /* Brand — deep Islamic forest */
+     --primary:           #0A3D2B;
+     --primary-hover:     #0D4E37;
+     --primary-foreground:#F4EFE4;
+
+     /* Antique gold accent */
+     --accent:            #B8892A;
+     --accent-foreground: #FDFAF3;
+
+     /* Rich emerald secondary */
+     --secondary:         #1A6B4A;
+     --secondary-foreground: #F4EFE4;
+
+     /* Warm parchment surfaces */
+     --background:        #F4EFE4;
+     --foreground:        #0E1912;
+     --card:              #FDFAF3;
+     --card-foreground:   #0E1912;
+
+     /* Muted — warm parchment tones */
+     --muted:             #E8E3D8;
+     --muted-foreground:  #66756A;
+
+     /* Warm borders */
+     --border:            #DDD5BF;
+     --input:             #DDD5BF;
+
+     /* Focus ring — gold */
+     --ring:              #B8892A;
+
+     /* Destructive */
+     --destructive:       #A03030;
+     --destructive-foreground: #FDF8F0;
+
+     /* Sidebar — dark forest green contrast panel */
+     --sidebar-bg:        #091F16;
+     --sidebar-fg:        #7DAC8D;
+     --sidebar-active-fg: #E8C57A;
+     --sidebar-active-bg: rgba(184,137,42,0.15);
+     --sidebar-hover-bg:  rgba(255,255,255,0.05);
+     --sidebar-border:    rgba(255,255,255,0.07);
+     --sidebar-label:     #3E6B50;
+     --sidebar-divider:   rgba(255,255,255,0.06);
+     --sidebar-user-bg:   rgba(255,255,255,0.05);
    }
 
    [data-theme="light-blue"] {
@@ -1108,6 +1168,44 @@ html {
  .btn-theme-danger:hover:not(:disabled) {
    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
    box-shadow: 0 4px 16px rgba(239,68,68,0.4);
+ }
+
+ /* ── Luxury theme overrides — gold CTA accent ── */
+ [data-theme="luxury"] .btn-theme-primary {
+   background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+   color: var(--primary-foreground);
+   box-shadow: 0 2px 12px rgba(11,61,43,0.35);
+ }
+ [data-theme="luxury"] .btn-theme-primary:hover:not(:disabled) {
+   background: linear-gradient(135deg, var(--primary-hover) 0%, var(--secondary) 50%, var(--accent) 100%);
+   box-shadow: 0 4px 20px rgba(11,61,43,0.5), 0 2px 8px rgba(184,137,42,0.25);
+ }
+ [data-theme="luxury"] .btn-theme-accent {
+   background: linear-gradient(135deg, var(--accent) 0%, #D4A853 100%);
+   color: #0A3D2B;
+   box-shadow: 0 2px 12px rgba(184,137,42,0.35);
+ }
+ [data-theme="luxury"] .btn-theme-accent:hover:not(:disabled) {
+   background: linear-gradient(135deg, #D4A853 0%, var(--accent) 100%);
+   box-shadow: 0 4px 20px rgba(184,137,42,0.5);
+ }
+ [data-theme="luxury"] .card-theme-default {
+   background-color: var(--card);
+   border: 1px solid var(--border);
+   color: var(--card-foreground);
+   box-shadow: 0 1px 3px rgba(14,25,18,0.04), 0 4px 16px rgba(14,25,18,0.06), 0 0 0 1px rgba(255,255,255,0.7) inset;
+ }
+ [data-theme="luxury"] .card-theme-elevated {
+   background-color: var(--card);
+   border: 1px solid color-mix(in srgb, var(--accent) 15%, var(--border));
+   box-shadow: 0 8px 32px rgba(14,25,18,0.1), 0 2px 8px rgba(14,25,18,0.05), 0 0 0 1px rgba(255,255,255,0.7) inset;
+ }
+ [data-theme="luxury"] .card-theme-glass {
+   background: color-mix(in srgb, var(--card) 80%, transparent);
+   backdrop-filter: blur(20px) saturate(180%);
+   -webkit-backdrop-filter: blur(20px) saturate(180%);
+   border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+   box-shadow: 0 4px 24px rgba(14,25,18,0.08), 0 0 0 1px rgba(255,255,255,0.6) inset;
  }
 
  /* Input theme */

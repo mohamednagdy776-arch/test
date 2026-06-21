@@ -25,7 +25,7 @@ function GreetingBanner() {
   return (
     <div className="relative overflow-hidden rounded-2xl mb-5 p-5"
       style={{
-        background: 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 60%, color-mix(in srgb, var(--accent) 70%, #f59e0b) 100%)',
+        background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%)',
         boxShadow: '0 8px 32px color-mix(in srgb, var(--primary) 35%, transparent)',
       }}>
       {/* decorative circles */}
@@ -70,7 +70,7 @@ function ProfileCompleteness() {
     );
   }
 
-  const barColor = pct >= 80 ? 'var(--primary)' : pct >= 50 ? '#f59e0b' : '#ef4444';
+  const barColor = pct >= 80 ? 'var(--primary)' : pct >= 50 ? 'var(--accent)' : '#ef4444';
   const isDone = pct === 100;
 
   return (
@@ -345,7 +345,7 @@ function QuickActions() {
     { icon: MagnifyingGlass, label: 'ابحث عن أشخاص', href: '/search', color: 'var(--accent)' },
     { icon: HeartHalf, label: 'التوافقات', href: '/matching', color: '#ec4899' },
     { icon: Baby, label: 'توقع شكل طفلك', href: '/child-prediction', color: '#8b5cf6' },
-    { icon: Sparkle, label: 'ترقية الحساب', href: '/upgrade', color: '#f59e0b' },
+    { icon: Sparkle, label: 'ترقية الحساب', href: '/upgrade', color: 'var(--accent)' },
   ];
   return (
     <div className="rounded-2xl p-3 card-theme-default border">

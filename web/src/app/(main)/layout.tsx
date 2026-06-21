@@ -6,7 +6,7 @@ import { OfflineBanner } from '@/components/ui/OfflineBanner';
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
-      <div data-theme="light-green" className="min-h-screen transition-colors duration-300" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
+      <div data-theme="luxury" className="min-h-screen transition-colors duration-300" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
         <OfflineBanner />
         <Navbar />
         <div className="mx-auto max-w-7xl px-3 sm:px-6 py-5">
