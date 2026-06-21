@@ -48,12 +48,12 @@ export default function EventsPage() {
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="mb-6 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] p-5 shadow-lg shadow-emerald-500/10 border border-emerald-100 space-y-3">
+        <form onSubmit={handleCreate} className="mb-6 rounded-2xl p-5 border space-y-3" style={{ background: 'var(--card)', borderColor: 'var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
           <div>
             <label htmlFor="event-title" className={LABEL_CLASS}>عنوان الحدث <span className="text-red-400">*</span></label>
             <input id="event-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="أدخل عنوان الحدث" className={INPUT_CLASS} required />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="event-start" className={LABEL_CLASS}>تاريخ البداية <span className="text-red-400">*</span></label>
               <input id="event-start" type="datetime-local" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={INPUT_CLASS} required />

@@ -553,6 +553,7 @@
     font-family: 'Noto Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
   .dark body {
@@ -923,6 +924,17 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* iOS safe-area bottom padding for fixed bottom nav */
+  .pb-safe {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.5rem);
+  }
+
+  /* Prevent horizontal overflow on mobile */
+  .overflow-x-safe {
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   /* Aspect ratio */

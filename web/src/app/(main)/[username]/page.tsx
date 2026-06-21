@@ -52,8 +52,8 @@ export default function UserProfilePage() {
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="h-64 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse border border-emerald-100" />
-        <div className="h-96 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse border border-emerald-100" />
+        <div className="h-64 rounded-2xl bg-[var(--card)] animate-pulse border border-[var(--border)]" />
+        <div className="h-96 rounded-2xl bg-[var(--card)] animate-pulse border border-[var(--border)]" />
       </div>
     );
   }
@@ -62,7 +62,7 @@ export default function UserProfilePage() {
     return (
       <div className="text-center py-16">
         <p className="text-4xl mb-3">👤</p>
-        <p className="text-[#10B981] font-medium">المستخدم غير موجود</p>
+        <p className="text-[var(--primary)] font-medium">المستخدم غير موجود</p>
       </div>
     );
   }
@@ -90,7 +90,7 @@ export default function UserProfilePage() {
         {activeTab === 'videos'   && <VideosTab   userId={profile.userId} />}
         {activeTab === 'activity' && (isSelf
           ? <ActivityLogViewer userId={profile.userId} />
-          : <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-8 text-center text-[#10B981]">🔒 النشاط خاص</div>
+          : <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center text-[var(--primary)]">🔒 النشاط خاص</div>
         )}
       </div>
     </div>
@@ -114,7 +114,7 @@ function PostsTab({ userId }: { userId: string }) {
     return (
       <div className="space-y-3">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-32 rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse border border-emerald-100" />
+          <div key={i} className="h-32 rounded-2xl bg-[var(--card)] animate-pulse border border-[var(--border)]" />
         ))}
       </div>
     );
@@ -122,18 +122,18 @@ function PostsTab({ userId }: { userId: string }) {
 
   if (isError) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-8 text-center">
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center">
         <p className="text-2xl mb-2">⚠️</p>
-        <p className="text-[#10B981] text-sm">فشل تحميل المنشورات</p>
+        <p className="text-[var(--primary)] text-sm">فشل تحميل المنشورات</p>
       </div>
     );
   }
 
   if (posts.length === 0 && page === 1) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-10 text-center">
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
         <p className="text-3xl mb-2">📝</p>
-        <p className="text-[#10B981]">لا توجد منشورات</p>
+        <p className="text-[var(--primary)]">لا توجد منشورات</p>
       </div>
     );
   }
@@ -148,15 +148,15 @@ function PostsTab({ userId }: { userId: string }) {
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-[#10B981] border border-emerald-200 hover:bg-[#ECFDF5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             السابق
           </button>
-          <span className="text-sm text-[#10B981]">{page} / {totalPages}</span>
+          <span className="text-sm text-[var(--primary)]">{page} / {totalPages}</span>
           <button
             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-[#10B981] border border-emerald-200 hover:bg-[#ECFDF5] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             التالي
           </button>
@@ -173,17 +173,17 @@ function AboutTab({ profile }: { profile: any }) {
         {profile.workEntries?.length > 0 ? (
           <div className="space-y-3">
             {profile.workEntries.map((work: any, i: number) => (
-              <div key={i} className="rounded-xl bg-[#ECFDF5] border border-emerald-100 p-4">
-                <p className="font-semibold text-[#065F46]">{work.company}</p>
-                <p className="text-sm text-[#10B981]">{work.position}</p>
-                <p className="text-xs text-emerald-400 mt-1">
+              <div key={i} className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-4">
+                <p className="font-semibold text-[var(--foreground)]">{work.company}</p>
+                <p className="text-sm text-[var(--primary)]">{work.position}</p>
+                <p className="text-xs text-[var(--muted-foreground)] mt-1">
                   {work.startDate} - {work.isCurrent ? 'حتى الآن' : work.endDate}
                 </p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-[#10B981] text-sm">لم تتم إضافة معلومات العمل</p>
+          <p className="text-[var(--primary)] text-sm">لم تتم إضافة معلومات العمل</p>
         )}
       </ProfileSection>
 
@@ -191,42 +191,42 @@ function AboutTab({ profile }: { profile: any }) {
         {profile.educationEntries?.length > 0 ? (
           <div className="space-y-3">
             {profile.educationEntries.map((edu: any, i: number) => (
-              <div key={i} className="rounded-xl bg-[#ECFDF5] border border-emerald-100 p-4">
-                <p className="font-semibold text-[#065F46]">{edu.school}</p>
-                <p className="text-sm text-[#10B981]">{edu.degree}</p>
-                <p className="text-xs text-emerald-400 mt-1">
+              <div key={i} className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-4">
+                <p className="font-semibold text-[var(--foreground)]">{edu.school}</p>
+                <p className="text-sm text-[var(--primary)]">{edu.degree}</p>
+                <p className="text-xs text-[var(--muted-foreground)] mt-1">
                   {edu.startYear} - {edu.endYear}
                 </p>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-[#10B981] text-sm">لم تتم إضافة معلومات التعليم</p>
+          <p className="text-[var(--primary)] text-sm">لم تتم إضافة معلومات التعليم</p>
         )}
       </ProfileSection>
 
       <ProfileSection title="معلومات أساسية" icon="ℹ️">
         <div className="grid grid-cols-2 gap-3">
           {profile.relationshipStatus && (
-            <div className="rounded-xl bg-[#ECFDF5] border border-emerald-100 p-3">
-              <p className="text-xs text-emerald-400 mb-0.5">الحالة الاجتماعية</p>
-              <p className="text-sm font-semibold text-[#065F46]">{profile.relationshipStatus}</p>
+            <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-3">
+              <p className="text-xs text-[var(--muted-foreground)] mb-0.5">الحالة الاجتماعية</p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">{profile.relationshipStatus}</p>
             </div>
           )}
           {profile.location && (
-            <div className="rounded-xl bg-[#ECFDF5] border border-emerald-100 p-3">
-              <p className="text-xs text-emerald-400 mb-0.5">الموقع</p>
-              <p className="text-sm font-semibold text-[#065F46]">{profile.location}</p>
+            <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-3">
+              <p className="text-xs text-[var(--muted-foreground)] mb-0.5">الموقع</p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">{profile.location}</p>
             </div>
           )}
           {safeWebsite(profile.website) && (
-            <div className="rounded-xl bg-[#ECFDF5] border border-emerald-100 p-3 col-span-2">
-              <p className="text-xs text-emerald-400 mb-0.5">الموقع الإلكتروني</p>
+            <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-3 col-span-2">
+              <p className="text-xs text-[var(--muted-foreground)] mb-0.5">الموقع الإلكتروني</p>
               <a
                 href={safeWebsite(profile.website)!}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm font-semibold text-[#059669] hover:underline"
+                className="text-sm font-semibold text-[var(--primary)] hover:underline"
               >
                 {profile.website}
               </a>
@@ -253,9 +253,9 @@ function FriendsTab({ userId }: { userId: string }) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] animate-pulse border border-emerald-100 h-28" />
+          <div key={i} className="rounded-2xl bg-[var(--card)] animate-pulse border border-[var(--border)] h-28" />
         ))}
       </div>
     );
@@ -263,45 +263,45 @@ function FriendsTab({ userId }: { userId: string }) {
 
   if (isError) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-8 text-center">
-        <p className="text-[#10B981] text-sm">تعذّر تحميل الأصدقاء</p>
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center">
+        <p className="text-[var(--primary)] text-sm">تعذّر تحميل الأصدقاء</p>
       </div>
     );
   }
 
   if (friends.length === 0) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-10 text-center">
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
         <p className="text-3xl mb-2">👥</p>
-        <p className="text-[#10B981]">لا توجد أصدقاء</p>
+        <p className="text-[var(--primary)]">لا توجد أصدقاء</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {friends.map((friend: any, i: number) => (
-          <Link key={i} href={friend.username ? `/${friend.username}` : '#'} className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-4 text-center shadow-sm hover:shadow-md hover:shadow-emerald-500/10 transition-all">
+          <Link key={i} href={friend.username ? `/${friend.username}` : '#'} className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 text-center shadow-sm hover:shadow-md hover:shadow-emerald-500/10 transition-all">
             <div className="h-16 w-16 mx-auto rounded-full bg-emerald-100 flex items-center justify-center mb-2">
               {friend.avatarUrl ? (
                 <img src={friend.avatarUrl} alt="" className="h-full w-full object-cover rounded-full" />
               ) : (
-                <span className="text-xl font-bold text-[#059669]">{friend.fullName?.charAt(0)}</span>
+                <span className="text-xl font-bold text-[var(--primary)]">{friend.fullName?.charAt(0)}</span>
               )}
             </div>
-            <p className="text-sm font-semibold text-[#065F46] truncate">{friend.fullName}</p>
+            <p className="text-sm font-semibold text-[var(--foreground)] truncate">{friend.fullName}</p>
             {friend.mutualFriends > 0 && (
-              <p className="text-xs text-[#10B981] mt-0.5">{friend.mutualFriends} مشترك</p>
+              <p className="text-xs text-[var(--primary)] mt-0.5">{friend.mutualFriends} مشترك</p>
             )}
           </Link>
         ))}
       </div>
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[#10B981] border border-emerald-200 hover:bg-[#ECFDF5] disabled:opacity-40 transition-colors">السابق</button>
-          <span className="text-sm text-[#10B981]">{page} / {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[#10B981] border border-emerald-200 hover:bg-[#ECFDF5] disabled:opacity-40 transition-colors">التالي</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">السابق</button>
+          <span className="text-sm text-[var(--primary)]">{page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">التالي</button>
         </div>
       )}
     </div>
@@ -323,9 +323,9 @@ function PhotosTab({ userId }: { userId: string }) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-          <div key={i} className="aspect-square bg-[#DCFCE7]/60 rounded-xl animate-pulse" />
+          <div key={i} className="aspect-square bg-[var(--muted)]/60 rounded-xl animate-pulse" />
         ))}
       </div>
     );
@@ -333,26 +333,26 @@ function PhotosTab({ userId }: { userId: string }) {
 
   if (isError) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-8 text-center">
-        <p className="text-[#10B981] text-sm">تعذّر تحميل الصور</p>
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center">
+        <p className="text-[var(--primary)] text-sm">تعذّر تحميل الصور</p>
       </div>
     );
   }
 
   if (photos.length === 0) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-10 text-center">
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
         <p className="text-3xl mb-2">🖼️</p>
-        <p className="text-[#10B981]">لا توجد صور</p>
+        <p className="text-[var(--primary)]">لا توجد صور</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {photos.map((photo: any, i: number) => (
-          <div key={i} className="aspect-square bg-[#DCFCE7]/40 rounded-xl overflow-hidden border border-emerald-100">
+          <div key={i} className="aspect-square bg-[var(--muted)]/40 rounded-xl overflow-hidden border border-[var(--border)]">
             {photo.metadata?.url && (
               <img src={photo.metadata.url} alt="" className="w-full h-full object-cover" />
             )}
@@ -361,9 +361,9 @@ function PhotosTab({ userId }: { userId: string }) {
       </div>
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[#10B981] border border-emerald-200 hover:bg-[#ECFDF5] disabled:opacity-40 transition-colors">السابق</button>
-          <span className="text-sm text-[#10B981]">{page} / {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[#10B981] border border-emerald-200 hover:bg-[#ECFDF5] disabled:opacity-40 transition-colors">التالي</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">السابق</button>
+          <span className="text-sm text-[var(--primary)]">{page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">التالي</button>
         </div>
       )}
     </div>
@@ -385,9 +385,9 @@ function VideosTab({ userId }: { userId: string }) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {[1, 2, 3, 4, 5, 6].map(i => (
-          <div key={i} className="aspect-video bg-[#DCFCE7]/60 rounded-xl animate-pulse" />
+          <div key={i} className="aspect-video bg-[var(--muted)]/60 rounded-xl animate-pulse" />
         ))}
       </div>
     );
@@ -395,17 +395,17 @@ function VideosTab({ userId }: { userId: string }) {
 
   if (isError) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-8 text-center">
-        <p className="text-[#10B981] text-sm">تعذّر تحميل الفيديوهات</p>
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center">
+        <p className="text-[var(--primary)] text-sm">تعذّر تحميل الفيديوهات</p>
       </div>
     );
   }
 
   if (videos.length === 0) {
     return (
-      <div className="rounded-2xl bg-gradient-to-br from-[#ECFDF5] to-[#F0FDF4] border border-emerald-100 p-10 text-center">
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
         <p className="text-3xl mb-2">🎬</p>
-        <p className="text-[#10B981]">لا توجد فيديوهات</p>
+        <p className="text-[var(--primary)]">لا توجد فيديوهات</p>
       </div>
     );
   }
@@ -414,7 +414,7 @@ function VideosTab({ userId }: { userId: string }) {
     <div className="space-y-4">
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {videos.map((video: any) => (
-          <Link key={video.id} href={`/watch/${video.id}`} className="group relative aspect-video bg-[#DCFCE7]/40 rounded-xl overflow-hidden border border-emerald-100">
+          <Link key={video.id} href={`/watch/${video.id}`} className="group relative aspect-video bg-[var(--muted)]/40 rounded-xl overflow-hidden border border-[var(--border)]">
             {video.thumbnail ? (
               <img src={video.thumbnail} alt={video.title || ''} className="w-full h-full object-cover" />
             ) : (
@@ -433,9 +433,9 @@ function VideosTab({ userId }: { userId: string }) {
       </div>
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[#10B981] border border-emerald-200 hover:bg-[#ECFDF5] disabled:opacity-40 transition-colors">السابق</button>
-          <span className="text-sm text-[#10B981]">{page} / {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[#10B981] border border-emerald-200 hover:bg-[#ECFDF5] disabled:opacity-40 transition-colors">التالي</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">السابق</button>
+          <span className="text-sm text-[var(--primary)]">{page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">التالي</button>
         </div>
       )}
     </div>

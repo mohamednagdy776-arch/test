@@ -10,6 +10,8 @@ import { useMyProfile } from '@/features/profile/hooks';
 import {
   House, Heart, MagnifyingGlass, UsersThree, ChatCircle,
   SignOut, List, X, User, CaretDown, CalendarBlank, Crown,
+  UsersThree as Friends, ShieldCheck, BookmarkSimple, Clock,
+  PlayCircle, FilmStrip, Baby, TestTube, ShareNetwork, Gear,
 } from '@phosphor-icons/react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
@@ -117,14 +119,13 @@ export const Navbar = () => {
             })}
           </div>
 
-          {/* Right side */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop right side (lg+) */}
+          <div className="hidden lg:flex items-center gap-2">
             <NotificationBell />
 
-            {/* Premium upgrade */}
             <Link
               href="/upgrade"
-              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 hover:scale-105"
+              className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 hover:scale-105"
               style={{
                 background: 'linear-gradient(135deg, var(--accent) 0%, #D4A853 100%)',
                 color: '#0A3D2B',
@@ -135,7 +136,6 @@ export const Navbar = () => {
               مميز
             </Link>
 
-            {/* User avatar */}
             <Link
               href="/profile"
               className="flex items-center gap-2 px-2 py-1.5 rounded-xl transition-all duration-200"
@@ -169,15 +169,15 @@ export const Navbar = () => {
                   style={{ background: '#22c55e', borderColor: 'var(--card)', boxShadow: '0 0 5px rgba(34,197,94,0.5)' }}
                 />
               </div>
-              <span className="hidden xl:block text-xs font-semibold max-w-[80px] truncate" style={{ color: 'var(--foreground)' }}>
+              <span className="hidden 2xl:block text-xs font-semibold max-w-[80px] truncate" style={{ color: 'var(--foreground)' }}>
                 {displayName}
               </span>
-              <CaretDown size={11} className="hidden xl:block" style={{ color: 'var(--muted-foreground)' }} />
+              <CaretDown size={11} className="hidden 2xl:block" style={{ color: 'var(--muted-foreground)' }} />
             </Link>
 
             <button
               onClick={logout}
-              className="flex items-center p-2 rounded-xl text-xs transition-all duration-200"
+              className="flex items-center p-2 rounded-xl transition-all duration-200"
               style={{ color: 'var(--muted-foreground)' }}
               onMouseEnter={(e) => {
                 (e.currentTarget as HTMLElement).style.background = 'rgba(160,48,48,0.08)';
@@ -193,8 +193,8 @@ export const Navbar = () => {
             </button>
           </div>
 
-          {/* Mobile */}
-          <div className="flex md:hidden items-center gap-2">
+          {/* Mobile + tablet (below lg) — notification bell + hamburger for secondary features */}
+          <div className="flex lg:hidden items-center gap-2">
             <NotificationBell />
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
@@ -209,10 +209,10 @@ export const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile drawer */}
+        {/* Mobile + tablet drawer (hidden on lg+ where sidebar handles navigation) */}
         {mobileOpen && (
           <div
-            className="md:hidden border-t animate-slide-down overflow-hidden"
+            className="lg:hidden border-t animate-slide-down overflow-hidden"
             style={{ background: 'var(--card)', borderColor: 'color-mix(in srgb, var(--accent) 20%, var(--border))' }}
           >
             {/* User strip */}
@@ -233,34 +233,39 @@ export const Navbar = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-1 p-3">
-              {navLinks.map(({ href, label, icon: Icon }) => {
+            {/* Secondary features — not in the bottom nav */}
+            <div className="p-3 grid grid-cols-4 gap-1">
+              {[
+                { href: '/friends',          label: 'الأصدقاء',   icon: UsersThree },
+                { href: '/family',           label: 'العائلة',    icon: ShieldCheck },
+                { href: '/events',           label: 'الفعاليات',  icon: CalendarBlank },
+                { href: '/groups',           label: 'المجتمعات',  icon: UsersThree },
+                { href: '/saved',            label: 'المحفوظات',  icon: BookmarkSimple },
+                { href: '/memories',         label: 'الذكريات',   icon: Clock },
+                { href: '/reels',            label: 'ريلز',       icon: FilmStrip },
+                { href: '/watch',            label: 'Watch',      icon: PlayCircle },
+                { href: '/child-prediction', label: 'التوقع',     icon: Baby },
+                { href: '/lab-portal',       label: 'المختبرات',  icon: TestTube },
+                { href: '/affiliates',       label: 'الإحالة',    icon: ShareNetwork },
+                { href: '/settings',         label: 'الإعدادات',  icon: Gear },
+              ].map(({ href, label, icon: Icon }) => {
                 const isActive = pathname === href;
                 return (
                   <Link
                     key={href}
                     href={href}
                     onClick={() => setMobileOpen(false)}
-                    className="flex flex-col items-center gap-1 p-3 rounded-xl text-xs font-semibold transition-all duration-200"
+                    className="flex flex-col items-center gap-1 p-2.5 rounded-xl text-[11px] font-semibold transition-all duration-200"
                     style={{
                       color: isActive ? 'var(--accent)' : 'var(--muted-foreground)',
                       background: isActive ? 'color-mix(in srgb, var(--accent) 8%, transparent)' : undefined,
                     }}
                   >
-                    <Icon size={22} weight={isActive ? 'fill' : 'regular'} />
+                    <Icon size={20} weight={isActive ? 'fill' : 'regular'} />
                     {label}
                   </Link>
                 );
               })}
-              <Link
-                href="/profile"
-                onClick={() => setMobileOpen(false)}
-                className="flex flex-col items-center gap-1 p-3 rounded-xl text-xs font-semibold"
-                style={{ color: 'var(--muted-foreground)' }}
-              >
-                <User size={22} />
-                الملف
-              </Link>
             </div>
 
             <div className="px-3 pb-3 flex gap-2">
