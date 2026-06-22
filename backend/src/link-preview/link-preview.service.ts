@@ -1,0 +1,191 @@
+import { Injectable } from '@nestjs/common';
+import axios from 'axios';
+import { lookup } from 'dns/promises';
+import { isIP } from 'net';
+import { RedisCacheService } from '../common/services/redis-cache.service';
+
+export interface LinkPreview {
+  url: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  siteName?: string;
+}
+
+const PREVIEW_TTL = 24 * 60 * 60; // 24h — OG data rarely changes
+const FETCH_TIMEOUT = 6000;
+const MAX_BYTES = 1024 * 1024; // 1MB — we only need the <head>
+const UA =
+  'Mozilla/5.0 (compatible; TayyibtBot/1.0; +https://tayyibt.app) link-preview';
+
+// The first http(s) URL in a block of text (used by chat + post enrichment).
+const URL_RE = /\bhttps?:\/\/[^\s<>"')]+/i;
+
+@Injectable()
+export class LinkPreviewService {
+  constructor(private redis: RedisCacheService) {}
+
+  extractFirstUrl(text?: string | null): string | null {
+    if (!text) return null;
+    const match = text.match(URL_RE);
+    return match ? match[0].replace(/[.,;:!?)]+$/, '') : null;
+  }
+
+  async getPreview(rawUrl: string): Promise<LinkPreview | null> {
+    let url: URL;
+    try {
+      url = new URL(rawUrl);
+    } catch {
+      return null;
+    }
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+
+    const cacheKey = `link_preview:${url.href}`;
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        /* fall through and refetch */
+      }
+    }
+
+    if (!(await this.isPublicHost(url.hostname))) return null;
+
+    const preview = await this.fetchAndParse(url);
+    if (preview) {
+      // Cache successes longer; cache "no preview" briefly to avoid hammering.
+      await this.redis.set(cacheKey, JSON.stringify(preview), PREVIEW_TTL);
+    } else {
+      await this.redis.set(cacheKey, JSON.stringify({ url: url.href }), 10 * 60);
+      return { url: url.href };
+    }
+    return preview;
+  }
+
+  // SSRF guard: never fetch URLs that resolve to private/loopback/link-local IPs.
+  private async isPublicHost(hostname: string): Promise<boolean> {
+    try {
+      const addrs = isIP(hostname)
+        ? [{ address: hostname }]
+        : await lookup(hostname, { all: true });
+      return addrs.every((a) => !this.isPrivateIp(a.address));
+    } catch {
+      return false;
+    }
+  }
+
+  private isPrivateIp(ip: string): boolean {
+    if (ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80')) {
+      return true;
+    }
+    const parts = ip.split('.').map(Number);
+    if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) {
+      // Non-IPv4 (e.g. IPv6 mapped) — be conservative for anything unrecognised.
+      return ip.includes('::');
+    }
+    const [a, b] = parts;
+    return (
+      a === 0 ||
+      a === 10 ||
+      a === 127 ||
+      (a === 169 && b === 254) || // link-local
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 100 && b >= 64 && b <= 127) // carrier-grade NAT
+    );
+  }
+
+  private async fetchAndParse(url: URL): Promise<LinkPreview | null> {
+    let html: string;
+    try {
+      const res = await axios.get(url.href, {
+        timeout: FETCH_TIMEOUT,
+        maxContentLength: MAX_BYTES,
+        maxRedirects: 3,
+        responseType: 'text',
+        headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml' },
+        // Only HTML is useful for OG parsing.
+        validateStatus: (s) => s >= 200 && s < 400,
+      });
+      const contentType = String(res.headers['content-type'] || '');
+      if (contentType && !contentType.includes('html')) return null;
+      html = typeof res.data === 'string' ? res.data : String(res.data);
+    } catch {
+      return null;
+    }
+
+    const head = html.slice(0, 200_000); // OG tags live in <head>
+    const meta = (...names: string[]): string | undefined => {
+      for (const name of names) {
+        const v = this.readMeta(head, name);
+        if (v) return v;
+      }
+      return undefined;
+    };
+
+    const title =
+      meta('og:title', 'twitter:title') || this.readTitle(head) || undefined;
+    const description = meta('og:description', 'twitter:description', 'description');
+    const rawImage = meta('og:image', 'og:image:url', 'twitter:image', 'twitter:image:src');
+    const siteName = meta('og:site_name');
+
+    const image = rawImage ? this.absolutize(rawImage, url) : undefined;
+
+    if (!title && !description && !image) return null;
+    return {
+      url: url.href,
+      title: this.decode(title),
+      description: this.decode(description),
+      image,
+      siteName: this.decode(siteName) || url.hostname,
+    };
+  }
+
+  private readMeta(html: string, name: string): string | undefined {
+    // Match <meta property|name="<name>" content="..."> in either attr order.
+    const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const patterns = [
+      new RegExp(
+        `<meta[^>]+(?:property|name)\\s*=\\s*["']${esc}["'][^>]*?content\\s*=\\s*["']([^"']*)["']`,
+        'i',
+      ),
+      new RegExp(
+        `<meta[^>]+content\\s*=\\s*["']([^"']*)["'][^>]*?(?:property|name)\\s*=\\s*["']${esc}["']`,
+        'i',
+      ),
+    ];
+    for (const re of patterns) {
+      const m = html.match(re);
+      if (m && m[1]) return m[1].trim();
+    }
+    return undefined;
+  }
+
+  private readTitle(html: string): string | undefined {
+    const m = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+    return m ? m[1].trim() : undefined;
+  }
+
+  private absolutize(src: string, base: URL): string | undefined {
+    try {
+      return new URL(src, base).href;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private decode(s?: string): string | undefined {
+    if (!s) return s;
+    return s
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#0?39;/g, "'")
+      .replace(/&#x27;/gi, "'")
+      .replace(/&apos;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .trim();
+  }
+}

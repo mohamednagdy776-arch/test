@@ -79,6 +79,12 @@ export class CreatePostDto {
   @IsString()
   linkImage?: string;
 
+  // Set when the author explicitly removed the auto-detected link preview, so
+  // the server skips Open Graph enrichment for this post.
+  @IsOptional()
+  @IsBoolean()
+  noLinkPreview?: boolean;
+
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(10)

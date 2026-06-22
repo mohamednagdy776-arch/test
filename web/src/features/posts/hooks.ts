@@ -39,8 +39,8 @@ export function useGroupPosts(groupId: string, page = 1, limit = 20) {
 export function useCreatePost() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ groupId, content, mediaUrl, mediaType, mediaUrls, bgColor, feeling, location, audience, scheduledAt, pollOptions, postType }: { groupId: string; content: string; mediaUrl?: string; mediaType?: string; mediaUrls?: string[]; bgColor?: string; feeling?: string; location?: string; audience?: string; scheduledAt?: string; pollOptions?: { text: string; votes: number }[]; postType?: string }) =>
-      postsApi.createPost(groupId, { content, mediaUrl, mediaType, mediaUrls, bgColor, feeling, location, audience, scheduledAt, pollOptions, postType }),
+    mutationFn: ({ groupId, content, mediaUrl, mediaType, mediaUrls, bgColor, feeling, location, audience, scheduledAt, pollOptions, postType, linkUrl, linkTitle, linkDescription, linkImage, noLinkPreview }: { groupId: string; content: string; mediaUrl?: string; mediaType?: string; mediaUrls?: string[]; bgColor?: string; feeling?: string; location?: string; audience?: string; scheduledAt?: string; pollOptions?: { text: string; votes: number }[]; postType?: string; linkUrl?: string; linkTitle?: string; linkDescription?: string; linkImage?: string; noLinkPreview?: boolean }) =>
+      postsApi.createPost(groupId, { content, mediaUrl, mediaType, mediaUrls, bgColor, feeling, location, audience, scheduledAt, pollOptions, postType, linkUrl, linkTitle, linkDescription, linkImage, noLinkPreview }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['feed-recent'] });

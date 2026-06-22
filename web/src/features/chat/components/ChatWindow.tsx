@@ -7,6 +7,8 @@ import { getSocket, getCurrentUserId } from '@/lib/socket-client';
 import { useDeleteMessage } from '@/features/chat/hooks';
 import { postsApi } from '@/features/posts/api';
 import { resolveMediaUrl } from '@/lib/media';
+import { linkifyText, extractFirstUrl } from '@/lib/linkify';
+import { LinkPreviewCard } from './LinkPreviewCard';
 import type { Match } from '@/types';
 import {
   ArrowLeft, Phone, VideoCamera, DotsThreeVertical,
@@ -412,7 +414,13 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                     ? { background: 'rgba(255,255,255,0.15)', borderRight: '2px solid rgba(255,255,255,0.45)', color: 'rgba(255,255,255,0.85)' }
                     : { background: 'color-mix(in srgb, var(--primary) 6%, var(--muted))', borderRight: '2px solid var(--primary)', color: 'var(--muted-foreground)' }}>
                   {(() => {
-                    const replyContent = getReplyMessage(msg.replyToId)?.content || 'رسالة محذوفة';
+                    const replied = getReplyMessage(msg.replyToId);
+                    // Not in the loaded thread → genuinely gone. A media message
+                    // has empty content but is NOT deleted — show a media label.
+                    if (!replied) return 'رسالة محذوفة';
+                    if (replied.isDeletedForEveryone) return 'تم حذف الرسالة';
+                    if (replied.type === 'image' || (!replied.content && replied.mediaUrl)) return '📷 صورة';
+                    const replyContent = replied.content || 'رسالة محذوفة';
                     return replyContent.length > 40 ? replyContent.slice(0, 40) + '...' : replyContent;
                   })()}
                 </div>
@@ -429,15 +437,19 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                 </div>
               ) : (
                 <>
-                  <p className="leading-relaxed" dir="auto"
+                  <p className="leading-relaxed whitespace-pre-wrap" dir="auto"
                     style={{ color: msg.isOwn ? 'white' : 'var(--foreground)' }}>
-                    {msg.content}
+                    {linkifyText(msg.content, msg.isOwn ? 'text-white' : 'text-[var(--primary)]')}
                   </p>
                   {msg.isEdited && (
                     <span className="text-[10px]" style={{ opacity: 0.6, color: msg.isOwn ? 'white' : 'var(--muted-foreground)' }}>
                       (تم التعديل)
                     </span>
                   )}
+                  {(() => {
+                    const previewUrl = extractFirstUrl(msg.content);
+                    return previewUrl ? <LinkPreviewCard url={previewUrl} isOwn={msg.isOwn} /> : null;
+                  })()}
                 </>
               )}
 

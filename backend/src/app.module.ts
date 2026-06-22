@@ -34,6 +34,7 @@ import { ConsentModule } from './consent/consent.module';
 import { MedicalModule } from './medical/medical.module';
 import { LabPortalModule } from './lab-portal/lab-portal.module';
 import { FamilyModule } from './family/family.module';
+import { LinkPreviewModule } from './link-preview/link-preview.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { FamilyModule } from './family/family.module';
     MedicalModule,
     LabPortalModule,
     FamilyModule,
+    LinkPreviewModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
 })
