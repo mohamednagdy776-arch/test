@@ -218,7 +218,7 @@ export default function NotificationsPage() {
       onClick={onClick}
       disabled={disabled}
       className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
-        enabled ? 'bg-[var(--muted)]0 shadow-inner' : 'bg-sage-300'
+        enabled ? 'bg-[var(--primary)] shadow-inner' : 'bg-[var(--muted-foreground)]/30'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span
@@ -313,8 +313,8 @@ export default function NotificationsPage() {
                     key={setting.key}
                     className={`flex items-start justify-between p-3 rounded-xl border transition-all ${
                       !masterNotificationsEnabled
-                        ? 'bg-sage-50/50 border-sage-200/50 opacity-60'
-                        : 'bg-white/50 border-[var(--border)]/50'
+                        ? 'bg-[var(--muted)]/50 border-[var(--border)]/50 opacity-60'
+                        : 'bg-[var(--card)]/50 border-[var(--border)]/50'
                     }`}
                   >
                     <div className="flex items-start gap-3 flex-1">
@@ -371,7 +371,7 @@ export default function NotificationsPage() {
                   {NEWSLETTER_SETTINGS.map((setting) => (
                     <div
                       key={setting.key}
-                      className="flex items-start justify-between p-3 rounded-xl bg-white/50 border border-[var(--border)]/50"
+                      className="flex items-start justify-between p-3 rounded-xl bg-[var(--card)]/50 border border-[var(--border)]/50"
                     >
                       <div className="flex items-start gap-3 flex-1">
                         <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-sm">

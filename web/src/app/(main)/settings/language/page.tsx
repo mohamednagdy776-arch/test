@@ -72,7 +72,7 @@ export default function LanguagePage() {
                   <p className="text-sm text-[var(--primary)]">{lang.native}</p>
                 </div>
                 <span className={`h-6 w-6 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                  isActive ? 'bg-[var(--muted)]0 text-white' : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
+                  isActive ? 'bg-[var(--primary)] text-white' : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
                 }`}>
                   {isActive ? '✓' : ''}
                 </span>

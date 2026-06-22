@@ -37,7 +37,7 @@ export default function NotificationsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--muted)] via-[var(--card)] to-amber-50/30 p-4 md:p-6">
+    <div>
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-[var(--foreground)]">الإشعارات</h1>
@@ -59,8 +59,8 @@ export default function NotificationsPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors relative ${
                 activeTab === tab.id
-                  ? 'text-[var(--primary)] border-b-2 border-[var(--primary)]'
-                  : 'text-[var(--primary)] hover:text-[var(--primary)]'
+                  ? 'text-[var(--primary)] border-b-2 border-[var(--accent)]'
+                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               }`}
             >
               {tab.label}

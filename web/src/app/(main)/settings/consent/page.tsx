@@ -150,12 +150,12 @@ export default function ConsentManagementPage() {
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 bg-white/60 p-1 rounded-2xl border border-[var(--border)]/50">
+        <div className="flex gap-2 mb-6 bg-[var(--card)]/60 p-1 rounded-2xl border border-[var(--border)]/50">
           <button
             onClick={() => setTab('incoming')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               tab === 'incoming'
-                ? 'bg-[var(--muted)]0 text-white shadow-md'
+                ? 'bg-[var(--primary)] text-white shadow-md'
                 : 'text-[var(--primary)] hover:bg-[var(--muted)]'
             }`}
           >
@@ -170,7 +170,7 @@ export default function ConsentManagementPage() {
             onClick={() => setTab('outgoing')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               tab === 'outgoing'
-                ? 'bg-[var(--muted)]0 text-white shadow-md'
+                ? 'bg-[var(--primary)] text-white shadow-md'
                 : 'text-[var(--primary)] hover:bg-[var(--muted)]'
             }`}
           >

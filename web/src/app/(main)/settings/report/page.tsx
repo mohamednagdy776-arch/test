@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 const ISSUE_TYPES = [
   { value: 'bug', label: 'خطأ تقني', icon: '🐛', color: 'bg-red-100' },
@@ -22,6 +23,7 @@ export default function ReportPage() {
   const [sending, setSending] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -53,7 +55,7 @@ export default function ReportPage() {
       setSubmitted(true);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'فشل إرسال البلاغ. يرجى المحاولة مجدداً.';
-      alert(msg);
+      showToast(msg, 'error');
     } finally {
       setSending(false);
     }
@@ -109,7 +111,7 @@ export default function ReportPage() {
                   className={`p-4 rounded-xl border-2 transition-all duration-300 ${
                     issueType === type.value
                       ? 'border-[var(--ring)] bg-[var(--muted)]/80 shadow-lg shadow-black/5'
-                      : 'border-[var(--border)]/50 bg-white/50 hover:border-[var(--border)] hover:shadow-md'
+                      : 'border-[var(--border)]/50 bg-[var(--card)]/50 hover:border-[var(--border)] hover:shadow-md'
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">

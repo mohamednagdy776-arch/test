@@ -237,8 +237,8 @@ function QuickStats() {
         <div className="grid grid-cols-3 gap-3">
           {[0, 1, 2].map((i) => (
             <div key={i} className="text-center">
-              <div className="h-7 rounded-lg bg-white/20 animate-pulse mb-1" />
-              <div className="h-2 rounded bg-white/10 animate-pulse" />
+              <div className="h-7 rounded-lg bg-[var(--card)]/20 animate-pulse mb-1" />
+              <div className="h-2 rounded bg-[var(--card)]/10 animate-pulse" />
             </div>
           ))}
         </div>
@@ -246,7 +246,7 @@ function QuickStats() {
         <div className="grid grid-cols-3 gap-2">
           {stats.map(({ label, value, icon: Icon, href }) => (
             <button key={label} onClick={() => router.push(href)}
-              className="flex flex-col items-center p-2.5 rounded-xl transition-all hover:bg-white/10 active:scale-95">
+              className="flex flex-col items-center p-2.5 rounded-xl transition-all hover:bg-[var(--card)]/10 active:scale-95">
               <Icon size={16} weight="fill" className="text-white/60 mb-1" />
               <span className="text-2xl font-extrabold text-white leading-none tabular-nums">
                 {value > 999 ? `${(value / 1000).toFixed(1)}k` : value}
@@ -256,7 +256,7 @@ function QuickStats() {
           ))}
         </div>
       )}
-      <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-white/5" />
+      <div className="absolute -bottom-4 -left-4 w-20 h-20 rounded-full bg-[var(--card)]/5" />
     </div>
   );
 }
@@ -488,7 +488,7 @@ function ChildPredictionWidget() {
         boxShadow: '0 6px 24px rgba(124,58,237,0.3)',
       }}>
       <div className="flex items-start gap-3 relative z-10">
-        <div className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-white/20">
+        <div className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center bg-[var(--card)]/20">
           <Baby size={24} weight="fill" className="text-white" />
         </div>
         <div className="flex-1 min-w-0">
@@ -503,7 +503,7 @@ function ChildPredictionWidget() {
         style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(8px)' }}>
         جرّب الآن ←
       </button>
-      <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/5" />
+      <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-[var(--card)]/5" />
     </div>
   );
 }

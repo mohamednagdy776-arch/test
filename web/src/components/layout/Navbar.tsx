@@ -8,7 +8,7 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 import { authApi } from '@/features/auth/api';
 import { useMyProfile } from '@/features/profile/hooks';
 import {
-  House, Heart, MagnifyingGlass, UsersThree, ChatCircle,
+  House, Heart, MagnifyingGlass, UsersThree, UsersFour, ChatCircle,
   SignOut, List, X, User, CaretDown, CalendarBlank, Crown,
   UsersThree as Friends, ShieldCheck, BookmarkSimple, Clock,
   PlayCircle, FilmStrip, Baby, TestTube, ShareNetwork, Gear,
@@ -20,7 +20,7 @@ const navLinks = [
   { href: '/dashboard', label: 'الرئيسية', icon: House },
   { href: '/matching', label: 'التوافق', icon: Heart },
   { href: '/search', label: 'البحث', icon: MagnifyingGlass },
-  { href: '/groups', label: 'المجتمعات', icon: UsersThree },
+  { href: '/groups', label: 'المجتمعات', icon: UsersFour },
   { href: '/events', label: 'الفعاليات', icon: CalendarBlank },
   { href: '/chat', label: 'المحادثات', icon: ChatCircle },
 ];
@@ -239,7 +239,7 @@ export const Navbar = () => {
                 { href: '/friends',          label: 'الأصدقاء',   icon: UsersThree },
                 { href: '/family',           label: 'العائلة',    icon: ShieldCheck },
                 { href: '/events',           label: 'الفعاليات',  icon: CalendarBlank },
-                { href: '/groups',           label: 'المجتمعات',  icon: UsersThree },
+                { href: '/groups',           label: 'المجتمعات',  icon: UsersFour },
                 { href: '/saved',            label: 'المحفوظات',  icon: BookmarkSimple },
                 { href: '/memories',         label: 'الذكريات',   icon: Clock },
                 { href: '/reels',            label: 'ريلز',       icon: FilmStrip },

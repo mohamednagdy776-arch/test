@@ -57,7 +57,7 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
           className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
           style={{ backgroundColor: 'rgba(0,0,0,0.25)', opacity: isHovered ? 1 : 0, pointerEvents: 'none' }}
         >
-          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 rounded-full bg-[var(--card)]/90 flex items-center justify-center shadow-lg">
             <PlayCircle size={28} weight="fill" style={{ color: 'var(--primary)' }} />
           </div>
         </div>

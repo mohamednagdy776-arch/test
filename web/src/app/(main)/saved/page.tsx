@@ -7,18 +7,21 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
 
 export default function SavedPage() {
   const { data: savedData, isLoading: savedLoading } = useSavedItems();
   const removeSaved = useRemoveSaved();
+  const { showToast } = useToast();
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
 
   const handleRemoveSaved = async () => {
     if (!pendingRemoveId) return;
     try {
       await removeSaved.mutateAsync(pendingRemoveId);
+      showToast('تمت إزالة العنصر من المحفوظات', 'success');
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'فشل إزالة العنصر');
+      showToast(err?.response?.data?.message || 'فشل إزالة العنصر', 'error');
     } finally {
       setPendingRemoveId(null);
     }
@@ -33,7 +36,7 @@ export default function SavedPage() {
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">المحفوظات</h1>
-        <p className="text-sm text-[var(--primary)]/70 mt-1">العناصر التي حفظتها لإعادةمشاهدتها لاحقاً</p>
+        <p className="text-sm text-[var(--primary)]/70 mt-1">العناصر التي حفظتها لإعادة مشاهدتها لاحقاً</p>
       </div>
 
       {savedLoading ? (
@@ -60,7 +63,7 @@ export default function SavedPage() {
                     )}
                     {item.entityType === 'video' && item.entity && (
                       <div className="flex gap-4 p-4 rounded-2xl bg-[var(--card)] border border-[var(--border)]">
-                        <div className="w-32 h-20 bg-gradient-to-br from-[var(--muted)] to-amber-100 rounded-xl flex items-center justify-center text-2xl">▶️</div>
+                        <div className="w-32 h-20 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl">▶️</div>
                         <div>
                           <p className="font-semibold text-[var(--foreground)]">{item.entity.title || 'فيديو'}</p>
                           <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.createdAt)}</p>
@@ -69,7 +72,7 @@ export default function SavedPage() {
                     )}
                     {item.entityType === 'story' && item.entity && (
                       <div className="flex gap-4 p-4 rounded-2xl bg-[var(--card)] border border-[var(--border)]">
-                        <div className="w-32 h-20 bg-gradient-to-br from-[var(--muted)] to-amber-100 rounded-xl flex items-center justify-center text-2xl">📸</div>
+                        <div className="w-32 h-20 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl">📸</div>
                         <div>
                           <p className="font-semibold text-[var(--foreground)]">قصة</p>
                           <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.createdAt)}</p>
@@ -81,7 +84,7 @@ export default function SavedPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => setPendingRemoveId(item.id)}
-                    className="text-rose-500 hover:bg-rose-50"
+                    className="text-[var(--destructive)] hover:bg-[var(--destructive)]/10"
                   >
                     🗑️
                   </Button>

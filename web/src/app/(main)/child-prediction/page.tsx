@@ -255,7 +255,7 @@ export default function ChildPredictionPage() {
             <div className="mt-4 flex justify-center gap-5 flex-wrap">
               {STEPS.map((s) => (
                 <div key={s} className={`flex items-center gap-1.5 text-xs transition-colors duration-500 ${stage === s ? 'text-[var(--primary)] font-semibold' : 'text-[var(--muted-foreground)]/70'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full transition-colors ${stage === s ? 'bg-[var(--muted)]0 animate-pulse' : 'bg-[var(--muted)]'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full transition-colors ${stage === s ? 'bg-[var(--primary)] animate-pulse' : 'bg-[var(--muted)]'}`} />
                   {LABELS[s]}
                 </div>
               ))}
@@ -295,7 +295,7 @@ export default function ChildPredictionPage() {
                 تنزيل
               </a>
               <button onClick={reset}
-                className="h-11 rounded-xl bg-[var(--muted)]0 text-white font-medium text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)] transition-colors">
+                className="h-11 rounded-xl bg-[var(--primary)] text-white font-medium text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)] transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>

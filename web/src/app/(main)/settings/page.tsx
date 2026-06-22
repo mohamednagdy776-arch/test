@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {
   User, ShieldCheck, Lock, Bell, Palette, Globe,
-  Question, Bug, Fingerprint, CaretLeft,
+  Question, Bug, Fingerprint, CaretLeft, IdentificationCard, Envelope,
 } from '@phosphor-icons/react';
 
 const sections = [
@@ -14,6 +14,22 @@ const sections = [
     href: '/profile',
     accent: 'var(--primary)',
     bg: 'color-mix(in srgb, var(--primary) 8%, transparent)',
+  },
+  {
+    title: 'الحساب',
+    icon: IdentificationCard,
+    description: 'اسم المستخدم وبيانات حسابك الأساسية',
+    href: '/settings/account',
+    accent: 'var(--secondary)',
+    bg: 'color-mix(in srgb, var(--secondary) 8%, transparent)',
+  },
+  {
+    title: 'البريد الإلكتروني',
+    icon: Envelope,
+    description: 'تغيير بريدك الإلكتروني وتأكيده',
+    href: '/settings/email',
+    accent: '#0ea5e9',
+    bg: 'color-mix(in srgb, #0ea5e9 8%, transparent)',
   },
   {
     title: 'الأمان',

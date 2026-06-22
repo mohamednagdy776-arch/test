@@ -8,6 +8,7 @@ import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, Ch
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -46,6 +47,7 @@ export const ProfileHeader = ({
 }: Props) => {
   const router = useRouter();
   const qc = useQueryClient();
+  const { showToast } = useToast();
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -63,7 +65,7 @@ export const ProfileHeader = ({
       qc.invalidateQueries({ queryKey: ['my-profile'] });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
-      alert(`${msg}\n\nالصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`);
+      showToast(`${msg} — الصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`, 'error');
     } finally {
       setUploading(false);
     }
@@ -88,7 +90,7 @@ export const ProfileHeader = ({
       await apiClient.delete(`/users/me/${kind}`);
       qc.invalidateQueries({ queryKey: ['my-profile'] });
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'فشل إزالة الصورة');
+      showToast(err?.response?.data?.message ?? 'فشل إزالة الصورة', 'error');
     } finally {
       setUploading(false);
     }
