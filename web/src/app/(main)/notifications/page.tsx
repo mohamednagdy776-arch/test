@@ -22,7 +22,7 @@ export default function NotificationsPage() {
   const markAllAsRead = useMarkAllAsRead();
   const deleteNotification = useDeleteNotification();
 
-  const allNotifications: any[] = data?.data?.notifications ?? [];
+  const allNotifications: any[] = data?.data ?? [];
   const unreadCount = unreadData?.data?.count ?? 0;
   // If the server filled the page, there are probably more to load.
   const hasMore = allNotifications.length >= limit;

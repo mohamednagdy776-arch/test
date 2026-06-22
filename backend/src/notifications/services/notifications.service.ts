@@ -56,9 +56,9 @@ export class NotificationsService {
     }
   }
 
-  async findByUser(userId: string, page: number, limit: number) {
+  async findByUser(userId: string, page: number, limit: number, type?: string) {
     const [data, total] = await this.notificationRepo.findAndCount({
-      where: { user: { id: userId } },
+      where: { user: { id: userId }, ...(type ? { type: type as any } : {}) },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,

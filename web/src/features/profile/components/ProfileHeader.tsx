@@ -130,7 +130,7 @@ export const ProfileHeader = ({
               onClick={() => coverRef.current?.click()}
               disabled={uploading}
               title="يُفضّل صورة غلاف بنسبة 3:1 (مثال 1500×500 بكسل) — حتى 5 ميجابايت" /* #401 */
-              className="absolute bottom-4 left-4 px-4 py-2 bg-[var(--primary)]/70 hover:bg-[var(--foreground)]/90 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105 disabled:opacity-70"
+              className="absolute bottom-4 left-4 z-10 px-4 py-2 bg-[var(--primary)]/70 hover:bg-[var(--foreground)]/90 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105 disabled:opacity-70"
             >
               <Camera size={18} />
               <span>{uploading ? 'جاري الرفع...' : 'تعديل غلاف'}</span>
@@ -139,7 +139,7 @@ export const ProfileHeader = ({
               <button
                 onClick={() => setRemoveImageKind('cover')}
                 disabled={uploading}
-                className="absolute bottom-4 left-36 px-3 py-2 bg-[var(--primary)]/60 hover:bg-[var(--destructive)]/90/80 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
+                className="absolute bottom-4 left-36 z-10 px-3 py-2 bg-[var(--primary)]/60 hover:bg-[var(--destructive)]/90/80 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
               >
                 إزالة
               </button>

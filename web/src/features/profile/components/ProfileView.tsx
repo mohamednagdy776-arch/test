@@ -325,20 +325,21 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
         </div>
       )}
       <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-4 gap-2">
-        {photos.map((p: any, i: number) =>
-          p.metadata?.url ? (
+        {photos.map((p: any, i: number) => {
+          const photoUrl = p.metadata?.url ?? p.metadata?.coverUrl ?? p.metadata?.avatarUrl ?? p.metadata?.mediaUrl ?? null;
+          return photoUrl ? (
             <button
               key={i}
-              onClick={() => setLightboxUrl(p.metadata.url)}
+              onClick={() => setLightboxUrl(photoUrl)}
               className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
               aria-label={`عرض الصورة ${i + 1}`}
             >
-              <img src={resolveMediaUrl(p.metadata.url) ?? ''} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+              <img src={resolveMediaUrl(photoUrl) ?? ''} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
             </button>
           ) : (
             <div key={i} className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden" />
-          )
-        )}
+          );
+        })}
       </div>
     </>
   );

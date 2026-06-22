@@ -12,6 +12,19 @@ import { User } from '../../auth/entities/user.entity';
 export class PostsController {
   constructor(private postsService: PostsService) {}
 
+  // Static routes MUST come before :postId wildcard to avoid being swallowed.
+  @Get('saved')
+  async getSavedPosts(@CurrentUser() user: User, @Query() query: PaginationDto) {
+    const { data, total } = await this.postsService.getSavedPosts(user.id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
+  @Get('scheduled')
+  async getScheduledPosts(@CurrentUser() user: User, @Query() query: PaginationDto) {
+    const { data, total } = await this.postsService.getScheduledPosts(user.id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
   @Get(':postId')
   async getPost(@Param('postId') postId: string, @CurrentUser() user: User) {
     const post = await this.postsService.findById(postId, user.id);
@@ -52,18 +65,6 @@ export class PostsController {
   async sharePost(@Param('postId') postId: string, @Body('content') content: string, @CurrentUser() user: User) {
     const shared = await this.postsService.share(postId, content, user.id);
     return ok(shared, 'Post shared');
-  }
-
-  @Get('saved')
-  async getSavedPosts(@CurrentUser() user: User, @Query() query: PaginationDto) {
-    const { data, total } = await this.postsService.getSavedPosts(user.id, query.page!, query.limit!);
-    return paginated(data, total, query.page!, query.limit!);
-  }
-
-  @Get('scheduled')
-  async getScheduledPosts(@CurrentUser() user: User, @Query() query: PaginationDto) {
-    const { data, total } = await this.postsService.getScheduledPosts(user.id, query.page!, query.limit!);
-    return paginated(data, total, query.page!, query.limit!);
   }
 
   @Post(':postId/comments-disabled')

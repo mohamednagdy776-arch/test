@@ -14,7 +14,7 @@ export const postsApi = {
     apiClient.get(`/groups/${groupId}/posts`, { params: { page, limit } }).then((r) => r.data),
 
   createPost: (groupId: string, data: any) =>
-    apiClient.post(`/posts`, data).then((r) => r.data),
+    apiClient.post(`/posts`, { ...data, ...(groupId ? { groupId } : {}) }).then((r) => r.data),
 
   createPostWithMedia: (groupId: string, content: string, file: File) => {
     const formData = new FormData();

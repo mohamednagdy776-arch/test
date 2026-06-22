@@ -95,4 +95,8 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   originalPostId?: string;
+
+  @IsOptional()
+  @IsString()
+  groupId?: string;
 }

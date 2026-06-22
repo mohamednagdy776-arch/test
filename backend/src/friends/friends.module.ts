@@ -4,9 +4,10 @@ import { FriendsController } from './controllers/friends.controller';
 import { FriendsService } from './services/friends.service';
 import { Friendship, FriendList, UserBlock, UserRestriction } from './entities/friendship.entity';
 import { Follow } from '../follows/entities/follow.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Friendship, FriendList, UserBlock, UserRestriction, Follow])],
+  imports: [TypeOrmModule.forFeature([Friendship, FriendList, UserBlock, UserRestriction, Follow]), NotificationsModule],
   controllers: [FriendsController],
   providers: [FriendsService],
   exports: [FriendsService],

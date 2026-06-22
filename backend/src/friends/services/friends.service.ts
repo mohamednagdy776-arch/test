@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Friendship, FriendList, UserBlock, UserRestriction, FriendshipStatus, FriendListType } from '../entities/friendship.entity';
 import { User } from '../../auth/entities/user.entity';
 import { Follow } from '../../follows/entities/follow.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class FriendsService {
@@ -13,6 +14,7 @@ export class FriendsService {
     @InjectRepository(UserBlock) private blocksRepo: Repository<UserBlock>,
     @InjectRepository(UserRestriction) private restrictionsRepo: Repository<UserRestriction>,
     @InjectRepository(Follow) private followsRepo: Repository<Follow>,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async sendRequest(requesterId: string, addresseeId: string) {
@@ -67,6 +69,13 @@ export class FriendsService {
       ])
       .orIgnore()
       .execute();
+
+    // Notify the original requester that their friend request was accepted.
+    try {
+      await this.notifications.notifyUser(requesterId, addresseeId, 'friend_accepted', 'قبل طلب صداقتك');
+    } catch {
+      // Never fail the accept operation if the notification dispatch fails.
+    }
 
     return saved;
   }

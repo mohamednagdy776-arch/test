@@ -2,10 +2,12 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
+import { useMyProfile } from '@/features/profile/hooks';
 import { apiClient } from '@/lib/api-client';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
-import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt } from '@phosphor-icons/react';
+import { useToast } from '@/components/ui/Toast';
+import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 
 const REACTIONS = [
   { type: 'like', emoji: '👍', label: 'إعجاب', activeBg: 'bg-[var(--muted)]', activeText: 'text-[var(--foreground)]' },
@@ -16,15 +18,22 @@ const REACTIONS = [
   { type: 'angry', emoji: '😠', label: 'غضب', activeBg: 'bg-[#B05252]/20', activeText: 'text-[#B05252]' },
 ];
 
-// Turn #hashtags into search links and @mentions into profile links (#392).
+// Turn #hashtags, @mentions, and URLs into interactive elements.
 function renderWithHashtags(text: string) {
   if (!text) return text;
-  return text.split(/(#[\p{L}0-9_]+|@[a-zA-Z0-9_]+)/gu).map((part, i) => {
+  const URL_RE = /\bhttps?:\/\/[^\s<>"')]+/gi;
+  const TRAILING = /[.,;:!?)]+$/;
+  const parts = text.split(/(#[\p{L}0-9_]+|@[a-zA-Z0-9_]+|\bhttps?:\/\/[^\s<>"')]+)/gu);
+  return parts.map((part, i) => {
     if (/^#[\p{L}0-9_]+$/u.test(part)) {
       return <Link key={i} href={`/search?q=${encodeURIComponent(part)}`} className="text-[var(--primary)] font-medium hover:underline">{part}</Link>;
     }
     if (/^@[a-zA-Z0-9_]+$/.test(part)) {
       return <Link key={i} href={`/${part.slice(1)}`} className="text-[var(--primary)] font-medium hover:underline">{part}</Link>;
+    }
+    if (/^\bhttps?:\/\//i.test(part)) {
+      const url = part.replace(TRAILING, '');
+      return <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="text-[var(--primary)] underline break-all hover:opacity-80" dir="ltr" onClick={(e) => e.stopPropagation()}>{url}</a>;
     }
     return part;
   });
@@ -165,9 +174,10 @@ function CommentSection({ postId }: { postId: string }) {
 function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean; onClose: () => void; postId: string; postContent: string }) {
   const [content, setContent] = useState('');
   const sharePost = useSharePost();
-  
+  const { showToast } = useToast() as any;
+
   if (!isOpen) return null;
-  
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in">
       <div className="absolute inset-0 bg-[var(--primary)]/80 backdrop-blur-glass-sm" onClick={onClose} />
@@ -190,8 +200,13 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
         </div>
         <button
           onClick={async () => {
-            await sharePost.mutateAsync({ postId, content });
-            onClose();
+            try {
+              await sharePost.mutateAsync({ postId, content });
+              showToast('تمت المشاركة بنجاح', 'success');
+              onClose();
+            } catch {
+              showToast('فشلت المشاركة، حاول مجدداً', 'error');
+            }
           }}
           disabled={sharePost.isPending}
           className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all hover:-translate-y-0.5 duration-300"
@@ -204,20 +219,68 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
   );
 }
 
-function PostMenu({ postId, post, onClose }: { postId: string; post: any; onClose: () => void }) {
+function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: () => void; post: any }) {
+  const [content, setContent] = useState(post.content || '');
+  const updatePost = useUpdatePost();
+  const { showToast } = useToast() as any;
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative w-full max-w-md mx-4 bg-[var(--card)] rounded-2xl p-6 animate-scale-in shadow-glow-lg border border-[var(--border)]/60">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-[var(--foreground)]">تعديل المنشور</h3>
+          <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:scale-110 transition-transform">
+            <X size={24} />
+          </button>
+        </div>
+        <textarea
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] mb-4 transition-all duration-300 min-h-[100px]"
+          rows={4}
+        />
+        <button
+          onClick={async () => {
+            try {
+              await updatePost.mutateAsync({ postId: post.id, data: { content } });
+              showToast('تم تعديل المنشور', 'success');
+              onClose();
+            } catch {
+              showToast('فشل تعديل المنشور', 'error');
+            }
+          }}
+          disabled={updatePost.isPending || !content.trim()}
+          className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all duration-300"
+          style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
+        >
+          {updatePost.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PostMenu({ postId, post, isOwnPost, onClose, onEdit }: { postId: string; post: any; isOwnPost?: boolean; onClose: () => void; onEdit?: () => void }) {
   const savePost = useSavePost();
   const hidePost = useHidePost();
   const deletePost = useDeletePost();
   const pinPost = useUpdatePost();
+  const { showToast } = useToast() as any;
 
   const menuItems = [
-    { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId) },
-    { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
-    // Archive now actually archives (was a no-op); "عدم الاهتمام" duplicate removed.
-    { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => pinPost.mutate({ postId, data: { isArchived: true } }) },
-    { label: 'عدم الاهتمام', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
-    { label: 'إيقاف مؤقت 30 يوم', icon: Clock, action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }) },
-    { label: 'حذف المنشور', icon: Trash, action: () => deletePost.mutate(postId), danger: true },
+    ...(isOwnPost && onEdit ? [{ label: 'تعديل المنشور', icon: PencilSimple, action: () => { onEdit(); } }] : []),
+    { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId, { onSuccess: () => showToast('تم حفظ المنشور', 'success') }) },
+    ...(isOwnPost ? [
+      { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
+      { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => pinPost.mutate({ postId, data: { isArchived: true } }) },
+      { label: 'حذف المنشور', icon: Trash, action: () => deletePost.mutate(postId), danger: true },
+    ] : [
+      { label: 'عدم الاهتمام', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
+      { label: 'إيقاف مؤقت 30 يوم', icon: Clock, action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }) },
+    ]),
   ];
 
   return (
@@ -310,7 +373,11 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const [showComments, setShowComments] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  
+  const [showEditModal, setShowEditModal] = useState(false);
+  const { data: myProfileData } = useMyProfile();
+  const myUserId = (myProfileData as any)?.data?.user?.id ?? (myProfileData as any)?.data?.id ?? null;
+  const isOwnPost = myUserId && post.user?.id && myUserId === post.user.id;
+
   const userName = displayName(post.user);
   const userInitial = userName.charAt(0).toUpperCase();
   const authorAvatar = resolveMediaUrl(post.user?.profile?.avatarUrl);
@@ -346,7 +413,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
           <button onClick={() => setShowMenu(!showMenu)} className="rounded-lg p-1.5 text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:shadow-soft transition-all duration-200 hover:scale-110">
             <DotsThreeVertical size={20} />
           </button>
-          {showMenu && <PostMenu postId={post.id} post={post} onClose={() => setShowMenu(false)} />}
+          {showMenu && <PostMenu postId={post.id} post={post} isOwnPost={!!isOwnPost} onClose={() => setShowMenu(false)} onEdit={() => { setShowMenu(false); setShowEditModal(true); }} />}
         </div>
       </div>
 
@@ -414,6 +481,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
       {showComments && <div className="px-4 pb-4"><CommentSection postId={post.id} /></div>}
       
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} postId={post.id} postContent={post.content} />
+      <EditPostModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} post={post} />
     </article>
   );
 }

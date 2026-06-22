@@ -401,6 +401,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             )}
 
             {/* Bubble */}
+            <div className="flex flex-col gap-0.5">
             <div
               className={`relative max-w-xs lg:max-w-md rounded-2xl px-4 py-2.5 text-sm ${msg.isOwn ? 'rounded-tl-sm' : 'rounded-tr-sm'}`}
               style={msg.isOwn
@@ -472,18 +473,6 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                 )}
               </div>
 
-              {/* Reactions display */}
-              {msg.reactions && msg.reactions.length > 0 && (
-                <div className="absolute -bottom-3 flex gap-0.5">
-                  {msg.reactions.map((r, i) => (
-                    <span key={i} className="rounded-full px-1.5 py-0.5 text-xs shadow-sm"
-                      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                      {r.emoji}
-                    </span>
-                  ))}
-                </div>
-              )}
-
               {/* Emoji picker trigger */}
               <button
                 onClick={() => setShowReactions(showReactions === msg.id ? null : msg.id)}
@@ -494,7 +483,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
 
               {showReactions === msg.id && (
                 <div
-                  className={`absolute top-0 z-10 flex gap-1 p-1.5 rounded-full shadow-xl ${msg.isOwn ? '-left-44' : '-right-44'}`}
+                  className={`absolute bottom-full mb-2 z-20 flex gap-1 p-1.5 rounded-full shadow-xl ${msg.isOwn ? 'right-0' : 'left-0'}`}
                   style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                   {EMOJI_REACTIONS.map(emoji => (
                     <button key={emoji}
@@ -505,6 +494,19 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Reactions display — outside bubble so it doesn't overlap next message */}
+            {msg.reactions && msg.reactions.length > 0 && (
+              <div className={`flex gap-0.5 ${msg.isOwn ? 'justify-end' : 'justify-start'}`}>
+                {msg.reactions.map((r, i) => (
+                  <span key={i} className="rounded-full px-1.5 py-0.5 text-xs shadow-sm"
+                    style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                    {r.emoji}
+                  </span>
+                ))}
+              </div>
+            )}
             </div>
           </div>
         ))}

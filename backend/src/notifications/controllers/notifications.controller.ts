@@ -25,8 +25,8 @@ export class NotificationsController {
   ) {}
 
   @Get()
-  async findAll(@CurrentUser() user: User, @Query() query: PaginationDto) {
-    const { data, total } = await this.notificationsService.findByUser(user.id, query.page!, query.limit!);
+  async findAll(@CurrentUser() user: User, @Query() query: PaginationDto, @Query('type') type?: string) {
+    const { data, total } = await this.notificationsService.findByUser(user.id, query.page!, query.limit!, type);
     return paginated(data, total, query.page!, query.limit!);
   }
 

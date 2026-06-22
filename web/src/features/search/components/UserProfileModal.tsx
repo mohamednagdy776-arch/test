@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/components/ui/Toast';
-import { X, ChatCircle, User, Sparkle, Check, MapPin } from '@phosphor-icons/react';
+import { X, ChatCircle, User, Sparkle, Check, MapPin, UserPlus, ArrowSquareOut } from '@phosphor-icons/react';
 
 
 interface Props {
@@ -43,6 +43,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
   const [aiScore, setAiScore] = useState<{ matchScore: number; matchReasons: string[] } | null>(null);
   const [loadingScore, setLoadingScore] = useState(false);
   const [chatError, setChatError] = useState('');
+  const [friendRequestSent, setFriendRequestSent] = useState(false);
 
   const targetId = user.userId ?? user.id;
   const avatarSrc = user.avatarUrl
@@ -65,6 +66,15 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
     onError: () => {
       setChatError('تعذّر بدء المحادثة، حاول مرة أخرى.');
     },
+  });
+
+  const sendFriendRequest = useMutation({
+    mutationFn: () => apiClient.post('/friends/request', { userId: targetId }),
+    onSuccess: () => {
+      setFriendRequestSent(true);
+      showToast('تم إرسال طلب الصداقة', 'success');
+    },
+    onError: () => showToast('فشل إرسال طلب الصداقة', 'error'),
   });
 
   const calcScore = async () => {
@@ -295,10 +305,26 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
         </div>
 
         {/* ── Footer ────────────────────────────────────────────── */}
-        <div className="shrink-0 p-4" style={{ borderTop: '1px solid var(--border)' }}>
+        <div className="shrink-0 p-4 space-y-2" style={{ borderTop: '1px solid var(--border)' }}>
           {chatError && (
             <p className="text-xs text-center mb-2" style={{ color: '#ef4444' }}>{chatError}</p>
           )}
+          <div className="flex gap-2">
+            <button
+              onClick={() => { onClose(); router.push(user.username ? `/${user.username}` : `/profile/${targetId}`); }}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-bold transition-all hover:scale-[1.01] active:scale-95"
+              style={{ background: 'var(--muted)', color: 'var(--foreground)', border: '1px solid var(--border)' }}>
+              <ArrowSquareOut size={15} weight="bold" />
+              عرض الملف
+            </button>
+            <button
+              onClick={() => sendFriendRequest.mutate()}
+              disabled={sendFriendRequest.isPending || friendRequestSent}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl text-sm font-bold text-white transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-60"
+              style={{ background: friendRequestSent ? 'var(--muted)' : 'linear-gradient(135deg, var(--accent), #c8952e)', color: friendRequestSent ? 'var(--muted-foreground)' : 'white' }}>
+              {friendRequestSent ? <><Check size={15} weight="bold" /> تم الإرسال</> : <><UserPlus size={15} weight="bold" /> إضافة صديق</>}
+            </button>
+          </div>
           <button
             onClick={() => createConversation.mutate()}
             disabled={createConversation.isPending}

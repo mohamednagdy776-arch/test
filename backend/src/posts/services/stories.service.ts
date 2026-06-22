@@ -57,7 +57,6 @@ export class StoriesService {
       .leftJoinAndSelect('user.profile', 'profile')
       .where('story.createdAt > :twentyFourHoursAgo', { twentyFourHoursAgo })
       .andWhere('story.isArchived = :isArchived', { isArchived: false })
-      .andWhere('story.userId != :userId', { userId })
       .orderBy('story.createdAt', 'DESC')
       .getMany();
     const grouped = stories.reduce((acc: Record<string, any[]>, story) => {
@@ -330,6 +329,7 @@ export class StoriesService {
         }
       }
     }
+    if (data.groupId) post.group = { id: data.groupId } as any;
     if (data.pollOptions) post.pollOptions = data.pollOptions;
     if (data.scheduledAt) {
       post.scheduledAt = new Date(data.scheduledAt);
