@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useMyAffiliate, useCreateAffiliate } from '@/features/affiliates/hooks';
 import { apiClient } from '@/lib/api-client';
+import { useToast } from '@/components/ui/Toast';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tayyibt.com';
 
@@ -40,6 +41,7 @@ function WithdrawModal({ commission, onClose }: { commission: string; onClose: (
   const [name, setName] = useState('');
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
+  const { showToast } = useToast();
   const MIN_PAYOUT = 50;
   const balance = parseFloat(commission);
 
@@ -50,7 +52,7 @@ function WithdrawModal({ commission, onClose }: { commission: string; onClose: (
       await apiClient.post('/affiliates/payout', { iban: iban.trim(), accountName: name.trim() });
       setDone(true);
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'فشل طلب السحب، يرجى المحاولة مجدداً');
+      showToast(err?.response?.data?.message || 'فشل طلب السحب، يرجى المحاولة مجدداً', 'error');
     } finally {
       setSending(false);
     }
@@ -295,7 +297,7 @@ function JoinAffiliate() {
           )}
 
           {create.isError && (
-            <p className="text-xs text-red-500 text-center">
+            <p className="text-xs text-[var(--destructive)] text-center">
               {(create.error as any)?.response?.data?.message ?? 'حدث خطأ، حاول مجدداً'}
             </p>
           )}

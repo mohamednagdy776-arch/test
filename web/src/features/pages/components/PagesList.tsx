@@ -5,6 +5,7 @@ import { usePages, useMyPages, useCreatedPages, useSearchPages, useSuggestedPage
 import { Spinner } from '@/components/ui/Spinner';
 import Link from 'next/link';
 import Image from 'next/image';
+import { resolveMediaUrl } from '@/lib/media';
 
 const CATEGORIES = [
   { value: '', label: 'الكل' },
@@ -33,7 +34,7 @@ function PageCard({ page, isFollowing, onFollow, onUnfollow, isFollowingLoading 
     <div className="rounded-xl bg-[var(--card)] shadow-sm hover:shadow-md transition-shadow border border-[var(--border)] overflow-hidden">
       <div className="relative h-24 bg-gradient-to-br from-blue-500/20 to-blue-600/5">
         {page.coverPhoto ? (
-          <img src={page.coverPhoto} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={resolveMediaUrl(page.coverPhoto) ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/30 to-blue-600/10" />
         )}
@@ -274,7 +275,7 @@ export const PagesList = () => {
                   <div key={p.id} className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/5 shrink-0 flex items-center justify-center overflow-hidden">
                       {p.coverPhoto ? (
-                        <img src={p.coverPhoto} alt="" className="w-full h-full object-cover rounded-lg" />
+                        <img src={resolveMediaUrl(p.coverPhoto) ?? ''} alt="" className="w-full h-full object-cover rounded-lg" />
                       ) : (
                         <span className="text-lg font-bold text-blue-600">{p.name?.[0]}</span>
                       )}

@@ -17,7 +17,7 @@ export function SavedItemsList() {
 
   if (error) {
     return (
-      <div className="text-center py-12 text-red-500">
+      <div className="text-center py-12 text-[var(--destructive)]">
         Failed to load saved items
       </div>
     );
@@ -56,7 +56,7 @@ export function SavedItemsList() {
             </div>
             <button
               onClick={() => removeSaved.mutate(item.id)}
-              className="text-sm text-red-500 hover:text-red-700"
+              className="text-sm text-[var(--destructive)] hover:text-[var(--destructive)]"
             >
               Remove
             </button>

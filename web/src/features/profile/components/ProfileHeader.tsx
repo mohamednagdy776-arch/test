@@ -8,6 +8,8 @@ import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, Ch
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
+import { resolveMediaUrl } from '@/lib/media';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -15,14 +17,12 @@ interface FriendshipStatus {
   isRequester?: boolean;
 }
 
-const BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1').replace('/api/v1', '');
-
 const mediaUrl = (url: string | null | undefined) => {
   if (!url) return null;
   // Only allow http(s) absolute URLs or backend-relative paths — reject
   // data:, javascript:, blob:, etc. that could be injected via the API.
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`;
+  // resolveMediaUrl re-anchors dev/localhost URLs onto the deployed origin.
+  if (/^https?:\/\//i.test(url) || url.startsWith('/')) return resolveMediaUrl(url);
   return null;
 };
 
@@ -46,6 +46,7 @@ export const ProfileHeader = ({
 }: Props) => {
   const router = useRouter();
   const qc = useQueryClient();
+  const { showToast } = useToast();
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -63,7 +64,7 @@ export const ProfileHeader = ({
       qc.invalidateQueries({ queryKey: ['my-profile'] });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
-      alert(`${msg}\n\nالصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`);
+      showToast(`${msg} — الصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`, 'error');
     } finally {
       setUploading(false);
     }
@@ -88,7 +89,7 @@ export const ProfileHeader = ({
       await apiClient.delete(`/users/me/${kind}`);
       qc.invalidateQueries({ queryKey: ['my-profile'] });
     } catch (err: any) {
-      alert(err?.response?.data?.message ?? 'فشل إزالة الصورة');
+      showToast(err?.response?.data?.message ?? 'فشل إزالة الصورة', 'error');
     } finally {
       setUploading(false);
     }
@@ -138,7 +139,7 @@ export const ProfileHeader = ({
               <button
                 onClick={() => setRemoveImageKind('cover')}
                 disabled={uploading}
-                className="absolute bottom-4 left-36 px-3 py-2 bg-[var(--primary)]/60 hover:bg-red-600/80 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
+                className="absolute bottom-4 left-36 px-3 py-2 bg-[var(--primary)]/60 hover:bg-[var(--destructive)]/90/80 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
               >
                 إزالة
               </button>
@@ -191,7 +192,7 @@ export const ProfileHeader = ({
                     onClick={() => setRemoveImageKind('avatar')}
                     disabled={uploading}
                     title="إزالة الصورة"
-                    className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[var(--primary)]/70 hover:bg-red-600/80 text-[var(--card)] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
+                    className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[var(--primary)]/70 hover:bg-[var(--destructive)]/90/80 text-[var(--card)] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
                   >
                     ✕
                   </button>
@@ -302,7 +303,7 @@ export const ProfileHeader = ({
                 <button
                   onClick={onUnfriend}
                   disabled={friendActionPending}
-                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)]/30 hover:text-[var(--destructive)] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Users size={16} />
                   {friendActionPending ? '...' : 'أصدقاء'}
@@ -322,7 +323,7 @@ export const ProfileHeader = ({
               {onBlock && friendshipStatus?.status !== 'blocked' && (
                 <button
                   onClick={onBlock}
-                  className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-300"
+                  className="rounded-xl border border-[var(--destructive)]/30 px-4 py-2 text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 transition-all duration-300"
                 >
                   حظر
                 </button>
@@ -362,7 +363,7 @@ export const ProfileHeader = ({
           </p>
           <div className="flex gap-3">
             <button onClick={() => setRemoveImageKind(null)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
-            <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">إزالة</button>
+            <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors">إزالة</button>
           </div>
         </div>
       </Modal>

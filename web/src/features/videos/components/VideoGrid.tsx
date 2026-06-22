@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { videosApi } from '../api';
 import { useVideos } from '../hooks';
 import { Spinner } from '@/components/ui/Spinner';
+import { resolveMediaUrl } from '@/lib/media';
 
 export function VideoGrid() {
   const { data, isLoading, error } = useVideos();
@@ -17,7 +18,7 @@ export function VideoGrid() {
 
   if (error) {
     return (
-      <div className="text-center py-12 text-red-500">
+      <div className="text-center py-12 text-[var(--destructive)]">
         Failed to load videos
       </div>
     );
@@ -53,7 +54,7 @@ export function VideoCard({ video, onClick }: { video: any; onClick?: () => void
       <div className="aspect-video relative bg-[var(--foreground)]">
         {video.thumbnailUrl ? (
           <Image
-            src={video.thumbnailUrl}
+            src={resolveMediaUrl(video.thumbnailUrl) ?? ''}
             alt={video.title}
             fill
             className="object-cover"
@@ -70,7 +71,7 @@ export function VideoCard({ video, onClick }: { video: any; onClick?: () => void
         )}
         {isHovered && video.previewUrl && (
           <video
-            src={video.previewUrl}
+            src={resolveMediaUrl(video.previewUrl) ?? ''}
             autoPlay
             muted
             loop

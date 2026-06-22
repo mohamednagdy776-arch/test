@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
+import { useToast } from '@/components/ui/Toast';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Clock } from '@phosphor-icons/react';
 
 export default function MemoriesPage() {
   const router = useRouter();
@@ -16,14 +19,16 @@ export default function MemoriesPage() {
   const { data: memoriesData, isLoading: memoriesLoading } = useMemories();
   const { data: savedData, isLoading: savedLoading } = useSavedItems();
   const removeSaved = useRemoveSaved();
+  const { showToast } = useToast();
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
 
   const handleRemoveSaved = async () => {
     if (!pendingRemoveId) return;
     try {
       await removeSaved.mutateAsync(pendingRemoveId);
+      showToast('تمت إزالة العنصر من المحفوظات', 'success');
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'فشل إزالة العنصر');
+      showToast(err?.response?.data?.message || 'فشل إزالة العنصر', 'error');
     } finally {
       setPendingRemoveId(null);
     }
@@ -56,17 +61,19 @@ export default function MemoriesPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">المحفوظات والذكريات</h1>
-        <p className="text-sm text-[var(--primary)]/70 mt-1">راجع ذكرياتك المحفوظة من السنوات السابقة</p>
-      </div>
+      <PageHeader
+        icon={Clock}
+        eyebrow="ذكرياتك"
+        title="المحفوظات والذكريات"
+        subtitle="راجع ذكرياتك المحفوظة من السنوات السابقة"
+      />
 
-      <div className="flex gap-2 mb-6 border-b border-[var(--border)]/50 pb-px">
+      <div className="flex gap-2 mb-6 mt-6 border-b border-[var(--border)]/50 pb-px">
         <button
           onClick={() => setActiveTab('memories')}
           className={`px-5 py-2.5 font-semibold transition-all rounded-t-xl ${
             activeTab === 'memories'
-              ? 'text-[var(--foreground)] border-b-2 border-[var(--ring)] bg-gradient-to-r from-[var(--muted)] to-amber-50'
+              ? 'text-[var(--foreground)] border-b-2 border-[var(--ring)] bg-gradient-to-r from-[var(--muted)] to-[var(--accent)]/15'
               : 'text-[var(--primary)]/70 hover:text-[var(--foreground)] hover:bg-[var(--muted)]'
           }`}
         >
@@ -76,7 +83,7 @@ export default function MemoriesPage() {
           onClick={() => setActiveTab('saved')}
           className={`px-5 py-2.5 font-semibold transition-all rounded-t-xl ${
             activeTab === 'saved'
-              ? 'text-[var(--foreground)] border-b-2 border-[var(--ring)] bg-gradient-to-r from-[var(--muted)] to-amber-50'
+              ? 'text-[var(--foreground)] border-b-2 border-[var(--ring)] bg-gradient-to-r from-[var(--muted)] to-[var(--accent)]/15'
               : 'text-[var(--primary)]/70 hover:text-[var(--foreground)] hover:bg-[var(--muted)]'
           }`}
         >
@@ -108,7 +115,7 @@ export default function MemoriesPage() {
                   <div className="flex gap-2 flex-wrap">
                     <button
                       onClick={() => setSelectedYear(null)}
-                      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${!selectedYear ? 'bg-[var(--muted)]0 text-white' : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border border-[var(--border)]'}`}
+                      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${!selectedYear ? 'bg-[var(--primary)] text-white' : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--border)] border border-[var(--border)]'}`}
                     >
                       الكل
                     </button>
@@ -116,7 +123,7 @@ export default function MemoriesPage() {
                       <button
                         key={y}
                         onClick={() => setSelectedYear(y)}
-                        className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${selectedYear === y ? 'bg-[var(--muted)]0 text-white' : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border border-[var(--border)]'}`}
+                        className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${selectedYear === y ? 'bg-[var(--primary)] text-white' : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--border)] border border-[var(--border)]'}`}
                       >
                         {y}
                       </button>
@@ -128,7 +135,7 @@ export default function MemoriesPage() {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-[var(--foreground)]">
                         <span>📅</span>
-                        <span className="text-amber-600 font-semibold">{getRelativeLabel(memory.createdAt)}</span>
+                        <span className="text-[var(--accent)] font-semibold">{getRelativeLabel(memory.createdAt)}</span>
                         <span className="text-xs text-[var(--primary)]/60 font-normal">{formatDate(memory.createdAt)}</span>
                       </CardTitle>
                     </CardHeader>
@@ -171,7 +178,7 @@ export default function MemoriesPage() {
                           onClick={() => item.entity?.id && router.push(`/videos/${item.entity.id}`)}
                           className="w-full text-right flex gap-4 p-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] hover:border-[var(--border)] hover:shadow-md transition-all"
                         >
-                          <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-[var(--muted)] to-amber-100 rounded-xl flex items-center justify-center text-2xl">▶️</div>
+                          <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl">▶️</div>
                           <div>
                             <p className="font-semibold text-[var(--foreground)]">{item.entity.title || 'فيديو'}</p>
                             <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.createdAt)}</p>
@@ -183,7 +190,7 @@ export default function MemoriesPage() {
                           onClick={() => item.entity?.id && router.push(`/stories/${item.entity.id}`)}
                           className="w-full text-right flex gap-4 p-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] hover:border-[var(--border)] hover:shadow-md transition-all"
                         >
-                          <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-[var(--muted)] to-amber-100 rounded-xl flex items-center justify-center text-2xl">📸</div>
+                          <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl">📸</div>
                           <div>
                             <p className="font-semibold text-[var(--foreground)]">قصة</p>
                             <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.createdAt)}</p>
@@ -195,7 +202,7 @@ export default function MemoriesPage() {
                       variant="ghost"
                       size="sm"
                       onClick={() => setPendingRemoveId(item.id)}
-                      className="text-rose-500 hover:bg-rose-50"
+                      className="text-[var(--destructive)] hover:bg-[var(--destructive)]/10"
                     >
                       🗑️
                     </Button>

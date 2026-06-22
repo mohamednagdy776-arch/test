@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
 
 const ISSUE_TYPES = [
-  { value: 'bug', label: 'خطأ تقني', icon: '🐛', color: 'bg-red-100' },
-  { value: 'feature', label: 'اقتراح ميزة', icon: '💡', color: 'bg-amber-100' },
+  { value: 'bug', label: 'خطأ تقني', icon: '🐛', color: 'bg-[var(--destructive)]/15' },
+  { value: 'feature', label: 'اقتراح ميزة', icon: '💡', color: 'bg-[var(--accent)]/15' },
   { value: 'account', label: 'مشكلة في الحساب', icon: '👤', color: 'bg-blue-100' },
   { value: 'privacy', label: 'مشكلة في الخصوصية', icon: '🔒', color: 'bg-purple-100' },
   { value: 'other', label: 'أخرى', icon: '📝', color: 'bg-[var(--muted)]' },
@@ -22,6 +23,7 @@ export default function ReportPage() {
   const [sending, setSending] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -53,7 +55,7 @@ export default function ReportPage() {
       setSubmitted(true);
     } catch (err: any) {
       const msg = err?.response?.data?.message || 'فشل إرسال البلاغ. يرجى المحاولة مجدداً.';
-      alert(msg);
+      showToast(msg, 'error');
     } finally {
       setSending(false);
     }
@@ -109,7 +111,7 @@ export default function ReportPage() {
                   className={`p-4 rounded-xl border-2 transition-all duration-300 ${
                     issueType === type.value
                       ? 'border-[var(--ring)] bg-[var(--muted)]/80 shadow-lg shadow-black/5'
-                      : 'border-[var(--border)]/50 bg-white/50 hover:border-[var(--border)] hover:shadow-md'
+                      : 'border-[var(--border)]/50 bg-[var(--card)]/50 hover:border-[var(--border)] hover:shadow-md'
                   }`}
                 >
                   <div className="flex flex-col items-center gap-2">
@@ -174,7 +176,7 @@ export default function ReportPage() {
                     {attachments.map((f, i) => (
                       <div key={i} className="flex items-center justify-between rounded-lg bg-[var(--muted)] border border-[var(--border)] px-3 py-2 text-sm">
                         <span className="text-[var(--foreground)] truncate">{f.name}</span>
-                        <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 mr-2 shrink-0">✕</button>
+                        <button onClick={() => removeAttachment(i)} className="text-[var(--destructive)]/70 hover:text-[var(--destructive)] mr-2 shrink-0">✕</button>
                       </div>
                     ))}
                   </div>

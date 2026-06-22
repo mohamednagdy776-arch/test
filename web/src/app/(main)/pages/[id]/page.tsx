@@ -167,7 +167,7 @@ export default function PageDetailPage() {
                 className="w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] resize-none"
               />
               {editError && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{editError}</p>
+                <p className="text-xs text-[var(--destructive)] bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 rounded-lg px-3 py-2">{editError}</p>
               )}
               <div className="flex gap-3 pt-1">
                 <button
@@ -195,7 +195,7 @@ export default function PageDetailPage() {
           <p className="text-sm text-[var(--primary)]">هل أنت متأكد من حذف هذه الصفحة؟ لا يمكن التراجع عن هذا الإجراء.</p>
           <div className="flex gap-3">
             <button onClick={() => setShowDeleteModal(false)} className="flex-1 rounded-xl border border-[var(--border)] py-2.5 text-sm text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
-            <button onClick={handleDelete} disabled={deletePage.isPending} className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
+            <button onClick={handleDelete} disabled={deletePage.isPending} className="flex-1 rounded-xl bg-[var(--destructive)] py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors">
               {deletePage.isPending ? '...' : 'تأكيد الحذف'}
             </button>
           </div>
@@ -206,7 +206,7 @@ export default function PageDetailPage() {
         {page.coverPhoto ? (
           <img src={page.coverPhoto} alt={`صورة غلاف ${page.name}`} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[var(--muted)] via-[var(--card)] to-amber-500/10" />
+          <div className="w-full h-full bg-gradient-to-br from-[var(--muted)] via-[var(--card)] to-[var(--accent)]/10" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--primary)]/70 via-[var(--primary)]/20 to-transparent" />
         <div className="absolute bottom-5 right-5">
@@ -226,7 +226,7 @@ export default function PageDetailPage() {
             <button
               onClick={() => setShowDeleteModal(true)}
               disabled={deletePage.isPending}
-              className="rounded-xl bg-[var(--card)] backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-red-500 hover:bg-[var(--card)] transition-colors shadow-sm disabled:opacity-50"
+              className="rounded-xl bg-[var(--card)] backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-[var(--destructive)] hover:bg-[var(--card)] transition-colors shadow-sm disabled:opacity-50"
             >
               {deletePage.isPending ? '...' : '🗑 حذف'}
             </button>
@@ -262,7 +262,7 @@ export default function PageDetailPage() {
             disabled={likePage.isPending || unlikePage.isPending}
             className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
               isLiked
-                ? 'bg-gradient-to-r from-rose-100 to-rose-50 text-rose-600 shadow-lg shadow-rose-500/20 hover:shadow-xl hover:shadow-rose-500/30'
+                ? 'bg-gradient-to-r from-[var(--destructive)]/15 to-[var(--destructive)]/8 text-[var(--destructive)] shadow-lg shadow-[var(--destructive)]/20 hover:shadow-xl hover:shadow-[var(--destructive)]/30'
                 : 'bg-[var(--card)] text-[var(--primary)] border border-[var(--border)]/50 hover:bg-[var(--muted)] shadow-md'
             } disabled:opacity-50`}
           >
@@ -308,7 +308,7 @@ export default function PageDetailPage() {
             className="w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 mb-3 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] resize-none"
           />
           {postError && (
-            <p className="mb-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{postError}</p>
+            <p className="mb-3 text-xs text-[var(--destructive)] bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 rounded-lg px-3 py-2">{postError}</p>
           )}
           <button
             type="submit"
@@ -336,7 +336,7 @@ export default function PageDetailPage() {
             {posts.map((post: any, i: number) => (
               <div key={post.id ?? i} className="bg-[var(--card)] rounded-2xl p-5 shadow-lg shadow-black/5 border border-[var(--border)]">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--muted)]/50 to-amber-500/10 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--muted)]/50 to-[var(--accent)]/10 flex items-center justify-center">
                     {page.coverPhoto ? (
                       <img src={page.coverPhoto} alt={page.name} className="w-full h-full object-cover rounded-full" />
                     ) : (

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { formatDistanceToNow } from '@/lib/utils';
+import { resolveMediaUrl } from '@/lib/media';
 import type { Memory } from '../types';
 
 interface MemoryCardProps {
@@ -16,14 +17,14 @@ export function MemoryCard({ memory, onClick }: MemoryCardProps) {
       <div className="aspect-square relative">
         {memory.mediaType === 'image' ? (
           <Image
-            src={memory.mediaUrl}
+            src={resolveMediaUrl(memory.mediaUrl) ?? ''}
             alt={memory.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <video
-            src={memory.mediaUrl}
+            src={resolveMediaUrl(memory.mediaUrl) ?? ''}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
         )}

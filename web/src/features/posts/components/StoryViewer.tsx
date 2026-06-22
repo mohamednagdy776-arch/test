@@ -2,13 +2,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useViewStory, useStoryViewers, useAddToHighlight } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
+import { resolveMediaUrl } from '@/lib/media';
 
 function resolveMedia(url?: string): string | undefined {
-  if (!url) return undefined;
-  if (url.startsWith('http') || url.startsWith('blob:')) return url;
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1')
-    .replace(/\/api\/v1\/?$/, '');
-  return `${base}${url}`;
+  return resolveMediaUrl(url) ?? undefined;
 }
 
 interface StoryItem {

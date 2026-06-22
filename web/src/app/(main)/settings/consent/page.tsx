@@ -25,9 +25,9 @@ const TYPE_LABELS = {
 };
 
 const STATUS_STYLES: Record<ConsentStatus, [string, string]> = {
-  pending: ['⏳ في الانتظار', 'bg-amber-100 text-amber-700 border-amber-200'],
+  pending: ['⏳ في الانتظار', 'bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/30'],
   accepted: ['✓ مقبول', 'bg-[var(--muted)] text-[var(--primary)] border-[var(--border)]'],
-  declined: ['✗ مرفوض', 'bg-red-100 text-red-700 border-red-200'],
+  declined: ['✗ مرفوض', 'bg-[var(--destructive)]/15 text-[var(--destructive)] border-[var(--destructive)]/30'],
   expired: ['منتهي الصلاحية', 'bg-[var(--muted)] text-[var(--muted-foreground)] border-[var(--border)]'],
   revoked: ['ملغي', 'bg-[var(--muted)] text-[var(--muted-foreground)] border-[var(--border)]'],
 };
@@ -85,7 +85,7 @@ function ConsentCard({
           </button>
           <button
             onClick={() => onDecline(req.id)}
-            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-bold text-[var(--destructive)] bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 hover:bg-[var(--destructive)]/15 transition-colors"
           >
             <X size={13} weight="bold" /> رفض
           </button>
@@ -95,7 +95,7 @@ function ConsentCard({
       {req.status === 'accepted' && !isIncoming && onRevoke && (
         <button
           onClick={() => onRevoke(req.id)}
-          className="text-xs text-red-500 hover:text-red-700 transition-colors flex items-center gap-1"
+          className="text-xs text-[var(--destructive)] hover:text-[var(--destructive)] transition-colors flex items-center gap-1"
         >
           <X size={12} /> سحب الموافقة
         </button>
@@ -150,18 +150,18 @@ export default function ConsentManagementPage() {
           </div>
         </div>
 
-        <div className="flex gap-2 mb-6 bg-white/60 p-1 rounded-2xl border border-[var(--border)]/50">
+        <div className="flex gap-2 mb-6 bg-[var(--card)]/60 p-1 rounded-2xl border border-[var(--border)]/50">
           <button
             onClick={() => setTab('incoming')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               tab === 'incoming'
-                ? 'bg-[var(--muted)]0 text-white shadow-md'
+                ? 'bg-[var(--primary)] text-white shadow-md'
                 : 'text-[var(--primary)] hover:bg-[var(--muted)]'
             }`}
           >
             واردة
             {pendingIncoming > 0 && (
-              <span className="mr-1.5 bg-amber-400 text-white text-xs rounded-full px-1.5 py-0.5">
+              <span className="mr-1.5 bg-[var(--accent)] text-white text-xs rounded-full px-1.5 py-0.5">
                 {pendingIncoming}
               </span>
             )}
@@ -170,7 +170,7 @@ export default function ConsentManagementPage() {
             onClick={() => setTab('outgoing')}
             className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               tab === 'outgoing'
-                ? 'bg-[var(--muted)]0 text-white shadow-md'
+                ? 'bg-[var(--primary)] text-white shadow-md'
                 : 'text-[var(--primary)] hover:bg-[var(--muted)]'
             }`}
           >

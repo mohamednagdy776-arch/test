@@ -266,7 +266,7 @@ export default function UpgradePage() {
       {feedback && (
         <div className={cn(
           'mb-6 rounded-2xl px-5 py-3 text-sm text-center font-medium',
-          feedback.includes('خطأ') ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-[var(--muted)] text-[var(--primary)] border border-[#A7F3D0]'
+          feedback.includes('خطأ') ? 'bg-[var(--destructive)]/10 text-[var(--destructive)] border border-[var(--destructive)]/20' : 'bg-[var(--muted)] text-[var(--primary)] border border-[#A7F3D0]'
         )}>
           {feedback}
         </div>
@@ -286,7 +286,7 @@ export default function UpgradePage() {
           <button
             onClick={handleCancel}
             disabled={cancelSub.isPending}
-            className="text-sm text-red-400 hover:text-red-600 transition-colors underline underline-offset-2 disabled:opacity-50"
+            className="text-sm text-[var(--destructive)]/70 hover:text-[var(--destructive)] transition-colors underline underline-offset-2 disabled:opacity-50"
           >
             {cancelSub.isPending ? 'جارٍ الإلغاء...' : 'إلغاء الاشتراك الحالي'}
           </button>

@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useRecommendedVideos, useTrendingVideos, useVideos, useContinueWatching } from '@/features/videos/hooks';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
-import { PlayCircle, Fire, Users, Clock } from '@phosphor-icons/react';
+import { PlayCircle, Fire, Users, Clock, Plus } from '@phosphor-icons/react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { resolveMediaUrl } from '@/lib/media';
 
 function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -39,7 +41,7 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
       {/* Thumbnail */}
       <div className="relative aspect-video" style={{ backgroundColor: 'var(--muted)' }}>
         {video.thumbnail ? (
-          <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+          <img src={resolveMediaUrl(video.thumbnail) ?? ''} alt={video.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <PlayCircle size={40} className="opacity-30" style={{ color: 'var(--muted-foreground)' }} />
@@ -57,7 +59,7 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
           className="absolute inset-0 flex items-center justify-center transition-opacity duration-200"
           style={{ backgroundColor: 'rgba(0,0,0,0.25)', opacity: isHovered ? 1 : 0, pointerEvents: 'none' }}
         >
-          <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+          <div className="w-12 h-12 rounded-full bg-[var(--card)]/90 flex items-center justify-center shadow-lg">
             <PlayCircle size={28} weight="fill" style={{ color: 'var(--primary)' }} />
           </div>
         </div>
@@ -212,25 +214,26 @@ export default function WatchPage() {
   const isLoading = activeTab === 'recommended' ? rLoading : activeTab === 'trending' ? tLoading : fLoading;
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Page Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>الفيديوهات</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>اكتشف فيديوهات جديدة من مجتمعاتك</p>
-        </div>
-        <button
-          onClick={() => router.push('/videos/upload')}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
-          style={{ background: 'var(--primary)' }}
-        >
-          <span>+</span> رفع فيديو
-        </button>
-      </div>
+    <div className="max-w-6xl mx-auto space-y-6">
+      <PageHeader
+        icon={PlayCircle}
+        eyebrow="المشاهدة"
+        title="الفيديوهات"
+        subtitle="اكتشف فيديوهات جديدة من مجتمعاتك"
+        action={
+          <button
+            onClick={() => router.push('/videos/upload')}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}
+          >
+            <Plus size={15} weight="bold" /> رفع فيديو
+          </button>
+        }
+      />
 
       {/* Tabs */}
       <div
-        className="flex gap-1 mb-6 rounded-2xl p-1"
+        className="flex gap-1 rounded-2xl p-1"
         style={{ backgroundColor: 'var(--muted)' }}
       >
         {TABS.map((tab) => (

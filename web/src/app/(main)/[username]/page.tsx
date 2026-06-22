@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { profileApi } from '@/features/profile/api';
+import { resolveMediaUrl } from '@/lib/media';
 import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
 import { ProfileSection } from '@/features/profile/components/ProfileSection';
 import { ProfileTabs } from '@/features/profile/components/ProfileTabs';
@@ -285,7 +286,7 @@ function FriendsTab({ userId }: { userId: string }) {
           <Link key={i} href={friend.username ? `/${friend.username}` : '#'} className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 text-center shadow-sm hover:shadow-md hover:shadow-black/5 transition-all">
             <div className="h-16 w-16 mx-auto rounded-full bg-[var(--muted)] flex items-center justify-center mb-2">
               {friend.avatarUrl ? (
-                <img src={friend.avatarUrl} alt="" className="h-full w-full object-cover rounded-full" />
+                <img src={resolveMediaUrl(friend.avatarUrl) ?? ''} alt="" className="h-full w-full object-cover rounded-full" />
               ) : (
                 <span className="text-xl font-bold text-[var(--primary)]">{friend.fullName?.charAt(0)}</span>
               )}
@@ -354,7 +355,7 @@ function PhotosTab({ userId }: { userId: string }) {
         {photos.map((photo: any, i: number) => (
           <div key={i} className="aspect-square bg-[var(--muted)]/40 rounded-xl overflow-hidden border border-[var(--border)]">
             {photo.metadata?.url && (
-              <img src={photo.metadata.url} alt="" className="w-full h-full object-cover" />
+              <img src={resolveMediaUrl(photo.metadata.url) ?? ''} alt="" className="w-full h-full object-cover" />
             )}
           </div>
         ))}
@@ -416,7 +417,7 @@ function VideosTab({ userId }: { userId: string }) {
         {videos.map((video: any) => (
           <Link key={video.id} href={`/watch/${video.id}`} className="group relative aspect-video bg-[var(--muted)]/40 rounded-xl overflow-hidden border border-[var(--border)]">
             {video.thumbnail ? (
-              <img src={video.thumbnail} alt={video.title || ''} className="w-full h-full object-cover" />
+              <img src={resolveMediaUrl(video.thumbnail) ?? ''} alt={video.title || ''} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
             )}

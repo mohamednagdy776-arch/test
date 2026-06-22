@@ -5,14 +5,13 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useMyProfile } from '@/features/profile/hooks';
 import {
-  House, MagnifyingGlass, Heart, UsersThree, User, Flag,
+  House, MagnifyingGlass, Heart, UsersThree, UsersFour, User, Flag,
   CalendarBlank, ChatCircle, Gear, Clock, PlayCircle, FilmStrip,
   ShieldCheck, ShareNetwork, TestTube, Baby, Sparkle, SignOut,
-  BookmarkSimple, Crown,
+  BookmarkSimple, Crown, Bell,
 } from '@phosphor-icons/react';
 import { authApi } from '@/features/auth/api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
+import { resolveMediaUrl } from '@/lib/media';
 
 const navGroups = [
   {
@@ -21,6 +20,7 @@ const navGroups = [
       { label: 'الرئيسية', href: '/dashboard', icon: House },
       { label: 'البحث', href: '/search', icon: MagnifyingGlass },
       { label: 'المحادثات', href: '/chat', icon: ChatCircle },
+      { label: 'الإشعارات', href: '/notifications', icon: Bell },
       { label: 'المحفوظات', href: '/saved', icon: BookmarkSimple },
     ],
   },
@@ -31,7 +31,7 @@ const navGroups = [
       { label: 'الأصدقاء', href: '/friends', icon: UsersThree },
       { label: 'العائلة', href: '/family', icon: ShieldCheck },
       { label: 'الفعاليات', href: '/events', icon: CalendarBlank },
-      { label: 'المجتمعات', href: '/groups', icon: UsersThree },
+      { label: 'المجتمعات', href: '/groups', icon: UsersFour },
       { label: 'الصفحات', href: '/pages', icon: Flag },
     ],
   },
@@ -65,7 +65,7 @@ export const Sidebar = () => {
   const router = useRouter();
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
-  const avatarUrl = user?.avatar ? `${API_BASE}${user.avatar}` : null;
+  const avatarUrl = resolveMediaUrl(user?.avatar);
   const displayName = user?.name || user?.username || 'المستخدم';
   const username = user?.username ? `@${user.username}` : '';
 

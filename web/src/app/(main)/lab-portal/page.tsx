@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import QRCode from 'react-qr-code';
 import { labsApi, type Lab, type ReferralCode } from '@/features/labs/api';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { TestTube } from '@phosphor-icons/react';
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, string> = {
     active: 'bg-green-100 text-green-700',
     used: 'bg-[var(--muted)] text-[var(--muted-foreground)]',
-    expired: 'bg-red-100 text-red-600',
+    expired: 'bg-[var(--destructive)]/15 text-[var(--destructive)]',
     pending: 'bg-yellow-100 text-yellow-700',
   };
   return (
@@ -108,17 +110,15 @@ export default function LabPortalPage() {
     <div className="space-y-6">
       {activeQR && <QRModal code={activeQR} onClose={() => setActiveQR(null)} />}
 
-      <div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--foreground)' }}>
-          بوابة المختبرات
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-          أنشئ كود إحالة لإجراء فحوصاتك في أحد المختبرات المعتمدة والحصول على شارة التحقق الصحي
-        </p>
-      </div>
+      <PageHeader
+        icon={TestTube}
+        eyebrow="الصحة"
+        title="بوابة المختبرات"
+        subtitle="أنشئ كود إحالة لإجراء فحوصاتك في مختبر معتمد والحصول على شارة التحقق الصحي"
+      />
 
       {error && (
-        <div className="rounded-xl p-3 bg-red-50 text-red-600 text-sm">{error}</div>
+        <div className="rounded-xl p-3 bg-[var(--destructive)]/10 text-[var(--destructive)] text-sm">{error}</div>
       )}
 
       {/* Available Labs */}

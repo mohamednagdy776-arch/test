@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
+import { useToast } from '@/components/ui/Toast';
 
 const VISIBILITY_OPTIONS = [
   { value: 'public', label: 'العام' },
@@ -91,6 +92,7 @@ interface BlockedUser {
 function DataExportButton() {
   const [exporting, setExporting] = useState(false);
   const [done, setDone] = useState(false);
+  const { showToast } = useToast();
 
   const handleExport = async () => {
     setExporting(true);
@@ -106,7 +108,7 @@ function DataExportButton() {
       setDone(true);
       setTimeout(() => setDone(false), 4000);
     } catch {
-      alert('تعذّر تصدير البيانات. يرجى المحاولة مجدداً.');
+      showToast('تعذّر تصدير البيانات. يرجى المحاولة مجدداً.', 'error');
     } finally {
       setExporting(false);
     }
@@ -182,7 +184,7 @@ export default function PrivacyPage() {
       onClick={onClick}
       disabled={disabled}
       className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
-        enabled ? 'bg-[var(--muted)]0 shadow-inner' : 'bg-sage-300'
+        enabled ? 'bg-[var(--primary)] shadow-inner' : 'bg-[var(--muted-foreground)]/30'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
     >
       <span
@@ -228,10 +230,10 @@ export default function PrivacyPage() {
         </div>
 
         {privacyError && (
-          <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2 rounded-xl bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 px-4 py-3 text-sm text-[var(--destructive)]">
             <span>⚠️</span>
             <span className="flex-1">{privacyError}</span>
-            <button onClick={() => setPrivacyError(null)} className="text-red-400 hover:text-red-600">✕</button>
+            <button onClick={() => setPrivacyError(null)} className="text-[var(--destructive)]/70 hover:text-[var(--destructive)]">✕</button>
           </div>
         )}
 

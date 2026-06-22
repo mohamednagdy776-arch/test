@@ -157,8 +157,8 @@ export default function ChildPredictionPage() {
               </svg>
               <span className="text-xs text-[var(--primary)] font-medium">خصوصية تامة — لا يُحفظ أي صور</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100">
-              <span className="text-xs text-amber-600 font-medium">⏱ يستغرق 2–4 دقائق</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20">
+              <span className="text-xs text-[var(--accent)] font-medium">⏱ يستغرق 2–4 دقائق</span>
             </div>
           </div>
         </div>
@@ -213,9 +213,9 @@ export default function ChildPredictionPage() {
 
         {(parent1 || parent2) && (
           <div className="flex items-center gap-3 mb-5">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-rose-200" />
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--destructive)]/20" />
             <span className="text-xl animate-pulse">💕</span>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-rose-200" />
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[var(--destructive)]/20" />
           </div>
         )}
 
@@ -242,7 +242,7 @@ export default function ChildPredictionPage() {
           {isLoading && (
             <button
               onClick={cancelPrediction}
-              className="h-14 px-5 rounded-2xl font-semibold text-red-600 border-2 border-red-200 bg-red-50 hover:bg-red-100 transition-colors shrink-0"
+              className="h-14 px-5 rounded-2xl font-semibold text-[var(--destructive)] border-2 border-[var(--destructive)]/30 bg-[var(--destructive)]/10 hover:bg-[var(--destructive)]/15 transition-colors shrink-0"
             >
               إلغاء
             </button>
@@ -255,7 +255,7 @@ export default function ChildPredictionPage() {
             <div className="mt-4 flex justify-center gap-5 flex-wrap">
               {STEPS.map((s) => (
                 <div key={s} className={`flex items-center gap-1.5 text-xs transition-colors duration-500 ${stage === s ? 'text-[var(--primary)] font-semibold' : 'text-[var(--muted-foreground)]/70'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full transition-colors ${stage === s ? 'bg-[var(--muted)]0 animate-pulse' : 'bg-[var(--muted)]'}`} />
+                  <div className={`w-1.5 h-1.5 rounded-full transition-colors ${stage === s ? 'bg-[var(--primary)] animate-pulse' : 'bg-[var(--muted)]'}`} />
                   {LABELS[s]}
                 </div>
               ))}
@@ -268,7 +268,7 @@ export default function ChildPredictionPage() {
 
         {/* Error */}
         {stage === 'error' && (
-          <div className="mt-4 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center leading-relaxed">
+          <div className="mt-4 p-4 rounded-xl bg-[var(--destructive)]/10 border border-[var(--destructive)]/20 text-[var(--destructive)] text-sm text-center leading-relaxed">
             ⚠️ {errMsg ?? LABELS.error}
           </div>
         )}
@@ -295,7 +295,7 @@ export default function ChildPredictionPage() {
                 تنزيل
               </a>
               <button onClick={reset}
-                className="h-11 rounded-xl bg-[var(--muted)]0 text-white font-medium text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)] transition-colors">
+                className="h-11 rounded-xl bg-[var(--primary)] text-white font-medium text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)] transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>

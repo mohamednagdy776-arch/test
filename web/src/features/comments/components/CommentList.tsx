@@ -204,7 +204,7 @@ function CommentItem({
                       <button onClick={() => { setIsEditing(true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[var(--muted)]/50 flex items-center gap-2">
                         <Pencil size={14} /> تعديل
                       </button>
-                      <button onClick={() => { onDelete(comment.id); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm text-red-500 hover:bg-[var(--muted)]/50 flex items-center gap-2">
+                      <button onClick={() => { onDelete(comment.id); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm text-[var(--destructive)] hover:bg-[var(--muted)]/50 flex items-center gap-2">
                         <Trash size={14} /> حذف
                       </button>
                     </>

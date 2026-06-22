@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
 import { apiClient } from '@/lib/api-client';
 import { cn, displayName } from '@/lib/utils';
+import { resolveMediaUrl } from '@/lib/media';
 import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt } from '@phosphor-icons/react';
 
 const REACTIONS = [
@@ -227,7 +228,7 @@ function PostMenu({ postId, post, onClose }: { postId: string; post: any; onClos
           <button
             key={i}
             onClick={() => { item.action(); onClose(); }}
-            className={cn('w-full px-4 py-2.5 text-right text-sm hover:bg-[var(--muted)]/50 flex items-center gap-3 hover:shadow-soft transition-all duration-200', item.danger ? 'text-red-500' : 'text-[var(--foreground)]')}
+            className={cn('w-full px-4 py-2.5 text-right text-sm hover:bg-[var(--muted)]/50 flex items-center gap-3 hover:shadow-soft transition-all duration-200', item.danger ? 'text-[var(--destructive)]' : 'text-[var(--foreground)]')}
           >
             <Icon size={18} weight={item.danger ? 'fill' : 'regular'} />
             {item.label}
@@ -312,13 +313,8 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   
   const userName = displayName(post.user);
   const userInitial = userName.charAt(0).toUpperCase();
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3000';
-  const avatarRaw = post.user?.profile?.avatarUrl;
-  const authorAvatar = avatarRaw ? (avatarRaw.startsWith('http') ? avatarRaw : `${apiUrl}${avatarRaw}`) : null;
-
-  const mediaUrl = post.mediaUrl
-    ? (post.mediaUrl.startsWith('http') ? post.mediaUrl : `${apiUrl}${post.mediaUrl}`)
-    : undefined;
+  const authorAvatar = resolveMediaUrl(post.user?.profile?.avatarUrl);
+  const mediaUrl = resolveMediaUrl(post.mediaUrl) ?? undefined;
   const isShared = post.postType === 'shared' || post.originalPostId;
 
   return (
@@ -387,7 +383,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
               ) : post.mediaUrls?.length > 1 ? (
                 <div className="grid grid-cols-2 gap-1">
                   {post.mediaUrls.map((url: string, i: number) => (
-                    <img key={i} src={url.startsWith('http') ? url : `${apiUrl}${url}`} alt="" className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
+                    <img key={i} src={resolveMediaUrl(url) ?? ''} alt="" className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
                   ))}
                 </div>
               ) : (

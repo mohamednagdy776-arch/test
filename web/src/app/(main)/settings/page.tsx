@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import {
   User, ShieldCheck, Lock, Bell, Palette, Globe,
-  Question, Bug, Fingerprint, CaretLeft,
+  Question, Bug, Fingerprint, CaretLeft, IdentificationCard, Envelope, Gear,
 } from '@phosphor-icons/react';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const sections = [
   {
@@ -14,6 +15,22 @@ const sections = [
     href: '/profile',
     accent: 'var(--primary)',
     bg: 'color-mix(in srgb, var(--primary) 8%, transparent)',
+  },
+  {
+    title: 'الحساب',
+    icon: IdentificationCard,
+    description: 'اسم المستخدم وبيانات حسابك الأساسية',
+    href: '/settings/account',
+    accent: 'var(--secondary)',
+    bg: 'color-mix(in srgb, var(--secondary) 8%, transparent)',
+  },
+  {
+    title: 'البريد الإلكتروني',
+    icon: Envelope,
+    description: 'تغيير بريدك الإلكتروني وتأكيده',
+    href: '/settings/email',
+    accent: '#0ea5e9',
+    bg: 'color-mix(in srgb, #0ea5e9 8%, transparent)',
   },
   {
     title: 'الأمان',
@@ -83,14 +100,13 @@ const sections = [
 
 export default function SettingsPage() {
   return (
-    <div className="max-w-2xl mx-auto pb-10">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold" style={{ color: 'var(--foreground)' }}>الإعدادات</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-          إدارة حسابك وتخصيص تجربتك في طيبت
-        </p>
-      </div>
+    <div className="max-w-2xl mx-auto pb-10 space-y-6">
+      <PageHeader
+        icon={Gear}
+        eyebrow="حسابك"
+        title="الإعدادات"
+        subtitle="إدارة حسابك وتخصيص تجربتك في طيبت"
+      />
 
       <div className="space-y-2">
         {sections.map(({ title, icon: Icon, description, href, accent, bg }) => (

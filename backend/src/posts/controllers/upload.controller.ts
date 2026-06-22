@@ -1,12 +1,23 @@
-import { Controller, Post, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Post, UseGuards, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { extname, join } from 'path';
+import { mkdirSync } from 'fs';
 import { ok } from '../../common/response.helper';
+import { signMediaPath } from '../../common/utils/media-token';
+
+// Post / story / chat media lives under uploads/posts so it can be served by the
+// token-protected MediaController (GET /api/v1/media/posts/:file?t=...), the same
+// scheme used for avatars/covers. (#media — the old /uploads/<file> flat path was
+// no longer served once static hosting moved behind signed tokens.)
+const POSTS_DIR = join(process.cwd(), 'uploads', 'posts');
 
 const storage = diskStorage({
-  destination: './uploads',
+  destination: (req, file, cb) => {
+    mkdirSync(POSTS_DIR, { recursive: true });
+    cb(null, POSTS_DIR);
+  },
   filename: (req, file, cb) => {
     const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${extname(file.originalname)}`;
     cb(null, uniqueName);
@@ -19,7 +30,7 @@ const fileFilter = (req: any, file: any, cb: any) => {
   if (allowedImage.includes(file.mimetype) || allowedVideo.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('File type not supported'), false);
+    cb(new BadRequestException('File type not supported'), false);
   }
 };
 
@@ -29,7 +40,10 @@ export class UploadController {
   @Post('media')
   @UseInterceptors(FileInterceptor('file', { storage, fileFilter, limits: { fileSize: 50 * 1024 * 1024 } }))
   async uploadMedia(@UploadedFile() file: any) {
-    const url = `/uploads/${file.filename}`;
+    if (!file) throw new BadRequestException('No file uploaded');
+    const mediaPath = `posts/${file.filename}`;
+    const token = signMediaPath(mediaPath);
+    const url = `/api/v1/media/${mediaPath}?t=${token}`;
     const type = file.mimetype.startsWith('video/') ? 'video' : 'image';
     return ok({ url, type, filename: file.filename }, 'File uploaded');
   }

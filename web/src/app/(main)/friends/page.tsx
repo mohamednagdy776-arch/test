@@ -6,15 +6,16 @@ import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { useFriends, usePendingRequests, useSuggestions, useAcceptFriendRequest, useDeclineFriendRequest, useSendFriendRequest, useUnfriend, useFollowUser, useBlockUser, useFriendBirthdays, useFriendLists, useCreateFriendList, useUpdateFriendList, useDeleteFriendList } from '@/features/friends/hooks';
 import { cn, displayName } from '@/lib/utils';
-import { DotsThreeVertical, ChatCircle, UserMinus, UserPlus, Prohibit } from '@phosphor-icons/react';
+import { DotsThreeVertical, ChatCircle, UserMinus, UserPlus, Prohibit, UsersThree } from '@phosphor-icons/react';
+import { PageHeader } from '@/components/ui/PageHeader';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
+import { resolveMediaUrl } from '@/lib/media';
 
 function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: any; onUnfriend?: () => void; onMessage?: () => void; onBlock?: () => void; onFollow?: () => void }) {
   const name = displayName(user);
   const [showMenu, setShowMenu] = useState(false);
   const isFriend = user.friendshipStatus === 'friends' || user.isFriend;
-  const avatarSrc = user.avatar ? `${API_BASE}${user.avatar}` : null;
+  const avatarSrc = resolveMediaUrl(user.avatar);
 
   return (
     <div className="rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
@@ -47,7 +48,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
               </button>
               {isFriend ? (
                 <button onClick={() => { onUnfriend?.(); setShowMenu(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm transition-colors hover:bg-red-50 text-red-500">
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm transition-colors hover:bg-[var(--destructive)]/10 text-[var(--destructive)]">
                   <UserMinus size={15} /> إلغاء الصداقة
                 </button>
               ) : (
@@ -58,7 +59,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
                 </button>
               )}
               <button onClick={() => { onBlock?.(); setShowMenu(false); }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm text-red-500 transition-colors hover:bg-red-50">
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10">
                 <Prohibit size={15} /> حظر
               </button>
             </div>
@@ -92,7 +93,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
 function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept: () => void; onDecline: () => void }) {
   const name = displayName(request.requester);
   const mutualCount = request.mutualFriends || 0;
-  const avatarSrc = request.requester?.avatar ? `${API_BASE}${request.requester.avatar}` : null;
+  const avatarSrc = resolveMediaUrl(request.requester?.avatar);
 
   return (
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
@@ -123,7 +124,7 @@ function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept:
 function SuggestionCard({ user, onAdd, onFollow }: { user: any; onAdd: () => void; onFollow: () => void }) {
   const name = displayName(user);
   const mutual = user.mutual || 0;
-  const avatarSrc = user.userId?.avatar ? `${API_BASE}${user.userId.avatar}` : null;
+  const avatarSrc = resolveMediaUrl(user.userId?.avatar);
 
   return (
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
@@ -186,7 +187,7 @@ function FriendListCard({ list, onEdit, onDelete, members }: { list: any; onEdit
             </svg>
           </button>
           <button onClick={onDelete} aria-label="حذف"
-            className="p-1.5 rounded-lg text-red-400 transition-colors hover:bg-red-50 hover:text-red-600">
+            className="p-1.5 rounded-lg text-[var(--destructive)]/70 transition-colors hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
@@ -331,7 +332,14 @@ export default function FriendsPage() {
 
   return (
     <div className="pb-10">
-      <h1 className="text-2xl font-extrabold mb-5" style={{ color: 'var(--foreground)' }}>الأصدقاء</h1>
+      <div className="mb-5">
+        <PageHeader
+          icon={UsersThree}
+          eyebrow="شبكتك"
+          title="الأصدقاء"
+          subtitle="أصدقاؤك، طلبات الصداقة، والأشخاص الذين قد تعرفهم"
+        />
+      </div>
 
         {activeTab === 'friends' && birthdays.length > 0 && (
           <div className="mb-5 rounded-2xl p-4"

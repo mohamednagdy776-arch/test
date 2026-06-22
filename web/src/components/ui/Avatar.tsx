@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import NextImage from 'next/image';
+import { resolveMediaUrl } from '@/lib/media';
 
 interface AvatarProps {
   src?: string | null;
@@ -27,12 +28,13 @@ export function Avatar({ src, name, size = 'md', className, online, shape = 'cir
   const px = pxSizes[size];
   const initials = name ? name.split(' ').filter(Boolean).map((n) => n[0]).join('').slice(0, 2).toUpperCase() : '?';
   const shapeClass = shape === 'rounded' ? 'rounded-xl' : 'rounded-full';
+  const resolvedSrc = resolveMediaUrl(src);
 
   return (
     <div className={cn('relative inline-flex shrink-0', className)} style={{ width: px, height: px }}>
-      {src ? (
+      {resolvedSrc ? (
         <NextImage
-          src={src}
+          src={resolvedSrc}
           alt={name || 'صورة شخصية'}
           width={px}
           height={px}

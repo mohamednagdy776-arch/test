@@ -23,7 +23,7 @@ const HELP_ITEMS = [
     title: 'الشروط والأحكام',
     description: 'اقرأ شروط الاستخدام',
     href: '/terms',
-    color: 'bg-amber-100',
+    color: 'bg-[var(--accent)]/15',
   },
   {
     icon: '🔒',
@@ -37,7 +37,7 @@ const HELP_ITEMS = [
 const ContactItem = ({ icon, title, detail, href }: { icon: string; title: string; detail: string; href: string }) => (
   <Link
     href={href}
-    className="flex items-center gap-4 p-4 rounded-xl bg-white/50 border border-[var(--border)]/50 hover:border-[var(--border)] hover:shadow-md transition-all duration-300"
+    className="flex items-center gap-4 p-4 rounded-xl bg-[var(--card)]/50 border border-[var(--border)]/50 hover:border-[var(--border)] hover:shadow-md transition-all duration-300"
   >
     <span className="text-2xl">{icon}</span>
     <div className="flex-1">
@@ -51,7 +51,7 @@ const ContactItem = ({ icon, title, detail, href }: { icon: string; title: strin
 const HelpLink = ({ item }: { item: typeof HELP_ITEMS[0] }) => (
   <Link
     href={item.href}
-    className="flex items-center gap-4 p-4 rounded-xl bg-white/50 border border-[var(--border)]/50 hover:border-[var(--border)] hover:shadow-md transition-all duration-300"
+    className="flex items-center gap-4 p-4 rounded-xl bg-[var(--card)]/50 border border-[var(--border)]/50 hover:border-[var(--border)] hover:shadow-md transition-all duration-300"
   >
     <div className={`w-12 h-12 rounded-xl ${item.color} flex items-center justify-center text-xl`}>
       {item.icon}

@@ -2,6 +2,8 @@
 import { PagesList } from '@/features/pages/components/PagesList';
 import { useCreatePage } from '@/features/pages/hooks';
 import { useState } from 'react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Flag, Plus, X } from '@phosphor-icons/react';
 
 const PAGE_CATEGORIES = ['دراسة', 'صحة', 'رياضة', 'تكنولوجيا', 'فنون', 'موسيقى', 'ألعاب', 'طعام', 'سفر', 'أعمال', 'أخرى'];
 
@@ -30,16 +32,23 @@ export default function PagesPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">الصفحات</h1>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="rounded-2xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all"
-        >
-          {showCreate ? 'إلغاء' : '+ إنشاء صفحة'}
-        </button>
-      </div>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <PageHeader
+        icon={Flag}
+        eyebrow="مجتمعك"
+        title="الصفحات"
+        subtitle="اكتشف صفحات تهمك أو أنشئ صفحتك الخاصة"
+        action={
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}
+          >
+            {showCreate ? <X size={15} /> : <Plus size={15} weight="bold" />}
+            {showCreate ? 'إلغاء' : 'إنشاء صفحة'}
+          </button>
+        }
+      />
 
       {showCreate && (
         <form onSubmit={handleCreate} className="mb-6 rounded-2xl bg-[var(--card)] p-5 shadow-lg shadow-black/5 border border-[var(--border)]">
@@ -67,7 +76,7 @@ export default function PagesPage() {
             className="w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 mb-3 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] resize-none"
           />
           {createError && (
-            <p className="mb-3 rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700">{createError}</p>
+            <p className="mb-3 rounded-lg bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 px-3 py-2 text-xs text-[var(--destructive)]">{createError}</p>
           )}
           <button
             type="submit"

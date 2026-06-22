@@ -6,6 +6,7 @@ import { useVideo, useVideoComments, useAddVideoComment, useLikeVideo, useUnlike
 import { Avatar } from '@/components/ui/Avatar';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
+import { resolveMediaUrl } from '@/lib/media';
 
 function VideoPlayer({ video }: { video: any }) {
   const [liked, setLiked] = useState<boolean>(() => !!video?.isLiked);
@@ -80,13 +81,13 @@ function VideoPlayer({ video }: { video: any }) {
       <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-xl">
         {video.url ? (
           <video
-            src={video.url}
+            src={resolveMediaUrl(video.url) ?? ''}
             controls
             className="w-full h-full"
-            poster={video.thumbnail}
+            poster={resolveMediaUrl(video.thumbnail) ?? undefined}
           />
         ) : video.thumbnail ? (
-          <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+          <img src={resolveMediaUrl(video.thumbnail) ?? ''} alt={video.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-6xl">🎬</div>
         )}
@@ -104,7 +105,7 @@ function VideoPlayer({ video }: { video: any }) {
               onClick={handleLike}
               className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
                 liked
-                  ? 'bg-red-50 text-red-500 border border-red-200'
+                  ? 'bg-[var(--destructive)]/10 text-[var(--destructive)] border border-[var(--destructive)]/30'
                   : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border border-[var(--border)]'
               }`}
             >
@@ -125,7 +126,7 @@ function VideoPlayer({ video }: { video: any }) {
             </button>
             <button
               onClick={() => setShowReport(true)}
-              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 transition-all"
+              className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[var(--destructive)]/10 text-[var(--destructive)] hover:bg-[var(--destructive)]/15 border border-[var(--destructive)]/20 transition-all"
             >
               🚩 إبلاغ
             </button>
@@ -143,7 +144,7 @@ function VideoPlayer({ video }: { video: any }) {
               <div className="space-y-2">
                 {['محتوى غير لائق', 'انتهاك الخصوصية', 'معلومات مضللة', 'محتوى عنيف', 'بريد مزعج', 'سبب آخر'].map((r) => (
                   <button key={r} onClick={() => setReportReason(r)}
-                    className={`w-full text-right px-4 py-2.5 rounded-xl text-sm border transition-all ${reportReason === r ? 'border-red-400 bg-red-50 text-red-700 font-semibold' : 'border-[var(--border)] bg-[var(--muted)] text-[var(--foreground)] hover:border-[var(--border)]'}`}>
+                    className={`w-full text-right px-4 py-2.5 rounded-xl text-sm border transition-all ${reportReason === r ? 'border-[var(--destructive)]/50 bg-[var(--destructive)]/10 text-[var(--destructive)] font-semibold' : 'border-[var(--border)] bg-[var(--muted)] text-[var(--foreground)] hover:border-[var(--border)]'}`}>
                     {r}
                   </button>
                 ))}
@@ -151,7 +152,7 @@ function VideoPlayer({ video }: { video: any }) {
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setShowReport(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--border)] text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
                 <button onClick={handleReport} disabled={!reportReason || reportLoading}
-                  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors">
+                  className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold bg-[var(--destructive)] text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors">
                   {reportLoading ? '...' : 'إرسال البلاغ'}
                 </button>
               </div>
@@ -268,7 +269,7 @@ function RecommendedSidebar({ currentId }: { currentId: string }) {
         >
           <div className="w-28 h-16 shrink-0 rounded-lg bg-[var(--muted)] overflow-hidden">
             {v.thumbnail ? (
-              <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
+              <img src={resolveMediaUrl(v.thumbnail) ?? ''} alt={v.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>
             )}

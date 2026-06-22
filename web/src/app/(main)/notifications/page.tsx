@@ -4,6 +4,8 @@ import { useNotifications, useUnreadCount, useMarkAsRead, useMarkAllAsRead, useD
 import { NotificationList } from '@/features/notifications/components/NotificationList';
 import { usePushNotifications } from '@/features/notifications/usePushNotifications';
 import { Spinner } from '@/components/ui/Spinner';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Bell, Checks } from '@phosphor-icons/react';
 
 type Tab = 'all' | 'unread' | 'mentions' | 'likes' | 'comments';
 
@@ -37,30 +39,35 @@ export default function NotificationsPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--muted)] via-[var(--card)] to-amber-50/30 p-4 md:p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">الإشعارات</h1>
-          {unreadCount > 0 && (
+    <div>
+      <div className="max-w-2xl mx-auto space-y-6">
+        <PageHeader
+          icon={Bell}
+          eyebrow="تنبيهاتك"
+          title="الإشعارات"
+          subtitle="آخر التفاعلات والتحديثات على حسابك"
+          action={unreadCount > 0 ? (
             <button
               onClick={() => markAllAsRead.mutate()}
               disabled={markAllAsRead.isPending}
-              className="text-sm font-medium text-[var(--primary)] hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+              style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}
             >
+              <Checks size={15} weight="bold" />
               تعيين الكل كمقروء
             </button>
-          )}
-        </div>
+          ) : undefined}
+        />
 
-        <div className="flex gap-2 mb-6 border-b border-[var(--border)] pb-1">
+        <div className="flex gap-2 border-b border-[var(--border)] pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors relative ${
                 activeTab === tab.id
-                  ? 'text-[var(--primary)] border-b-2 border-[var(--primary)]'
-                  : 'text-[var(--primary)] hover:text-[var(--primary)]'
+                  ? 'text-[var(--primary)] border-b-2 border-[var(--accent)]'
+                  : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
               }`}
             >
               {tab.label}

@@ -228,7 +228,7 @@ export default function SecurityPage() {
         </div>
 
         {error && (
-          <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+          <div className="p-3 rounded-xl bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 text-[var(--destructive)] text-sm">
             {error}
           </div>
         )}
@@ -241,7 +241,7 @@ export default function SecurityPage() {
                 className={`p-3 rounded-xl border flex items-center justify-between ${
                   alert.type === 'success'
                     ? 'bg-[var(--muted)] border-[var(--border)] text-[var(--primary)]'
-                    : 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-[var(--destructive)]/10 border-[var(--destructive)]/30 text-[var(--destructive)]'
                 }`}
               >
                 <span className="text-sm">{alert.message}</span>
@@ -294,7 +294,7 @@ export default function SecurityPage() {
                         size="sm"
                         loading={revoking === session.id}
                         onClick={() => handleRevokeSession(session.id)}
-                        className="text-red-600 hover:bg-red-50"
+                        className="text-[var(--destructive)] hover:bg-[var(--destructive)]/10"
                       >
                         إلغاء
                       </Button>
@@ -311,7 +311,7 @@ export default function SecurityPage() {
                   size="sm"
                   loading={revoking === 'all'}
                   onClick={() => setShowRevokeAllModal(true)}
-                  className="text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400"
+                  className="text-[var(--destructive)] border-[var(--destructive)]/40 hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)]/50"
                 >
                   إلغاء جميع الجلسات الأخرى
                 </Button>
@@ -330,7 +330,7 @@ export default function SecurityPage() {
           <CardContent>
             <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50">
               <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl ${twoFactorEnabled ? 'bg-[var(--muted)]' : 'bg-amber-100'}`}>
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl ${twoFactorEnabled ? 'bg-[var(--muted)]' : 'bg-[var(--accent)]/15'}`}>
                   {twoFactorEnabled ? '✓' : '🔒'}
                 </div>
                 <div>
@@ -345,7 +345,7 @@ export default function SecurityPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setShowDisable2FA(true)}
-                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  className="text-[var(--destructive)] border-[var(--destructive)]/40 hover:bg-[var(--destructive)]/10"
                 >
                   إلغاء التفعيل
                 </Button>
@@ -455,7 +455,7 @@ export default function SecurityPage() {
                 required
               />
               {changePwdError && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{changePwdError}</p>
+                <p className="text-sm text-[var(--destructive)] bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 rounded-lg px-3 py-2">{changePwdError}</p>
               )}
               {changePwdSuccess && (
                 <p className="text-sm text-[var(--primary)] bg-[var(--muted)] border border-[var(--border)] rounded-lg px-3 py-2">تم تغيير كلمة المرور بنجاح</p>
@@ -473,18 +473,18 @@ export default function SecurityPage() {
           </CardContent>
         </Card>
 
-        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-red-200/50">
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--destructive)]/20">
           <CardHeader>
-            <CardTitle className="text-red-700 flex items-center gap-2">
+            <CardTitle className="text-[var(--destructive)] flex items-center gap-2">
               <span>⚠️</span> منطقة خطرة
             </CardTitle>
             <CardDescription>إجراءات خطرة على حسابك</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-start justify-between p-4 rounded-xl bg-red-50/50 border border-red-200/50">
+            <div className="flex items-start justify-between p-4 rounded-xl bg-[var(--destructive)]/8 border border-[var(--destructive)]/20">
               <div className="flex-1">
-                <h3 className="font-semibold text-red-700">حذف الحساب</h3>
-                <p className="text-red-600/70 text-sm mt-0.5">طلب حذف حسابك بشكل نهائي</p>
+                <h3 className="font-semibold text-[var(--destructive)]">حذف الحساب</h3>
+                <p className="text-[var(--destructive)]/70 text-sm mt-0.5">طلب حذف حسابك بشكل نهائي</p>
               </div>
               <Button
                 variant="danger"
@@ -512,7 +512,7 @@ export default function SecurityPage() {
             <p className="text-sm text-[var(--primary)]">
               هل أنت متأكد من طلب حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه.
             </p>
-            <div className="p-3 rounded-xl bg-red-50 text-red-700 text-sm">
+            <div className="p-3 rounded-xl bg-[var(--destructive)]/10 text-[var(--destructive)] text-sm">
               ⚠️ سيتم حذف جميع منشوراتك، صورك، رسائلك، وصدقائك نهائياً
             </div>
             <Input

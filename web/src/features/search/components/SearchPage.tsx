@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { resolveMediaUrl } from '@/lib/media';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { SearchFilters } from './SearchFilters';
@@ -21,7 +22,6 @@ import {
   Users, Newspaper, CalendarBlank, FileText, User, ArrowLeft,
 } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 const TABS: { key: TabType; label: string; icon: typeof User }[] = [
   { key: 'people',  label: 'الأشخاص',   icon: User },
@@ -38,7 +38,7 @@ const POPULAR_ARABIC = ['مصر', 'السعودية', 'طبيب', 'مهندس', 
 function GroupResultCard({ item }: { item: any }) {
   const router = useRouter();
   const coverSrc = item.coverPhoto
-    ? (item.coverPhoto.startsWith('http') ? item.coverPhoto : `${API_BASE}${item.coverPhoto}`)
+    ? (resolveMediaUrl(item.coverPhoto))
     : null;
   const initial = (item.name || 'م').charAt(0);
   const count = item.memberCount ?? item.membersCount ?? 0;
@@ -85,7 +85,7 @@ function GroupResultCard({ item }: { item: any }) {
 function PageResultCard({ item }: { item: any }) {
   const router = useRouter();
   const coverSrc = item.coverPhoto
-    ? (item.coverPhoto.startsWith('http') ? item.coverPhoto : `${API_BASE}${item.coverPhoto}`)
+    ? (resolveMediaUrl(item.coverPhoto))
     : null;
   const initial = (item.name || 'ص').charAt(0);
   const followers = item.followersCount ?? item.followers ?? 0;
@@ -179,7 +179,7 @@ function PostResultCard({ item }: { item: any }) {
   const router = useRouter();
   const authorName = item.author?.fullName || item.author?.username || 'مستخدم';
   const avatarSrc = item.author?.avatar
-    ? (item.author.avatar.startsWith('http') ? item.author.avatar : `${API_BASE}${item.author.avatar}`)
+    ? (resolveMediaUrl(item.author.avatar))
     : null;
   const reactions = (item.likesCount ?? 0) + (item.commentsCount ?? 0);
 
