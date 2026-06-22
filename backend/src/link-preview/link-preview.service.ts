@@ -13,8 +13,13 @@ export interface LinkPreview {
 }
 
 const PREVIEW_TTL = 24 * 60 * 60; // 24h — OG data rarely changes
-const FETCH_TIMEOUT = 6000;
-const MAX_BYTES = 1024 * 1024; // 1MB — we only need the <head>
+const FETCH_TIMEOUT = 8000;
+// Big sites (YouTube, etc.) ship multi-MB documents with heavy inline JS in the
+// <head> before the OG tags. 1MB was too small — the download threw and we lost
+// the preview entirely. Cap generously; results are cached, so cost is one-off.
+const MAX_BYTES = 6 * 1024 * 1024; // 6MB
+// How far into the body to scan for meta tags when there's no </head> marker.
+const HEAD_SCAN_FALLBACK = 2 * 1024 * 1024; // 2MB
 const UA =
   'Mozilla/5.0 (compatible; TayyibtBot/1.0; +https://tayyibt.app) link-preview';
 
@@ -115,7 +120,11 @@ export class LinkPreviewService {
       return null;
     }
 
-    const head = html.slice(0, 200_000); // OG tags live in <head>
+    // OG/meta tags live in <head>, but on big sites that can be hundreds of KB
+    // in. Scan up to </head> (with a generous fallback) rather than a fixed
+    // small prefix, so YouTube et al. resolve.
+    const headEnd = html.indexOf('</head>');
+    const head = headEnd > 0 ? html.slice(0, headEnd) : html.slice(0, HEAD_SCAN_FALLBACK);
     const meta = (...names: string[]): string | undefined => {
       for (const name of names) {
         const v = this.readMeta(head, name);
