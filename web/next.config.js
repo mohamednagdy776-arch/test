@@ -15,6 +15,14 @@ const apiHost = (() => {
 const nextConfig = {
   output: 'standalone',
   images: {
+    // The app is deployed behind nginx with NEXT_PUBLIC_API_URL set to a
+    // relative path (/api/v1), and uploaded media is served by the backend at
+    // /uploads. The Next.js image optimizer can't reach those (apiHost collapses
+    // to localhost → it 400s every /_next/image request for backend media), which
+    // broke every avatar, chat image and video thumbnail rendered via next/image.
+    // Disable optimization so <Image> emits a plain <img>; the relative /uploads
+    // src then resolves against the public origin → nginx → backend (200).
+    unoptimized: true,
     domains: ['localhost', apiHost, 'images.unsplash.com'],
     remotePatterns: [
       { protocol: 'https', hostname: apiHost },
