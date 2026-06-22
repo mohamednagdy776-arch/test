@@ -61,19 +61,19 @@ export const ProfileHeader = ({
       const form = new FormData();
       form.append('file', blob, filename);
       const res = await apiClient.post(endpoint, form);
-      // The upload response already contains the updated profile (including the
-      // new coverUrl / avatarUrl). Apply it immediately so the UI refreshes
-      // without waiting for a background re-fetch, which can be delayed when
-      // staleTime is set globally on the QueryClient.
       const updatedProfile = res.data?.data;
       if (updatedProfile) {
+        // Write the server response directly into the cache so the UI updates
+        // instantly without a second network request.
         qc.setQueryData(['my-profile'], (old: any) => ({
           ...(old ?? {}),
           data: updatedProfile,
         }));
       }
-      // Also mark stale so any other mounted consumers get fresh data.
-      await qc.invalidateQueries({ queryKey: ['my-profile'] });
+      // Mark stale with refetchType:'none' so the NEXT mount/focus re-fetches
+      // from the server, but avoids firing a background GET /users/me right now
+      // that could race with and overwrite the setQueryData above.
+      qc.invalidateQueries({ queryKey: ['my-profile'], refetchType: 'none' });
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
       showToast(`${msg} — الصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`, 'error');
@@ -106,7 +106,7 @@ export const ProfileHeader = ({
           data: updatedProfile,
         }));
       }
-      await qc.invalidateQueries({ queryKey: ['my-profile'] });
+      qc.invalidateQueries({ queryKey: ['my-profile'], refetchType: 'none' });
     } catch (err: any) {
       showToast(err?.response?.data?.message ?? 'فشل إزالة الصورة', 'error');
     } finally {
