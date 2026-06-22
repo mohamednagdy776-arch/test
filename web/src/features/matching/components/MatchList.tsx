@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { Match } from '@/types';
+import { resolveMediaUrl } from '@/lib/media';
 
 const scoreColor = (s: number) => s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-[var(--destructive)]';
 
@@ -21,7 +22,7 @@ const MatchCard = ({ match }: { match: Match }) => {
       <div className="mb-4 flex items-center justify-between">
         <div className="h-12 w-12 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold overflow-hidden">
           {(match as any).otherUserAvatar
-            ? <img src={(match as any).otherUserAvatar} alt="" className="h-full w-full object-cover" />
+            ? <img src={resolveMediaUrl((match as any).otherUserAvatar) ?? ''} alt="" className="h-full w-full object-cover" />
             : ((match as any).otherUserName || 'مستخدم').trim().slice(0, 2).toUpperCase()}
         </div>
         <div className="text-center">

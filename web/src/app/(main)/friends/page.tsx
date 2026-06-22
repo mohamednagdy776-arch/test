@@ -9,13 +9,13 @@ import { cn, displayName } from '@/lib/utils';
 import { DotsThreeVertical, ChatCircle, UserMinus, UserPlus, Prohibit, UsersThree } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
+import { resolveMediaUrl } from '@/lib/media';
 
 function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: any; onUnfriend?: () => void; onMessage?: () => void; onBlock?: () => void; onFollow?: () => void }) {
   const name = displayName(user);
   const [showMenu, setShowMenu] = useState(false);
   const isFriend = user.friendshipStatus === 'friends' || user.isFriend;
-  const avatarSrc = user.avatar ? `${API_BASE}${user.avatar}` : null;
+  const avatarSrc = resolveMediaUrl(user.avatar);
 
   return (
     <div className="rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
@@ -93,7 +93,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
 function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept: () => void; onDecline: () => void }) {
   const name = displayName(request.requester);
   const mutualCount = request.mutualFriends || 0;
-  const avatarSrc = request.requester?.avatar ? `${API_BASE}${request.requester.avatar}` : null;
+  const avatarSrc = resolveMediaUrl(request.requester?.avatar);
 
   return (
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
@@ -124,7 +124,7 @@ function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept:
 function SuggestionCard({ user, onAdd, onFollow }: { user: any; onAdd: () => void; onFollow: () => void }) {
   const name = displayName(user);
   const mutual = user.mutual || 0;
-  const avatarSrc = user.userId?.avatar ? `${API_BASE}${user.userId.avatar}` : null;
+  const avatarSrc = resolveMediaUrl(user.userId?.avatar);
 
   return (
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"

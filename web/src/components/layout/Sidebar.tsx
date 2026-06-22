@@ -11,8 +11,7 @@ import {
   BookmarkSimple, Crown, Bell,
 } from '@phosphor-icons/react';
 import { authApi } from '@/features/auth/api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
+import { resolveMediaUrl } from '@/lib/media';
 
 const navGroups = [
   {
@@ -66,7 +65,7 @@ export const Sidebar = () => {
   const router = useRouter();
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
-  const avatarUrl = user?.avatar ? `${API_BASE}${user.avatar}` : null;
+  const avatarUrl = resolveMediaUrl(user?.avatar);
   const displayName = user?.name || user?.username || 'المستخدم';
   const username = user?.username ? `@${user.username}` : '';
 

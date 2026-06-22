@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Heart, ChatCircle, ShareFat, DotsThreeVertical } from '@phosphor-icons/react';
+import { resolveMediaUrl } from '@/lib/media';
 
 interface Reel {
   id: string;
@@ -47,8 +48,8 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
       {reel.videoUrl ? (
         <video
           ref={videoRef}
-          src={reel.videoUrl}
-          poster={reel.thumbnailUrl}
+          src={resolveMediaUrl(reel.videoUrl) ?? ''}
+          poster={resolveMediaUrl(reel.thumbnailUrl) ?? undefined}
           className="w-full h-full object-cover"
           loop
           muted
@@ -60,7 +61,7 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
           style={{ background: 'linear-gradient(135deg, var(--foreground), var(--primary))' }}
         >
           {reel.thumbnailUrl ? (
-            <img src={reel.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+            <img src={resolveMediaUrl(reel.thumbnailUrl) ?? ''} alt="" className="w-full h-full object-cover" />
           ) : (
             <span className="text-6xl">🎬</span>
           )}

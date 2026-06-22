@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef } from 'react';
+import { resolveMediaUrl } from '@/lib/media';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup } from '@/features/groups/hooks';
@@ -12,7 +13,6 @@ import {
   PencilLine, Image as ImageIcon, VideoCamera, X, Check,
 } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 function privacyInfo(privacy: string) {
   if (privacy === 'public')  return { label: 'عام',  icon: Globe,     style: { background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))', color: 'var(--primary)' } };
@@ -108,7 +108,7 @@ export default function GroupDetailPage() {
   const group = data.data || data;
   const posts: any[] = postsData?.data ?? [];
   const coverSrc = group.coverPhoto
-    ? (group.coverPhoto.startsWith('http') ? group.coverPhoto : `${API_BASE}${group.coverPhoto}`)
+    ? (resolveMediaUrl(group.coverPhoto))
     : null;
   const privacy   = privacyInfo(group.privacy);
   const PrivacyIcon = privacy.icon;

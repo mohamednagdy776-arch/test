@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
+import { resolveMediaUrl } from '@/lib/media';
 import Image from 'next/image';
 import { useDebounce } from '@/hooks/useDebounce';
 import {
@@ -12,7 +13,6 @@ import {
   MagnifyingGlass, X, Users, Clock, ArrowLeft,
 } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 const CATEGORIES = [
   { value: '', label: 'الكل' },
@@ -39,7 +39,7 @@ function privacyBadge(privacy: string) {
 
 function groupCoverSrc(group: any) {
   if (!group.coverPhoto) return null;
-  return group.coverPhoto.startsWith('http') ? group.coverPhoto : `${API_BASE}${group.coverPhoto}`;
+  return resolveMediaUrl(group.coverPhoto);
 }
 
 interface GroupCardProps {

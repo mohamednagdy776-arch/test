@@ -1,9 +1,9 @@
 'use client';
 import Image from 'next/image';
+import { resolveMediaUrl } from '@/lib/media';
 import { X, Check, Heart, MapPin, Scales, Info } from '@phosphor-icons/react';
 import type { Match } from '@/types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 function scoreColor(s: number) {
   return s >= 80 ? 'var(--primary)' : s >= 60 ? 'var(--accent)' : '#ef4444';
@@ -35,7 +35,7 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
   const displayName = (match as any).otherUserName || (match as any).user?.fullName || 'مستخدم';
   const avatarRaw = (match as any).otherUserAvatar || (match as any).user?.avatarUrl;
   const avatarSrc = avatarRaw
-    ? (avatarRaw.startsWith('http') ? avatarRaw : `${API_BASE}${avatarRaw}`)
+    ? (resolveMediaUrl(avatarRaw))
     : null;
   const age = (match as any).user?.age || (match as any).otherUserAge;
   const location = (match as any).user?.location || (match as any).otherUserLocation;

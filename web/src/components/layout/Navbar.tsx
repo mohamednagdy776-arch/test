@@ -14,7 +14,7 @@ import {
   PlayCircle, FilmStrip, Baby, TestTube, ShareNetwork, Gear,
 } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
+import { resolveMediaUrl } from '@/lib/media';
 
 const navLinks = [
   { href: '/dashboard', label: 'الرئيسية', icon: House },
@@ -31,7 +31,7 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
-  const avatarUrl = user?.avatar ? `${API_BASE}${user.avatar}` : null;
+  const avatarUrl = resolveMediaUrl(user?.avatar);
   const displayName = user?.name || user?.username || 'حسابي';
 
   const logout = async () => {

@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { resolveMediaUrl } from '@/lib/media';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -13,7 +14,6 @@ import {
   Globe, Lock,
 } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 function privacyBadge(privacy: string) {
   if (privacy === 'public')
@@ -51,7 +51,7 @@ function EventCard({ event, myUserId, onRsvp, onDelete, isRsvpPending }: EventCa
   const BadgeIcon = badge.icon;
   const isOwner = myUserId && (event.creatorId === myUserId || event.userId === myUserId);
   const coverSrc = event.coverPhoto
-    ? (event.coverPhoto.startsWith('http') ? event.coverPhoto : `${API_BASE}${event.coverPhoto}`)
+    ? (resolveMediaUrl(event.coverPhoto))
     : null;
 
   return (

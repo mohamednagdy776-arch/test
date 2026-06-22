@@ -2,6 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { resolveMediaUrl } from '@/lib/media';
 import {
   UserPlus, CheckCircle, Heart, ChatCircle, Tag, ShareNetwork,
   Megaphone, Cake, UsersThree, Bell, X, UserCircle,
@@ -58,7 +59,7 @@ function SenderAvatar({ fromUser }: { fromUser?: Notification['fromUser'] }) {
   const initial = name.charAt(0).toUpperCase() || '?';
 
   return avatar ? (
-    <img src={avatar} alt={name} className="h-9 w-9 rounded-full object-cover shrink-0" />
+    <img src={resolveMediaUrl(avatar) ?? ''} alt={name} className="h-9 w-9 rounded-full object-cover shrink-0" />
   ) : (
     <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[var(--muted)] to-[var(--muted-foreground)] flex items-center justify-center shrink-0">
       {initial !== '?' ? (

@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import { resolveMediaUrl } from '@/lib/media';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -7,7 +8,6 @@ import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/components/ui/Toast';
 import { X, ChatCircle, User, Sparkle, Check, MapPin } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 interface Props {
   user: any;
@@ -46,7 +46,7 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
 
   const targetId = user.userId ?? user.id;
   const avatarSrc = user.avatarUrl
-    ? (user.avatarUrl.startsWith('http') ? user.avatarUrl : `${API_BASE}${user.avatarUrl}`)
+    ? (resolveMediaUrl(user.avatarUrl))
     : null;
   const initial = (user.fullName || user.username || '?').charAt(0).toUpperCase();
 

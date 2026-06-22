@@ -6,6 +6,7 @@ import { useVideo, useVideoComments, useAddVideoComment, useLikeVideo, useUnlike
 import { Avatar } from '@/components/ui/Avatar';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
+import { resolveMediaUrl } from '@/lib/media';
 
 function VideoPlayer({ video }: { video: any }) {
   const [liked, setLiked] = useState<boolean>(() => !!video?.isLiked);
@@ -80,13 +81,13 @@ function VideoPlayer({ video }: { video: any }) {
       <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-xl">
         {video.url ? (
           <video
-            src={video.url}
+            src={resolveMediaUrl(video.url) ?? ''}
             controls
             className="w-full h-full"
-            poster={video.thumbnail}
+            poster={resolveMediaUrl(video.thumbnail) ?? undefined}
           />
         ) : video.thumbnail ? (
-          <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+          <img src={resolveMediaUrl(video.thumbnail) ?? ''} alt={video.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-6xl">🎬</div>
         )}
@@ -268,7 +269,7 @@ function RecommendedSidebar({ currentId }: { currentId: string }) {
         >
           <div className="w-28 h-16 shrink-0 rounded-lg bg-[var(--muted)] overflow-hidden">
             {v.thumbnail ? (
-              <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
+              <img src={resolveMediaUrl(v.thumbnail) ?? ''} alt={v.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>
             )}

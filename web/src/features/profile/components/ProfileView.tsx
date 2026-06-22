@@ -10,6 +10,7 @@ import { ProfileEditForm } from './ProfileEditForm';
 import { ProfileTabs, type Tab } from './ProfileTabs';
 import { ActivityLogViewer } from './ActivityLogViewer';
 import { PostCard } from '@/features/posts/components/PostCard';
+import { resolveMediaUrl } from '@/lib/media';
 
 interface Props {
   userId?: string;
@@ -280,7 +281,7 @@ const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
       {friends.map((f: any, i: number) => (
         <Link key={f.id ?? i} href={f.username ? `/${f.username}` : f.id ? `/profile/${f.id}` : '#'} className="rounded-lg bg-[var(--muted)] p-3 text-center hover:bg-[var(--muted)]/40 transition-colors">
           <div className="h-16 w-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
-            {f.avatarUrl ? <img src={f.avatarUrl} alt="" className="h-full w-full object-cover" /> : <span className="text-xl font-bold text-[var(--muted-foreground)]">{f.fullName?.charAt(0)}</span>}
+            {f.avatarUrl ? <img src={resolveMediaUrl(f.avatarUrl) ?? ''} alt="" className="h-full w-full object-cover" /> : <span className="text-xl font-bold text-[var(--muted-foreground)]">{f.fullName?.charAt(0)}</span>}
           </div>
           <p className="mt-2 text-sm font-semibold text-[var(--foreground)] truncate">{f.fullName}</p>
         </Link>
@@ -316,7 +317,7 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
             ✕
           </button>
           <img
-            src={lightboxUrl}
+            src={resolveMediaUrl(lightboxUrl) ?? ''}
             alt=""
             className="max-w-full max-h-full rounded-xl shadow-2xl object-contain"
             onClick={(e) => e.stopPropagation()}
@@ -332,7 +333,7 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
               className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
               aria-label={`عرض الصورة ${i + 1}`}
             >
-              <img src={p.metadata.url} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+              <img src={resolveMediaUrl(p.metadata.url) ?? ''} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
             </button>
           ) : (
             <div key={i} className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden" />
@@ -359,7 +360,7 @@ const ProfileVideosFeed = ({ userId }: { userId: string }) => {
       {videos.map((v: any, i: number) => (
         <Link key={v.id ?? i} href={`/watch/${v.id}`} className="group relative aspect-video bg-[var(--muted)] rounded-lg overflow-hidden block hover:opacity-90 transition-opacity">
           {v.thumbnail ? (
-            <img src={v.thumbnail} alt={v.title || ''} className="w-full h-full object-cover" />
+            <img src={resolveMediaUrl(v.thumbnail) ?? ''} alt={v.title || ''} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-3xl text-[var(--muted-foreground)]">🎬</div>
           )}

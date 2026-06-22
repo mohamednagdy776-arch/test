@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import { resolveMediaUrl } from '@/lib/media';
 import { useParams, useRouter } from 'next/navigation';
 import { useEvent, useRsvpEvent } from '@/features/events/hooks';
 import { useToast } from '@/components/ui/Toast';
@@ -8,7 +9,6 @@ import {
   X as XIcon, Globe, Lock, Clock,
 } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 function rsvpStyle(active: boolean, kind: 'going' | 'interested' | 'not_going') {
   if (kind === 'going')
@@ -75,7 +75,7 @@ export default function EventDetailPage() {
   const endDate    = event.endDate   ? new Date(event.endDate)   : null;
   const rsvpCurrent = event.userRsvp as 'going' | 'interested' | 'not_going' | undefined;
   const coverSrc   = event.coverPhoto
-    ? (event.coverPhoto.startsWith('http') ? event.coverPhoto : `${API_BASE}${event.coverPhoto}`)
+    ? (resolveMediaUrl(event.coverPhoto))
     : null;
   const isPublic   = event.privacy === 'public';
 

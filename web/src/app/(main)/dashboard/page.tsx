@@ -18,7 +18,7 @@ import {
   Bell, HouseSimple,
 } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
+import { resolveMediaUrl } from '@/lib/media';
 
 // ─── Greeting Banner ──────────────────────────────────────────────────────────
 function GreetingBanner() {
@@ -370,7 +370,7 @@ function SuggestedConnections() {
             const age = u?.profile?.age;
             const initial = nm.charAt(0).toUpperCase();
             const mutual = s.mutual ?? 0;
-            const avatarUrl = u?.avatar ? `${API_BASE}${u.avatar}` : null;
+            const avatarUrl = resolveMediaUrl(u?.avatar);
             return (
               <button key={u?.id ?? nm}
                 onClick={() => u?.username && router.push(`/${u.username}`)}
@@ -448,7 +448,7 @@ function SuggestedGroupsWidget() {
               <div key={group.id} className="flex items-center gap-3 rounded-xl p-2.5">
                 <div className="shrink-0 w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center text-sm font-bold">
                   {group.coverPhoto ? (
-                    <Image src={group.coverPhoto.startsWith('http') ? group.coverPhoto : `${API_BASE}${group.coverPhoto}`}
+                    <Image src={resolveMediaUrl(group.coverPhoto) ?? ''}
                       alt={name} width={36} height={36} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white"

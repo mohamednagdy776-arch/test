@@ -6,13 +6,13 @@ import { apiClient } from '@/lib/api-client';
 import { getSocket, getCurrentUserId } from '@/lib/socket-client';
 import { useDeleteMessage } from '@/features/chat/hooks';
 import { postsApi } from '@/features/posts/api';
+import { resolveMediaUrl } from '@/lib/media';
 import type { Match } from '@/types';
 import {
   ArrowLeft, Phone, VideoCamera, DotsThreeVertical,
   PaperPlaneTilt, Image as ImageIcon, Smiley, Trash, ArrowBendUpLeft,
 } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 interface Message {
   id: string;
@@ -38,8 +38,7 @@ interface Props {
 const EMOJI_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏'];
 
 function avatarSrc(url?: string | null) {
-  if (!url) return null;
-  return url.startsWith('http') ? url : `${API_BASE}${url}`;
+  return resolveMediaUrl(url);
 }
 
 export const ChatWindow = ({ match, onBack }: Props) => {
@@ -426,7 +425,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                 </span>
               ) : msg.type === 'image' && msg.mediaUrl ? (
                 <div className="rounded-xl overflow-hidden max-w-[200px]">
-                  <Image src={msg.mediaUrl} alt="صورة" width={200} height={200} className="w-full h-auto object-cover" />
+                  <Image src={resolveMediaUrl(msg.mediaUrl) ?? ''} alt="صورة" width={200} height={200} className="w-full h-auto object-cover" />
                 </div>
               ) : (
                 <>

@@ -9,6 +9,7 @@ import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
+import { resolveMediaUrl } from '@/lib/media';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -16,14 +17,12 @@ interface FriendshipStatus {
   isRequester?: boolean;
 }
 
-const BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000/api/v1').replace('/api/v1', '');
-
 const mediaUrl = (url: string | null | undefined) => {
   if (!url) return null;
   // Only allow http(s) absolute URLs or backend-relative paths — reject
   // data:, javascript:, blob:, etc. that could be injected via the API.
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith('/')) return `${BACKEND_ORIGIN}${url}`;
+  // resolveMediaUrl re-anchors dev/localhost URLs onto the deployed origin.
+  if (/^https?:\/\//i.test(url) || url.startsWith('/')) return resolveMediaUrl(url);
   return null;
 };
 

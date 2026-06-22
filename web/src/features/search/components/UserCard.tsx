@@ -1,9 +1,9 @@
 'use client';
 import Image from 'next/image';
+import { resolveMediaUrl } from '@/lib/media';
 import { useRouter } from 'next/navigation';
 import { MapPin, GraduationCap, Scales, Briefcase, Eye, ChatCircle } from '@phosphor-icons/react';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
 
 const lifestyleLabel: Record<string, string> = {
   conservative: 'محافظ', moderate: 'معتدل', open: 'منفتح',
@@ -24,7 +24,7 @@ interface Props {
 export const UserCard = ({ user, onView }: Props) => {
   const router = useRouter();
   const avatarSrc = user.avatarUrl
-    ? (user.avatarUrl.startsWith('http') ? user.avatarUrl : `${API_BASE}${user.avatarUrl}`)
+    ? (resolveMediaUrl(user.avatarUrl))
     : null;
   const initial = (user.fullName || user.username || '?').charAt(0).toUpperCase();
   const isMale = user.gender === 'male';

@@ -5,8 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { Match } from '@/types';
 import { ChatCircle } from '@phosphor-icons/react';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || '';
+import { resolveMediaUrl } from '@/lib/media';
 
 interface Props {
   activeMatchId?: string;
@@ -14,8 +13,7 @@ interface Props {
 }
 
 function avatarSrc(url?: string | null) {
-  if (!url) return null;
-  return url.startsWith('http') ? url : `${API_BASE}${url}`;
+  return resolveMediaUrl(url);
 }
 
 function timeLabel(iso: string) {

@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { PlayCircle, Fire, Users, Clock, Plus } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { resolveMediaUrl } from '@/lib/media';
 
 function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -40,7 +41,7 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
       {/* Thumbnail */}
       <div className="relative aspect-video" style={{ backgroundColor: 'var(--muted)' }}>
         {video.thumbnail ? (
-          <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+          <img src={resolveMediaUrl(video.thumbnail) ?? ''} alt={video.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <PlayCircle size={40} className="opacity-30" style={{ color: 'var(--muted-foreground)' }} />
