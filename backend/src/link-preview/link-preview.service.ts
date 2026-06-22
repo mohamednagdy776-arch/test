@@ -57,7 +57,12 @@ export class LinkPreviewService {
 
     if (!(await this.isPublicHost(url.hostname))) return null;
 
-    const preview = await this.fetchAndParse(url);
+    // YouTube (and similar) serve datacenter IPs a consent/bot page with no OG
+    // tags, so HTML scraping returns nothing on the server. Use oEmbed for those
+    // providers; fall back to generic HTML parsing if it doesn't apply/fails.
+    const preview =
+      (this.isYouTube(url.hostname) ? await this.fetchYouTubeOembed(url) : null) ||
+      (await this.fetchAndParse(url));
     if (preview) {
       // Cache successes longer; cache "no preview" briefly to avoid hammering.
       await this.redis.set(cacheKey, JSON.stringify(preview), PREVIEW_TTL);
@@ -66,6 +71,37 @@ export class LinkPreviewService {
       return { url: url.href };
     }
     return preview;
+  }
+
+  private isYouTube(hostname: string): boolean {
+    const h = hostname.replace(/^www\./, '').toLowerCase();
+    return (
+      h === 'youtube.com' ||
+      h === 'm.youtube.com' ||
+      h === 'music.youtube.com' ||
+      h === 'youtu.be'
+    );
+  }
+
+  private async fetchYouTubeOembed(url: URL): Promise<LinkPreview | null> {
+    try {
+      const res = await axios.get('https://www.youtube.com/oembed', {
+        params: { url: url.href, format: 'json' },
+        timeout: FETCH_TIMEOUT,
+        validateStatus: (s) => s >= 200 && s < 300,
+      });
+      const d = res.data || {};
+      if (!d.title) return null;
+      return {
+        url: url.href,
+        title: this.decode(String(d.title)),
+        description: d.author_name ? this.decode(String(d.author_name)) : undefined,
+        image: d.thumbnail_url ? String(d.thumbnail_url) : undefined,
+        siteName: d.provider_name ? String(d.provider_name) : 'YouTube',
+      };
+    } catch {
+      return null;
+    }
   }
 
   // SSRF guard: never fetch URLs that resolve to private/loopback/link-local IPs.
