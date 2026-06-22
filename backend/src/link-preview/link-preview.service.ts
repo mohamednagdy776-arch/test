@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { lookup } from 'dns/promises';
 import { isIP } from 'net';
+import * as ipaddr from 'ipaddr.js';
 import { RedisCacheService } from '../common/services/redis-cache.service';
 
 export interface LinkPreview {
@@ -116,34 +117,26 @@ export class LinkPreviewService {
     }
   }
 
+  // Allow-list approach (fail closed): only globally-routable unicast addresses
+  // are permitted. ipaddr.js canonicalises every notation — compressed IPv6,
+  // IPv4-mapped (::ffff:a.b.c.d and its hex form), etc. — so the classification
+  // can't be bypassed with non-canonical literals. Anything it can't parse, or
+  // that isn't plain "unicast", is treated as private.
   private isPrivateIp(ip: string): boolean {
-    // IPv6: only loopback (::1), unspecified (::), unique-local (fc00::/7) and
-    // link-local (fe80::/10) are private. Global unicast (e.g. 2a00:... from
-    // Google/YouTube) is public — the old `ip.includes('::')` check wrongly
-    // flagged ALL compressed IPv6 as private, blocking every v6-enabled site.
-    if (ip.includes(':')) {
-      const v6 = ip.toLowerCase();
-      if (v6 === '::1' || v6 === '::') return true;
-      if (/^f[cd]/.test(v6)) return true; // fc00::/7
-      if (/^fe[89ab]/.test(v6)) return true; // fe80::/10
-      const mapped = v6.match(/(?:::ffff:)(\d+\.\d+\.\d+\.\d+)$/);
-      if (mapped) return this.isPrivateIp(mapped[1]); // IPv4-mapped ::ffff:a.b.c.d
-      return false;
+    let addr: ipaddr.IPv4 | ipaddr.IPv6;
+    try {
+      addr = ipaddr.parse(ip);
+    } catch {
+      return true;
     }
-    const parts = ip.split('.').map(Number);
-    if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) {
-      return true; // unparseable — be conservative
+    if (addr.kind() === 'ipv6') {
+      const v6 = addr as ipaddr.IPv6;
+      // Resolve IPv4-mapped addresses to the embedded IPv4 and classify that.
+      if (v6.isIPv4MappedAddress()) {
+        return v6.toIPv4Address().range() !== 'unicast';
+      }
     }
-    const [a, b] = parts;
-    return (
-      a === 0 ||
-      a === 10 ||
-      a === 127 ||
-      (a === 169 && b === 254) || // link-local
-      (a === 172 && b >= 16 && b <= 31) ||
-      (a === 192 && b === 168) ||
-      (a === 100 && b >= 64 && b <= 127) // carrier-grade NAT
-    );
+    return addr.range() !== 'unicast';
   }
 
   private async fetchAndParse(url: URL): Promise<LinkPreview | null> {
