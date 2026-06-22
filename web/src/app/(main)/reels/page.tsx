@@ -71,7 +71,7 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
 
       <div className="absolute bottom-20 right-4 flex flex-col gap-5 items-center">
         <button onClick={handleLike} className="flex flex-col items-center gap-1">
-          <div className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm ${liked ? 'bg-red-500' : 'bg-black/40'}`}>
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm ${liked ? 'bg-[var(--destructive)]' : 'bg-black/40'}`}>
             <Heart size={24} weight={liked ? 'fill' : 'regular'} className="text-white" />
           </div>
           <span className="text-white text-xs font-semibold">{likes}</span>

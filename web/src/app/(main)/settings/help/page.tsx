@@ -23,7 +23,7 @@ const HELP_ITEMS = [
     title: 'الشروط والأحكام',
     description: 'اقرأ شروط الاستخدام',
     href: '/terms',
-    color: 'bg-amber-100',
+    color: 'bg-[var(--accent)]/15',
   },
   {
     icon: '🔒',

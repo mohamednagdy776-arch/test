@@ -193,7 +193,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
 
       <form onSubmit={handleSubmit} className="p-6">
         {(save.isError || formError) && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 rounded-lg bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 px-4 py-3 text-sm text-[var(--destructive)]">
             {formError || 'فشل الحفظ، حاول مرة أخرى'}
           </div>
         )}

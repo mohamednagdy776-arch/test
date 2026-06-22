@@ -9,6 +9,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { Clock } from '@phosphor-icons/react';
 
 export default function MemoriesPage() {
   const router = useRouter();
@@ -59,12 +61,14 @@ export default function MemoriesPage() {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">المحفوظات والذكريات</h1>
-        <p className="text-sm text-[var(--primary)]/70 mt-1">راجع ذكرياتك المحفوظة من السنوات السابقة</p>
-      </div>
+      <PageHeader
+        icon={Clock}
+        eyebrow="ذكرياتك"
+        title="المحفوظات والذكريات"
+        subtitle="راجع ذكرياتك المحفوظة من السنوات السابقة"
+      />
 
-      <div className="flex gap-2 mb-6 border-b border-[var(--border)]/50 pb-px">
+      <div className="flex gap-2 mb-6 mt-6 border-b border-[var(--border)]/50 pb-px">
         <button
           onClick={() => setActiveTab('memories')}
           className={`px-5 py-2.5 font-semibold transition-all rounded-t-xl ${

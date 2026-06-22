@@ -140,7 +140,7 @@ export const ProfileHeader = ({
               <button
                 onClick={() => setRemoveImageKind('cover')}
                 disabled={uploading}
-                className="absolute bottom-4 left-36 px-3 py-2 bg-[var(--primary)]/60 hover:bg-red-600/80 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
+                className="absolute bottom-4 left-36 px-3 py-2 bg-[var(--primary)]/60 hover:bg-[var(--destructive)]/90/80 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
               >
                 إزالة
               </button>
@@ -193,7 +193,7 @@ export const ProfileHeader = ({
                     onClick={() => setRemoveImageKind('avatar')}
                     disabled={uploading}
                     title="إزالة الصورة"
-                    className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[var(--primary)]/70 hover:bg-red-600/80 text-[var(--card)] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
+                    className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[var(--primary)]/70 hover:bg-[var(--destructive)]/90/80 text-[var(--card)] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
                   >
                     ✕
                   </button>
@@ -304,7 +304,7 @@ export const ProfileHeader = ({
                 <button
                   onClick={onUnfriend}
                   disabled={friendActionPending}
-                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)]/30 hover:text-[var(--destructive)] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Users size={16} />
                   {friendActionPending ? '...' : 'أصدقاء'}
@@ -324,7 +324,7 @@ export const ProfileHeader = ({
               {onBlock && friendshipStatus?.status !== 'blocked' && (
                 <button
                   onClick={onBlock}
-                  className="rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-all duration-300"
+                  className="rounded-xl border border-[var(--destructive)]/30 px-4 py-2 text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 transition-all duration-300"
                 >
                   حظر
                 </button>
@@ -364,7 +364,7 @@ export const ProfileHeader = ({
           </p>
           <div className="flex gap-3">
             <button onClick={() => setRemoveImageKind(null)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
-            <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors">إزالة</button>
+            <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors">إزالة</button>
           </div>
         </div>
       </Modal>

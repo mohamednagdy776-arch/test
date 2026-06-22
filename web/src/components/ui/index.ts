@@ -8,3 +8,4 @@ export { Select } from './Select';
 export { Spinner } from './Spinner';
 export { ToastProvider, useToast } from './Toast';
 export { EmptyState } from './EmptyState';
+export { PageHeader } from './PageHeader';

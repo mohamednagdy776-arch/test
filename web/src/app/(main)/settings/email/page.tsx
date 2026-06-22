@@ -83,7 +83,7 @@ export default function ChangeEmailPage() {
             </div>
           )}
           {error && (
-            <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+            <div className="flex items-start gap-2 rounded-xl bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 px-4 py-3 text-sm text-[var(--destructive)]">
               <span className="shrink-0 mt-0.5">⚠️</span>
               <span>{error}</span>
             </div>
@@ -129,9 +129,9 @@ export default function ChangeEmailPage() {
         </form>
 
         {/* Security note */}
-        <div className="rounded-2xl bg-amber-50 border border-amber-100 p-4">
-          <p className="text-xs font-bold text-amber-700 mb-1">🔐 ملاحظة أمنية</p>
-          <p className="text-xs text-amber-600 leading-relaxed">
+        <div className="rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 p-4">
+          <p className="text-xs font-bold text-[var(--accent)] mb-1">🔐 ملاحظة أمنية</p>
+          <p className="text-xs text-[var(--accent)] leading-relaxed">
             لن يتغير بريدك الإلكتروني حتى تضغط على رابط التأكيد المرسل إلى البريد الجديد. إذا لم تطلب هذا التغيير، تجاهل الرابط.
           </p>
         </div>

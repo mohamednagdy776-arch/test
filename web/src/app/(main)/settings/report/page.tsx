@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 
 const ISSUE_TYPES = [
-  { value: 'bug', label: 'خطأ تقني', icon: '🐛', color: 'bg-red-100' },
-  { value: 'feature', label: 'اقتراح ميزة', icon: '💡', color: 'bg-amber-100' },
+  { value: 'bug', label: 'خطأ تقني', icon: '🐛', color: 'bg-[var(--destructive)]/15' },
+  { value: 'feature', label: 'اقتراح ميزة', icon: '💡', color: 'bg-[var(--accent)]/15' },
   { value: 'account', label: 'مشكلة في الحساب', icon: '👤', color: 'bg-blue-100' },
   { value: 'privacy', label: 'مشكلة في الخصوصية', icon: '🔒', color: 'bg-purple-100' },
   { value: 'other', label: 'أخرى', icon: '📝', color: 'bg-[var(--muted)]' },
@@ -176,7 +176,7 @@ export default function ReportPage() {
                     {attachments.map((f, i) => (
                       <div key={i} className="flex items-center justify-between rounded-lg bg-[var(--muted)] border border-[var(--border)] px-3 py-2 text-sm">
                         <span className="text-[var(--foreground)] truncate">{f.name}</span>
-                        <button onClick={() => removeAttachment(i)} className="text-red-400 hover:text-red-600 mr-2 shrink-0">✕</button>
+                        <button onClick={() => removeAttachment(i)} className="text-[var(--destructive)]/70 hover:text-[var(--destructive)] mr-2 shrink-0">✕</button>
                       </div>
                     ))}
                   </div>

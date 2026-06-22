@@ -8,6 +8,8 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { BookmarkSimple } from '@phosphor-icons/react';
 
 export default function SavedPage() {
   const { data: savedData, isLoading: savedLoading } = useSavedItems();
@@ -33,11 +35,13 @@ export default function SavedPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--foreground)]">المحفوظات</h1>
-        <p className="text-sm text-[var(--primary)]/70 mt-1">العناصر التي حفظتها لإعادة مشاهدتها لاحقاً</p>
-      </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <PageHeader
+        icon={BookmarkSimple}
+        eyebrow="مجموعتك"
+        title="المحفوظات"
+        subtitle="العناصر التي حفظتها لإعادة مشاهدتها لاحقاً"
+      />
 
       {savedLoading ? (
         <div className="flex justify-center py-12">

@@ -230,10 +230,10 @@ export default function PrivacyPage() {
         </div>
 
         {privacyError && (
-          <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+          <div className="flex items-start gap-2 rounded-xl bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 px-4 py-3 text-sm text-[var(--destructive)]">
             <span>⚠️</span>
             <span className="flex-1">{privacyError}</span>
-            <button onClick={() => setPrivacyError(null)} className="text-red-400 hover:text-red-600">✕</button>
+            <button onClick={() => setPrivacyError(null)} className="text-[var(--destructive)]/70 hover:text-[var(--destructive)]">✕</button>
           </div>
         )}
 

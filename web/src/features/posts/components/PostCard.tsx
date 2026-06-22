@@ -227,7 +227,7 @@ function PostMenu({ postId, post, onClose }: { postId: string; post: any; onClos
           <button
             key={i}
             onClick={() => { item.action(); onClose(); }}
-            className={cn('w-full px-4 py-2.5 text-right text-sm hover:bg-[var(--muted)]/50 flex items-center gap-3 hover:shadow-soft transition-all duration-200', item.danger ? 'text-red-500' : 'text-[var(--foreground)]')}
+            className={cn('w-full px-4 py-2.5 text-right text-sm hover:bg-[var(--muted)]/50 flex items-center gap-3 hover:shadow-soft transition-all duration-200', item.danger ? 'text-[var(--destructive)]' : 'text-[var(--foreground)]')}
           >
             <Icon size={18} weight={item.danger ? 'fill' : 'regular'} />
             {item.label}

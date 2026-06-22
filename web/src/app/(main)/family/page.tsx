@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { ShieldCheck, Plus, Check, X, Trash } from '@phosphor-icons/react';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 type RelStatus = 'pending' | 'active' | 'revoked';
 
@@ -27,9 +28,9 @@ const TYPE_LABELS: Record<string, string> = {
 
 function StatusBadge({ status }: { status: RelStatus }) {
   const map: Record<RelStatus, [string, string]> = {
-    pending: ['في الانتظار', 'bg-amber-100 text-amber-700'],
+    pending: ['في الانتظار', 'bg-[var(--accent)]/15 text-[var(--accent)]'],
     active: ['نشط', 'bg-[var(--muted)] text-[var(--primary)]'],
-    revoked: ['ملغي', 'bg-red-100 text-red-700'],
+    revoked: ['ملغي', 'bg-[var(--destructive)]/15 text-[var(--destructive)]'],
   };
   const [label, cls] = map[status] ?? ['غير معروف', 'bg-[var(--muted)] text-[var(--foreground)]'];
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>{label}</span>;
@@ -52,7 +53,7 @@ function RelCard({ rel, onRevoke }: { rel: Relationship; onRevoke: (id: string) 
         {rel.status !== 'revoked' && (
           <button
             onClick={() => onRevoke(rel.id)}
-            className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition-colors"
+            className="text-xs text-[var(--destructive)] hover:text-[var(--destructive)] flex items-center gap-1 transition-colors"
           >
             <Trash size={12} /> إلغاء
           </button>
@@ -113,7 +114,7 @@ function InviteGuardianModal({ onClose }: { onClose: () => void }) {
             </select>
           </div>
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-[var(--destructive)] text-sm">{error}</p>}
 
           <button
             onClick={() => mutation.mutate({ guardianUserId, type })}
@@ -151,26 +152,25 @@ export default function FamilyPage() {
   const revoked = relationships.filter((r) => r.status === 'revoked');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
+    <div>
       {showInvite && <InviteGuardianModal onClose={() => setShowInvite(false)} />}
 
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <ShieldCheck size={28} weight="fill" className="text-[var(--primary)]" />
-              <h1 className="text-3xl font-bold text-[var(--foreground)]">وضع العائلة</h1>
-            </div>
-            <p className="text-[var(--primary)]/70">إدارة أولياء الأمور والصلاحيات</p>
-          </div>
-          <button
-            onClick={() => setShowInvite(true)}
-            className="flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold text-white shadow-lg transition-all hover:shadow-black/10"
-            style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
-          >
-            <Plus size={16} /> دعوة ولي أمر
-          </button>
-        </div>
+      <div className="max-w-2xl mx-auto space-y-6">
+        <PageHeader
+          icon={ShieldCheck}
+          eyebrow="وضع العائلة"
+          title="العائلة"
+          subtitle="إدارة أولياء الأمور والصلاحيات"
+          action={
+            <button
+              onClick={() => setShowInvite(true)}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
+              style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}
+            >
+              <Plus size={15} weight="bold" /> دعوة ولي أمر
+            </button>
+          }
+        />
 
         {isLoading ? (
           <div className="space-y-3">
@@ -206,7 +206,7 @@ export default function FamilyPage() {
 
             {pending.length > 0 && (
               <section>
-                <h2 className="text-sm font-bold text-amber-600 mb-3">⏳ دعوات في الانتظار ({pending.length})</h2>
+                <h2 className="text-sm font-bold text-[var(--accent)] mb-3">⏳ دعوات في الانتظار ({pending.length})</h2>
                 <div className="space-y-3">
                   {pending.map((r) => <RelCard key={r.id} rel={r} onRevoke={(id) => revoke.mutate(id)} />)}
                 </div>

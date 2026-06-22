@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import {
   User, ShieldCheck, Lock, Bell, Palette, Globe,
-  Question, Bug, Fingerprint, CaretLeft, IdentificationCard, Envelope,
+  Question, Bug, Fingerprint, CaretLeft, IdentificationCard, Envelope, Gear,
 } from '@phosphor-icons/react';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 const sections = [
   {
@@ -99,14 +100,13 @@ const sections = [
 
 export default function SettingsPage() {
   return (
-    <div className="max-w-2xl mx-auto pb-10">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-extrabold" style={{ color: 'var(--foreground)' }}>الإعدادات</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--muted-foreground)' }}>
-          إدارة حسابك وتخصيص تجربتك في طيبت
-        </p>
-      </div>
+    <div className="max-w-2xl mx-auto pb-10 space-y-6">
+      <PageHeader
+        icon={Gear}
+        eyebrow="حسابك"
+        title="الإعدادات"
+        subtitle="إدارة حسابك وتخصيص تجربتك في طيبت"
+      />
 
       <div className="space-y-2">
         {sections.map(({ title, icon: Icon, description, href, accent, bg }) => (

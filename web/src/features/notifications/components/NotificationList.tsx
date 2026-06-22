@@ -31,7 +31,7 @@ interface NotificationListProps {
 const TYPE_CONFIG: Record<string, { icon: React.ElementType; bg: string; fg: string }> = {
   friend_request:  { icon: UserPlus,     bg: 'bg-blue-100',   fg: 'text-blue-600'   },
   friend_accepted: { icon: CheckCircle,  bg: 'bg-green-100',  fg: 'text-green-600'  },
-  like:            { icon: Heart,        bg: 'bg-red-100',    fg: 'text-red-500'    },
+  like:            { icon: Heart,        bg: 'bg-[var(--destructive)]/15',    fg: 'text-[var(--destructive)]'    },
   comment:         { icon: ChatCircle,   bg: 'bg-sky-100',    fg: 'text-sky-600'    },
   tag:             { icon: Tag,          bg: 'bg-orange-100', fg: 'text-orange-500' },
   share:           { icon: ShareNetwork, bg: 'bg-purple-100', fg: 'text-purple-600' },
@@ -205,7 +205,7 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
                     }}
                     disabled={deletingId === n.id}
                     aria-label="حذف الإشعار"
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-[var(--muted-foreground)] hover:text-red-400 hover:bg-red-50 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-lg text-[var(--muted-foreground)] hover:text-[var(--destructive)]/70 hover:bg-[var(--destructive)]/10 shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {deletingId === n.id ? (
                       <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">

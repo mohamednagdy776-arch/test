@@ -15,7 +15,7 @@ export function MemoriesList() {
 
   if (error) {
     return (
-      <div className="text-center py-12 text-red-500">
+      <div className="text-center py-12 text-[var(--destructive)]">
         Failed to load memories
       </div>
     );

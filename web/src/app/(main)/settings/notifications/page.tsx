@@ -250,7 +250,7 @@ export default function NotificationsPage() {
         </div>
 
         {message && (
-          <div className={`p-4 rounded-xl ${message.type === 'success' ? 'bg-[var(--muted)] border border-[var(--border)] text-[var(--primary)]' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+          <div className={`p-4 rounded-xl ${message.type === 'success' ? 'bg-[var(--muted)] border border-[var(--border)] text-[var(--primary)]' : 'bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 text-[var(--destructive)]'}`}>
             {message.text}
           </div>
         )}
@@ -352,7 +352,7 @@ export default function NotificationsPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-lg">
+                  <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/15 flex items-center justify-center text-lg">
                     📧
                   </div>
                   <div>
@@ -374,7 +374,7 @@ export default function NotificationsPage() {
                       className="flex items-start justify-between p-3 rounded-xl bg-[var(--card)]/50 border border-[var(--border)]/50"
                     >
                       <div className="flex items-start gap-3 flex-1">
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center text-sm">
+                        <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/15 flex items-center justify-center text-sm">
                           {setting.icon}
                         </div>
                         <div className="flex-1">

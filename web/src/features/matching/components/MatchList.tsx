@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { Match } from '@/types';
 
-const scoreColor = (s: number) => s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-red-500';
+const scoreColor = (s: number) => s >= 80 ? 'text-green-600' : s >= 60 ? 'text-yellow-600' : 'text-[var(--destructive)]';
 
 const MatchCard = ({ match }: { match: Match }) => {
   const qc = useQueryClient();
@@ -57,7 +57,7 @@ export const MatchList = () => {
   });
 
   if (isLoading) return <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{[1,2,3].map((i) => <div key={i} className="h-48 rounded-xl bg-[var(--card)] animate-pulse" />)}</div>;
-  if (isError) return <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600">فشل تحميل التوافقات</div>;
+  if (isError) return <div className="rounded-xl bg-[var(--destructive)]/10 p-4 text-sm text-[var(--destructive)]">فشل تحميل التوافقات</div>;
 
   const matches: Match[] = data?.data ?? [];
 

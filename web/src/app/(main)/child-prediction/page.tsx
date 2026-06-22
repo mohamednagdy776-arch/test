@@ -157,8 +157,8 @@ export default function ChildPredictionPage() {
               </svg>
               <span className="text-xs text-[var(--primary)] font-medium">خصوصية تامة — لا يُحفظ أي صور</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-100">
-              <span className="text-xs text-amber-600 font-medium">⏱ يستغرق 2–4 دقائق</span>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20">
+              <span className="text-xs text-[var(--accent)] font-medium">⏱ يستغرق 2–4 دقائق</span>
             </div>
           </div>
         </div>
@@ -213,9 +213,9 @@ export default function ChildPredictionPage() {
 
         {(parent1 || parent2) && (
           <div className="flex items-center gap-3 mb-5">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-rose-200" />
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--destructive)]/20" />
             <span className="text-xl animate-pulse">💕</span>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-rose-200" />
+            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[var(--destructive)]/20" />
           </div>
         )}
 
@@ -242,7 +242,7 @@ export default function ChildPredictionPage() {
           {isLoading && (
             <button
               onClick={cancelPrediction}
-              className="h-14 px-5 rounded-2xl font-semibold text-red-600 border-2 border-red-200 bg-red-50 hover:bg-red-100 transition-colors shrink-0"
+              className="h-14 px-5 rounded-2xl font-semibold text-[var(--destructive)] border-2 border-[var(--destructive)]/30 bg-[var(--destructive)]/10 hover:bg-[var(--destructive)]/15 transition-colors shrink-0"
             >
               إلغاء
             </button>
@@ -268,7 +268,7 @@ export default function ChildPredictionPage() {
 
         {/* Error */}
         {stage === 'error' && (
-          <div className="mt-4 p-4 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm text-center leading-relaxed">
+          <div className="mt-4 p-4 rounded-xl bg-[var(--destructive)]/10 border border-[var(--destructive)]/20 text-[var(--destructive)] text-sm text-center leading-relaxed">
             ⚠️ {errMsg ?? LABELS.error}
           </div>
         )}

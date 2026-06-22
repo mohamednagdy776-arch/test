@@ -32,7 +32,7 @@ export function NotificationBell() {
       >
         <Bell size={22} weight={isOpen ? 'fill' : 'regular'} className="text-[var(--muted-foreground)]" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 h-[18px] min-w-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
+          <span className="absolute -top-0.5 -right-0.5 h-[18px] min-w-[18px] px-1 rounded-full bg-[var(--destructive)] text-white text-[10px] font-bold flex items-center justify-center leading-none">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
