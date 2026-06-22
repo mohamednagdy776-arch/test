@@ -2,6 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCreatePost, useCreatePostWithMedia, useUploadMedia } from '../hooks';
 import { cn } from '@/lib/utils';
+import { extractFirstUrl } from '@/lib/linkify';
+import { useLinkPreview } from '@/lib/useLinkPreview';
 import { Palette, Image, Smiley, MapPin, Users, Clock, ChartBar, X, Gear, Heart, Plus, Trash } from '@phosphor-icons/react';
 
 const BACKGROUNDS = [
@@ -44,7 +46,9 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
   const [showPollCreator, setShowPollCreator] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState<string[]>(['', '']);
-  
+  const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
+  const [dismissedUrls, setDismissedUrls] = useState<string[]>([]);
+
   const createPost = useCreatePost();
   const createPostWithMedia = useCreatePostWithMedia();
   const uploadMedia = useUploadMedia();
@@ -59,6 +63,19 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
       tagInputRef.current.focus();
     }
   }, [showTagInput]);
+
+  // Detect a pasted/typed link (debounced) to show a live preview card.
+  useEffect(() => {
+    const t = setTimeout(() => setDetectedUrl(extractFirstUrl(content)), 400);
+    return () => clearTimeout(t);
+  }, [content]);
+
+  const activeUrl =
+    detectedUrl && !dismissedUrls.includes(detectedUrl) && mediaFiles.length === 0 && !bgColor
+      ? detectedUrl
+      : null;
+  const { data: linkPreview, isLoading: linkLoading } = useLinkPreview(activeUrl);
+  const hasPreview = !!(linkPreview && (linkPreview.title || linkPreview.description || linkPreview.image));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,6 +101,19 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
       pollOpts = pollOptions.filter(o => o.trim()).map(o => ({ text: o, votes: 0 }));
     }
 
+    // Carry the previewed link through so the server persists it without a
+    // refetch; if the author dismissed it, tell the server to skip enrichment.
+    const linkFields = hasPreview && activeUrl
+      ? {
+          linkUrl: linkPreview!.url,
+          linkTitle: linkPreview!.title,
+          linkDescription: linkPreview!.description,
+          linkImage: linkPreview!.image,
+        }
+      : detectedUrl && dismissedUrls.includes(detectedUrl)
+        ? { noLinkPreview: true }
+        : {};
+
     await createPost.mutateAsync({
       groupId: groupId || '',
       content: content.trim(),
@@ -96,7 +126,8 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
       audience: audience as any,
       scheduledAt,
       pollOptions: pollOpts,
-      postType: pollOpts ? 'poll' : undefined,
+      postType: pollOpts ? 'poll' : (hasPreview ? 'link' : undefined),
+      ...linkFields,
     });
     
     resetForm();
@@ -117,6 +148,8 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
     setTaggedUsers([]);
     setPollQuestion('');
     setPollOptions(['', '']);
+    setDetectedUrl(null);
+    setDismissedUrls([]);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,6 +225,46 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                 </button>
               </div>
             ))}
+          </div>
+        )}
+
+        {activeUrl && (linkLoading || hasPreview) && (
+          <div className="mt-3 relative rounded-xl overflow-hidden border border-[var(--border)]/60 bg-[var(--muted)]/40">
+            <button
+              type="button"
+              onClick={() => setDismissedUrls((d) => [...d, activeUrl])}
+              className="absolute top-2 left-2 z-10 h-7 w-7 rounded-full bg-[var(--primary)]/70 text-[var(--card)] flex items-center justify-center hover:bg-[var(--primary)] transition-colors"
+              aria-label="إزالة معاينة الرابط"
+            >
+              <X size={16} />
+            </button>
+            {linkLoading ? (
+              <div className="p-3 animate-pulse space-y-2">
+                <div className="h-28 w-full rounded-lg bg-[var(--muted)]" />
+                <div className="h-3 w-2/3 rounded bg-[var(--muted)]" />
+                <div className="h-2.5 w-1/2 rounded bg-[var(--muted)]" />
+              </div>
+            ) : (
+              <>
+                {linkPreview?.image && (
+                  <div className="aspect-video bg-[var(--muted)]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={linkPreview.image} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="p-3">
+                  {linkPreview?.siteName && (
+                    <p className="text-[10px] uppercase tracking-wide text-[var(--muted-foreground)] truncate" dir="ltr">{linkPreview.siteName}</p>
+                  )}
+                  {linkPreview?.title && (
+                    <p className="text-sm font-semibold text-[var(--foreground)] mt-0.5 line-clamp-2">{linkPreview.title}</p>
+                  )}
+                  {linkPreview?.description && (
+                    <p className="text-xs text-[var(--muted-foreground)] mt-1 line-clamp-2">{linkPreview.description}</p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
 

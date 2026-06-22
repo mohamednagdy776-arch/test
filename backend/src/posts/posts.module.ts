@@ -12,9 +12,10 @@ import { StoriesController } from './controllers/stories.controller';
 import { UploadController } from './controllers/upload.controller';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { SettingsModule } from '../settings/settings.module';
+import { LinkPreviewModule } from '../link-preview/link-preview.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost]), NotificationsModule, SettingsModule],
+  imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost]), NotificationsModule, SettingsModule, LinkPreviewModule],
   providers: [PostsService, FeedService, StoriesService],
   controllers: [PostsController, AdminPostsController, FeedController, StoriesController, UploadController],
   exports: [PostsService],

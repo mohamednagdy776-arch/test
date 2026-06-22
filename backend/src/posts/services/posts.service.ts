@@ -5,17 +5,22 @@ import { Post, PostType } from '../entities/post.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { User } from '../../auth/entities/user.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
+import { LinkPreviewService } from '../../link-preview/link-preview.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     @InjectRepository(Post) private postsRepo: Repository<Post>,
     private notifications: NotificationsService,
+    private linkPreview: LinkPreviewService,
   ) {}
 
   async create(groupId: string, dto: CreatePostDto, user: User) {
+    const linkFields = await this.resolveLinkPreview(dto);
+    const { noLinkPreview, ...rest } = dto;
     const post = this.postsRepo.create({
-      ...dto,
+      ...rest,
+      ...linkFields,
       group: { id: groupId } as any,
       user,
     });
@@ -24,6 +29,23 @@ export class PostsService {
       where: { id: (saved as any).id },
       relations: ['user', 'group'],
     });
+  }
+
+  // If the author didn't supply link metadata, detect the first URL in the body
+  // and fetch its Open Graph preview so PostCard can render a rich card (#link).
+  private async resolveLinkPreview(dto: CreatePostDto): Promise<Partial<Post>> {
+    // Client already supplied a preview, or explicitly removed it.
+    if (dto.linkUrl || dto.noLinkPreview) return {};
+    const url = this.linkPreview.extractFirstUrl(dto.content);
+    if (!url) return {};
+    const preview = await this.linkPreview.getPreview(url);
+    if (!preview) return {};
+    return {
+      linkUrl: preview.url,
+      linkTitle: preview.title,
+      linkDescription: preview.description,
+      linkImage: preview.image,
+    };
   }
 
   async findByGroup(groupId: string, page: number, limit: number) {
