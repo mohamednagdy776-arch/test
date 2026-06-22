@@ -12,8 +12,30 @@ const apiHost = (() => {
   }
 })();
 
+// Backend origin for the dev proxy rewrite below.
+const devApiOrigin = (() => {
+  try {
+    const u = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1');
+    return u.origin !== 'null' ? u.origin : 'http://localhost:3000';
+  } catch {
+    return 'http://localhost:3000';
+  }
+})();
+
 const nextConfig = {
   output: 'standalone',
+  // In development the Next.js dev server and the NestJS backend run on
+  // different ports. Without this rewrite every /api/v1/* and /uploads/*
+  // request from the browser (including <img> src values) hits the Next.js
+  // server and 404s. In production nginx handles the proxying, so the
+  // rewrite list is empty.
+  async rewrites() {
+    if (process.env.NODE_ENV === 'production') return [];
+    return [
+      { source: '/api/v1/:path*', destination: `${devApiOrigin}/api/v1/:path*` },
+      { source: '/uploads/:path*', destination: `${devApiOrigin}/uploads/:path*` },
+    ];
+  },
   images: {
     // The app is deployed behind nginx with NEXT_PUBLIC_API_URL set to a
     // relative path (/api/v1), and uploaded media is served by the backend at

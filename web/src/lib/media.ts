@@ -12,7 +12,9 @@
 // and re-anchor app-relative media on the API origin, while leaving genuine
 // external URLs untouched.
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/api\/v1\/?$/, '');
+// Fall back to the same default as apiClient so dev without .env.local still
+// resolves /api/v1/media/... to the backend instead of the Next.js dev server.
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1').replace(/\/api\/v1\/?$/, '');
 
 // Hosts that only ever make sense on a developer machine.
 const DEV_HOST = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?/i;
