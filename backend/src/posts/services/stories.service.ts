@@ -5,6 +5,7 @@ import { Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost } f
 import { Post } from '../entities/post.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { SettingsService } from '../../settings/services/settings.service';
+import { LinkPreviewService } from '../../link-preview/link-preview.service';
 
 @Injectable()
 export class StoriesService {
@@ -18,6 +19,7 @@ export class StoriesService {
     @InjectRepository(Post) private postRepo: Repository<Post>,
     private notifications: NotificationsService,
     private settingsService: SettingsService,
+    private linkPreview: LinkPreviewService,
   ) {}
 
   async createStory(userId: string, data: { mediaUrl?: string; mediaType?: string; thumbnailUrl?: string; text?: string; bgColor?: string; duration?: number }) {
@@ -313,6 +315,21 @@ export class StoriesService {
     if (data.linkTitle) post.linkTitle = data.linkTitle;
     if (data.linkDescription) post.linkDescription = data.linkDescription;
     if (data.linkImage) post.linkImage = data.linkImage;
+    // If the client didn't supply a preview (and didn't explicitly remove it),
+    // detect the first URL in the body and fetch its Open Graph metadata so the
+    // feed renders a rich card (#link-preview).
+    if (!data.linkUrl && !data.noLinkPreview) {
+      const url = this.linkPreview.extractFirstUrl(post.content);
+      if (url) {
+        const preview = await this.linkPreview.getPreview(url);
+        if (preview && (preview.title || preview.description || preview.image)) {
+          post.linkUrl = preview.url;
+          if (preview.title) post.linkTitle = preview.title;
+          if (preview.description) post.linkDescription = preview.description;
+          if (preview.image) post.linkImage = preview.image;
+        }
+      }
+    }
     if (data.pollOptions) post.pollOptions = data.pollOptions;
     if (data.scheduledAt) {
       post.scheduledAt = new Date(data.scheduledAt);
