@@ -117,13 +117,22 @@ export class LinkPreviewService {
   }
 
   private isPrivateIp(ip: string): boolean {
-    if (ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80')) {
-      return true;
+    // IPv6: only loopback (::1), unspecified (::), unique-local (fc00::/7) and
+    // link-local (fe80::/10) are private. Global unicast (e.g. 2a00:... from
+    // Google/YouTube) is public — the old `ip.includes('::')` check wrongly
+    // flagged ALL compressed IPv6 as private, blocking every v6-enabled site.
+    if (ip.includes(':')) {
+      const v6 = ip.toLowerCase();
+      if (v6 === '::1' || v6 === '::') return true;
+      if (/^f[cd]/.test(v6)) return true; // fc00::/7
+      if (/^fe[89ab]/.test(v6)) return true; // fe80::/10
+      const mapped = v6.match(/(?:::ffff:)(\d+\.\d+\.\d+\.\d+)$/);
+      if (mapped) return this.isPrivateIp(mapped[1]); // IPv4-mapped ::ffff:a.b.c.d
+      return false;
     }
     const parts = ip.split('.').map(Number);
     if (parts.length !== 4 || parts.some((n) => Number.isNaN(n))) {
-      // Non-IPv4 (e.g. IPv6 mapped) — be conservative for anything unrecognised.
-      return ip.includes('::');
+      return true; // unparseable — be conservative
     }
     const [a, b] = parts;
     return (
