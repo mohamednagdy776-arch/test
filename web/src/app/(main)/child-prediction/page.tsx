@@ -1,6 +1,11 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { PageHeader } from '@/components/ui/PageHeader';
+import {
+  Baby, Sparkle, Heart, ShieldCheck, Camera, X, Star,
+  ArrowClockwise, DownloadSimple, WhatsappLogo, TelegramLogo, MagicWand,
+} from '@phosphor-icons/react';
 
 type Stage = 'idle' | 'analyzing' | 'generating' | 'rendering' | 'done' | 'error';
 
@@ -12,7 +17,11 @@ const LABELS: Record<string, string> = {
   error:      'حدث خطأ، يرجى المحاولة مجدداً',
 };
 
-const STEPS: Stage[] = ['analyzing', 'generating', 'rendering'];
+const STEPS: { key: Stage; short: string }[] = [
+  { key: 'analyzing',  short: 'تحليل الملامح' },
+  { key: 'generating', short: 'مزج الوراثة' },
+  { key: 'rendering',  short: 'رسم الصورة' },
+];
 
 interface ParentImage { file: File; preview: string; }
 
@@ -34,6 +43,7 @@ export default function ChildPredictionPage() {
   const preview2Ref = useRef<string | null>(null);
 
   const isLoading = ['analyzing', 'generating', 'rendering'].includes(stage);
+  const bothReady = !!(parent1 && parent2);
 
   useEffect(() => {
     if (isLoading) {
@@ -61,6 +71,11 @@ export default function ChildPredictionPage() {
     } else {
       setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview2Ref.current = preview; return { file, preview }; });
     }
+  };
+
+  const clearParent = (which: 1 | 2) => {
+    if (which === 1) setParent1(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview1Ref.current = null; return null; });
+    else             setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview2Ref.current = null; return null; });
   };
 
   const onDrop = useCallback((e: React.DragEvent, which: 1 | 2) => {
@@ -129,210 +144,313 @@ export default function ChildPredictionPage() {
   };
 
   const reset = () => {
-    setParent1(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview1Ref.current = null; return null; });
-    setParent2(prev => { if (prev?.preview) URL.revokeObjectURL(prev.preview); preview2Ref.current = null; return null; });
+    clearParent(1);
+    clearParent(2);
     setResult(null);  setErrMsg(null);
     setStage('idle');
   };
 
   const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-[var(--muted)]/60 to-white">
-      <div className="max-w-xl mx-auto px-4 py-10">
-
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-[var(--muted)] to-[var(--muted)] shadow-lg shadow-black/5 mb-4">
-            <span className="text-4xl">👶</span>
-          </div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-2">توقّع شكل طفلكما</h1>
-          <p className="text-[var(--muted-foreground)] text-sm leading-relaxed max-w-sm mx-auto">
-            ارفع صورتك وصورة شريكك واكتشف كيف سيبدو طفلكما — بتقنية الذكاء الاصطناعي المحلية 💕
-          </p>
-          <div className="flex items-center justify-center gap-3 mt-3 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--muted)] border border-[var(--border)]">
-              <svg className="w-3.5 h-3.5 text-[var(--primary)]" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
-              </svg>
-              <span className="text-xs text-[var(--primary)] font-medium">خصوصية تامة — لا يُحفظ أي صور</span>
-            </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-              <span className="text-xs text-[var(--accent)] font-medium">⏱ يستغرق 2–4 دقائق</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Upload Zones */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          {([1, 2] as const).map((which) => {
-            const data  = which === 1 ? parent1 : parent2;
-            const ref   = which === 1 ? ref1 : ref2;
-            const drag  = which === 1 ? drag1 : drag2;
-            const label = which === 1 ? 'صورتك' : 'صورة شريكك';
-            return (
-              <div
-                key={which}
-                role="button"
-                tabIndex={0}
-                aria-label={`رفع ${label}`}
-                className={[
-                  'relative flex flex-col items-center justify-center aspect-square rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2',
-                  drag  ? 'border-[var(--ring)] bg-[var(--muted)] scale-[1.02]'
-                  : data ? 'border-[var(--border)] bg-[var(--card)]'
-                  :        'border-[var(--border)] bg-[var(--muted)]/40 hover:bg-[var(--muted)] hover:border-[var(--border)]',
-                ].join(' ')}
-                onClick={() => ref.current?.click()}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ref.current?.click(); } }}
-                onDrop={(e) => onDrop(e, which)}
-                onDragOver={(e) => { e.preventDefault(); if (which === 1) setDrag1(true); else setDrag2(true); }}
-                onDragLeave={() => { if (which === 1) setDrag1(false); else setDrag2(false); }}
-              >
-                <input
-                  ref={ref} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) setParentImg(f, which); }}
-                />
-                {data ? (
-                  <>
-                    <img src={data.preview} alt={label} className="w-full h-full object-cover" />
-                    <div className="absolute bottom-2 left-0 right-0 flex justify-center">
-                      <span className="text-xs bg-black/50 text-white px-2 py-0.5 rounded-full">{label}</span>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center gap-2 p-4 text-center select-none">
-                    <div className="w-14 h-14 rounded-full bg-[var(--card)] shadow-sm flex items-center justify-center text-2xl">👤</div>
-                    <p className="font-semibold text-[var(--primary)] text-sm">{label}</p>
-                    <p className="text-xs text-[var(--muted-foreground)]">اسحب صورة أو اضغط للرفع</p>
-                  </div>
-                )}
+  /* ── Upload zone (one parent) ── */
+  const renderZone = (which: 1 | 2) => {
+    const data  = which === 1 ? parent1 : parent2;
+    const ref   = which === 1 ? ref1 : ref2;
+    const drag  = which === 1 ? drag1 : drag2;
+    const label = which === 1 ? 'صورتك' : 'صورة شريكك';
+    return (
+      <div className="group relative">
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label={`رفع ${label}`}
+          className={[
+            'relative flex flex-col items-center justify-center aspect-square rounded-[1.4rem] cursor-pointer overflow-hidden',
+            'transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--ring)] focus:ring-offset-2',
+            'border-2',
+            drag  ? 'scale-[1.03] border-[var(--accent)]'
+            : data ? 'border-[var(--border)] shadow-[0_8px_24px_color-mix(in_srgb,var(--primary)_14%,transparent)]'
+            :        'border-dashed border-[color-mix(in_srgb,var(--accent)_45%,var(--border))] hover:-translate-y-0.5',
+          ].join(' ')}
+          style={{ background: data ? 'var(--card)' : 'color-mix(in srgb, var(--accent) 6%, var(--card))' }}
+          onClick={() => ref.current?.click()}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ref.current?.click(); } }}
+          onDrop={(e) => onDrop(e, which)}
+          onDragOver={(e) => { e.preventDefault(); if (which === 1) setDrag1(true); else setDrag2(true); }}
+          onDragLeave={() => { if (which === 1) setDrag1(false); else setDrag2(false); }}
+        >
+          <input
+            ref={ref} type="file" accept="image/jpeg,image/png,image/webp" className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) setParentImg(f, which); }}
+          />
+          {data ? (
+            <>
+              <img src={data.preview} alt={label} className="w-full h-full object-cover" />
+              <div className="absolute inset-x-0 bottom-0 p-2 flex justify-center"
+                   style={{ background: 'linear-gradient(to top, color-mix(in srgb, var(--primary) 80%, transparent), transparent)' }}>
+                <span className="text-[11px] font-bold text-white">{label}</span>
               </div>
-            );
-          })}
-        </div>
-
-        {(parent1 || parent2) && (
-          <div className="flex items-center gap-3 mb-5">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent to-[var(--destructive)]/20" />
-            <span className="text-xl animate-pulse">💕</span>
-            <div className="h-px flex-1 bg-gradient-to-l from-transparent to-[var(--destructive)]/20" />
-          </div>
-        )}
-
-        {/* Submit / Cancel */}
-        <div className="flex gap-3">
-          <button
-            onClick={handleSubmit}
-            disabled={!parent1 || !parent2 || isLoading}
-            className="flex-1 h-14 rounded-2xl font-bold text-white text-base transition-all duration-300 shadow-lg shadow-black/5 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex items-center justify-center gap-3 bg-gradient-to-l from-[var(--primary)] to-[var(--secondary)] hover:from-[var(--primary-hover)] hover:to-[var(--secondary)] active:scale-[0.98]"
-          >
-            {isLoading ? (
-              <>
-                <svg className="animate-spin h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <span>{LABELS[stage] ?? '...'}</span>
-                <span className="text-sm font-mono opacity-70">{fmt(elapsed)}</span>
-              </>
-            ) : (
-              <><span className="text-lg">✨</span>اكتشف شكل طفلكما<span className="text-lg">✨</span></>
-            )}
-          </button>
-          {isLoading && (
-            <button
-              onClick={cancelPrediction}
-              className="h-14 px-5 rounded-2xl font-semibold text-[var(--destructive)] border-2 border-[var(--destructive)]/30 bg-[var(--destructive)]/10 hover:bg-[var(--destructive)]/15 transition-colors shrink-0"
-            >
-              إلغاء
-            </button>
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-2 p-3 text-center select-none">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                   style={{ background: 'color-mix(in srgb, var(--accent) 14%, var(--card))', color: 'var(--accent)' }}>
+                <Camera size={22} weight="duotone" />
+              </div>
+              <p className="font-bold text-[var(--primary)] text-sm">{label}</p>
+              <p className="text-[11px] text-[var(--muted-foreground)] leading-snug">اسحب صورة<br />أو اضغط للرفع</p>
+            </div>
           )}
         </div>
-
-        {/* Progress steps */}
-        {isLoading && (
-          <>
-            <div className="mt-4 flex justify-center gap-5 flex-wrap">
-              {STEPS.map((s) => (
-                <div key={s} className={`flex items-center gap-1.5 text-xs transition-colors duration-500 ${stage === s ? 'text-[var(--primary)] font-semibold' : 'text-[var(--muted-foreground)]/70'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full transition-colors ${stage === s ? 'bg-[var(--primary)] animate-pulse' : 'bg-[var(--muted)]'}`} />
-                  {LABELS[s]}
-                </div>
-              ))}
-            </div>
-            <p className="text-center text-xs text-[var(--muted-foreground)] mt-3">
-              المعالجة تتم محلياً بالكامل — قد تستغرق 2–4 دقائق ⏳
-            </p>
-          </>
+        {/* Replace / remove control once a photo is chosen */}
+        {data && (
+          <button
+            onClick={() => clearParent(which)}
+            aria-label={`إزالة ${label}`}
+            className="absolute -top-2 -left-2 z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-md transition-transform hover:scale-110"
+            style={{ background: 'var(--card)', color: 'var(--destructive)', border: '1px solid var(--border)' }}
+          >
+            <X size={14} weight="bold" />
+          </button>
         )}
+      </div>
+    );
+  };
 
-        {/* Error */}
-        {stage === 'error' && (
-          <div className="mt-4 p-4 rounded-xl bg-[var(--destructive)]/10 border border-[var(--destructive)]/20 text-[var(--destructive)] text-sm text-center leading-relaxed">
-            ⚠️ {errMsg ?? LABELS.error}
+  /* ── Central fusion orb — the creative heart of the page ── */
+  const fusionOrb = (
+    <div className="relative flex items-center justify-center w-14 sm:w-20 shrink-0" aria-hidden>
+      {/* soft aura */}
+      <div
+        className={`absolute w-16 sm:w-24 h-16 sm:h-24 rounded-full blur-xl transition-opacity duration-500 ${bothReady ? 'opacity-80 animate-pulse-soft' : 'opacity-30'}`}
+        style={{ background: 'radial-gradient(circle, var(--accent), transparent 70%)' }}
+      />
+      {/* ripple rings when ready */}
+      {bothReady && !result && (
+        <>
+          <span className="absolute w-12 sm:w-16 h-12 sm:h-16 rounded-full border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)', animation: 'ripple 2.4s ease-out infinite' }} />
+          <span className="absolute w-12 sm:w-16 h-12 sm:h-16 rounded-full border" style={{ borderColor: 'color-mix(in srgb, var(--accent) 50%, transparent)', animation: 'ripple 2.4s ease-out infinite 1.2s' }} />
+        </>
+      )}
+      {/* core orb */}
+      <div
+        className={`relative z-10 w-11 sm:w-14 h-11 sm:h-14 rounded-full flex items-center justify-center text-white shadow-lg ${isLoading ? 'animate-float' : ''}`}
+        style={{
+          background: bothReady
+            ? 'linear-gradient(135deg, var(--secondary), var(--accent))'
+            : 'linear-gradient(135deg, var(--primary), var(--secondary))',
+          boxShadow: bothReady ? '0 0 22px color-mix(in srgb, var(--accent) 55%, transparent)' : '0 6px 16px color-mix(in srgb, var(--primary) 30%, transparent)',
+        }}
+      >
+        <Heart size={bothReady ? 22 : 20} weight="fill" className={bothReady ? 'animate-pulse' : 'opacity-80'} />
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="max-w-xl mx-auto px-4 py-6 animate-fade-in">
+
+      {/* Luxury page header — shared system component */}
+      <PageHeader
+        icon={Baby}
+        eyebrow="ميزة ترفيهية بالذكاء الاصطناعي"
+        title="توقّع شكل طفلكما"
+        subtitle="امزج ملامحكما واكتشف وجه المستقبل 💕"
+        action={
+          <div className="hidden sm:flex items-center gap-1.5 rounded-full px-3 py-1.5"
+               style={{ background: 'rgba(255,255,255,0.12)' }}>
+            <Sparkle size={14} weight="fill" className="text-white" />
+            <span className="text-[11px] font-bold text-white">معالجة محلية</span>
           </div>
-        )}
+        }
+      />
 
-        {/* Result */}
-        {result && stage === 'done' && (
-          <div className="mt-8">
-            <div className="text-center mb-4">
-              <h2 className="text-lg font-bold text-[var(--foreground)]">طفلكما المنتظر 🌟</h2>
-              <p className="text-xs text-[var(--muted-foreground)] mt-1">ما شاء الله تبارك الله — صورة توقعية للتسلية</p>
+      {/* trust chips */}
+      <div className="flex items-center justify-center gap-2 mt-4 mb-7 flex-wrap">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold"
+              style={{ background: 'color-mix(in srgb, var(--primary) 8%, var(--card))', color: 'var(--primary)', border: '1px solid var(--border)' }}>
+          <ShieldCheck size={14} weight="fill" /> خصوصية تامة — لا تُحفظ الصور
+        </span>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold"
+              style={{ background: 'color-mix(in srgb, var(--accent) 12%, var(--card))', color: 'var(--accent)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}>
+          ⏱ 2–4 دقائق
+        </span>
+      </div>
+
+      {/* Fusion chamber: parent ▸ orb ◂ parent */}
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 mb-6">
+        {renderZone(1)}
+        {fusionOrb}
+        {renderZone(2)}
+      </div>
+
+      {/* Primary action */}
+      <div className="flex gap-3">
+        <button
+          onClick={handleSubmit}
+          disabled={!bothReady || isLoading}
+          className="relative flex-1 h-14 rounded-2xl font-bold text-white text-base overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] flex items-center justify-center gap-2.5"
+          style={{
+            background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 55%, var(--accent) 100%)',
+            boxShadow: bothReady && !isLoading ? '0 10px 28px color-mix(in srgb, var(--accent) 35%, transparent)' : 'none',
+          }}
+        >
+          {/* gold shimmer sweep when actionable */}
+          {bothReady && !isLoading && (
+            <span className="absolute inset-0 -translate-x-full animate-shimmer"
+                  style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }} />
+          )}
+          {isLoading ? (
+            <>
+              <svg className="animate-spin h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="relative z-10 truncate">{LABELS[stage] ?? '...'}</span>
+              <span className="relative z-10 text-sm font-mono opacity-70">{fmt(elapsed)}</span>
+            </>
+          ) : (
+            <span className="relative z-10 flex items-center gap-2.5">
+              <MagicWand size={20} weight="fill" />
+              اكتشف شكل طفلكما
+              <Sparkle size={18} weight="fill" />
+            </span>
+          )}
+        </button>
+        {isLoading && (
+          <button
+            onClick={cancelPrediction}
+            className="h-14 px-5 rounded-2xl font-semibold transition-colors shrink-0"
+            style={{ color: 'var(--destructive)', background: 'color-mix(in srgb, var(--destructive) 10%, transparent)', border: '2px solid color-mix(in srgb, var(--destructive) 30%, transparent)' }}
+          >
+            إلغاء
+          </button>
+        )}
+      </div>
+
+      {/* Processing ritual — connected timeline */}
+      {isLoading && (
+        <div className="mt-6 rounded-2xl p-5"
+             style={{ background: 'color-mix(in srgb, var(--primary) 5%, var(--card))', border: '1px solid var(--border)' }}>
+          <div className="flex items-start justify-between">
+            {STEPS.map((s, i) => {
+              const activeIdx = STEPS.findIndex(st => st.key === stage);
+              const isActive = stage === s.key;
+              const isDone = i < activeIdx;
+              return (
+                <div key={s.key} className="flex-1 flex flex-col items-center relative">
+                  {/* connector */}
+                  {i < STEPS.length - 1 && (
+                    <span className="absolute top-3 right-1/2 w-full h-0.5 -z-0"
+                          style={{ background: isDone ? 'var(--accent)' : 'var(--border)' }} />
+                  )}
+                  <div className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center transition-all duration-500"
+                       style={{
+                         background: isActive ? 'var(--accent)' : isDone ? 'var(--secondary)' : 'var(--muted)',
+                         boxShadow: isActive ? '0 0 0 5px color-mix(in srgb, var(--accent) 18%, transparent)' : 'none',
+                       }}>
+                    {isDone
+                      ? <Sparkle size={12} weight="fill" className="text-white" />
+                      : <span className={`w-2 h-2 rounded-full ${isActive ? 'bg-white animate-pulse' : 'bg-[var(--muted-foreground)]'}`} />}
+                  </div>
+                  <span className={`mt-2 text-[11px] text-center transition-colors ${isActive ? 'font-bold text-[var(--primary)]' : isDone ? 'text-[var(--secondary)]' : 'text-[var(--muted-foreground)]'}`}>
+                    {s.short}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-center text-[11px] text-[var(--muted-foreground)] mt-4 leading-relaxed">
+            {LABELS[stage]}<br />المعالجة تتم محلياً بالكامل داخل الخادم ⏳
+          </p>
+        </div>
+      )}
+
+      {/* Error */}
+      {stage === 'error' && (
+        <div className="mt-5 p-4 rounded-2xl text-sm text-center leading-relaxed"
+             style={{ background: 'color-mix(in srgb, var(--destructive) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--destructive) 22%, transparent)', color: 'var(--destructive)' }}>
+          ⚠️ {errMsg ?? LABELS.error}
+        </div>
+      )}
+
+      {/* Result reveal */}
+      {result && stage === 'done' && (
+        <div className="mt-8 animate-scale-in">
+          <div className="text-center mb-4">
+            <div className="inline-flex items-center gap-1.5 mb-2 px-3 py-1 rounded-full"
+                 style={{ background: 'color-mix(in srgb, var(--accent) 14%, var(--card))', color: 'var(--accent)' }}>
+              <Star size={13} weight="fill" />
+              <span className="text-[11px] font-bold">النتيجة جاهزة</span>
             </div>
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-black/5/80 border border-[var(--border)]">
+            <h2 className="text-lg font-extrabold text-[var(--foreground)]">طفلكما المنتظر 🌟</h2>
+            <p className="text-xs text-[var(--muted-foreground)] mt-1">ما شاء الله تبارك الله — صورة توقعية للتسلية</p>
+          </div>
+
+          {/* gold-framed portrait */}
+          <div className="relative rounded-[1.6rem] p-1"
+               style={{ background: 'linear-gradient(135deg, var(--accent), var(--secondary))', boxShadow: '0 16px 40px color-mix(in srgb, var(--primary) 24%, transparent)' }}>
+            <div className="relative rounded-[1.4rem] overflow-hidden" style={{ background: 'var(--card)' }}>
               <img src={result} alt="صورة الطفل المتوقع" className="w-full object-cover" />
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/50 to-transparent p-4 text-center">
-                <p className="text-white text-xs font-medium">بإذن الله 💕</p>
+              <div className="absolute bottom-0 inset-x-0 p-4 text-center"
+                   style={{ background: 'linear-gradient(to top, color-mix(in srgb, var(--primary) 75%, transparent), transparent)' }}>
+                <p className="text-white text-xs font-bold flex items-center justify-center gap-1.5">
+                  <Heart size={13} weight="fill" /> بإذن الله
+                </p>
               </div>
             </div>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <a href={result} download="طفلنا.jpg"
-                className="h-11 rounded-xl border border-[var(--border)] text-[var(--primary)] font-medium text-sm flex items-center justify-center gap-2 hover:bg-[var(--muted)] transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                </svg>
-                تنزيل
-              </a>
-              <button onClick={reset}
-                className="h-11 rounded-xl bg-[var(--primary)] text-white font-medium text-sm flex items-center justify-center gap-2 hover:bg-[var(--primary)] transition-colors">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                جرّب مجدداً
-              </button>
-            </div>
-            <div className="mt-3 flex gap-2 flex-wrap">
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت: https://tayyibt.com/child-prediction')}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[#25D366] text-white hover:opacity-90 transition-opacity"
-              >
-                📲 شارك عبر واتساب
-              </a>
-              <a
-                href={`https://t.me/share/url?url=${encodeURIComponent('https://tayyibt.com/child-prediction')}&text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت!')}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[#229ED9] text-white hover:opacity-90 transition-opacity"
-              >
-                ✈️ تليجرام
-              </a>
-            </div>
           </div>
-        )}
 
-        {/* Privacy */}
-        <div className="mt-8 p-4 rounded-2xl bg-[var(--muted)]/80 border border-[var(--border)]">
-          <p className="text-xs font-bold text-[var(--muted-foreground)] mb-2">🛡️ سياسة الخصوصية</p>
-          <ul className="text-xs text-[var(--muted-foreground)] space-y-1 leading-relaxed">
-            <li>• المعالجة تتم كلياً في الذاكرة المؤقتة داخل الخادم</li>
-            <li>• لا تُحفظ صورك أو نتيجة التوليد على أي قرص صلب</li>
-            <li>• الصور تُمسح فور إرجاع النتيجة للمستخدم</li>
-            <li>• هذه الميزة للتسلية والترفيه فقط — ليست توقعاً علمياً</li>
-          </ul>
+          {/* actions */}
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <a href={result} download="طفلنا.jpg"
+               className="h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+               style={{ color: 'var(--primary)', border: '1px solid var(--border)', background: 'var(--card)' }}>
+              <DownloadSimple size={17} weight="bold" /> تنزيل
+            </a>
+            <button onClick={reset}
+              className="h-11 rounded-xl text-white font-semibold text-sm flex items-center justify-center gap-2 transition-opacity hover:opacity-90"
+              style={{ background: 'var(--primary)' }}>
+              <ArrowClockwise size={17} weight="bold" /> جرّب مجدداً
+            </button>
+          </div>
+
+          {/* share */}
+          <div className="mt-3 flex gap-2 flex-wrap">
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت: https://tayyibt.com/child-prediction')}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+              style={{ background: '#25D366' }}
+            >
+              <WhatsappLogo size={18} weight="fill" /> واتساب
+            </a>
+            <a
+              href={`https://t.me/share/url?url=${encodeURIComponent('https://tayyibt.com/child-prediction')}&text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت!')}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+              style={{ background: '#229ED9' }}
+            >
+              <TelegramLogo size={18} weight="fill" /> تليجرام
+            </a>
+          </div>
         </div>
+      )}
 
+      {/* Privacy */}
+      <div className="mt-8 rounded-2xl p-4"
+           style={{ background: 'color-mix(in srgb, var(--primary) 4%, var(--card))', border: '1px solid var(--border)' }}>
+        <p className="text-xs font-bold text-[var(--primary)] mb-2 flex items-center gap-1.5">
+          <ShieldCheck size={15} weight="fill" style={{ color: 'var(--accent)' }} /> سياسة الخصوصية
+        </p>
+        <ul className="text-[11px] text-[var(--muted-foreground)] space-y-1 leading-relaxed">
+          <li>• المعالجة تتم كلياً في الذاكرة المؤقتة داخل الخادم</li>
+          <li>• لا تُحفظ صورك أو نتيجة التوليد على أي قرص صلب</li>
+          <li>• الصور تُمسح فور إرجاع النتيجة للمستخدم</li>
+          <li>• هذه الميزة للتسلية والترفيه فقط — ليست توقعاً علمياً</li>
+        </ul>
       </div>
+
     </div>
   );
 }
