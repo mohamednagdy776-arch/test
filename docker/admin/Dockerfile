@@ -9,13 +9,15 @@ WORKDIR /app
 # Copy package files from admin directory
 COPY admin/package*.json ./admin/
 WORKDIR /app/admin
-# NOTE: admin/package-lock.json is missing the platform-specific @next/swc-*
-# package nodes (unlike web/), so `npm ci` never installs the Linux SWC binary.
-# Next then reports "lockfile missing swc dependencies", crash-loops its lockfile
-# patcher (TypeError reading 'os') and re-downloads SWC every build. `npm install`
-# resolves the missing optional dep and installs it cleanly. Switch back to
-# `npm ci` once admin/package-lock.json is regenerated with the swc nodes.
-RUN npm install --no-audit --no-fund
+# NOTE: the committed admin/package-lock.json is broken — it references the
+# @next/swc-* binaries only in next's optionalDependencies but has no installable
+# package nodes for them (web/ has them). npm trusts the lockfile, so neither
+# `npm ci` nor `npm install` ever installs @next/swc-linux-x64-musl. Next then
+# crash-loops its lockfile patcher (TypeError reading 'os') and re-downloads SWC
+# on every build. Dropping the stale lockfile forces a fresh resolve that installs
+# the correct musl SWC for alpine. Restore `npm ci` once the committed lockfile is
+# regenerated with the swc package nodes.
+RUN rm -f package-lock.json && npm install --no-audit --no-fund
 
 # Copy source code from admin directory
 COPY admin/ ./
