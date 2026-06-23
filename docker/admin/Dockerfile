@@ -1,9 +1,7 @@
 # ── Stage 1: Build ──────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
-# Install dependencies needed for Next.js SWC (musl glibc shim).
-# Without this the SWC binary fails to load on alpine, Next wrongly thinks
-# swc deps are missing, and crash-loops the lockfile patcher (slow + noisy).
+# glibc shim so the Next.js musl SWC binary loads on alpine.
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
@@ -11,7 +9,13 @@ WORKDIR /app
 # Copy package files from admin directory
 COPY admin/package*.json ./admin/
 WORKDIR /app/admin
-RUN npm ci
+# NOTE: admin/package-lock.json is missing the platform-specific @next/swc-*
+# package nodes (unlike web/), so `npm ci` never installs the Linux SWC binary.
+# Next then reports "lockfile missing swc dependencies", crash-loops its lockfile
+# patcher (TypeError reading 'os') and re-downloads SWC every build. `npm install`
+# resolves the missing optional dep and installs it cleanly. Switch back to
+# `npm ci` once admin/package-lock.json is regenerated with the swc nodes.
+RUN npm install --no-audit --no-fund
 
 # Copy source code from admin directory
 COPY admin/ ./
