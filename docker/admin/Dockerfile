@@ -9,14 +9,10 @@ WORKDIR /app
 # Copy package files from admin directory
 COPY admin/package*.json ./admin/
 WORKDIR /app/admin
-# NOTE: the committed admin/package-lock.json is broken — it references the
-# @next/swc-* binaries only in next's optionalDependencies but has no installable
-# package nodes for them (web/ has them). npm trusts the lockfile, so neither
-# `npm ci` nor `npm install` ever installs @next/swc-linux-x64-musl. Next then
-# crash-loops its lockfile patcher (TypeError reading 'os') and re-downloads SWC
-# on every build. Dropping the stale lockfile forces a fresh resolve that installs
-# the correct musl SWC for alpine. Restore `npm ci` once the committed lockfile is
-# regenerated with the swc package nodes.
+# The committed admin/package-lock.json lacks installable @next/swc-* package
+# nodes, so `npm ci` won't install the Linux SWC binary. Drop the stale lockfile
+# and let npm resolve fresh so swc-linux-x64-musl actually lands in node_modules
+# (a fast, local compile — no per-build SWC download).
 RUN rm -f package-lock.json && npm install --no-audit --no-fund
 
 # Copy source code from admin directory
@@ -25,6 +21,13 @@ COPY admin/ ./
 # Build arguments
 ARG NEXT_PUBLIC_API_URL=http://localhost:3003/api/v1
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Skip Next's lockfile "patcher". It looks up @next/swc at next's own version
+# (14.2.35), but the swc binaries publish at 14.2.33, so the lookup hits
+# undefined and crash-loops with "Cannot read properties of undefined (reading
+# 'os')" on every build. The flag is Next's official escape hatch; swc is already
+# installed above, so the patch is pure (broken) overhead.
+ENV NEXT_IGNORE_INCORRECT_LOCKFILE=1
 
 RUN npm run build
 
