@@ -1,6 +1,11 @@
 # ── Stage 1: Build ──────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
+# Install dependencies needed for Next.js SWC (musl glibc shim).
+# Without this the SWC binary fails to load on alpine, Next wrongly thinks
+# swc deps are missing, and crash-loops the lockfile patcher (slow + noisy).
+RUN apk add --no-cache libc6-compat
+
 WORKDIR /app
 
 # Copy package files from admin directory
@@ -19,6 +24,9 @@ RUN npm run build
 
 # ── Stage 2: Production image ────────────────────────────────────
 FROM node:20-alpine AS runner
+
+# Runtime glibc shim for the Next.js standalone server.
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
