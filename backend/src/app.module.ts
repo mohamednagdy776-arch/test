@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { ClassSerializerInterceptor, Module } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -81,6 +82,14 @@ import { LinkPreviewModule } from './link-preview/link-preview.module';
     FamilyModule,
     LinkPreviewModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
+  ],
+  providers: [
+    // Globally serialize responses through class-transformer so @Exclude() on
+    // sensitive entity columns (User.passwordHash, totpSecret, reset/verification
+    // tokens, etc.) is honored on EVERY endpoint that returns those entities —
+    // including the 11 that joined the raw User relation and leaked auth secrets
+    // (#745). Default options keep all other fields (excludeExtraneousValues:false).
+    { provide: APP_INTERCEPTOR, useClass: ClassSerializerInterceptor },
   ],
 })
 export class AppModule {}

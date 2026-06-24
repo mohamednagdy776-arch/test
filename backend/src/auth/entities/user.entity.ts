@@ -1,4 +1,5 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Profile } from '../../users/entities/profile.entity';
 
 export enum Gender {
@@ -18,6 +19,7 @@ export class User {
   @Column({ unique: true })
   phone: string;
 
+  @Exclude()
   @Column({ name: 'password_hash' })
   passwordHash: string;
 
@@ -45,24 +47,31 @@ export class User {
   @Column({ name: 'is_deactivated', default: false })
   isDeactivated: boolean;
 
+  @Exclude()
   @Column({ name: 'verification_token', nullable: true })
   verificationToken: string;
 
+  @Exclude()
   @Column({ name: 'verification_expires', nullable: true })
   verificationExpires: Date;
 
+  @Exclude()
   @Column({ name: 'reset_token', nullable: true })
   resetToken: string;
 
+  @Exclude()
   @Column({ name: 'reset_token_expires', nullable: true })
   resetTokenExpires: Date;
 
+  @Exclude()
   @Column({ name: 'failed_login_attempts', default: 0 })
   failedLoginAttempts: number;
 
+  @Exclude()
   @Column({ name: 'locked_until', nullable: true })
   lockedUntil: Date;
 
+  @Exclude()
   @Column({ name: 'totp_secret', nullable: true })
   totpSecret: string;
 
@@ -78,6 +87,7 @@ export class User {
   @Column({ name: 'oauth_provider', type: 'varchar', length: 50, nullable: true })
   oauthProvider: 'google' | 'github' | null;
 
+  @Exclude()
   @Column({ name: 'oauth_id', nullable: true })
   oauthId: string;
 
