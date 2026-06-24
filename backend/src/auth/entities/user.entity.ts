@@ -75,6 +75,12 @@ export class User {
   @Column({ name: 'totp_secret', nullable: true })
   totpSecret: string;
 
+  // SHA-256 hashes of one-time backup codes (JSON array), issued at 2FA
+  // enrollment so a user who loses their authenticator can still recover (#759).
+  @Exclude()
+  @Column({ name: 'two_factor_backup_codes', type: 'text', nullable: true })
+  twoFactorBackupCodes: string;
+
   @Column({ name: 'two_factor_enabled', default: false })
   twoFactorEnabled: boolean;
 

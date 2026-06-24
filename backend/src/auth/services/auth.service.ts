@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
+import { generateTotpSecret, verifyTotp, buildOtpauthUrl } from '../utils/totp';
 import { User } from '../entities/user.entity';
 import { Session } from '../entities/session.entity';
 import { EmailChangeRequest } from '../entities/email-change-request.entity';
@@ -138,7 +139,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.twoFactorEnabled && !user.twoFactorVerified) {
+    if (user.twoFactorEnabled) {
+      // Challenge for a second factor on EVERY login once 2FA is enabled. (The
+      // old gate `enabled && !verified` skipped 2FA forever after the first
+      // successful challenge — i.e. 2FA only ever applied once.)
       // Issue a short-lived pre-auth token (bound to this password-verified
       // user) instead of returning a raw userId the client could swap out.
       const preAuthToken = this.jwtService.sign(
@@ -170,8 +174,14 @@ export class AuthService {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user || !user.twoFactorEnabled) throw new UnauthorizedException();
 
-    const valid = this.verifyTotp(code, user.totpSecret);
-    if (!valid) throw new UnauthorizedException('Invalid code');
+    if (verifyTotp(code, user.totpSecret)) {
+      // valid authenticator code
+    } else {
+      // Fall back to a one-time backup code (#759), consuming it on success.
+      const remaining = this.consumeBackupCode(code, user.twoFactorBackupCodes);
+      if (remaining === null) throw new UnauthorizedException('Invalid code');
+      await this.usersRepo.update(userId, { twoFactorBackupCodes: JSON.stringify(remaining) });
+    }
 
     await this.usersRepo.update(userId, { twoFactorVerified: true });
     await this.handleSuccessfulLogin(user, false, deviceInfo);
@@ -182,20 +192,38 @@ export class AuthService {
     };
   }
 
-  private verifyTotp(code: string, secret: string): boolean {
-    const crypto = require('crypto');
-    const epoch = Math.floor(Date.now() / 1000);
-    const timeSlots = [epoch, epoch - 30, epoch + 30];
+  private hashBackupCode(code: string): string {
+    return createHash('sha256').update(code.replace(/\s+/g, '').toUpperCase()).digest('hex');
+  }
 
-    for (const slot of timeSlots) {
-      const hmac = crypto.createHmac('sha1', secret);
-      hmac.update(slot.toString());
-      const hash = hmac.digest('hex');
-      const codeInt = parseInt(hash.slice(-8), 16);
-      const totp = (codeInt % 1000000).toString().padStart(6, '0');
-      if (totp === code) return true;
+  // Generate N single-use backup codes. Returns the plaintext codes (shown to the
+  // user exactly once) and their SHA-256 hashes (persisted) so a lost authenticator
+  // doesn't mean a permanent lockout (#759).
+  private generateBackupCodes(count = 10): { plain: string[]; hashes: string[] } {
+    const plain: string[] = [];
+    for (let i = 0; i < count; i++) {
+      // 10 hex chars, grouped for readability (e.g. "A1B2C-3D4E5").
+      const raw = randomBytes(5).toString('hex').toUpperCase();
+      plain.push(`${raw.slice(0, 5)}-${raw.slice(5)}`);
     }
-    return false;
+    return { plain, hashes: plain.map((c) => this.hashBackupCode(c)) };
+  }
+
+  // Validate a submitted backup code against the stored hashes. On success returns
+  // the remaining hashes (the used code is consumed) so the caller can persist them.
+  private consumeBackupCode(code: string, stored: string | null): string[] | null {
+    if (!stored) return null;
+    let hashes: string[];
+    try {
+      hashes = JSON.parse(stored);
+    } catch {
+      return null;
+    }
+    const target = this.hashBackupCode(code);
+    const idx = hashes.indexOf(target);
+    if (idx === -1) return null;
+    hashes.splice(idx, 1);
+    return hashes;
   }
 
   private async handleFailedLogin(user: User) {
@@ -451,40 +479,59 @@ export class AuthService {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
-    const crypto = require('crypto');
-    const secret = crypto.randomBytes(20).toString('base64');
+    // Base32 secret + otpauth URI so standard authenticators can enroll (#743).
+    // Do NOT enable 2FA yet — only persist the pending secret. 2FA turns on once
+    // the user proves their authenticator works in verifyTwoFactorSetup, so a
+    // failed/abandoned setup can never lock the account out (#759).
+    const secret = generateTotpSecret();
+    const otpauthUrl = buildOtpauthUrl(secret, user.email);
 
     await this.usersRepo.update(userId, {
       totpSecret: secret,
-      twoFactorEnabled: true,
+      twoFactorEnabled: false,
       twoFactorVerified: false,
     });
 
-    return { secret, message: 'Two-factor authentication enabled' };
+    return { secret, otpauthUrl, message: 'Scan the QR code, then verify a code to enable 2FA' };
   }
 
   async verifyTwoFactorSetup(userId: string, code: string) {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user || !user.totpSecret) throw new NotFoundException('No 2FA setup in progress');
 
-    const valid = this.verifyTotp(code, user.totpSecret);
+    const valid = verifyTotp(code, user.totpSecret);
     if (!valid) throw new UnauthorizedException('Invalid code');
 
-    await this.usersRepo.update(userId, { twoFactorVerified: true });
-    return { message: 'Two-factor authentication verified' };
+    // Authenticator confirmed working → enable 2FA and issue one-time backup
+    // codes (shown exactly once) so a lost device isn't a permanent lockout (#759).
+    const { plain, hashes } = this.generateBackupCodes();
+    await this.usersRepo.update(userId, {
+      twoFactorEnabled: true,
+      twoFactorVerified: true,
+      twoFactorBackupCodes: JSON.stringify(hashes),
+    });
+
+    return {
+      message: 'Two-factor authentication enabled',
+      backupCodes: plain,
+    };
   }
 
   async disableTwoFactor(userId: string, code: string) {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user || !user.twoFactorEnabled) throw new ForbiddenException('2FA not enabled');
 
-    const valid = this.verifyTotp(code, user.totpSecret);
+    // Accept an authenticator code OR a backup code, so a user without their
+    // device can still turn 2FA off (#759).
+    const valid = verifyTotp(code, user.totpSecret)
+      || this.consumeBackupCode(code, user.twoFactorBackupCodes) !== null;
     if (!valid) throw new UnauthorizedException('Invalid code');
 
     await this.usersRepo.update(userId, {
       totpSecret: null as any,
       twoFactorEnabled: false,
       twoFactorVerified: false,
+      twoFactorBackupCodes: null as any,
     });
 
     return { message: 'Two-factor authentication disabled' };
