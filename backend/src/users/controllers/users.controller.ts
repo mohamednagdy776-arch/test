@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, UploadedFile, UseInterceptors, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, UploadedFile, UseInterceptors, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
@@ -131,6 +131,10 @@ export class UsersController {
   @Get(':id')
   async getFullProfile(@Param('id') id: string, @CurrentUser() user?: User) {
     const profile = await this.usersService.getFullProfile(id, user?.id);
+    // A nonexistent user/username must 404, not 200 with an empty body. Without
+    // this, `{ ...null }` spread to `{}` and the route returned a ghost profile
+    // (frontend then rendered a blank "Add friend/Message/Block" card — #728/#729).
+    if (!profile) throw new NotFoundException('User not found');
     // Use the resolved UUID from the profile, not the raw :id param which may be a username
     const resolvedId = (profile as any)?.userId;
     const friendshipStatus = (user?.id && resolvedId && user.id !== resolvedId)
