@@ -44,6 +44,14 @@ export class SearchService {
         )
         .andWhere('user.id != :userId', { userId })
         .andWhere('user.status = :status', { status: 'active' })
+        // Block enforcement (#758): hide users who blocked me or whom I blocked.
+        .andWhere(
+          `user.id NOT IN (
+             SELECT blocked_id FROM blocks WHERE blocker_id = :userId
+             UNION
+             SELECT blocker_id FROM blocks WHERE blocked_id = :userId
+           )`,
+        )
         .take(20)
         .getMany();
 

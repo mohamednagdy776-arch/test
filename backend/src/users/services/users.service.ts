@@ -138,6 +138,12 @@ export class UsersService {
   async getFullProfile(idOrUsername: string, viewerId?: string) {
     const userId = await this.resolveUserId(idOrUsername);
     if (!userId) return null;
+    // Block enforcement (#758): if either party has blocked the other, the
+    // profile is not viewable. Returning null makes the controller 404 it,
+    // hiding both the profile and the fact that a block exists.
+    if (viewerId && await this.friendsService.isBlockedEither(viewerId, userId)) {
+      return null;
+    }
     let profile = await this.profilesRepo.findOne({
       where: { user: { id: userId } },
       relations: ['user', 'workEntries', 'educationEntries'],

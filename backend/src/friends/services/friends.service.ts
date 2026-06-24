@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Friendship, FriendList, UserBlock, UserRestriction, FriendshipStatus, FriendListType } from '../entities/friendship.entity';
 import { User } from '../../auth/entities/user.entity';
 import { Follow } from '../../follows/entities/follow.entity';
+import { Block } from '../../settings/entities/block.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
@@ -14,8 +15,22 @@ export class FriendsService {
     @InjectRepository(UserBlock) private blocksRepo: Repository<UserBlock>,
     @InjectRepository(UserRestriction) private restrictionsRepo: Repository<UserRestriction>,
     @InjectRepository(Follow) private followsRepo: Repository<Follow>,
+    @InjectRepository(Block) private userBlockRepo: Repository<Block>,
     private readonly notifications: NotificationsService,
   ) {}
+
+  // Single source of truth for block enforcement: reads the `blocks` table that
+  // the user-facing POST /blocks writes to, in BOTH directions (#758).
+  async isBlockedEither(userA: string, userB: string): Promise<boolean> {
+    if (!userA || !userB || userA === userB) return false;
+    const count = await this.userBlockRepo.count({
+      where: [
+        { blocker: { id: userA }, blocked: { id: userB } },
+        { blocker: { id: userB }, blocked: { id: userA } },
+      ],
+    });
+    return count > 0;
+  }
 
   async sendRequest(requesterId: string, addresseeId: string) {
     if (requesterId === addresseeId) {
@@ -36,10 +51,7 @@ export class FriendsService {
       throw new BadRequestException('Friend request already exists');
     }
 
-    const isBlocked = await this.blocksRepo.findOne({
-      where: [{ blockerId: addresseeId, blockedId: requesterId }, { blockerId: requesterId, blockedId: addresseeId }],
-    });
-    if (isBlocked) {
+    if (await this.isBlockedEither(requesterId, addresseeId)) {
       throw new ForbiddenException('Cannot send friend request');
     }
 
