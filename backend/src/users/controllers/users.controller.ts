@@ -66,10 +66,18 @@ export class UsersController {
     const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
     const destDir = join(process.cwd(), 'uploads', 'avatars');
     mkdirSync(destDir, { recursive: true });
-    const processed = await sharp(file.buffer)
-      .resize(512, 512, { fit: 'cover', position: 'centre' })
-      .jpeg({ quality: 88 })
-      .toBuffer();
+    // The multer fileFilter only trusts the client-declared name/MIME. Decode the
+    // actual bytes with sharp so a file that lies about being an image fails as a
+    // clean 400 instead of crashing the pipeline with a 500 (#750).
+    let processed: Buffer;
+    try {
+      processed = await sharp(file.buffer)
+        .resize(512, 512, { fit: 'cover', position: 'centre' })
+        .jpeg({ quality: 88 })
+        .toBuffer();
+    } catch {
+      throw new BadRequestException('File is not a valid image');
+    }
     writeFileSync(join(destDir, filename), processed);
     const mediaPath = `avatars/${filename}`;
     const token = signMediaPath(mediaPath);
@@ -97,10 +105,17 @@ export class UsersController {
     const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
     const destDir = join(process.cwd(), 'uploads', 'covers');
     mkdirSync(destDir, { recursive: true });
-    const processed = await sharp(file.buffer)
-      .resize(1200, 375, { fit: 'cover', position: 'centre' })
-      .jpeg({ quality: 85 })
-      .toBuffer();
+    // Validate the real bytes (not just the declared MIME) so a non-image fails
+    // as a clean 400 rather than a 500 (#750).
+    let processed: Buffer;
+    try {
+      processed = await sharp(file.buffer)
+        .resize(1200, 375, { fit: 'cover', position: 'centre' })
+        .jpeg({ quality: 85 })
+        .toBuffer();
+    } catch {
+      throw new BadRequestException('File is not a valid image');
+    }
     writeFileSync(join(destDir, filename), processed);
     const mediaPath = `covers/${filename}`;
     const token = signMediaPath(mediaPath);

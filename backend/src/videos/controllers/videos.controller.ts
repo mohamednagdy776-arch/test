@@ -6,6 +6,7 @@ import { CreateVideoDto } from '../dto/create-video.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ok, paginated } from '../../common/response.helper';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import { VideoQueryDto } from '../dto/video-query.dto';
 import { User } from '../../auth/entities/user.entity';
 
 @UseGuards(AuthGuard('jwt'))
@@ -23,7 +24,7 @@ export class VideosController {
   }
 
   @Get()
-  async findAll(@Query() query: PaginationDto & { isReel?: string }) {
+  async findAll(@Query() query: VideoQueryDto) {
     const isReel = query.isReel === 'true' ? true : query.isReel === 'false' ? false : undefined;
     const { data, total } = await this.videosService.findAll(query.page!, query.limit!, isReel);
     return paginated(data, total, query.page!, query.limit!);
