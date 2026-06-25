@@ -264,7 +264,9 @@ export const ProfileHeader = ({
             )}
             {profile.userId && <FollowSection userId={profile.userId} isSelf={isSelf} />}
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-              {[profile.location, profile.city, profile.country].filter(Boolean).join('، ')}
+              {profile.location
+                  ? profile.location
+                  : [profile.city, profile.country].filter(Boolean).join('، ')}
             </p>
             {profile.workplace && (
               <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Briefcase size={14} className="inline mr-1" /> {profile.workplace}</p>
@@ -278,10 +280,10 @@ export const ProfileHeader = ({
             <p className="mt-2 text-xs text-[var(--muted-foreground)]">
               انضم في {formatDate(profile.joinDate || profile.createdAt)}
               {!!profile.friendCount && (
-                <span className="mr-2">• {profile.friendCount} صديق</span>
+                <span className="mr-2">• {profile.friendCount} {profile.friendCount === 1 ? 'صديق' : 'أصدقاء'}</span>
               )}
               {!!profile.mutualFriends && profile.mutualFriends > 0 && (
-                <span className="mr-2">• {profile.mutualFriends} أصدقاء مشترك</span>
+                <span className="mr-2">• {profile.mutualFriends} {profile.mutualFriends === 1 ? 'صديق مشترك' : 'أصدقاء مشترك'}</span>
               )}
             </p>
           </div>

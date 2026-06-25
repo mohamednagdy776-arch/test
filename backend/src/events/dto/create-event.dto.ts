@@ -1,10 +1,12 @@
-import { IsString, IsOptional, IsIn, IsDateString, IsArray } from 'class-validator';
+import { IsString, IsOptional, IsIn, IsDateString, IsArray, MinLength, MaxLength } from 'class-validator';
 
 export type EventPrivacy = 'public' | 'friends' | 'private';
 export type RecurringType = 'daily' | 'weekly' | 'monthly' | 'custom' | null;
 
 export class CreateEventDto {
   @IsString()
+  @MinLength(3, { message: 'يجب أن يكون العنوان 3 أحرف على الأقل' })
+  @MaxLength(200)
   title: string;
 
   @IsString()

@@ -19,7 +19,8 @@ export class FeedController {
     @Query('cursor') cursor: string | undefined = undefined,
     @Query('limit', new DefaultValuePipe(10)) limit: number = 10,
   ) {
-    const { data, nextCursor, hasMore } = await this.postsService.getFeedByCursor(cursor, limit, user.id);
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+    const { data, nextCursor, hasMore } = await this.postsService.getFeedByCursor(cursor, safeLimit, user.id);
     return { data, pagination: { cursor: nextCursor, hasMore } };
   }
 
@@ -29,7 +30,8 @@ export class FeedController {
     @Query('cursor') cursor: string | undefined = undefined,
     @Query('limit', new DefaultValuePipe(10)) limit: number = 10,
   ) {
-    const { data, nextCursor, hasMore } = await this.postsService.getRecentFeedByCursor(cursor, limit, user.id);
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+    const { data, nextCursor, hasMore } = await this.postsService.getRecentFeedByCursor(cursor, safeLimit, user.id);
     return { data, pagination: { cursor: nextCursor, hasMore } };
   }
 

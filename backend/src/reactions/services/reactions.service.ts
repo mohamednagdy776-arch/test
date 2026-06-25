@@ -24,6 +24,8 @@ export class ReactionsService {
       // Toggle off if same type, update if different type
       if (existing.type === (dto.type || 'like')) {
         await this.reactionsRepo.delete(existing.id);
+        const post = await this.postsRepo.findOne({ where: { id: postId } });
+        if (post) await this.notifications.deleteByEntity(post.userId, user.id, 'like', postId);
         return { reacted: false, type: null };
       }
       existing.type = dto.type || 'like';

@@ -13,9 +13,11 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Exclude()
   @Column({ unique: true })
   email: string;
 
+  @Exclude()
   @Column({ unique: true })
   phone: string;
 
@@ -35,6 +37,7 @@ export class User {
   @Column({ name: 'full_name', nullable: true })
   fullName: string;
 
+  @Exclude()
   @Column({ name: 'date_of_birth', type: 'date', nullable: true })
   dateOfBirth: Date;
 

@@ -99,11 +99,11 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
     ['الجنس', user.gender === 'male' ? 'ذكر' : 'أنثى'],
     ['الدولة', user.country || '—'],
     ['المدينة', user.city || '—'],
-    ['التعليم', user.education || '—'],
+    ['التعليم', ({high_school:'ثانوية',diploma:'دبلوم',bachelor:'بكالوريوس',master:'ماجستير',phd:'دكتوراه'})[user.education as string] || user.education || '—'],
     ['العمل', user.jobTitle || '—'],
-    ['نمط الحياة', user.lifestyle || '—'],
-    ['المذهب', user.sect || '—'],
-    ['مستوى الصلاة', user.prayerLevel || '—'],
+    ['نمط الحياة', ({conservative:'محافظ',moderate:'معتدل',open:'منفتح'})[user.lifestyle as string] || user.lifestyle || '—'],
+    ['المذهب', ({sunni:'سني',shia:'شيعي',other:'أخرى'})[user.sect as string] || user.sect || '—'],
+    ['مستوى الصلاة', ({always:'دائماً',mostly:'في الغالب',sometimes:'أحياناً',rarely:'نادراً'})[user.prayerLevel as string] || user.prayerLevel || '—'],
   ];
 
   return (

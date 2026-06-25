@@ -39,6 +39,12 @@ export class NotificationsService {
     }
   }
 
+  async deleteByEntity(targetUserId: string, actorId: string, type: string, entityId: string) {
+    try {
+      await this.notificationRepo.delete({ user: { id: targetUserId }, type: type as any, entityId });
+    } catch { /* best-effort */ }
+  }
+
   // Parse @username mentions out of free text and notify each mentioned user
   // (excluding the actor). Usernames are [a-zA-Z0-9_] (#385).
   async notifyMentions(content: string | undefined, actorId: string, entityType: string, entityId: string) {

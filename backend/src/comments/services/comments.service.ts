@@ -48,13 +48,29 @@ export class CommentsService {
     });
     const saved = await this.commentsRepo.save(comment);
 
+    // Reload to get the DB-generated id and avoid serialising full User PII
+    const full = await this.commentsRepo.findOne({ where: { id: saved.id } });
+    const result = {
+      id: full?.id ?? saved.id,
+      content: saved.content,
+      depth: saved.depth,
+      parentId: saved.parentId ?? null,
+      createdAt: full?.createdAt ?? null,
+      user: {
+        id: user.id,
+        username: user.username,
+        fullName: user.fullName,
+      },
+      post: { id: postId },
+    };
+
     // Notify the post owner about the comment, and anyone @mentioned in it
     // (#383/#385). Best-effort — never blocks the comment from being created.
     const post = await this.postsRepo.findOne({ where: { id: postId } });
     await this.notifications.notifyUser(post?.userId, user.id, 'comment', 'commented on your post', 'post', postId);
     await this.notifications.notifyMentions(dto.content, user.id, 'post', postId);
 
-    return saved;
+    return result;
   }
 
   async findByPost(postId: string) {

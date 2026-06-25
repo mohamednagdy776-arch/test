@@ -19,8 +19,8 @@ export class FeedService {
       .andWhere('post.audience IN (:...audiences)', {
         audiences: ['public', 'friends', 'friends_of_friends'],
       })
-      .orderBy('post.feed_score', 'DESC')
-      .addOrderBy('post.created_at', 'DESC')
+      .orderBy('post.feedScore', 'DESC')
+      .addOrderBy('post.createdAt', 'DESC')
       .take(limit + 1);
 
     if (cursor) {

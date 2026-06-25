@@ -35,6 +35,12 @@ export class EventsController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  @Get('upcoming')
+  async upcoming(@Query() query: PaginationDto, @CurrentUser() user?: User) {
+    const { data, total } = await this.eventsService.findAll(query.page!, query.limit!, user?.id);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
   @Get('my')
   async myEvents(@CurrentUser() user: User) {
     const events = await this.eventsService.getMyEvents(user.id);

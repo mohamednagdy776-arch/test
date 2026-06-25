@@ -355,6 +355,36 @@ export class UsersService {
     return this.getProfile(userId);
   }
 
+  async deleteAccount(userId: string) {
+    await this.usersRepo.update(userId, {
+      email: `deleted-${userId}@deleted.invalid` as any,
+      phone: `+000${userId.replace(/-/g, '').slice(0, 10)}` as any,
+      fullName: 'حساب محذوف',
+      username: null as any,
+      status: 'banned' as any,
+    });
+    await this.usersRepo.softDelete(userId);
+  }
+
+  async exportUserData(userId: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    const profile = await this.profilesRepo.findOne({
+      where: { user: { id: userId } },
+      relations: ['workEntries', 'educationEntries'],
+    });
+    return {
+      exportedAt: new Date().toISOString(),
+      account: {
+        id: user?.id,
+        email: user?.email,
+        phone: user?.phone,
+        username: user?.username,
+        createdAt: user?.createdAt,
+      },
+      profile: profile ?? null,
+    };
+  }
+
   // Remove a previously uploaded file from disk when it's replaced, so old
   // avatars/covers don't accumulate. Only touches paths under ./uploads.
   private async deleteUploadedFile(urlPath: string) {

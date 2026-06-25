@@ -33,10 +33,9 @@ export class PrivacySettings {
   @Column({ name: 'who_can_tag_me', default: 'friends' })
   whoCanTagMe: PrivacyVisibility;
 
-  // Who may start a conversation with this user (#457). Defaults to 'public'
-  // so existing behaviour is unchanged; enforcement only applies when a user
-  // explicitly restricts it.
-  @Column({ name: 'who_can_send_messages', default: 'public' })
+  // Who may start a conversation with this user. Defaults to 'friends' so
+  // strangers cannot cold-message on this Islamic matchmaking platform (#805/#771).
+  @Column({ name: 'who_can_send_messages', default: 'friends' })
   whoCanSendMessages: PrivacyVisibility;
 
   // Who may follow this user (#480). Defaults to 'public' (unchanged behaviour).

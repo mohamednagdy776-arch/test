@@ -128,6 +128,17 @@ export class UsersController {
     return ok(await this.usersService.updateCover(user.id, coverUrl), 'Cover uploaded');
   }
 
+  @Delete('me')
+  async deleteAccount(@CurrentUser() user: User) {
+    await this.usersService.deleteAccount(user.id);
+    return ok(null, 'Account deleted');
+  }
+
+  @Get('me/export')
+  async exportData(@CurrentUser() user: User) {
+    return ok(await this.usersService.exportUserData(user.id), 'Data export');
+  }
+
   @Delete('me/avatar')
   async removeAvatar(@CurrentUser() user: User) {
     return ok(await this.usersService.removeAvatar(user.id), 'Avatar removed');
