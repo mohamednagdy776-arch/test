@@ -13,6 +13,7 @@ import { PublicProfileController } from './controllers/public-profile.controller
 import { FriendsModule } from '../friends/friends.module';
 import { ColdStartService } from '../matching/services/cold-start.service';
 import { ReportsModule } from '../reports/reports.module';
+import { InterestsModule } from '../interests/interests.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ReportsModule } from '../reports/reports.module';
     MulterModule.register({}),
     FriendsModule,
     ReportsModule,
+    InterestsModule,
   ],
   providers: [UsersService, ColdStartService],
   controllers: [UsersController, PublicProfileController],

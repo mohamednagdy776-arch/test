@@ -12,6 +12,8 @@ import { ActivityLogViewer } from './ActivityLogViewer';
 import { ReportUserModal } from './ReportUserModal';
 import { PostCard } from '@/features/posts/components/PostCard';
 import { resolveMediaUrl } from '@/lib/media';
+import { useToast } from '@/components/ui/Toast';
+import { interestsApi } from '@/features/interests/api';
 
 interface Props {
   userId?: string;
@@ -32,6 +34,7 @@ function socialStatusLabel(value?: string | null): string {
 
 export const ProfileView = ({ userId }: Props) => {
   const qc = useQueryClient();
+  const { showToast } = useToast();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('posts');
   const [reportOpen, setReportOpen] = useState(false);
@@ -90,6 +93,13 @@ export const ProfileView = ({ userId }: Props) => {
   const blockUser = useMutation({
     mutationFn: () => profileApi.blockUser(profileUserId),
     onSuccess: () => qc.invalidateQueries({ queryKey: userId ? ['user-profile', userId] : ['my-profile'] }),
+  });
+
+  // Send Salam — directed marriage-intent interest (#754).
+  const sendInterest = useMutation({
+    mutationFn: () => interestsApi.send(profileUserId),
+    onSuccess: (res: any) => showToast(res?.message || 'تم إرسال اهتمامك', 'success'),
+    onError: () => showToast('تعذّر إرسال الاهتمام', 'error'),
   });
 
   const friendActionPending =
@@ -229,6 +239,8 @@ export const ProfileView = ({ userId }: Props) => {
         onUnfriend={!isSelf ? () => unfriend.mutate() : undefined}
         onBlock={!isSelf ? () => blockUser.mutate() : undefined}
         onReport={!isSelf ? () => setReportOpen(true) : undefined}
+        onSendInterest={!isSelf ? () => sendInterest.mutate() : undefined}
+        sendInterestPending={sendInterest.isPending}
         friendActionPending={!isSelf ? friendActionPending : false}
       />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />

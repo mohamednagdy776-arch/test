@@ -36,6 +36,7 @@ import { MedicalModule } from './medical/medical.module';
 import { LabPortalModule } from './lab-portal/lab-portal.module';
 import { FamilyModule } from './family/family.module';
 import { LinkPreviewModule } from './link-preview/link-preview.module';
+import { InterestsModule } from './interests/interests.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { LinkPreviewModule } from './link-preview/link-preview.module';
     LabPortalModule,
     FamilyModule,
     LinkPreviewModule,
+    InterestsModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
   providers: [

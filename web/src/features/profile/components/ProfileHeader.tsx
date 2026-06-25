@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag } from '@phosphor-icons/react';
+import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight } from '@phosphor-icons/react';
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
@@ -37,12 +37,15 @@ interface Props {
   onUnfriend?: () => void;
   onBlock?: () => void;
   onReport?: () => void;
+  onSendInterest?: () => void;
+  sendInterestPending?: boolean;
   friendActionPending?: boolean;
 }
 
 export const ProfileHeader = ({
   profile, onEdit, isSelf = false,
   friendshipStatus, onAddFriend, onCancelRequest, onAcceptRequest, onUnfriend, onBlock, onReport,
+  onSendInterest, sendInterestPending = false,
   friendActionPending = false,
 }: Props) => {
   const router = useRouter();
@@ -327,6 +330,19 @@ export const ProfileHeader = ({
                 >
                   <Users size={16} />
                   {friendActionPending ? '...' : 'أصدقاء'}
+                </button>
+              )}
+
+              {/* Send Salam — directed marriage-intent interest (#754) */}
+              {onSendInterest && (
+                <button
+                  onClick={onSendInterest}
+                  disabled={sendInterestPending}
+                  className="rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, var(--accent) 0%, #D4A853 100%)', color: '#0A3D2B' }}
+                >
+                  <HeartStraight size={16} weight="fill" />
+                  {sendInterestPending ? '...' : 'أرسل السلام'}
                 </button>
               )}
 

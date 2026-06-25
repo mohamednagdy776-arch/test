@@ -21,6 +21,7 @@ import { signMediaPath } from '../../common/utils/media-token';
 import { ColdStartService } from '../../matching/services/cold-start.service';
 import { ReportsService } from '../../reports/services/reports.service';
 import { ReportUserDto } from '../../reports/dto/report-user.dto';
+import { InterestsService } from '../../interests/interests.service';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -29,6 +30,7 @@ export class UsersController {
     private usersService: UsersService,
     private coldStartService: ColdStartService,
     private reportsService: ReportsService,
+    private interestsService: InterestsService,
   ) {}
 
   @Get('me')
@@ -158,6 +160,11 @@ export class UsersController {
     const friendshipStatus = (user?.id && resolvedId && user.id !== resolvedId)
       ? await this.usersService.getFriendshipStatus(resolvedId, user.id)
       : null;
+    // Record the profile view for "who viewed me" (#754) — best-effort, off the
+    // response path so it never delays or fails the profile load.
+    if (user?.id && resolvedId && user.id !== resolvedId) {
+      this.interestsService.recordView(user.id, resolvedId).catch(() => undefined);
+    }
     return ok({ ...profile, friendshipStatus });
   }
 

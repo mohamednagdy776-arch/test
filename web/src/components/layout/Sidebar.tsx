@@ -8,7 +8,7 @@ import {
   House, MagnifyingGlass, Heart, UsersThree, UsersFour, User, Flag,
   CalendarBlank, ChatCircle, Gear, Clock, PlayCircle, FilmStrip,
   ShieldCheck, ShareNetwork, TestTube, Baby, Sparkle, SignOut,
-  BookmarkSimple, Crown, Bell,
+  BookmarkSimple, Crown, Bell, HeartStraight,
 } from '@phosphor-icons/react';
 import { authApi } from '@/features/auth/api';
 import { resolveMediaUrl } from '@/lib/media';
@@ -28,6 +28,7 @@ const navGroups = [
     label: 'التواصل',
     items: [
       { label: 'التوافق', href: '/matching', icon: Heart },
+      { label: 'الاهتمامات', href: '/interests', icon: HeartStraight },
       { label: 'الأصدقاء', href: '/friends', icon: UsersThree },
       { label: 'العائلة', href: '/family', icon: ShieldCheck },
       { label: 'الفعاليات', href: '/events', icon: CalendarBlank },
