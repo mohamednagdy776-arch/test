@@ -1,8 +1,7 @@
--- #746: saving a post returned 201 (the INSERT works) but GET /posts/saved 500'd.
--- The SavedPost entity has a @DeleteDateColumn, so find() adds `WHERE deleted_at
--- IS NULL`; if saved_posts is missing (never migrated) or predates that column,
--- the read query errors while the insert still succeeds. Create the table and
--- backfill the column idempotently.
+-- #746 supporting schema. The actual GET /posts/saved 500 was a code bug
+-- (skip/take pagination over a raw join — fixed in PostsService.getSavedPosts).
+-- This migration just ensures the saved_posts table + soft-delete column + a
+-- uniqueness index exist on any environment that predates them. All idempotent.
 
 CREATE TABLE IF NOT EXISTS saved_posts (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),

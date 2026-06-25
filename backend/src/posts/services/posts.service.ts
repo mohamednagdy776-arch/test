@@ -251,8 +251,12 @@ export class PostsService {
       .innerJoin('saved_posts', 'sp', 'sp.post_id = post.id AND sp.deleted_at IS NULL')
       .where('sp.user_id = :userId', { userId })
       .orderBy('sp.saved_at', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit)
+      // Use offset/limit, not skip/take: skip/take triggers TypeORM's
+      // entity-aware distinct pagination, which tried to resolve the raw join
+      // alias `sp.saved_at` against entity metadata and threw
+      // "Cannot read properties of undefined (reading 'databaseName')" (#746).
+      .offset((page - 1) * limit)
+      .limit(limit)
       .getManyAndCount();
     return { data, total };
   }

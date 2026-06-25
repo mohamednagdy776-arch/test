@@ -24,7 +24,9 @@ export class ConsentRequest {
   @Column({ name: 'target_user_id' })
   targetUserId: string;
 
-  @Column({ type: 'enum', enum: ConsentType })
+  // DB column is snake_case `consent_type`; without this name mapping TypeORM
+  // queried a nonexistent `"consentType"` column and every read 500'd (#747).
+  @Column({ type: 'enum', enum: ConsentType, name: 'consent_type' })
   consentType: ConsentType;
 
   @Column({ type: 'enum', enum: ConsentStatus, default: ConsentStatus.PENDING })
