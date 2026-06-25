@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
@@ -23,6 +23,10 @@ export class StoriesService {
   ) {}
 
   async createStory(userId: string, data: { mediaUrl?: string; mediaType?: string; thumbnailUrl?: string; text?: string; bgColor?: string; duration?: number }) {
+    // A story needs media or non-blank text — reject empty stories (#748).
+    if (!data.mediaUrl && !(data.text && data.text.trim())) {
+      throw new BadRequestException('Story must have media or text');
+    }
     const story = new Story();
     story.userId = userId;
     if (data.mediaUrl) story.mediaUrl = data.mediaUrl;
@@ -260,10 +264,16 @@ export class StoriesService {
     return this.postRepo.findOne({ where: { id: saved.id }, relations: ['user', 'group', 'originalPost', 'originalPost.user'] });
   }
 
-  async updatePost(postId: string, userId: string, data: Partial<Post>) {
+  async updatePost(postId: string, userId: string, data: Record<string, any>) {
     const post = await this.postRepo.findOne({ where: { id: postId, userId } });
     if (!post) return null;
     Object.assign(post, data, { editedAt: new Date() });
+    // Don't let an edit blank a post to nothing — it must keep content or media (#748).
+    const hasContent = !!(post.content && post.content.trim());
+    const hasMedia = !!(post.mediaUrl || (Array.isArray(post.mediaUrls) && post.mediaUrls.length));
+    if (!hasContent && !hasMedia) {
+      throw new BadRequestException('Post must have content or media');
+    }
     await this.postRepo.save(post);
     return this.postRepo.findOne({ where: { id: postId }, relations: ['user', 'group'] });
   }

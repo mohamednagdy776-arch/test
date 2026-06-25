@@ -4,7 +4,8 @@ import { StoriesService } from '../services/stories.service';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../../auth/entities/user.entity';
 import { ok, paginated } from '../../common/response.helper';
-import { CreatePostDto } from '../dto/create-post.dto';
+import { CreatePostDto, UpdatePostDto } from '../dto/create-post.dto';
+import { CreateStoryDto } from '../dto/create-story.dto';
 import { sanitizeUserContent } from '../../common/utils/sanitize';
 
 @UseGuards(AuthGuard('jwt'))
@@ -41,7 +42,8 @@ export class StoriesController {
   }
 
   @Post('stories')
-  async createStory(@CurrentUser() user: User, @Body() body: { mediaUrl?: string; mediaType?: string; thumbnailUrl?: string; text?: string; bgColor?: string; duration?: number }) {
+  async createStory(@CurrentUser() user: User, @Body() body: CreateStoryDto) {
+    if (body.text) body.text = sanitizeUserContent(body.text);
     const story = await this.storiesService.createStory(user.id, body);
     return ok(story, 'Story created');
   }
@@ -116,7 +118,8 @@ export class StoriesController {
   }
 
   @Patch('posts/:id')
-  async updatePost(@CurrentUser() user: User, @Param('id') postId: string, @Body() body: any) {
+  async updatePost(@CurrentUser() user: User, @Param('id') postId: string, @Body() body: UpdatePostDto) {
+    if (body.content) body.content = sanitizeUserContent(body.content);
     const post = await this.storiesService.updatePost(postId, user.id, body);
     return ok(post, 'Post updated');
   }

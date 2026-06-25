@@ -1,9 +1,10 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString, IsUrl, Max, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Max, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
 
 export class UpdateProfileDto {
-  // Basic
-  @IsOptional() @IsString() @MaxLength(100) fullName?: string;
+  // Basic — trim then reject a whitespace-only name (was accepted as blank, #733).
+  @IsOptional() @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString() @IsNotEmpty({ message: 'Name cannot be empty' }) @MaxLength(100) fullName?: string;
   @IsOptional() @IsInt() @Min(18) @Max(80) age?: number;
   @IsOptional() @IsEnum(['male', 'female']) gender?: string;
   @IsOptional() @IsString() country?: string;

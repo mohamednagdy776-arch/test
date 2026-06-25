@@ -1,4 +1,5 @@
 import { IsArray, IsEnum, IsIn, IsOptional, IsString, IsDateString, IsNumber, IsBoolean, MaxLength, ArrayMaxSize, ValidateNested, IsInt, Min, Max, IsNotEmpty } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { PostType, Audience } from '../entities/post.entity';
 
@@ -100,3 +101,10 @@ export class CreatePostDto {
   @IsString()
   groupId?: string;
 }
+
+// Editing a post: every field optional, but only the whitelisted CreatePostDto
+// fields are accepted. Previously updatePost took `body: any` straight into
+// Object.assign, so callers could set arbitrary columns (latent mass-assignment)
+// and blank a post to nothing (#748). The global ValidationPipe (whitelist:true)
+// strips any field not declared here.
+export class UpdatePostDto extends PartialType(CreatePostDto) {}
