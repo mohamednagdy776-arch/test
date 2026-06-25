@@ -8,9 +8,32 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import sharp from 'sharp';
 import { ChildPredictionService } from './child-prediction.service';
 
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const ALLOWED_FORMATS = new Set(['jpeg', 'png', 'webp']);
+// A real parent face photo is at least ~this size. The 3-4 min generation pipeline
+// used to run on anything that declared an image MIME — including a 2x2 non-face
+// PNG (#742). Validate the actual bytes + a sane minimum resolution up front.
+const MIN_DIMENSION = 100;
+
+async function assertUsableFaceImage(buffer: Buffer, label: string): Promise<void> {
+  let meta: sharp.Metadata;
+  try {
+    meta = await sharp(buffer).metadata();
+  } catch {
+    throw new BadRequestException(`${label} is not a valid image`);
+  }
+  if (!meta.format || !ALLOWED_FORMATS.has(meta.format)) {
+    throw new BadRequestException(`${label} must be a JPEG, PNG, or WebP image`);
+  }
+  if ((meta.width ?? 0) < MIN_DIMENSION || (meta.height ?? 0) < MIN_DIMENSION) {
+    throw new BadRequestException(
+      `${label} is too small to be a face photo (min ${MIN_DIMENSION}x${MIN_DIMENSION}px)`,
+    );
+  }
+}
 
 @Controller('features/child-prediction')
 export class ChildPredictionController {
@@ -34,6 +57,11 @@ export class ChildPredictionController {
     if (!files || files.length !== 2) {
       throw new BadRequestException('Exactly two images required (field: images)');
     }
+    // Reject non-images / too-small images BEFORE the expensive pipeline (#742).
+    await Promise.all([
+      assertUsableFaceImage(files[0].buffer, 'First parent image'),
+      assertUsableFaceImage(files[1].buffer, 'Second parent image'),
+    ]);
     const image = await this.svc.predict(files[0].buffer, files[1].buffer);
     return { success: true, image, format: 'jpeg' };
   }

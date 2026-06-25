@@ -13,11 +13,11 @@ function scoreLabel(s: number) {
 }
 
 const CATEGORIES = [
-  { label: 'التوافق الديني', emoji: '🕌', weight: 0.30, displayWeight: 30 },
-  { label: 'نمط الحياة', emoji: '🌿', weight: 0.25, displayWeight: 25 },
-  { label: 'الاهتمامات المشتركة', emoji: '❤️', weight: 0.20, displayWeight: 20 },
-  { label: 'التوافق الجغرافي', emoji: '📍', weight: 0.15, displayWeight: 15 },
-  { label: 'عوامل أخرى', emoji: '✨', weight: 0.10, displayWeight: 10 },
+  { label: 'التوافق الديني', emoji: '🕌', key: 'religious', weight: 0.30, displayWeight: 30 },
+  { label: 'نمط الحياة', emoji: '🌿', key: 'lifestyle', weight: 0.25, displayWeight: 25 },
+  { label: 'الاهتمامات المشتركة', emoji: '❤️', key: 'interests', weight: 0.20, displayWeight: 20 },
+  { label: 'التوافق الجغرافي', emoji: '📍', key: 'location', weight: 0.15, displayWeight: 15 },
+  { label: 'عوامل أخرى', emoji: '✨', key: 'other', weight: 0.10, displayWeight: 10 },
 ];
 
 interface Props {
@@ -130,7 +130,12 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
               <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--foreground)' }}>أسباب التوافق</h3>
               <div className="space-y-2.5">
                 {CATEGORIES.map((c) => {
-                  const val = Math.min(100, Math.round(match.score * (0.85 + c.weight / 2)));
+                  // Real AI sub-score when available (#741); estimate only for
+                  // legacy matches lacking a breakdown.
+                  const real = (match as any).breakdown?.[c.key];
+                  const val = real != null
+                    ? Math.max(0, Math.min(100, Math.round(real)))
+                    : Math.min(100, Math.round(match.score * (0.85 + c.weight / 2)));
                   const catColor = scoreColor(val);
                   return (
                     <div key={c.label} className="flex items-center gap-3">

@@ -144,3 +144,21 @@ class TestFullCompatibility:
         )
         result = calculate_compatibility(user_a, user_b)
         assert 0 <= result.compatibilityScore <= 100
+
+    def test_returns_real_breakdown(self):
+        # [Body_Sadek] #741 — the response must carry per-dimension sub-scores so
+        # the client stops fabricating the breakdown from the single total score.
+        result = calculate_compatibility(make_user(), make_user(user_id="b"))
+        assert result.breakdown is not None
+        assert set(result.breakdown) == {"religious", "lifestyle", "interests", "location", "other"}
+        for v in result.breakdown.values():
+            assert 0.0 <= v <= 100.0
+
+    def test_same_gender_breakdown_is_zero(self):
+        result = calculate_compatibility(
+            make_user(gender="male"), make_user(user_id="b", gender="male")
+        )
+        assert result.compatibilityScore == 0.0
+        assert result.breakdown == {
+            "religious": 0.0, "lifestyle": 0.0, "interests": 0.0, "location": 0.0, "other": 0.0,
+        }

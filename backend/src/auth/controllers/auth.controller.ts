@@ -14,6 +14,7 @@ import { SetupTwoFactorDto, DisableTwoFactorDto } from '../dto/two-factor.dto';
 import { ChangeEmailDto, ConfirmEmailChangeDto } from '../dto/change-email.dto';
 import { ok } from '../../common/response.helper';
 import { LoginThrottle } from '../../common/decorators/throttle.decorator';
+import { parseUserAgent } from '../utils/user-agent';
 
 // Tighter rate limit on auth endpoints (brute-force / mass-signup / email
 // bombing protection) — 10 requests/minute/IP, vs the global 100. (#14/#88)
@@ -35,11 +36,14 @@ export class AuthController {
   async login(@Body() dto: LoginDto, @Req() req: any, @Res({ passthrough: true }) res: Response) {
     // Derive real device info from the request so new-device security emails are
     // meaningful (was hardcoded 'Unknown').
-    const ua = (req?.headers?.['user-agent'] as string) || 'Unknown device';
+    const ua = (req?.headers?.['user-agent'] as string) || '';
+    // Parse the UA into a friendly browser + device label instead of storing the
+    // raw UA string in both columns (#732).
+    const { browser, device } = parseUserAgent(ua);
     const deviceInfo = {
-      browser: ua.slice(0, 160),
+      browser,
       ip: (req?.headers?.['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req?.ip || '0.0.0.0',
-      deviceName: ua.slice(0, 160),
+      deviceName: device,
     };
     const result = await this.authService.login(dto, deviceInfo);
     // Sets cookies only when tokens are present (skipped when 2FA is required).

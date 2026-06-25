@@ -28,6 +28,11 @@ def _is_same_gender(a: UserProfile, b: UserProfile) -> bool:
     return (ag in male and bg in male) or (ag in female and bg in female)
 
 
+def _pct(x: float) -> float:
+    """Clamp a 0-1 sub-score to a 0-100 percentage."""
+    return round(max(0.0, min(1.0, x)) * 100, 1)
+
+
 def _rule_based(a: UserProfile, b: UserProfile):
     """Pure rule-based score — fast, no network calls."""
     religious, r1 = extract_religious_score(a, b)
@@ -44,8 +49,16 @@ def _rule_based(a: UserProfile, b: UserProfile):
         other     * settings.WEIGHT_OTHER
     ) * 100)
 
+    breakdown = {
+        "religious": _pct(religious),
+        "lifestyle": _pct(lifestyle),
+        "interests": _pct(interests),
+        "location":  _pct(location),
+        "other":     _pct(other),
+    }
+
     reasons = r1 + r2 + r3 + r4 + r5
-    return round(score, 1), reasons
+    return round(score, 1), reasons, breakdown
 
 
 def _llm_reasons(a: UserProfile, b: UserProfile, score: float) -> list[str] | None:
@@ -88,12 +101,13 @@ def calculate_compatibility(a: UserProfile, b: UserProfile) -> MatchResponse:
         return MatchResponse(
             compatibilityScore=0.0,
             matchReasons=["لا توافق - نفس الجنس", "Islamic matchmaking requires opposite-gender pairing"],
+            breakdown={"religious": 0.0, "lifestyle": 0.0, "interests": 0.0, "location": 0.0, "other": 0.0},
         )
 
-    score, rule_reasons = _rule_based(a, b)
+    score, rule_reasons, breakdown = _rule_based(a, b)
 
     # Only call LLM for viable matches — saves resources on poor matches
     llm_reasons = _llm_reasons(a, b, score) if score >= 40 else None
 
     reasons = llm_reasons or rule_reasons or ["Potential compatibility"]
-    return MatchResponse(compatibilityScore=score, matchReasons=reasons)
+    return MatchResponse(compatibilityScore=score, matchReasons=reasons, breakdown=breakdown)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 
 class UserProfile(BaseModel):
@@ -47,6 +47,10 @@ class MatchRequest(BaseModel):
 class MatchResponse(BaseModel):
     compatibilityScore: float
     matchReasons: List[str]
+    # Per-dimension sub-scores (0-100 each): religious, lifestyle, interests,
+    # location, other. Lets the client show a REAL compatibility breakdown
+    # instead of fabricating bars from the single total score (#741).
+    breakdown: Optional[Dict[str, float]] = None
 
 
 # ── Bio suggestion ─────────────────────────────────────────────────────────────

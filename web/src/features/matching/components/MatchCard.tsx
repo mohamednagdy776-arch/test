@@ -45,18 +45,23 @@ function ScoreGauge({ score }: { score: number }) {
 }
 
 const categories = [
-  { label: 'الدين', weight: 0.30 },
-  { label: 'نمط الحياة', weight: 0.25 },
-  { label: 'الاهتمامات', weight: 0.20 },
-  { label: 'الموقع', weight: 0.15 },
-  { label: 'أخرى', weight: 0.10 },
+  { label: 'الدين', key: 'religious', weight: 0.30 },
+  { label: 'نمط الحياة', key: 'lifestyle', weight: 0.25 },
+  { label: 'الاهتمامات', key: 'interests', weight: 0.20 },
+  { label: 'الموقع', key: 'location', weight: 0.15 },
+  { label: 'أخرى', key: 'other', weight: 0.10 },
 ];
 
-function ScoreBreakdown({ score }: { score: number }) {
+function ScoreBreakdown({ score, breakdown }: { score: number; breakdown?: Record<string, number> | null }) {
   return (
     <div className="space-y-1.5 mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
       {categories.map((c) => {
-        const val = Math.min(100, Math.round(score * (0.85 + c.weight / 2)));
+        // Prefer the real per-dimension sub-score from the AI service (#741);
+        // fall back to an estimate only for legacy matches with no breakdown.
+        const real = breakdown?.[c.key];
+        const val = real != null
+          ? Math.max(0, Math.min(100, Math.round(real)))
+          : Math.min(100, Math.round(score * (0.85 + c.weight / 2)));
         const col = scoreColor(val);
         return (
           <div key={c.label} className="flex items-center gap-2">
@@ -156,7 +161,7 @@ export const MatchCard = ({
           )}
         </div>
 
-        <ScoreBreakdown score={match.score} />
+        <ScoreBreakdown score={match.score} breakdown={(match as any).breakdown} />
 
         {/* Status badge for non-pending */}
         {!isPending && (

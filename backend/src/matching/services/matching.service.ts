@@ -58,6 +58,7 @@ export class MatchingService {
           user2Id: match.user2.id,
           otherUserId,
           score: match.score,
+          breakdown: match.breakdown ?? null,
           status: match.status,
           createdAt: match.createdAt,
           otherUserName,
@@ -125,11 +126,13 @@ export class MatchingService {
         ).catch(() => ({ data: { compatibilityScore: Math.floor(Math.random() * 40) + 50 } }));
 
         const score = aiResponse.data?.compatibilityScore ?? 50;
+        const breakdown = aiResponse.data?.breakdown ?? null;
 
         pending.push(this.matchesRepo.create({
           user1: currentUser,
           user2: candidate,
           score,
+          breakdown,
           status: 'pending',
         }));
       } catch (err) {
