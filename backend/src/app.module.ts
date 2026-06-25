@@ -40,6 +40,7 @@ import { InterestsModule } from './interests/interests.module';
 import { VerificationModule } from './verification/verification.module';
 import { PhotoPrivacyModule } from './photo-privacy/photo-privacy.module';
 import { SavedSearchesModule } from './saved-searches/saved-searches.module';
+import { GuardianChatModule } from './guardian-chat/guardian-chat.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { SavedSearchesModule } from './saved-searches/saved-searches.module';
     VerificationModule,
     PhotoPrivacyModule,
     SavedSearchesModule,
+    GuardianChatModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
   providers: [
