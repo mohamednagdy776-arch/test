@@ -26,6 +26,10 @@ export class Report {
   @Column()
   reason: string;
 
+  // Optional free-text context the reporter adds (#751).
+  @Column({ type: 'text', nullable: true })
+  details: string | null;
+
   @Column({ default: 'pending' })
   status: 'pending' | 'resolved' | 'dismissed';
 

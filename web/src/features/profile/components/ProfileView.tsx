@@ -9,6 +9,7 @@ import { ProfileSection } from './ProfileSection';
 import { ProfileEditForm } from './ProfileEditForm';
 import { ProfileTabs, type Tab } from './ProfileTabs';
 import { ActivityLogViewer } from './ActivityLogViewer';
+import { ReportUserModal } from './ReportUserModal';
 import { PostCard } from '@/features/posts/components/PostCard';
 import { resolveMediaUrl } from '@/lib/media';
 
@@ -33,6 +34,7 @@ export const ProfileView = ({ userId }: Props) => {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('posts');
+  const [reportOpen, setReportOpen] = useState(false);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: userId ? ['user-profile', userId] : ['my-profile'],
@@ -226,10 +228,19 @@ export const ProfileView = ({ userId }: Props) => {
         onAcceptRequest={!isSelf ? () => acceptRequest.mutate() : undefined}
         onUnfriend={!isSelf ? () => unfriend.mutate() : undefined}
         onBlock={!isSelf ? () => blockUser.mutate() : undefined}
+        onReport={!isSelf ? () => setReportOpen(true) : undefined}
         friendActionPending={!isSelf ? friendActionPending : false}
       />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
       {renderTab()}
+      {!isSelf && profileUserId && (
+        <ReportUserModal
+          userId={profileUserId}
+          userName={(profile as any)?.fullName}
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
     </div>
   );
 };

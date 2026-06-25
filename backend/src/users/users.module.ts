@@ -12,12 +12,14 @@ import { UsersController } from './controllers/users.controller';
 import { PublicProfileController } from './controllers/public-profile.controller';
 import { FriendsModule } from '../friends/friends.module';
 import { ColdStartService } from '../matching/services/cold-start.service';
+import { ReportsModule } from '../reports/reports.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Profile, ProfileWork, ProfileEducation, ActivityLog, Post]),
     MulterModule.register({}),
     FriendsModule,
+    ReportsModule,
   ],
   providers: [UsersService, ColdStartService],
   controllers: [UsersController, PublicProfileController],

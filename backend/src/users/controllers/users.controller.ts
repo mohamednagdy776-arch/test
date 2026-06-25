@@ -19,6 +19,8 @@ import { User } from '../../auth/entities/user.entity';
 import { sanitizeUserContent } from '../../common/utils/sanitize';
 import { signMediaPath } from '../../common/utils/media-token';
 import { ColdStartService } from '../../matching/services/cold-start.service';
+import { ReportsService } from '../../reports/services/reports.service';
+import { ReportUserDto } from '../../reports/dto/report-user.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -26,6 +28,7 @@ export class UsersController {
   constructor(
     private usersService: UsersService,
     private coldStartService: ColdStartService,
+    private reportsService: ReportsService,
   ) {}
 
   @Get('me')
@@ -156,6 +159,16 @@ export class UsersController {
       ? await this.usersService.getFriendshipStatus(resolvedId, user.id)
       : null;
     return ok({ ...profile, friendshipStatus });
+  }
+
+  // Report a user for trust & safety review (#751). Works even if the reporter
+  // has blocked the target (resolve directly, not via the block-aware profile).
+  @Post(':id/report')
+  async reportUser(@Param('id') id: string, @Body() dto: ReportUserDto, @CurrentUser() user: User) {
+    const targetId = await this.usersService.resolveUserId(id);
+    if (!targetId) throw new NotFoundException('User not found');
+    await this.reportsService.createReport(user.id, 'user', targetId, dto.reason, dto.details);
+    return ok(null, 'تم استلام بلاغك، وسيقوم فريقنا بمراجعته');
   }
 
   @Get(':id/posts')

@@ -51,4 +51,11 @@ export const profileApi = {
 
   blockUser: (userId: string) =>
     apiClient.post(`/users/${userId}/block`).then((r) => r.data),
+
+  // User reporting (#751)
+  getReportReasons: () =>
+    apiClient.get('/reports/reasons').then((r) => r.data),
+
+  reportUser: (userId: string, reason: string, details?: string) =>
+    apiClient.post(`/users/${userId}/report`, { reason, details }).then((r) => r.data),
 };

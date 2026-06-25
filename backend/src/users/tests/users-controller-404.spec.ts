@@ -10,7 +10,7 @@ import { UsersController } from '../controllers/users.controller';
 describe('[Body_Sadek] UsersController getFullProfile (#728)', () => {
   it('throws NotFoundException when the user/username does not exist', async () => {
     const usersService = { getFullProfile: async () => null } as any;
-    const controller = new UsersController(usersService, {} as any);
+    const controller = new UsersController(usersService, {} as any, {} as any);
 
     await expect(controller.getFullProfile('does-not-exist')).rejects.toBeInstanceOf(NotFoundException);
   });
@@ -20,7 +20,7 @@ describe('[Body_Sadek] UsersController getFullProfile (#728)', () => {
       getFullProfile: async () => ({ userId: 'u2', username: 'real' }),
       getFriendshipStatus: async () => 'none',
     } as any;
-    const controller = new UsersController(usersService, {} as any);
+    const controller = new UsersController(usersService, {} as any, {} as any);
 
     const res: any = await controller.getFullProfile('real', { id: 'u1' } as any);
     expect(res.success).toBe(true);
