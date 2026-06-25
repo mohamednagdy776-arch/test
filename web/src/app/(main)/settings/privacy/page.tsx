@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePrivacySettings, useUpdatePrivacySettings, useBlocks, useUnblockUser } from '@/features/settings/hooks';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
+import { profileApi } from '@/features/profile/api';
 
 const VISIBILITY_OPTIONS = [
   { value: 'public', label: 'العام' },
@@ -237,6 +239,8 @@ export default function PrivacyPage() {
           </div>
         )}
 
+        <PhotoVisibilityCard />
+
         <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
             <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
@@ -352,5 +356,62 @@ export default function PrivacyPage() {
         </Modal>
       </div>
     </div>
+  );
+}
+
+// [Body_Sadek] #752 — modesty-first photo privacy control.
+const PHOTO_OPTIONS: { value: string; label: string; desc: string }[] = [
+  { value: 'public', label: 'عامة', desc: 'يراها أي شخص' },
+  { value: 'matches_only', label: 'للمتوافقين فقط', desc: 'تظهر بعد التوافق المتبادل أو الصداقة' },
+  { value: 'on_request', label: 'عند الطلب', desc: 'تظهر فقط لمن توافق على طلبه' },
+  { value: 'private', label: 'خاصة', desc: 'لا تظهر لأحد' },
+];
+
+function PhotoVisibilityCard() {
+  const qc = useQueryClient();
+  const { showToast } = useToast();
+  const { data } = useQuery({ queryKey: ['my-profile'], queryFn: profileApi.getMyProfile });
+  const current: string = data?.data?.photoVisibility ?? 'public';
+
+  const update = useMutation({
+    mutationFn: (photoVisibility: string) => profileApi.updateProfile({ photoVisibility }),
+    onSuccess: () => { showToast('تم تحديث خصوصية الصور', 'success'); qc.invalidateQueries({ queryKey: ['my-profile'] }); },
+    onError: () => showToast('تعذّر تحديث الإعداد', 'error'),
+  });
+
+  return (
+    <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
+      <CardHeader>
+        <CardTitle className="text-[var(--foreground)] flex items-center gap-2"><span>🖼️</span> خصوصية الصور</CardTitle>
+        <CardDescription>تحكّم في من يستطيع رؤية صورك</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-2">
+          {PHOTO_OPTIONS.map((o) => (
+            <label
+              key={o.value}
+              className="flex items-start gap-3 rounded-xl border px-4 py-2.5 cursor-pointer transition-colors"
+              style={{
+                borderColor: current === o.value ? 'var(--ring)' : 'var(--border)',
+                background: current === o.value ? 'color-mix(in srgb, var(--accent) 10%, var(--card))' : 'var(--card)',
+              }}
+            >
+              <input
+                type="radio"
+                name="photo-visibility"
+                checked={current === o.value}
+                onChange={() => update.mutate(o.value)}
+                disabled={update.isPending}
+                className="mt-1 accent-[var(--accent)]"
+              />
+              <div>
+                <p className="text-sm font-semibold text-[var(--foreground)]">{o.label}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">{o.desc}</p>
+              </div>
+            </label>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

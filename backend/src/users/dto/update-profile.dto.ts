@@ -21,6 +21,8 @@ export class UpdateProfileDto {
   @IsOptional() @IsString() location?: string;
   @IsOptional() @IsString() workplace?: string;
   @IsOptional() @IsEnum(['public', 'friends', 'only_me']) introVisibility?: string;
+  // Photo privacy (#752)
+  @IsOptional() @IsEnum(['public', 'matches_only', 'on_request', 'private']) photoVisibility?: string;
 
   // Details
   @IsOptional() @IsString() education?: string;

@@ -38,6 +38,7 @@ import { FamilyModule } from './family/family.module';
 import { LinkPreviewModule } from './link-preview/link-preview.module';
 import { InterestsModule } from './interests/interests.module';
 import { VerificationModule } from './verification/verification.module';
+import { PhotoPrivacyModule } from './photo-privacy/photo-privacy.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { VerificationModule } from './verification/verification.module';
     LinkPreviewModule,
     InterestsModule,
     VerificationModule,
+    PhotoPrivacyModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
   providers: [

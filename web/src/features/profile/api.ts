@@ -58,4 +58,8 @@ export const profileApi = {
 
   reportUser: (userId: string, reason: string, details?: string) =>
     apiClient.post(`/users/${userId}/report`, { reason, details }).then((r) => r.data),
+
+  // Photo privacy (#752)
+  requestPhotoAccess: (userId: string) =>
+    apiClient.post(`/users/${userId}/photo-access/request`).then((r) => r.data),
 };

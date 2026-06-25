@@ -130,6 +130,11 @@ export class Profile {
   @Column({ name: 'is_identity_verified', default: false })
   isIdentityVerified: boolean;
 
+  // Modesty-first photo privacy (#752): who may see this user's photos.
+  //   public | matches_only | on_request | private (validated by the DTO @IsEnum)
+  @Column({ name: 'photo_visibility', default: 'public' })
+  photoVisibility: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

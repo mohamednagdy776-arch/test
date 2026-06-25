@@ -13,6 +13,7 @@ import { UpdateProfileWithEntriesDto } from '../dto/update-profile.dto';
 import { SearchUsersDto } from '../dto/search-users.dto';
 import { ActivityLogQueryDto } from '../dto/activity-log.dto';
 import { FriendsService } from '../../friends/services/friends.service';
+import { PhotoPrivacyService } from '../../photo-privacy/photo-privacy.service';
 
 @Injectable()
 export class UsersService {
@@ -24,6 +25,7 @@ export class UsersService {
     @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Post) private postsRepo: Repository<Post>,
     private friendsService: FriendsService,
+    private photoPrivacyService: PhotoPrivacyService,
     private dataSource: DataSource,
   ) {}
 
@@ -163,10 +165,22 @@ export class UsersService {
     const mutualFriends = isSelf ? 0 : await this.getMutualFriendsCount(userId, viewerId ?? '');
     const { total: friendCount } = await this.friendsService.getFriends(userId, 1, 1);
 
+    const formatted = this.formatProfile(profile, userId);
+    // Photo privacy (#752): if the viewer isn't allowed to see this user's photos,
+    // strip the avatar/cover and flag it so the client can blur + offer "request".
+    const visibility = (profile.photoVisibility as any) ?? 'public';
+    const photoLocked = !isSelf && !(await this.photoPrivacyService.canViewPhoto(viewerId, userId, visibility));
+    if (photoLocked) {
+      (formatted as any).avatarUrl = null;
+      (formatted as any).coverUrl = null;
+    }
+
     return {
-      ...this.formatProfile(profile, userId),
+      ...formatted,
       username: profile.user?.username ?? null,
       joinDate: profile.createdAt,
+      photoVisibility: visibility,
+      photoLocked,
       mutualFriends,
       friendCount,
       isSelf,
@@ -221,6 +235,7 @@ export class UsersService {
       religiousCommitment: profile.religiousCommitment,
       isHealthVerified: profile.isHealthVerified ?? false,
       isIdentityVerified: profile.isIdentityVerified ?? false,
+      photoVisibility: profile.photoVisibility ?? 'public',
       createdAt: profile.createdAt,
     };
   }

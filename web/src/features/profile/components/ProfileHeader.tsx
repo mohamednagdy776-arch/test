@@ -149,24 +149,30 @@ export const ProfileHeader = ({
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--foreground)]/30 to-transparent pointer-events-none" />
         {isSelf && (
           <>
-            <button
-              onClick={() => coverRef.current?.click()}
-              disabled={uploading}
-              title="يُفضّل صورة غلاف بنسبة 3:1 (مثال 1500×500 بكسل) — حتى 5 ميجابايت" /* #401 */
-              className="absolute bottom-4 left-4 z-10 px-4 py-2 bg-[var(--primary)]/70 hover:bg-[var(--foreground)]/90 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm flex items-center gap-2 transition-all duration-300 hover:shadow-glow-lg hover:scale-105 disabled:opacity-70"
-            >
-              <Camera size={18} />
-              <span>{uploading ? 'جاري الرفع...' : 'تعديل غلاف'}</span>
-            </button>
-            {mediaUrl(profile.coverUrl) && (
+            {/* Compact icon controls tucked in the top corner so they don't sit
+                over (and hide) the cover image itself. */}
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
               <button
-                onClick={() => setRemoveImageKind('cover')}
+                onClick={() => coverRef.current?.click()}
                 disabled={uploading}
-                className="absolute bottom-4 left-36 z-10 px-3 py-2 bg-[var(--primary)]/60 hover:bg-[var(--destructive)]/90/80 backdrop-blur-sm text-[var(--card)] rounded-xl text-sm transition-all duration-300 disabled:opacity-70"
+                aria-label="تعديل صورة الغلاف"
+                title="يُفضّل صورة غلاف بنسبة 3:1 (مثال 1500×500 بكسل) — حتى 5 ميجابايت" /* #401 */
+                className="h-9 w-9 flex items-center justify-center bg-[var(--foreground)]/45 hover:bg-[var(--foreground)]/70 backdrop-blur-sm text-[var(--card)] rounded-full transition-all duration-300 hover:scale-105 disabled:opacity-70"
               >
-                إزالة
+                {uploading ? <span className="text-xs">...</span> : <Camera size={18} />}
               </button>
-            )}
+              {mediaUrl(profile.coverUrl) && (
+                <button
+                  onClick={() => setRemoveImageKind('cover')}
+                  disabled={uploading}
+                  aria-label="إزالة صورة الغلاف"
+                  title="إزالة صورة الغلاف"
+                  className="h-9 w-9 flex items-center justify-center bg-[var(--foreground)]/45 hover:bg-[var(--destructive)]/80 backdrop-blur-sm text-[var(--card)] rounded-full transition-all duration-300 hover:scale-105 disabled:opacity-70"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
             <input
               ref={coverRef}
               type="file"

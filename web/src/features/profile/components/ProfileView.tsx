@@ -102,6 +102,13 @@ export const ProfileView = ({ userId }: Props) => {
     onError: () => showToast('تعذّر إرسال الاهتمام', 'error'),
   });
 
+  // Request to view private/on-request photos (#752).
+  const requestPhotos = useMutation({
+    mutationFn: () => profileApi.requestPhotoAccess(profileUserId),
+    onSuccess: (res: any) => showToast(res?.message || 'تم إرسال طلب رؤية الصور', 'success'),
+    onError: () => showToast('تعذّر إرسال الطلب', 'error'),
+  });
+
   const friendActionPending =
     sendRequest.isPending || cancelRequest.isPending ||
     acceptRequest.isPending || unfriend.isPending;
@@ -243,6 +250,22 @@ export const ProfileView = ({ userId }: Props) => {
         sendInterestPending={sendInterest.isPending}
         friendActionPending={!isSelf ? friendActionPending : false}
       />
+      {!isSelf && (profile as any)?.photoLocked && (
+        <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
+            <span className="text-lg">🔒</span>
+            <span>صور هذا المستخدم خاصة</span>
+          </div>
+          <button
+            onClick={() => requestPhotos.mutate()}
+            disabled={requestPhotos.isPending}
+            className="rounded-xl px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] disabled:opacity-50 transition-all"
+            style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}
+          >
+            {requestPhotos.isPending ? '...' : 'اطلب رؤية الصور'}
+          </button>
+        </div>
+      )}
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
       {renderTab()}
       {!isSelf && profileUserId && (
