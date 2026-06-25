@@ -29,6 +29,12 @@ export default function ChangeEmailPage() {
     e.preventDefault();
     setError('');
     setDone('');
+    // Validate the email format client-side (#731) — an invalid address used to
+    // pass the non-empty-only check and only fail server-side.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
+      setError('صيغة البريد الإلكتروني غير صحيحة');
+      return;
+    }
     setLoading(true);
     try {
       const r: any = await authApi.requestEmailChange(newEmail.trim(), currentPassword);
@@ -75,7 +81,7 @@ export default function ChangeEmailPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={submit} className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-5 space-y-4 shadow-lg shadow-black/5">
+        <form onSubmit={submit} noValidate className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-5 space-y-4 shadow-lg shadow-black/5">
           {done && (
             <div className="flex items-start gap-2 rounded-xl bg-[var(--muted)] border border-[var(--border)] px-4 py-3 text-sm text-[var(--primary)]">
               <span className="shrink-0 mt-0.5">✓</span>

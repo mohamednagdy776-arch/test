@@ -154,6 +154,14 @@ export default function SecurityPage() {
       setChangePwdError('يجب أن تكون كلمة المرور 8 أحرف على الأقل');
       return;
     }
+    // Enforce the backend complexity rule client-side too, so a weak password is
+    // caught before the request instead of only being rejected server-side (#731).
+    const strong = /[a-z]/.test(newPassword) && /[A-Z]/.test(newPassword)
+      && /\d/.test(newPassword) && /[^a-zA-Z0-9]/.test(newPassword);
+    if (!strong) {
+      setChangePwdError('كلمة المرور يجب أن تحتوي على حرف كبير وحرف صغير ورقم ورمز خاص');
+      return;
+    }
     setChangePwdLoading(true);
     try {
       await authApi.changePassword({ oldPassword, newPassword });
@@ -428,7 +436,7 @@ export default function SecurityPage() {
             <CardDescription>استخدم كلمة مرور قوية لا تستخدمها في مواقع أخرى</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleChangePassword} className="space-y-4">
+            <form onSubmit={handleChangePassword} noValidate className="space-y-4">
               <Input
                 label="كلمة المرور الحالية"
                 type="password"

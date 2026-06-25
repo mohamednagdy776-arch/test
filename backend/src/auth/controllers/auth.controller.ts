@@ -12,6 +12,7 @@ import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
 import { SetupTwoFactorDto, DisableTwoFactorDto } from '../dto/two-factor.dto';
 import { ChangeEmailDto, ConfirmEmailChangeDto } from '../dto/change-email.dto';
+import { ChangePasswordDto } from '../dto/change-password.dto';
 import { ok } from '../../common/response.helper';
 import { LoginThrottle } from '../../common/decorators/throttle.decorator';
 import { parseUserAgent } from '../utils/user-agent';
@@ -158,6 +159,15 @@ export class AuthController {
     const result = await this.authService.reactivateAccount(body.email, body.password);
     setAuthCookies(res, result as any);
     return ok(result, 'Account reactivated');
+  }
+
+  // Change password while logged in. The web settings form posted to this route
+  // but it never existed server-side (404). Verifies the old password and
+  // enforces complexity via ChangePasswordDto (#731).
+  @Post('change-password')
+  @UseGuards(AuthGuard('jwt'))
+  async changePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
+    return ok(await this.authService.changePassword(req.user.id, dto.oldPassword, dto.newPassword), 'Password changed');
   }
 
   // Request an email change — emails a verification link to the new address (#454).

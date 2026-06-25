@@ -353,6 +353,24 @@ export class AuthService {
     return { message: 'Password reset successfully' };
   }
 
+  // Change password for a logged-in user: verify the current password, then set
+  // the new one. Other sessions are revoked so a stolen session can't outlive a
+  // password change (#731).
+  async changePassword(userId: string, oldPassword: string, newPassword: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    const valid = await bcrypt.compare(oldPassword, user.passwordHash);
+    if (!valid) throw new UnauthorizedException('Current password is incorrect');
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await this.usersRepo.update(user.id, { passwordHash });
+    await this.sessionsRepo.delete({ userId: user.id });
+    await this.mailService.sendPasswordChangedEmail(user.email);
+
+    return { message: 'Password changed successfully' };
+  }
+
   /**
    * Find the session for this refresh token and revoke it.
    * If the session was already revoked, it means the token is being reused —
