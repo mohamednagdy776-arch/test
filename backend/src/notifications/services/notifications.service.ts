@@ -33,7 +33,7 @@ export class NotificationsService {
         });
         if (existing) return;
       }
-      await this.create(targetUserId, { type, message, entityType, entityId });
+      await this.create(targetUserId, { type, message, entityType, entityId }, actorId);
     } catch {
       /* best-effort */
     }
@@ -49,7 +49,7 @@ export class NotificationsService {
       const users = await this.usersRepo.find({ where: { username: In(usernames) } });
       for (const u of users) {
         if (u.id === actorId) continue;
-        await this.create(u.id, { type: 'mention', message: 'mentioned you', entityType, entityId });
+        await this.create(u.id, { type: 'mention', message: 'mentioned you', entityType, entityId }, actorId);
       }
     } catch {
       /* best-effort */
@@ -62,8 +62,31 @@ export class NotificationsService {
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
+      relations: ['actor', 'actor.profile'],
     });
-    return { data, total };
+    // Expose the actor as a minimal `fromUser` (id + name + avatar) so the client
+    // can render "<name> accepted your friend request". Never return the raw actor
+    // User (it would leak email/phone); map to a safe shape and drop `actor`.
+    const shaped = data.map((n) => {
+      const a = n.actor;
+      const fromUser = a
+        ? {
+            id: a.id,
+            username: a.username ?? null,
+            profile: {
+              fullName:
+                (a.profile?.fullName && a.profile.fullName.trim()) ||
+                `${a.firstName ?? ''} ${a.lastName ?? ''}`.trim() ||
+                a.fullName ||
+                null,
+              avatarUrl: a.profile?.avatarUrl ?? null,
+            },
+          }
+        : null;
+      const { actor, actorId, ...rest } = n as any;
+      return { ...rest, fromUser };
+    });
+    return { data: shaped, total };
   }
 
   async findUnreadCount(userId: string) {
@@ -73,10 +96,11 @@ export class NotificationsService {
     return count;
   }
 
-  async create(userId: string, dto: CreateNotificationDto) {
+  async create(userId: string, dto: CreateNotificationDto, actorId?: string) {
     const notification = this.notificationRepo.create({
       ...dto,
       user: { id: userId } as any,
+      actorId: actorId ?? undefined,
       readStatus: false,
     });
     return this.notificationRepo.save(notification);

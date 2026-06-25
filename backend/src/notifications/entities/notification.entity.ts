@@ -15,6 +15,16 @@ export class Notification {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  // The user who triggered the notification (who liked/commented/accepted). Used
+  // to render "<name> accepted your friend request" — previously not stored, so
+  // the name was missing from the dropdown.
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'actor_id' })
+  actor: User;
+
+  @Column({ name: 'actor_id', nullable: true })
+  actorId: string;
+
   @Column({ type: 'varchar', length: 50 })
   type: NotificationType;
 

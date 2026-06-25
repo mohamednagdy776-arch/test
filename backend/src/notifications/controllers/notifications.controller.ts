@@ -54,6 +54,18 @@ export class NotificationsController {
     return ok(null, 'All notifications marked as read');
   }
 
+  // POST aliases — the canonical verb is PATCH, but clients commonly POST a bulk
+  // action (#756 verified POST /read-all + /mark-all-read returned 404).
+  @Post('read-all')
+  async readAllPostAlias(@CurrentUser() user: User) {
+    return this.markAllAsRead(user);
+  }
+
+  @Post('mark-all-read')
+  async markAllReadPostAlias(@CurrentUser() user: User) {
+    return this.markAllAsRead(user);
+  }
+
   @Delete(':id')
   async delete(@Param('id') id: string, @CurrentUser() user: User) {
     await this.notificationsService.delete(id, user.id);
