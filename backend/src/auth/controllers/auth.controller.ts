@@ -10,7 +10,7 @@ import { ForgotPasswordDto } from '../dto/forgot-password.dto';
 import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { VerifyEmailDto } from '../dto/verify-email.dto';
 import { RefreshTokenDto } from '../dto/refresh-token.dto';
-import { SetupTwoFactorDto, DisableTwoFactorDto } from '../dto/two-factor.dto';
+import { SetupTwoFactorDto, DisableTwoFactorDto, RegenerateBackupCodesDto } from '../dto/two-factor.dto';
 import { ChangeEmailDto, ConfirmEmailChangeDto } from '../dto/change-email.dto';
 import { ChangePasswordDto } from '../dto/change-password.dto';
 import { ok } from '../../common/response.helper';
@@ -134,6 +134,14 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async disableTwoFactor(@Body() dto: DisableTwoFactorDto, @Req() req: any) {
     const result = await this.authService.disableTwoFactor(req.user.id, dto.code);
+    return ok(result);
+  }
+
+  @Post('2fa/backup-codes')
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'))
+  async regenerateBackupCodes(@Body() dto: RegenerateBackupCodesDto, @Req() req: any) {
+    const result = await this.authService.regenerateBackupCodes(req.user.id, dto.code);
     return ok(result);
   }
 

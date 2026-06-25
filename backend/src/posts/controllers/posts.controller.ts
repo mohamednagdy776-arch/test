@@ -61,6 +61,12 @@ export class PostsController {
     return ok(saved, 'Post saved');
   }
 
+  @Delete(':postId/save')
+  async unsavePost(@Param('postId') postId: string, @CurrentUser() user: User) {
+    const result = await this.postsService.unsavePost(postId, user.id);
+    return ok(result, 'Post removed from saved');
+  }
+
   @Post(':postId/share')
   async sharePost(@Param('postId') postId: string, @Body('content') content: string, @CurrentUser() user: User) {
     const shared = await this.postsService.share(postId, content, user.id);

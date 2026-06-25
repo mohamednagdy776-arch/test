@@ -245,6 +245,15 @@ export class PostsService {
     return { saved: true };
   }
 
+  async unsavePost(postId: string, userId: string) {
+    await this.postsRepo.manager.query(
+      `UPDATE saved_posts SET deleted_at = NOW()
+       WHERE user_id = $1 AND post_id = $2 AND deleted_at IS NULL`,
+      [userId, postId],
+    );
+    return { saved: false };
+  }
+
   async getSavedPosts(userId: string, page: number, limit: number) {
     const [data, total] = await this.postsRepo
       .createQueryBuilder('post')

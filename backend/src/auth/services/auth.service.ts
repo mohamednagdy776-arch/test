@@ -555,6 +555,17 @@ export class AuthService {
     return { message: 'Two-factor authentication disabled' };
   }
 
+  async regenerateBackupCodes(userId: string, code: string) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user || !user.twoFactorEnabled) throw new ForbiddenException('2FA not enabled');
+    const valid = verifyTotp(code, user.totpSecret)
+      || this.consumeBackupCode(code, user.twoFactorBackupCodes) !== null;
+    if (!valid) throw new UnauthorizedException('Invalid code');
+    const { plain, hashes } = this.generateBackupCodes();
+    await this.usersRepo.update(userId, { twoFactorBackupCodes: JSON.stringify(hashes) });
+    return { backupCodes: plain };
+  }
+
   async deactivateAccount(userId: string) {
     await this.usersRepo.update(userId, { isDeactivated: true });
     return { message: 'Account deactivated' };

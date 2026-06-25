@@ -241,12 +241,20 @@ export class UsersService {
     };
   }
 
-  async searchUsers(dto: SearchUsersDto) {
+  async searchUsers(dto: SearchUsersDto, viewerId?: string) {
     const { name, gender, country, city, sect, lifestyle, education, prayerLevel, minAge, maxAge, page = 1, limit = 20 } = dto;
 
     const qb = this.profilesRepo.createQueryBuilder('p')
       .leftJoinAndSelect('p.user', 'u')
       .where('u.status = :status', { status: 'active' });
+
+    if (viewerId) {
+      qb.andWhere(`u.id NOT IN (
+        SELECT blocked_id FROM blocks WHERE blocker_id = :viewerId
+        UNION
+        SELECT blocker_id FROM blocks WHERE blocked_id = :viewerId
+      )`, { viewerId });
+    }
 
     if (name) qb.andWhere('p.fullName ILIKE :name', { name: `%${name}%` });
     if (gender) qb.andWhere('p.gender = :gender', { gender });

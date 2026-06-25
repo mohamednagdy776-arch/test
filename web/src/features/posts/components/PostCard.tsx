@@ -419,12 +419,12 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
 
       {post.bgColor && !mediaUrl ? (
         <div className="px-4 py-6 m-4 rounded-xl text-center shadow-card-hover" style={{ backgroundColor: post.bgColor }}>
-          <p className="text-lg text-[var(--card)] font-medium">{renderWithHashtags(post.content)}</p>
+          <p dir="auto" className="text-lg text-[var(--card)] font-medium">{renderWithHashtags(post.content)}</p>
         </div>
       ) : (
         <>
           <div className="px-4 py-3">
-            <p className="text-sm text-[var(--foreground)]/85 leading-relaxed whitespace-pre-wrap">{renderWithHashtags(post.content)}</p>
+            <p dir="auto" className="text-sm text-[var(--foreground)]/85 leading-relaxed whitespace-pre-wrap">{renderWithHashtags(post.content)}</p>
             {isShared && post.originalPost && (
               <div className="mt-3 p-3 rounded-xl bg-[var(--muted)]/40 border border-[var(--border)]/40 shadow-card-hover transition-all duration-300 hover:shadow-glow">
                 <div className="flex items-center gap-2 mb-2">

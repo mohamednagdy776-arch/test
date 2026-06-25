@@ -139,8 +139,8 @@ export class UsersController {
   }
 
   @Get('search')
-  async search(@Query() dto: SearchUsersDto) {
-    return ok(await this.usersService.searchUsers(dto));
+  async search(@Query() dto: SearchUsersDto, @CurrentUser() user: User) {
+    return ok(await this.usersService.searchUsers(dto, user.id));
   }
 
   @Get(':id/profile')

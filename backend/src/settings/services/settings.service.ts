@@ -101,11 +101,20 @@ export class SettingsService {
 
   // ==================== Block Management ====================
   async getBlockedUsers(userId: string) {
-    return this.blockRepo.find({
+    const blocks = await this.blockRepo.find({
       where: { blocker: { id: userId } },
       relations: ['blocked'],
       order: { blockedAt: 'DESC' },
     });
+    return blocks.map(b => ({
+      id: b.id,
+      blockedAt: b.blockedAt,
+      user: {
+        id: b.blocked.id,
+        username: b.blocked.username,
+        fullName: b.blocked.fullName,
+      },
+    }));
   }
 
   async blockUser(blockerId: string, blockedUserId: string) {

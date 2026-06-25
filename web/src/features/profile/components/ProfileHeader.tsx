@@ -273,7 +273,7 @@ export const ProfileHeader = ({
               <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Heart size={14} className="inline mr-1" weight="fill" /> {profile.relationshipStatus}</p>
             )}
             {profile.bio && (
-              <p className="mt-2 text-sm text-[var(--foreground)]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
+              <p dir="auto" className="mt-2 text-sm text-[var(--foreground)]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
             )}
             <p className="mt-2 text-xs text-[var(--muted-foreground)]">
               انضم في {formatDate(profile.joinDate || profile.createdAt)}

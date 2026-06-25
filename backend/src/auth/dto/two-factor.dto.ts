@@ -14,3 +14,8 @@ export class DisableTwoFactorDto {
   @IsString()
   code: string;
 }
+
+export class RegenerateBackupCodesDto {
+  @IsString()
+  code: string;
+}
