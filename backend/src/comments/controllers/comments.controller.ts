@@ -24,6 +24,7 @@ export class CommentsController {
   ) {
     // Sanitize user content against stored XSS (C-05)
     if (dto.content) dto.content = sanitizeUserContent(dto.content);
+    if (!dto.content?.trim()) throw new (require('@nestjs/common').BadRequestException)('Comment cannot be empty after sanitization');
     const comment = await this.commentsService.create(postId, dto, user);
     return ok(comment, 'Comment added');
   }
@@ -44,6 +45,7 @@ export class CommentsController {
     // Sanitize on edit too — create() sanitized but update() didn't, letting a
     // benign comment be edited into a stored-XSS payload.
     if (dto.content) dto.content = sanitizeUserContent(dto.content);
+    if (!dto.content?.trim()) throw new (require('@nestjs/common').BadRequestException)('Comment cannot be empty after sanitization');
     const comment = await this.commentsService.update(commentId, dto, user.id);
     return ok(comment, 'Comment updated');
   }

@@ -131,7 +131,7 @@ function ProfileCompleteness() {
     staleTime: 300_000,
   });
 
-  const score = data?.score ?? data?.completeness ?? data?.percentage ?? 0;
+  const score = data?.data?.score ?? data?.score ?? data?.completeness ?? data?.percentage ?? 0;
   const missing: string[] = data?.missing ?? data?.incompleteSections ?? [];
   const pct = Math.min(100, Math.max(0, Number(score)));
 

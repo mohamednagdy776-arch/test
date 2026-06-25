@@ -24,6 +24,9 @@ export class ChatController {
     @Body() dto: { targetUserId: string },
     @CurrentUser() user: User,
   ) {
+    if (!dto?.targetUserId) {
+      throw new (require('@nestjs/common').BadRequestException)('targetUserId is required');
+    }
     const conversation = await this.chatService.getOrCreateDirectConversation(
       user.id,
       dto.targetUserId,

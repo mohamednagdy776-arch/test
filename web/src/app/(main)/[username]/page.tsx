@@ -208,6 +208,12 @@ function AboutTab({ profile }: { profile: any }) {
 
       <ProfileSection title="معلومات أساسية" icon="ℹ️">
         <div className="grid grid-cols-2 gap-3">
+          {profile.age && (
+            <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-3">
+              <p className="text-xs text-[var(--muted-foreground)] mb-0.5">العمر</p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">{profile.age} سنة</p>
+            </div>
+          )}
           {profile.relationshipStatus && (
             <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-3">
               <p className="text-xs text-[var(--muted-foreground)] mb-0.5">الحالة الاجتماعية</p>

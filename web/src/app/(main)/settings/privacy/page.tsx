@@ -149,6 +149,7 @@ export default function PrivacyPage() {
     setPrivacyError(null);
     try {
       await updatePrivacy.mutateAsync({ [key]: value });
+      showToast('تم حفظ الإعداد', 'success');
     } catch (err: any) {
       setPrivacyError(err?.response?.data?.message || 'فشل حفظ إعداد الخصوصية');
     }
@@ -159,6 +160,7 @@ export default function PrivacyPage() {
     setPrivacyError(null);
     try {
       await updatePrivacy.mutateAsync({ allowSearchEngines: newValue });
+      showToast('تم حفظ الإعداد', 'success');
     } catch (err: any) {
       setPrivacyError(err?.response?.data?.message || 'فشل حفظ الإعداد');
     }
