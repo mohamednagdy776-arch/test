@@ -101,7 +101,10 @@ export class GroupsService {
       where: { group: { id: groupId }, user: { id: user.id } },
     });
     if (existing?.isBanned) throw new ForbiddenException('You have been banned from this group');
-    if (existing) throw new ConflictException('Already a member');
+    // Idempotent join: a double-clicked Join button used to fire two POSTs, the
+    // second 409-ing as an unhandled console error (#734). Already-a-member is a
+    // success — just return the group.
+    if (existing) return group;
 
     await this.memberRepo.save(this.memberRepo.create({
       group: { id: groupId } as any,

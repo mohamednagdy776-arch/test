@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, DeleteDateColumn, OneToMany } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, Unique } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 
 export enum FriendshipStatus {
@@ -16,6 +16,10 @@ export enum FriendListType {
 }
 
 @Entity('friendships')
+// One friendship row per (requester, addressee) pair. A double-clicked "Add
+// friend" used to insert two identical pending rows (#736); the DB constraint
+// makes the duplicate insert fail cleanly (translated to 4xx by QueryErrorFilter).
+@Unique('uq_friendship_pair', ['requesterId', 'addresseeId'])
 export class Friendship {
   @PrimaryGeneratedColumn('uuid')
   id: string;
