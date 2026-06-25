@@ -236,6 +236,7 @@ export class UsersService {
       isHealthVerified: profile.isHealthVerified ?? false,
       isIdentityVerified: profile.isIdentityVerified ?? false,
       photoVisibility: profile.photoVisibility ?? 'public',
+      incognito: profile.incognito ?? false,
       createdAt: profile.createdAt,
     };
   }

@@ -135,6 +135,11 @@ export class Profile {
   @Column({ name: 'photo_visibility', default: 'public' })
   photoVisibility: string;
 
+  // Incognito / private browsing (#757): when on, this user's profile visits
+  // don't leave a "viewed" trace.
+  @Column({ name: 'incognito', default: false })
+  incognito: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

@@ -23,6 +23,8 @@ export class UpdateProfileDto {
   @IsOptional() @IsEnum(['public', 'friends', 'only_me']) introVisibility?: string;
   // Photo privacy (#752)
   @IsOptional() @IsEnum(['public', 'matches_only', 'on_request', 'private']) photoVisibility?: string;
+  // Incognito browsing (#757)
+  @IsOptional() @IsBoolean() incognito?: boolean;
 
   // Details
   @IsOptional() @IsString() education?: string;

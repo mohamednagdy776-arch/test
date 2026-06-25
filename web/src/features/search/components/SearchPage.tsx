@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { SearchFilters } from './SearchFilters';
 import { UserCard } from './UserCard';
 import { UserProfileModal } from './UserProfileModal';
+import { savedSearchesApi } from '../savedSearches';
 import {
   searchApi,
   getRecentSearches,
@@ -380,6 +381,18 @@ export const SearchPage = () => {
               onSearch={() => { setApplied({ ...filters }); runSearch(query, activeTab, filters); }}
             />
           )}
+
+          {/* Saved searches (#757) */}
+          <SavedSearchesStrip
+            query={query}
+            filters={applied}
+            onApply={(s) => {
+              setQuery(s.query ?? '');
+              setFilters(s.filters ?? emptyFilters);
+              setApplied(s.filters ?? emptyFilters);
+              runSearch(s.query ?? '', activeTab, s.filters ?? emptyFilters);
+            }}
+          />
         </div>
 
         {/* Autocomplete dropdown */}
@@ -531,3 +544,60 @@ export const SearchPage = () => {
     </div>
   );
 };
+
+// [Body_Sadek] #757 — saved searches strip: save the current query+filters and
+// re-run saved ones with one tap.
+function SavedSearchesStrip({ query, filters, onApply }: {
+  query: string;
+  filters: any;
+  onApply: (s: { query?: string; filters?: any }) => void;
+}) {
+  const [saved, setSaved] = useState<any[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(() => {
+    savedSearchesApi.list().then((r) => setSaved(r?.data ?? [])).catch(() => undefined);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const save = async () => {
+    const name = (query || '').trim() || 'بحث محفوظ';
+    setBusy(true);
+    try {
+      await savedSearchesApi.create(name, { query, criteria: filters });
+      load();
+    } finally { setBusy(false); }
+  };
+
+  const remove = async (id: string) => {
+    await savedSearchesApi.remove(id).catch(() => undefined);
+    load();
+  };
+
+  const canSave = !!(query?.trim()) && saved.length < 20;
+
+  return (
+    <div className="mt-3 flex items-center gap-2 flex-wrap">
+      {canSave && (
+        <button
+          onClick={save}
+          disabled={busy}
+          className="rounded-full px-3 py-1.5 text-xs font-semibold border border-[var(--border)] text-[var(--primary)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
+        >
+          ★ احفظ هذا البحث
+        </button>
+      )}
+      {saved.map((s) => (
+        <span
+          key={s.id}
+          className="group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)]"
+        >
+          <button onClick={() => onApply({ query: s.filters?.query, filters: s.filters?.criteria })} className="hover:text-[var(--primary)] transition-colors">
+            {s.name}
+          </button>
+          <button onClick={() => remove(s.id)} aria-label="حذف البحث المحفوظ" className="text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors">✕</button>
+        </span>
+      ))}
+    </div>
+  );
+}

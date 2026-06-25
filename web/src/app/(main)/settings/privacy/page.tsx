@@ -373,9 +373,11 @@ function PhotoVisibilityCard() {
   const { data } = useQuery({ queryKey: ['my-profile'], queryFn: profileApi.getMyProfile });
   const current: string = data?.data?.photoVisibility ?? 'public';
 
+  const incognito: boolean = data?.data?.incognito ?? false;
+
   const update = useMutation({
-    mutationFn: (photoVisibility: string) => profileApi.updateProfile({ photoVisibility }),
-    onSuccess: () => { showToast('تم تحديث خصوصية الصور', 'success'); qc.invalidateQueries({ queryKey: ['my-profile'] }); },
+    mutationFn: (patch: Record<string, any>) => profileApi.updateProfile(patch),
+    onSuccess: () => { showToast('تم تحديث الإعداد', 'success'); qc.invalidateQueries({ queryKey: ['my-profile'] }); },
     onError: () => showToast('تعذّر تحديث الإعداد', 'error'),
   });
 
@@ -400,7 +402,7 @@ function PhotoVisibilityCard() {
                 type="radio"
                 name="photo-visibility"
                 checked={current === o.value}
-                onChange={() => update.mutate(o.value)}
+                onChange={() => update.mutate({ photoVisibility: o.value })}
                 disabled={update.isPending}
                 className="mt-1 accent-[var(--accent)]"
               />
@@ -410,6 +412,23 @@ function PhotoVisibilityCard() {
               </div>
             </label>
           ))}
+
+          {/* Incognito browsing (#757) */}
+          <label className="flex items-center justify-between gap-3 rounded-xl border border-[var(--border)] px-4 py-3 cursor-pointer mt-2">
+            <div>
+              <p className="text-sm font-semibold text-[var(--foreground)]">التصفّح المخفي</p>
+              <p className="text-xs text-[var(--muted-foreground)]">تصفّح الملفات دون ترك أثر "شاهد ملفك"</p>
+            </div>
+            <input
+              type="checkbox"
+              role="switch"
+              aria-checked={incognito}
+              checked={incognito}
+              onChange={(e) => update.mutate({ incognito: e.target.checked })}
+              disabled={update.isPending}
+              className="h-5 w-5 accent-[var(--primary)]"
+            />
+          </label>
         </div>
       </CardContent>
     </Card>

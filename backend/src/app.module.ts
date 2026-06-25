@@ -39,6 +39,7 @@ import { LinkPreviewModule } from './link-preview/link-preview.module';
 import { InterestsModule } from './interests/interests.module';
 import { VerificationModule } from './verification/verification.module';
 import { PhotoPrivacyModule } from './photo-privacy/photo-privacy.module';
+import { SavedSearchesModule } from './saved-searches/saved-searches.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { PhotoPrivacyModule } from './photo-privacy/photo-privacy.module';
     InterestsModule,
     VerificationModule,
     PhotoPrivacyModule,
+    SavedSearchesModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
   providers: [

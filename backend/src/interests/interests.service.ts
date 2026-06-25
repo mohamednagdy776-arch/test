@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Interest } from './entities/interest.entity';
 import { ProfileView } from './entities/profile-view.entity';
 import { User } from '../auth/entities/user.entity';
+import { Profile } from '../users/entities/profile.entity';
 
 // Minimal, secret-free shape of a user for interest/viewer lists.
 function publicUser(u?: User | null) {
@@ -26,6 +27,7 @@ export class InterestsService {
     @InjectRepository(Interest) private interestsRepo: Repository<Interest>,
     @InjectRepository(ProfileView) private viewsRepo: Repository<ProfileView>,
     @InjectRepository(User) private usersRepo: Repository<User>,
+    @InjectRepository(Profile) private profilesRepo: Repository<Profile>,
   ) {}
 
   // Accept a UUID or a username (profiles link by username); returns the UUID.
@@ -96,6 +98,12 @@ export class InterestsService {
   // Upsert a profile view (one row per viewer→profile, latest time wins).
   async recordView(viewerId: string, profileId: string) {
     if (!viewerId || viewerId === profileId) return;
+    // Incognito viewers leave no trace (#757).
+    const viewerProfile = await this.profilesRepo.findOne({
+      where: { user: { id: viewerId } },
+      select: { id: true, incognito: true },
+    });
+    if (viewerProfile?.incognito) return;
     const existing = await this.viewsRepo.findOne({ where: { viewerId, profileId } });
     if (existing) {
       existing.viewedAt = new Date();

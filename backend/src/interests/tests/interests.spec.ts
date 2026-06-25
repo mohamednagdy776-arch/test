@@ -18,7 +18,8 @@ function makeService(opts: { reciprocal?: any; existing?: any } = {}) {
   } as any;
   const viewsRepo = { findOne: async () => null, create: (x: any) => x, save: async (x: any) => { saved.push({ view: x }); return x; } } as any;
   const usersRepo = {} as any;
-  return { svc: new InterestsService(interestsRepo, viewsRepo, usersRepo), saved };
+  const profilesRepo = { findOne: async () => null } as any; // viewer not incognito
+  return { svc: new InterestsService(interestsRepo, viewsRepo, usersRepo, profilesRepo), saved };
 }
 
 describe('[Body_Sadek] InterestsService — Send Salam (#754)', () => {
