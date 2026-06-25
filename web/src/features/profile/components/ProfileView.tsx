@@ -16,6 +16,19 @@ interface Props {
   userId?: string;
 }
 
+// Map the stored English status enum to an Arabic label (was rendered raw as
+// "single", #739). Mirrors the options in ProfileEditForm.
+const SOCIAL_STATUS_LABELS: Record<string, string> = {
+  single: 'أعزب',
+  married: 'متزوج',
+  divorced: 'مطلق',
+  widowed: 'أرمل',
+};
+function socialStatusLabel(value?: string | null): string {
+  if (!value) return '—';
+  return SOCIAL_STATUS_LABELS[value] ?? value;
+}
+
 export const ProfileView = ({ userId }: Props) => {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
@@ -136,11 +149,13 @@ export const ProfileView = ({ userId }: Props) => {
           ['الجنس', profile.gender === 'male' ? 'ذكر' : profile.gender === 'female' ? 'أنثى' : '—'],
           ['الدولة', profile.country || '—'],
           ['المدينة', profile.city || '—'],
-          ['الحالة الاجتماعية', profile.socialStatus || '—'],
+          ['الحالة الاجتماعية', socialStatusLabel(profile.socialStatus)],
           ['عدد الأطفال', String(profile.childrenCount ?? 0)],
         ]} />
         {profile.bio && (
-          <p className="mt-3 text-sm text-[var(--muted-foreground)] leading-relaxed border-t border-[var(--border)]/40 pt-3">
+          // dir="auto" so an LTR bio in this RTL container aligns and puts
+          // punctuation on the correct side (#738).
+          <p dir="auto" className="mt-3 text-sm text-[var(--muted-foreground)] leading-relaxed border-t border-[var(--border)]/40 pt-3">
             {profile.bio}
           </p>
         )}

@@ -32,7 +32,8 @@ export const MatchingStats = () => {
       label: 'في الانتظار',
       value: pending,
       icon: HourglassHigh,
-      gradient: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+      // On-palette warning amber → gold accent (was off-palette #d97706, #740).
+      gradient: 'linear-gradient(135deg, #f59e0b 0%, var(--accent) 100%)',
       textColor: 'white',
       iconBg: 'rgba(255,255,255,0.2)',
     },
