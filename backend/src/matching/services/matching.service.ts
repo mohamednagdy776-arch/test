@@ -18,14 +18,15 @@ export class MatchingService {
     private httpService: HttpService,
   ) {}
 
-  async getMatches(userId: string, page: number, limit: number) {
+  async getMatches(userId: string, page: number, limit: number, status?: string, minAge?: number, maxAge?: number) {
     // Get current user's gender for opposite-gender filtering
     const currentUser = await this.usersRepo.findOne({ where: { id: userId } });
     const currentGender = currentUser?.gender ?? null;
     const oppositeGender = currentGender === 'male' ? 'female' : currentGender === 'female' ? 'male' : null;
 
+    const statusFilter = status ? { status: status as any } : {};
     const [data, total] = await this.matchesRepo.findAndCount({
-      where: [{ user1: { id: userId } }, { user2: { id: userId } }],
+      where: [{ user1: { id: userId }, ...statusFilter }, { user2: { id: userId }, ...statusFilter }],
       order: { score: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -51,6 +52,11 @@ export class MatchingService {
         const otherUserName =
           `${otherUser?.firstName ?? ''} ${otherUser?.lastName ?? ''}`.trim() ||
           profile?.fullName || otherUser?.fullName || null;
+
+        // Age filter (#690)
+        const age = profile?.age ?? null;
+        if (minAge && age !== null && age < minAge) return null;
+        if (maxAge && age !== null && age > maxAge) return null;
 
         return {
           id: match.id,

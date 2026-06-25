@@ -18,8 +18,12 @@ export class MatchingController {
   }
 
   @Get()
-  async getMatches(@CurrentUser() user: User, @Query() query: PaginationDto) {
-    const { data, total } = await this.matchingService.getMatches(user.id, query.page!, query.limit!);
+  async getMatches(@CurrentUser() user: User, @Query() query: PaginationDto, @Query('status') status?: string, @Query('minAge') minAge?: string, @Query('maxAge') maxAge?: string) {
+    const validStatuses = ['pending', 'accepted', 'rejected'];
+    const statusFilter = status && validStatuses.includes(status) ? status : undefined;
+    const minAgeN = minAge ? parseInt(minAge, 10) : undefined;
+    const maxAgeN = maxAge ? parseInt(maxAge, 10) : undefined;
+    const { data, total } = await this.matchingService.getMatches(user.id, query.page!, query.limit!, statusFilter, minAgeN, maxAgeN);
     return paginated(data, total, query.page!, query.limit!);
   }
 

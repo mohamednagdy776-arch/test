@@ -150,22 +150,22 @@ export class SearchService {
     }
   }
 
-  async autocomplete(query: string) {
+  async autocomplete(query: string, viewerId?: string) {
     if (!query || query.trim().length < 2) return [];
     const q = `%${query.trim()}%`;
 
     const [users, groups, pages, events] = await Promise.all([
-      this.userRepo
-        .createQueryBuilder('user')
-        .leftJoinAndSelect('user.profile', 'profile')
-        .where(
-          'user.firstName ILIKE :q OR user.lastName ILIKE :q OR user.username ILIKE :q OR user.fullName ILIKE :q OR profile.fullName ILIKE :q',
-          { q },
-        )
-        .andWhere('user.status = :status', { status: 'active' })
-        .take(5)
-        .getMany()
-        .then(users =>
+      (() => {
+        const qb = this.userRepo
+          .createQueryBuilder('user')
+          .leftJoinAndSelect('user.profile', 'profile')
+          .where(
+            'user.firstName ILIKE :q OR user.lastName ILIKE :q OR user.username ILIKE :q OR user.fullName ILIKE :q OR profile.fullName ILIKE :q',
+            { q },
+          )
+          .andWhere('user.status = :status', { status: 'active' });
+        if (viewerId) qb.andWhere('user.id != :viewerId', { viewerId });
+        return qb.take(5).getMany().then(users =>
           users.map(u => ({
             id:        u.id,
             firstName: u.firstName,
@@ -174,7 +174,8 @@ export class SearchService {
             fullName:  u.profile?.fullName || `${u.firstName ?? ''} ${u.lastName ?? ''}`.trim(),
             avatar:    u.profile?.avatarUrl ?? null,
           })),
-        ),
+        );
+      })(),
       this.groupRepo
         .createQueryBuilder('group')
         .select(['group.id', 'group.name'])

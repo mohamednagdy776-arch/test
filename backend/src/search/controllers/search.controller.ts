@@ -26,11 +26,11 @@ export class SearchController {
   }
 
   @Get('autocomplete')
-  async autocomplete(@Query('q') q: string) {
+  async autocomplete(@Query('q') q: string, @CurrentUser() user?: User) {
     if (!q || q.trim().length < 2) {
       return ok({ users: [], groups: [], pages: [], events: [] });
     }
-    const results = await this.searchService.autocomplete(q);
+    const results = await this.searchService.autocomplete(q, user?.id);
     return ok(results);
   }
 
