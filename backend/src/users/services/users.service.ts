@@ -220,6 +220,7 @@ export class UsersService {
       prayerLevel: profile.prayerLevel,
       religiousCommitment: profile.religiousCommitment,
       isHealthVerified: profile.isHealthVerified ?? false,
+      isIdentityVerified: profile.isIdentityVerified ?? false,
       createdAt: profile.createdAt,
     };
   }

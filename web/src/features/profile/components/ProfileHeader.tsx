@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight } from '@phosphor-icons/react';
+import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight, SealCheck } from '@phosphor-icons/react';
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
@@ -238,6 +238,16 @@ export const ProfileHeader = ({
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                   </svg>
                   مُحقَّق صحياً
+                </span>
+              )}
+              {profile.isIdentityVerified && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm"
+                  style={{ background: 'linear-gradient(135deg, var(--accent), #D4A853)', color: '#0A3D2B' }}
+                  title="تم التحقق من الهوية"
+                >
+                  <SealCheck size={14} weight="fill" />
+                  موثّق الهوية
                 </span>
               )}
             </div>

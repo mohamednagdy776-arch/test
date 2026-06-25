@@ -37,6 +37,7 @@ import { LabPortalModule } from './lab-portal/lab-portal.module';
 import { FamilyModule } from './family/family.module';
 import { LinkPreviewModule } from './link-preview/link-preview.module';
 import { InterestsModule } from './interests/interests.module';
+import { VerificationModule } from './verification/verification.module';
 
 @Module({
   imports: [
@@ -83,6 +84,7 @@ import { InterestsModule } from './interests/interests.module';
     FamilyModule,
     LinkPreviewModule,
     InterestsModule,
+    VerificationModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
   providers: [

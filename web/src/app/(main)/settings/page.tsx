@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import {
-  User, ShieldCheck, Lock, Bell, Palette, Globe,
+  User, ShieldCheck, Lock, Bell, Palette, Globe, SealCheck,
   Question, Bug, Fingerprint, CaretLeft, IdentificationCard, Envelope, Gear,
 } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -39,6 +39,14 @@ const sections = [
     href: '/settings/security',
     accent: '#f59e0b',
     bg: 'color-mix(in srgb, #f59e0b 8%, transparent)',
+  },
+  {
+    title: 'توثيق الهوية',
+    icon: SealCheck,
+    description: 'وثّق هويتك للحصول على شارة موثّق',
+    href: '/settings/verification',
+    accent: '#B8892A',
+    bg: 'color-mix(in srgb, #B8892A 10%, transparent)',
   },
   {
     title: 'الخصوصية',

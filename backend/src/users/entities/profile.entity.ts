@@ -125,6 +125,11 @@ export class Profile {
   @Column({ name: 'is_health_verified', default: false })
   isHealthVerified: boolean;
 
+  // Identity/photo (KYC) verification — distinct from email (isVerified) and
+  // health (isHealthVerified). Set true when an admin approves a submission (#755).
+  @Column({ name: 'is_identity_verified', default: false })
+  isIdentityVerified: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
