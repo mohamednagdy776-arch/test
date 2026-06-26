@@ -20,6 +20,9 @@ const SECRET_FIELDS = [
   'failedLoginAttempts',
   'lockedUntil',
   'oauthId',
+  // PII fields excluded after #802/#803 fix — should never appear in API responses
+  'email',
+  'phone',
 ] as const;
 
 function makeUser(): User {
@@ -51,10 +54,9 @@ describe('[Body_Sadek] User entity serialization (#745)', () => {
     }
   });
 
-  it('keeps safe public/PII fields the app still needs', () => {
+  it('keeps safe public fields the app still needs', () => {
     const plain = instanceToPlain(makeUser());
     expect(plain.id).toBe('a1b2');
-    expect(plain.email).toBe('victim@tayyibt.test');
     expect(plain.username).toBe('victim');
     expect(plain.firstName).toBe('Victim');
   });
@@ -68,6 +70,5 @@ describe('[Body_Sadek] User entity serialization (#745)', () => {
     for (const field of SECRET_FIELDS) {
       expect(blocked[field]).toBeUndefined();
     }
-    expect(blocked.email).toBe('victim@tayyibt.test');
   });
 });
