@@ -1,6 +1,5 @@
 'use client';
 import { useRef, useState } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
@@ -129,9 +128,10 @@ export const ProfileHeader = ({
       {/* Cover Photo with enhanced styling */}
       <div className="relative h-56 bg-gradient-to-br from-[var(--primary)] via-[var(--secondary)] to-[var(--muted)] overflow-hidden group">
         {mediaUrl(profile.coverUrl) ? (
-          // next/image enforces the next.config image allowlist, so a malicious
-          // URL from the API can't render an arbitrary external resource (#167).
-          <Image src={mediaUrl(profile.coverUrl)!} alt="cover" fill sizes="100vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+          // Plain <img>, not next/image: next/image mis-cached freshly-uploaded
+          // signed-token media and rendered a stale/blank green-pad cover.
+          // mediaUrl() already rejects non-http(s)/relative URLs (#167).
+          <img src={mediaUrl(profile.coverUrl)!} alt="cover" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
           <div
             className={`w-full h-full flex items-center justify-center ${isSelf ? 'cursor-pointer' : ''}`}
@@ -193,7 +193,7 @@ export const ProfileHeader = ({
               onClick={() => { if (isSelf) avatarRef.current?.click(); }}
             >
               {mediaUrl(profile.avatarUrl) ? (
-                <Image src={mediaUrl(profile.avatarUrl)!} alt="avatar" fill sizes="112px" className="object-cover" />
+                <img src={mediaUrl(profile.avatarUrl)!} alt="avatar" className="absolute inset-0 w-full h-full object-cover" />
               ) : (
                 <span className="text-4xl font-bold text-gradient">
                   {profile.fullName?.charAt(0)?.toUpperCase() ?? '?'}
