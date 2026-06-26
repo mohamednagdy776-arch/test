@@ -136,6 +136,7 @@ function DataExportButton() {
 }
 
 export default function PrivacyPage() {
+  const { showToast } = useToast();
   const { data: privacyData, isLoading: privacyLoading } = usePrivacySettings();
   const { data: blocksData, isLoading: blocksLoading } = useBlocks();
   const updatePrivacy = useUpdatePrivacySettings();
