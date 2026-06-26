@@ -1,6 +1,6 @@
 import { IsArray, IsEnum, IsIn, IsOptional, IsString, IsDateString, IsNumber, IsBoolean, MaxLength, ArrayMaxSize, ValidateNested, IsInt, Min, Max, IsNotEmpty } from 'class-validator';
 import { PartialType } from '@nestjs/mapped-types';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { PostType, Audience } from '../entities/post.entity';
 
 class PollOptionDto {
@@ -17,7 +17,9 @@ class PollOptionDto {
 }
 
 export class CreatePostDto {
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @IsNotEmpty({ message: 'Post content cannot be empty' })
   @MaxLength(10000)
   content: string;
 

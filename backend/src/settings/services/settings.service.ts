@@ -19,7 +19,15 @@ export class SettingsService {
   async getPrivacySettings(userId: string) {
     let settings = await this.privacyRepo.findOne({ where: { user: { id: userId } } });
     if (!settings) {
-      settings = await this.privacyRepo.save(this.privacyRepo.create({ user: { id: userId } as any }));
+      // Explicit JS-level defaults so new rows are not at the mercy of the DB
+      // column default (which may lag behind entity changes without a migration).
+      // #771: messaging defaults to 'friends' (match-gate platform).
+      // #779: search engine indexing defaults OFF (matrimonial privacy).
+      settings = await this.privacyRepo.save(this.privacyRepo.create({
+        user: { id: userId } as any,
+        whoCanSendMessages: 'friends' as any,
+        allowSearchEngines: false,
+      }));
     }
     return settings;
   }
