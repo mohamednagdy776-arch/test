@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseGuards, DefaultValuePipe } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query, UseGuards, DefaultValuePipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { PostsService } from '../services/posts.service';
 import { FeedService } from '../services/feed.service';
@@ -19,7 +19,9 @@ export class FeedController {
     @Query('cursor') cursor: string | undefined = undefined,
     @Query('limit', new DefaultValuePipe(10)) limit: number = 10,
   ) {
-    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+    const numLimit = Number(limit);
+    if (numLimit < 1) throw new BadRequestException('limit must be a positive integer');
+    const safeLimit = Math.min(100, numLimit || 10);
     const { data, nextCursor, hasMore } = await this.postsService.getFeedByCursor(cursor, safeLimit, user.id);
     return { data, pagination: { cursor: nextCursor, hasMore } };
   }
@@ -30,7 +32,9 @@ export class FeedController {
     @Query('cursor') cursor: string | undefined = undefined,
     @Query('limit', new DefaultValuePipe(10)) limit: number = 10,
   ) {
-    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 10));
+    const numLimit = Number(limit);
+    if (numLimit < 1) throw new BadRequestException('limit must be a positive integer');
+    const safeLimit = Math.min(100, numLimit || 10);
     const { data, nextCursor, hasMore } = await this.postsService.getRecentFeedByCursor(cursor, safeLimit, user.id);
     return { data, pagination: { cursor: nextCursor, hasMore } };
   }

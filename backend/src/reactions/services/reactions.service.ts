@@ -33,12 +33,27 @@ export class ReactionsService {
       return { reacted: true, type: saved.type };
     }
 
+    const reactionType = dto.type || 'like';
     const reaction = this.reactionsRepo.create({
       post: { id: postId } as any,
       user,
-      type: dto.type || 'like',
+      type: reactionType,
     });
-    const saved = await this.reactionsRepo.save(reaction);
+
+    let saved: Reaction;
+    try {
+      saved = await this.reactionsRepo.save(reaction);
+    } catch (err: any) {
+      // Concurrent request already inserted — re-read current state and return it
+      // without sending a duplicate notification (unique constraint code 23505).
+      if (err?.code === '23505' || err instanceof ConflictException) {
+        const current = await this.reactionsRepo.findOne({
+          where: { post: { id: postId }, user: { id: user.id } },
+        });
+        return { reacted: !!current, type: current?.type ?? null };
+      }
+      throw err;
+    }
 
     // Notify the post owner that someone reacted to their post (#382).
     const post = await this.postsRepo.findOne({ where: { id: postId } });

@@ -7,6 +7,7 @@ import { ConversationParticipant } from '../entities/conversation-participant.en
 import { MessageReaction } from '../entities/message-reaction.entity';
 import { User } from '../../auth/entities/user.entity';
 import { Profile } from '../../users/entities/profile.entity';
+import { Match } from '../../matching/entities/match.entity';
 import { SettingsService } from '../../settings/services/settings.service';
 import { FriendsService } from '../../friends/services/friends.service';
 
@@ -19,6 +20,7 @@ export class ChatService {
     @InjectRepository(MessageReaction) private reactionRepo: Repository<MessageReaction>,
     @InjectRepository(User) private usersRepo: Repository<User>,
     @InjectRepository(Profile) private profilesRepo: Repository<Profile>,
+    @InjectRepository(Match) private matchesRepo: Repository<Match>,
     private settingsService: SettingsService,
     private friendsService: FriendsService,
   ) {}
@@ -273,6 +275,17 @@ export class ChatService {
   async getOrCreateDirectConversation(userId: string, targetUserId: string) {
     if (userId === targetUserId) {
       throw new ForbiddenException('Cannot start a conversation with yourself');
+    }
+
+    // Enforce match gate: users must have an accepted match before chatting (#805).
+    const match = await this.matchesRepo.findOne({
+      where: [
+        { user1: { id: userId }, user2: { id: targetUserId } },
+        { user1: { id: targetUserId }, user2: { id: userId } },
+      ],
+    });
+    if (!match || !['accepted', 'chat'].includes(match.status)) {
+      throw new ForbiddenException('You must be matched before starting a conversation');
     }
 
     // Find an existing 1:1 conversation containing both users (scalar columns).

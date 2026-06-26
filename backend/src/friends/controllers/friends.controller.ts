@@ -48,6 +48,12 @@ export class FriendsController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  @Get('requests/incoming')
+  async getIncomingRequests(@CurrentUser() user: User) {
+    const requests = await this.friendsService.getPendingRequests(user.id);
+    return ok(requests);
+  }
+
   @Get('requests')
   async getPendingRequests(@CurrentUser() user: User) {
     const requests = await this.friendsService.getPendingRequests(user.id);
