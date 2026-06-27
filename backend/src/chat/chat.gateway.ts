@@ -366,4 +366,15 @@ export class ChatGateway implements OnGatewayConnection {
     if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
     this.emitToUser(payload.targetId, 'call:ended', { from, conversationId: payload.conversationId });
   }
+
+  /** Relay a participant's mic mute/unmute so the peer can reflect it in the UI. */
+  @SubscribeMessage('call:mute')
+  async handleCallMute(
+    @MessageBody() payload: { conversationId: string; targetId: string; muted: boolean },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
+    this.emitToUser(payload.targetId, 'call:mute', { from, muted: !!payload.muted });
+  }
 }

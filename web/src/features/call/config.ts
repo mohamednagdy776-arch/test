@@ -35,7 +35,11 @@ export type CallPhase =
   | 'incoming' // someone is ringing us
   | 'connecting' // accepted, negotiating SDP/ICE
   | 'active' // media flowing
+  | 'reconnecting' // transport blip — trying to recover before giving up
   | 'ended';
+
+/** Rough connection-quality bucket derived from WebRTC getStats(). */
+export type CallQuality = 'good' | 'fair' | 'poor' | 'unknown';
 
 export interface CallPeer {
   userId: string;

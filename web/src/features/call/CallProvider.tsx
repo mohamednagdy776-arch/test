@@ -4,8 +4,12 @@ import {
   createContext, useCallback, useContext, useEffect, useRef, useState,
 } from 'react';
 import { getSocket, getCurrentUserId } from '@/lib/socket-client';
-import { fetchIceServers, type CallPeer, type CallPhase, type CallType } from './config';
+import { fetchIceServers, type CallPeer, type CallPhase, type CallQuality, type CallType } from './config';
 import { CallOverlay } from './CallOverlay';
+import { Ringtone } from './ringtone';
+
+/** Auto-cancel an unanswered outgoing call after this long. */
+const RING_TIMEOUT_MS = 40_000;
 
 interface StartCallArgs {
   conversationId: string;
@@ -19,6 +23,12 @@ interface CallContextValue {
   phase: CallPhase;
   peer: CallPeer | null;
   muted: boolean;
+  /** whether the remote audio is audible (speaker on) */
+  speakerOn: boolean;
+  /** true when the OTHER party has muted their mic */
+  peerMuted: boolean;
+  /** rough live connection quality while a call is active */
+  quality: CallQuality;
   /** error message (e.g. mic permission denied, callee offline) or null */
   error: string | null;
   startCall: (args: StartCallArgs) => Promise<void>;
@@ -26,6 +36,7 @@ interface CallContextValue {
   rejectCall: () => void;
   endCall: () => void;
   toggleMute: () => void;
+  toggleSpeaker: () => void;
 }
 
 const CallContext = createContext<CallContextValue | null>(null);
@@ -40,6 +51,9 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [phase, setPhase] = useState<CallPhase>('idle');
   const [peer, setPeer] = useState<CallPeer | null>(null);
   const [muted, setMuted] = useState(false);
+  const [speakerOn, setSpeakerOn] = useState(true);
+  const [peerMuted, setPeerMuted] = useState(false);
+  const [quality, setQuality] = useState<CallQuality>('unknown');
   const [error, setError] = useState<string | null>(null);
 
   // Refs hold the live WebRTC objects so socket handlers always see current
@@ -49,8 +63,16 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
   const peerRef = useRef<CallPeer | null>(null);
   const phaseRef = useRef<CallPhase>('idle');
+  // Mirror of speakerOn so the (re)created remote-audio element can read it
+  // without buildPeerConnection re-subscribing on every toggle.
+  const speakerOnRef = useRef(true);
   // ICE candidates can arrive before remoteDescription is set; buffer them.
   const pendingIceRef = useRef<RTCIceCandidateInit[]>([]);
+  // Synthesised ringtone/ringback player (one instance for the provider's life).
+  const ringtoneRef = useRef<Ringtone | null>(null);
+  if (ringtoneRef.current === null && typeof window !== 'undefined') {
+    ringtoneRef.current = new Ringtone();
+  }
 
   const setPhaseBoth = useCallback((p: CallPhase) => {
     phaseRef.current = p;
@@ -72,6 +94,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     if (remoteAudioRef.current) remoteAudioRef.current.srcObject = null;
     pendingIceRef.current = [];
     setMuted(false);
+    setSpeakerOn(true);
+    speakerOnRef.current = true;
+    setPeerMuted(false);
+    setQuality('unknown');
   }, []);
 
   /** Build the RTCPeerConnection, attach the mic stream, and wire signalling. */
@@ -100,17 +126,24 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       const [remote] = e.streams;
       if (remoteAudioRef.current && remote) {
         remoteAudioRef.current.srcObject = remote;
+        // Honour the current speaker toggle for this fresh stream.
+        remoteAudioRef.current.muted = !speakerOnRef.current;
         void remoteAudioRef.current.play().catch(() => { /* autoplay guard */ });
       }
     };
 
     pc.onconnectionstatechange = () => {
       const st = pc.connectionState;
-      if (st === 'connected') setPhaseBoth('active');
-      if (st === 'failed' || st === 'disconnected' || st === 'closed') {
-        // Only treat as a hangup once we were past negotiation. No need to
-        // notify the peer — the transport already dropped.
-        if (phaseRef.current === 'active' || phaseRef.current === 'connecting') {
+      if (st === 'connected') {
+        // Covers both initial connect and recovery from a transient drop.
+        setPhaseBoth('active');
+      } else if (st === 'disconnected') {
+        // Transient blip — show "reconnecting" and give ICE a chance to recover
+        // instead of tearing the call down immediately.
+        if (phaseRef.current === 'active') setPhaseBoth('reconnecting');
+      } else if (st === 'failed' || st === 'closed') {
+        // Hard failure. No need to notify the peer — the transport already dropped.
+        if (phaseRef.current === 'active' || phaseRef.current === 'connecting' || phaseRef.current === 'reconnecting') {
           cleanup();
           setPhaseBoth('ended');
           setPeerBoth(null);
@@ -220,7 +253,70 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     const next = !muted;
     stream.getAudioTracks().forEach((t) => { t.enabled = !next; });
     setMuted(next);
+    // Let the peer reflect our mic state in their UI.
+    const p = peerRef.current;
+    if (p) getSocket().emit('call:mute', { conversationId: p.conversationId, targetId: p.userId, muted: next });
   }, [muted]);
+
+  // Speaker = whether we can hear the remote party. We just mute the audio
+  // sink; the mic / transport are untouched.
+  const toggleSpeaker = useCallback(() => {
+    const next = !speakerOnRef.current;
+    speakerOnRef.current = next;
+    setSpeakerOn(next);
+    if (remoteAudioRef.current) remoteAudioRef.current.muted = !next;
+  }, []);
+
+  // ── Ringtone: ring while outgoing/incoming, silent otherwise ───────────
+  useEffect(() => {
+    const rt = ringtoneRef.current;
+    if (!rt) return;
+    if (phase === 'outgoing') rt.start('outgoing');
+    else if (phase === 'incoming') rt.start('incoming');
+    else rt.stop();
+    return () => rt.stop();
+  }, [phase]);
+
+  // ── No-answer timeout: cancel an unanswered outgoing call ──────────────
+  useEffect(() => {
+    if (phase !== 'outgoing') return;
+    const id = window.setTimeout(() => {
+      setError('لا يوجد رد');
+      endCallInternal(true);
+    }, RING_TIMEOUT_MS);
+    return () => window.clearTimeout(id);
+  }, [phase, endCallInternal]);
+
+  // ── Connection-quality sampling while a call is live ───────────────────
+  useEffect(() => {
+    if (phase !== 'active' && phase !== 'reconnecting') return;
+    let cancelled = false;
+    const sample = async () => {
+      const pc = pcRef.current;
+      if (!pc) return;
+      try {
+        const stats = await pc.getStats();
+        let rtt = 0; let haveRtt = false;
+        let lost = 0; let recv = 0;
+        stats.forEach((r: any) => {
+          if (r.type === 'candidate-pair' && r.nominated && typeof r.currentRoundTripTime === 'number') {
+            rtt = r.currentRoundTripTime; haveRtt = true;
+          }
+          if (r.type === 'inbound-rtp' && r.kind === 'audio') {
+            lost = r.packetsLost ?? 0; recv = r.packetsReceived ?? 0;
+          }
+        });
+        const lossRatio = recv + lost > 0 ? lost / (recv + lost) : 0;
+        let q: CallQuality = 'good';
+        if (lossRatio > 0.08 || (haveRtt && rtt > 0.4)) q = 'poor';
+        else if (lossRatio > 0.03 || (haveRtt && rtt > 0.2)) q = 'fair';
+        if (!cancelled) setQuality(q);
+      } catch { /* getStats can throw mid-teardown */ }
+    };
+    void sample();
+    const id = window.setInterval(sample, 2000);
+    return () => { cancelled = true; window.clearInterval(id); };
+  }, [phase]);
 
   // ── Socket signalling ─────────────────────────────────────────────────
   useEffect(() => {
@@ -303,6 +399,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       window.setTimeout(() => { if (phaseRef.current === 'ended') setPhaseBoth('idle'); }, 1500);
     };
 
+    const onPeerMute = (d: { from: string; muted: boolean }) => {
+      if (d.from !== peerRef.current?.userId) return;
+      setPeerMuted(!!d.muted);
+    };
+
     socket.on('call:incoming', onIncoming);
     socket.on('call:accepted', onAccepted);
     socket.on('call:offer', onOffer);
@@ -310,6 +411,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     socket.on('call:ice-candidate', onIce);
     socket.on('call:rejected', onRejected);
     socket.on('call:ended', onEnded);
+    socket.on('call:mute', onPeerMute);
 
     return () => {
       socket.off('call:incoming', onIncoming);
@@ -319,11 +421,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       socket.off('call:ice-candidate', onIce);
       socket.off('call:rejected', onRejected);
       socket.off('call:ended', onEnded);
+      socket.off('call:mute', onPeerMute);
     };
   }, [cleanup, drainPendingIce, setPeerBoth, setPhaseBoth]);
 
   return (
-    <CallContext.Provider value={{ phase, peer, muted, error, startCall, acceptCall, rejectCall, endCall, toggleMute }}>
+    <CallContext.Provider value={{ phase, peer, muted, speakerOn, peerMuted, quality, error, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker }}>
       {children}
       {/* Hidden sink for the remote party's audio. */}
       <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
@@ -332,11 +435,15 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           phase={phase}
           peer={peer}
           muted={muted}
+          speakerOn={speakerOn}
+          peerMuted={peerMuted}
+          quality={quality}
           error={error}
           onAccept={acceptCall}
           onReject={rejectCall}
           onEnd={endCall}
           onToggleMute={toggleMute}
+          onToggleSpeaker={toggleSpeaker}
         />
       )}
     </CallContext.Provider>

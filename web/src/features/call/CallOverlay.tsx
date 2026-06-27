@@ -1,20 +1,27 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Phone, PhoneSlash, Microphone, MicrophoneSlash } from '@phosphor-icons/react';
+import {
+  Phone, PhoneSlash, Microphone, MicrophoneSlash,
+  SpeakerHigh, SpeakerSlash, ArrowsIn, ArrowsOut,
+} from '@phosphor-icons/react';
 import { resolveMediaUrl } from '@/lib/media';
-import type { CallPeer, CallPhase } from './config';
+import type { CallPeer, CallPhase, CallQuality } from './config';
 
 interface Props {
   phase: CallPhase;
   peer: CallPeer | null;
   muted: boolean;
+  speakerOn: boolean;
+  peerMuted: boolean;
+  quality: CallQuality;
   error: string | null;
   onAccept: () => void;
   onReject: () => void;
   onEnd: () => void;
   onToggleMute: () => void;
+  onToggleSpeaker: () => void;
 }
 
 const STATUS_TEXT: Record<CallPhase, string> = {
@@ -23,6 +30,7 @@ const STATUS_TEXT: Record<CallPhase, string> = {
   incoming: 'مكالمة واردة',
   connecting: 'جارٍ الاتصال…',
   active: '',
+  reconnecting: 'جارٍ إعادة الاتصال…',
   ended: 'انتهت المكالمة',
 };
 
@@ -32,21 +40,111 @@ function fmt(seconds: number): string {
   return `${m}:${s}`;
 }
 
-export function CallOverlay({ phase, peer, muted, error, onAccept, onReject, onEnd, onToggleMute }: Props) {
-  const [elapsed, setElapsed] = useState(0);
+const QUALITY_COLOR: Record<Exclude<CallQuality, 'unknown'>, string> = {
+  good: '#22c55e',
+  fair: '#f59e0b',
+  poor: '#ef4444',
+};
 
-  // Tick the in-call timer only while media is flowing.
+/** Three-bar signal strength indicator. */
+function QualityBars({ quality }: { quality: CallQuality }) {
+  if (quality === 'unknown') return null;
+  const lit = quality === 'good' ? 3 : quality === 'fair' ? 2 : 1;
+  const color = QUALITY_COLOR[quality];
+  return (
+    <span className="inline-flex items-end gap-0.5" title="جودة الاتصال" aria-label="جودة الاتصال">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          style={{
+            width: 3,
+            height: 5 + i * 4,
+            borderRadius: 1,
+            background: i < lit ? color : 'var(--border)',
+          }}
+        />
+      ))}
+    </span>
+  );
+}
+
+export function CallOverlay({
+  phase, peer, muted, speakerOn, peerMuted, quality, error,
+  onAccept, onReject, onEnd, onToggleMute, onToggleSpeaker,
+}: Props) {
+  const [elapsed, setElapsed] = useState(0);
+  const [minimized, setMinimized] = useState(false);
+
+  const inCall = phase === 'active' || phase === 'reconnecting';
+
+  // Tick the in-call timer while media is (or was briefly) flowing. Keep it
+  // running across a transient 'reconnecting' so the duration isn't lost.
   useEffect(() => {
-    if (phase !== 'active') { setElapsed(0); return; }
+    if (!inCall) { setElapsed(0); return; }
     const id = window.setInterval(() => setElapsed((e) => e + 1), 1000);
     return () => window.clearInterval(id);
-  }, [phase]);
+  }, [inCall]);
+
+  // Reflect the call in the browser tab title; restore on teardown.
+  const prevTitle = useRef<string>('');
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (!prevTitle.current) prevTitle.current = document.title;
+    const name = peer?.name || 'مكالمة';
+    if (inCall) document.title = `📞 ${fmt(elapsed)} · ${name}`;
+    else if (phase === 'incoming') document.title = `📞 مكالمة واردة · ${name}`;
+    else if (phase === 'outgoing' || phase === 'connecting') document.title = `📞 ${name}…`;
+    return () => { if (prevTitle.current) document.title = prevTitle.current; };
+  }, [inCall, phase, elapsed, peer?.name]);
 
   const name = peer?.name || 'مستخدم';
   const avatar = resolveMediaUrl(peer?.avatar);
   const initial = name.charAt(0).toUpperCase();
   const subtitle = phase === 'active' ? fmt(elapsed) : (error || STATUS_TEXT[phase]);
+  const canMinimize = phase !== 'incoming' && phase !== 'ended';
 
+  // ── Minimized: compact floating bar so the user can keep browsing ──────
+  if (minimized && canMinimize) {
+    return (
+      <div
+        dir="rtl"
+        className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 rounded-full px-3 py-2 animate-fade-in"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 10px 30px rgba(0,0,0,0.3)' }}
+      >
+        <div
+          className="h-9 w-9 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold text-white shrink-0"
+          style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}
+        >
+          {avatar ? <Image src={avatar} alt={name} width={36} height={36} className="w-full h-full object-cover" /> : initial}
+        </div>
+        <div className="flex flex-col leading-tight min-w-0">
+          <span className="text-xs font-semibold truncate max-w-[8rem]" style={{ color: 'var(--foreground)' }}>{name}</span>
+          <span className="text-[11px] tabular-nums flex items-center gap-1" style={{ color: phase === 'reconnecting' ? '#f59e0b' : 'var(--muted-foreground)' }}>
+            {inCall && <QualityBars quality={quality} />}
+            {phase === 'active' ? fmt(elapsed) : STATUS_TEXT[phase]}
+          </span>
+        </div>
+        <button
+          onClick={() => setMinimized(false)}
+          title="تكبير"
+          className="flex h-9 w-9 items-center justify-center rounded-full transition-transform hover:scale-110"
+          style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}
+        >
+          <ArrowsOut size={18} weight="bold" />
+        </button>
+        <button
+          onClick={onEnd}
+          title="إنهاء"
+          className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-transform hover:scale-110"
+          style={{ background: '#ef4444' }}
+        >
+          <PhoneSlash size={18} weight="fill" />
+        </button>
+      </div>
+    );
+  }
+
+  // ── Full overlay ───────────────────────────────────────────────────────
   return (
     <div
       dir="rtl"
@@ -54,9 +152,21 @@ export function CallOverlay({ phase, peer, muted, error, onAccept, onReject, onE
       style={{ background: 'rgba(0,0,0,0.55)', backdropFilter: 'blur(6px)' }}
     >
       <div
-        className="w-[88%] max-w-sm rounded-3xl px-6 py-8 flex flex-col items-center text-center"
+        className="relative w-[88%] max-w-sm rounded-3xl px-6 py-8 flex flex-col items-center text-center"
         style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 20px 60px rgba(0,0,0,0.35)' }}
       >
+        {/* Minimize */}
+        {canMinimize && (
+          <button
+            onClick={() => setMinimized(true)}
+            title="تصغير"
+            className="absolute top-3 left-3 flex h-9 w-9 items-center justify-center rounded-full transition-transform hover:scale-110"
+            style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}
+          >
+            <ArrowsIn size={18} weight="bold" />
+          </button>
+        )}
+
         {/* Avatar with a soft pulsing ring while ringing */}
         <div className="relative mb-5">
           {(phase === 'outgoing' || phase === 'incoming') && (
@@ -76,12 +186,22 @@ export function CallOverlay({ phase, peer, muted, error, onAccept, onReject, onE
         </div>
 
         <h2 className="text-xl font-bold" style={{ color: 'var(--foreground)' }}>{name}</h2>
-        <p className="mt-1 text-sm tabular-nums" style={{ color: error ? '#ef4444' : 'var(--muted-foreground)' }}>
+        <p
+          className="mt-1 text-sm tabular-nums flex items-center justify-center gap-1.5"
+          style={{ color: error ? '#ef4444' : (phase === 'reconnecting' ? '#f59e0b' : 'var(--muted-foreground)') }}
+        >
+          {inCall && !error && <QualityBars quality={quality} />}
           {subtitle}
         </p>
         <p className="mt-0.5 text-xs flex items-center gap-1" style={{ color: 'var(--muted-foreground)' }}>
           <Phone size={12} weight="fill" /> مكالمة صوتية
         </p>
+        {/* Peer's mic state */}
+        {inCall && peerMuted && (
+          <p className="mt-2 text-xs flex items-center gap-1" style={{ color: 'var(--muted-foreground)' }}>
+            <MicrophoneSlash size={13} weight="fill" /> الطرف الآخر كتم الميكروفون
+          </p>
+        )}
 
         {/* Controls */}
         <div className="mt-8 flex items-center justify-center gap-5">
@@ -96,7 +216,17 @@ export function CallOverlay({ phase, peer, muted, error, onAccept, onReject, onE
             </>
           ) : (
             <>
-              {(phase === 'active' || phase === 'connecting' || phase === 'outgoing') && (
+              {inCall && (
+                <CallButton
+                  color={speakerOn ? 'var(--muted-foreground)' : 'var(--accent)'}
+                  bg="var(--muted)"
+                  label={speakerOn ? 'مكبر الصوت' : 'كتم السماعة'}
+                  onClick={onToggleSpeaker}
+                >
+                  {speakerOn ? <SpeakerHigh size={24} weight="fill" /> : <SpeakerSlash size={24} weight="fill" />}
+                </CallButton>
+              )}
+              {(phase === 'active' || phase === 'reconnecting' || phase === 'connecting' || phase === 'outgoing') && (
                 <CallButton
                   color={muted ? 'var(--accent)' : 'var(--muted-foreground)'}
                   bg="var(--muted)"
