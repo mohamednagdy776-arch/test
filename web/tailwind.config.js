@@ -1,6 +1,9 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./src/**/*.{ts,tsx}'],
+  content: [
+    './src/**/*.{ts,tsx}',
+    './node_modules/flowbite/**/*.js',
+  ],
   darkMode: 'class',
   theme: {
     extend: {
@@ -102,5 +105,39 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    require('flowbite/plugin'),
+    require('daisyui'),
+  ],
+  // daisyUI: a scoped "tayyibt" theme in the luxury palette. base:false so it
+  // never restyles the app's <html>/<body> — components only pick up the theme
+  // colors inside an explicit `data-theme="tayyibt"` wrapper.
+  daisyui: {
+    base: false,
+    logs: false,
+    themes: [
+      {
+        tayyibt: {
+          primary: '#0A3D2B',
+          'primary-content': '#F4EFE4',
+          secondary: '#1A6B4A',
+          'secondary-content': '#F4EFE4',
+          accent: '#B8892A',
+          'accent-content': '#0E1912',
+          neutral: '#091F16',
+          'neutral-content': '#E8C57A',
+          'base-100': '#FDFAF3',
+          'base-200': '#F4EFE4',
+          'base-300': '#E8E3D8',
+          'base-content': '#0E1912',
+          info: '#1A6B4A',
+          success: '#1A6B4A',
+          warning: '#B8892A',
+          error: '#A03030',
+          '--rounded-box': '1.5rem',
+          '--rounded-btn': '1rem',
+        },
+      },
+    ],
+  },
 };

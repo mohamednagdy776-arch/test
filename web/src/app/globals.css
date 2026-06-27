@@ -1,5 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800;900&family=Noto+Serif+Arabic:wght@400;600;700&display=swap');
 
+/* StyleX-generated styles are injected here by @stylexjs/postcss-plugin. */
+@stylex;
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
