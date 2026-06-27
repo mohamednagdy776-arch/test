@@ -7,6 +7,7 @@ import { ConversationParticipant } from './entities/conversation-participant.ent
 import { MessageReaction } from './entities/message-reaction.entity';
 import { ChatGateway } from './chat.gateway';
 import { ChatController } from './controllers/chat.controller';
+import { CallsController } from './controllers/calls.controller';
 import { ChatService } from './services/chat.service';
 import { TranslationService } from './services/translation.service';
 import { Match } from '../matching/entities/match.entity';
@@ -33,7 +34,7 @@ import { SettingsModule } from '../settings/settings.module';
     SettingsModule,
   ],
   providers: [ChatGateway, ChatService, TranslationService],
-  controllers: [ChatController],
+  controllers: [ChatController, CallsController],
   exports: [ChatService, TranslationService],
 })
 export class ChatModule {}

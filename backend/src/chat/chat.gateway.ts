@@ -252,4 +252,118 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
   }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Voice/video calling — WebRTC signalling relay.
+  //
+  // The gateway never touches the media itself; it only relays SDP offers/
+  // answers and ICE candidates between the two participants of a 1:1
+  // conversation. Every payload is validated so a client can only signal a
+  // peer it actually shares the conversation with (prevents spamming ICE/SDP
+  // at arbitrary users). The authenticated sender id is always stamped
+  // server-side as `from` — never trusted from the client.
+  // ───────────────────────────────────────────────────────────────────────
+
+  /** True only if BOTH the authed caller and the target share the conversation. */
+  private async canSignal(
+    conversationId: string,
+    fromUserId: string,
+    targetId: string,
+  ): Promise<boolean> {
+    if (!conversationId || !fromUserId || !targetId || fromUserId === targetId) {
+      return false;
+    }
+    const [fromOk, targetOk] = await Promise.all([
+      this.chatService.isParticipant(conversationId, fromUserId),
+      this.chatService.isParticipant(conversationId, targetId),
+    ]);
+    return fromOk && targetOk;
+  }
+
+  /** Caller rings the callee. Replies via ack with the callee's availability. */
+  @SubscribeMessage('call:initiate')
+  async handleCallInitiate(
+    @MessageBody()
+    payload: { conversationId: string; calleeId: string; callType?: 'audio' | 'video'; callerName?: string; callerAvatar?: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.calleeId))) {
+      return { ok: false, reason: 'forbidden' };
+    }
+    if (!this.isOnline(payload.calleeId)) {
+      return { ok: false, reason: 'offline' };
+    }
+    this.emitToUser(payload.calleeId, 'call:incoming', {
+      from,
+      conversationId: payload.conversationId,
+      callType: payload.callType ?? 'audio',
+      callerName: payload.callerName,
+      callerAvatar: payload.callerAvatar,
+    });
+    return { ok: true };
+  }
+
+  /** Callee accepted the ring — tell the caller to send its SDP offer. */
+  @SubscribeMessage('call:accept')
+  async handleCallAccept(
+    @MessageBody() payload: { conversationId: string; targetId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
+    this.emitToUser(payload.targetId, 'call:accepted', { from, conversationId: payload.conversationId });
+  }
+
+  @SubscribeMessage('call:offer')
+  async handleCallOffer(
+    @MessageBody() payload: { conversationId: string; targetId: string; sdp: any },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
+    this.emitToUser(payload.targetId, 'call:offer', { from, conversationId: payload.conversationId, sdp: payload.sdp });
+  }
+
+  @SubscribeMessage('call:answer')
+  async handleCallAnswer(
+    @MessageBody() payload: { conversationId: string; targetId: string; sdp: any },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
+    this.emitToUser(payload.targetId, 'call:answer', { from, conversationId: payload.conversationId, sdp: payload.sdp });
+  }
+
+  @SubscribeMessage('call:ice-candidate')
+  async handleCallIce(
+    @MessageBody() payload: { conversationId: string; targetId: string; candidate: any },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
+    this.emitToUser(payload.targetId, 'call:ice-candidate', { from, candidate: payload.candidate });
+  }
+
+  /** Callee declined the ring. */
+  @SubscribeMessage('call:reject')
+  async handleCallReject(
+    @MessageBody() payload: { conversationId: string; targetId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
+    this.emitToUser(payload.targetId, 'call:rejected', { from, conversationId: payload.conversationId });
+  }
+
+  /** Either side hung up / cancelled. */
+  @SubscribeMessage('call:end')
+  async handleCallEnd(
+    @MessageBody() payload: { conversationId: string; targetId: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
+    this.emitToUser(payload.targetId, 'call:ended', { from, conversationId: payload.conversationId });
+  }
 }

@@ -8,6 +8,7 @@ import { useDeleteMessage } from '@/features/chat/hooks';
 import { postsApi } from '@/features/posts/api';
 import { resolveMediaUrl } from '@/lib/media';
 import { TranslatedMessageBody } from './TranslatedMessageBody';
+import { useCall } from '@/features/call/CallProvider';
 import { useTargetLanguage } from '../useTranslation';
 import { LANGUAGES, LANGUAGE_BY_CODE } from '@/lib/translation';
 import type { Match } from '@/types';
@@ -47,6 +48,7 @@ function avatarSrc(url?: string | null) {
 
 export const ChatWindow = ({ match, onBack }: Props) => {
   const myUserId = getCurrentUserId();
+  const { startCall } = useCall();
   const { lang: targetLang, setLang: setTargetLang } = useTargetLanguage();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -393,7 +395,16 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             </span>
           )}
           <button
-            onClick={() => { setCallToast('المكالمات قيد التطوير'); setTimeout(() => setCallToast(null), 3000); }}
+            onClick={() => {
+              if (!match.user2Id) return;
+              startCall({
+                conversationId: match.id,
+                calleeId: match.user2Id,
+                name: otherName,
+                avatar: (match as any).otherUserAvatar,
+                callType: 'audio',
+              });
+            }}
             title="مكالمة صوتية"
             className="p-2 rounded-xl transition-all hover:scale-110"
             style={{ color: 'var(--muted-foreground)' }}

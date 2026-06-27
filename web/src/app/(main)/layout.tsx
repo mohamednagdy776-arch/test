@@ -3,10 +3,12 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { CallProvider } from '@/features/call/CallProvider';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
+      <CallProvider>
       <div
         data-theme="luxury"
         className="min-h-screen transition-colors duration-300"
@@ -35,6 +37,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {/* Mobile / tablet bottom navigation — hidden on lg+ */}
         <BottomNav />
       </div>
+      </CallProvider>
     </AuthGuard>
   );
 }
