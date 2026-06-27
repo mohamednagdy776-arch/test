@@ -8,7 +8,8 @@
     "panda": "panda codegen && panda cssgen",
     "start": "next start -p 3002",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "panda codegen && tsc --noEmit",
+    "postinstall": "panda codegen"
   },
   "dependencies": {
     "@babel/runtime": "^7.24.7",
