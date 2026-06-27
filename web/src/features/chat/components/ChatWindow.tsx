@@ -7,12 +7,14 @@ import { getSocket, getCurrentUserId } from '@/lib/socket-client';
 import { useDeleteMessage } from '@/features/chat/hooks';
 import { postsApi } from '@/features/posts/api';
 import { resolveMediaUrl } from '@/lib/media';
-import { linkifyText, extractFirstUrl } from '@/lib/linkify';
-import { LinkPreviewCard } from './LinkPreviewCard';
+import { TranslatedMessageBody } from './TranslatedMessageBody';
+import { useTargetLanguage } from '../useTranslation';
+import { LANGUAGES, LANGUAGE_BY_CODE } from '@/lib/translation';
 import type { Match } from '@/types';
 import {
   ArrowLeft, Phone, VideoCamera, DotsThreeVertical,
   PaperPlaneTilt, Image as ImageIcon, Smiley, Trash, ArrowBendUpLeft,
+  Translate, Check,
 } from '@phosphor-icons/react';
 
 
@@ -45,6 +47,8 @@ function avatarSrc(url?: string | null) {
 
 export const ChatWindow = ({ match, onBack }: Props) => {
   const myUserId = getCurrentUserId();
+  const { lang: targetLang, setLang: setTargetLang } = useTargetLanguage();
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -311,6 +315,77 @@ export const ChatWindow = ({ match, onBack }: Props) => {
 
         {/* Action buttons */}
         <div className="flex items-center gap-1">
+          {/* Translate / language picker */}
+          <div className="relative">
+            <button
+              onClick={() => setShowLangMenu((v) => !v)}
+              title="لغة عرض الرسائل"
+              className="relative flex items-center gap-1 p-2 rounded-xl transition-all hover:scale-110"
+              style={{
+                color: targetLang ? 'var(--primary)' : 'var(--muted-foreground)',
+                background: targetLang ? 'color-mix(in srgb, var(--primary) 10%, transparent)' : 'transparent',
+              }}
+              onMouseEnter={(e) => { if (!targetLang) e.currentTarget.style.background = 'var(--muted)'; }}
+              onMouseLeave={(e) => { if (!targetLang) e.currentTarget.style.background = 'transparent'; }}
+            >
+              <Translate size={18} />
+              {targetLang && (
+                <span className="text-xs font-bold leading-none">
+                  {LANGUAGE_BY_CODE[targetLang]?.flag ?? targetLang.toUpperCase()}
+                </span>
+              )}
+            </button>
+
+            {showLangMenu && (
+              <>
+                {/* Click-away layer */}
+                <div className="fixed inset-0 z-30" onClick={() => setShowLangMenu(false)} />
+                <div
+                  className="absolute z-40 mt-2 left-0 w-56 rounded-2xl overflow-hidden shadow-xl"
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+                >
+                  <div className="px-3 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+                    <p className="text-xs font-bold" style={{ color: 'var(--foreground)' }}>ترجمة الرسائل</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+                      اختر اللغة التي تريد قراءة الرسائل بها
+                    </p>
+                  </div>
+                  <div className="max-h-72 overflow-y-auto py-1">
+                    {/* Off / original */}
+                    <button
+                      onClick={() => { setTargetLang(''); setShowLangMenu(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-right"
+                      style={{ color: 'var(--foreground)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--muted)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <span className="w-4 flex justify-center">
+                        {!targetLang && <Check size={14} weight="bold" style={{ color: 'var(--primary)' }} />}
+                      </span>
+                      <span className="flex-1">بدون ترجمة (الأصل)</span>
+                    </button>
+                    {LANGUAGES.map((l) => (
+                      <button
+                        key={l.code}
+                        onClick={() => { setTargetLang(l.code); setShowLangMenu(false); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors text-right"
+                        style={{ color: 'var(--foreground)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--muted)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                      >
+                        <span className="w-4 flex justify-center">
+                          {targetLang === l.code && <Check size={14} weight="bold" style={{ color: 'var(--primary)' }} />}
+                        </span>
+                        <span>{l.flag}</span>
+                        <span className="flex-1">{l.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
           {callToast && (
             <span className="text-xs px-2.5 py-1 rounded-xl"
               style={{ color: 'var(--muted-foreground)', background: 'var(--muted)' }}>
@@ -437,21 +512,12 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                   <Image src={resolveMediaUrl(msg.mediaUrl) ?? ''} alt="صورة" width={200} height={200} className="w-full h-auto object-cover" />
                 </div>
               ) : (
-                <>
-                  <p className="leading-relaxed whitespace-pre-wrap" dir="auto"
-                    style={{ color: msg.isOwn ? 'white' : 'var(--foreground)' }}>
-                    {linkifyText(msg.content, msg.isOwn ? 'text-white' : 'text-[var(--primary)]')}
-                  </p>
-                  {msg.isEdited && (
-                    <span className="text-[10px]" style={{ opacity: 0.6, color: msg.isOwn ? 'white' : 'var(--muted-foreground)' }}>
-                      (تم التعديل)
-                    </span>
-                  )}
-                  {(() => {
-                    const previewUrl = extractFirstUrl(msg.content);
-                    return previewUrl ? <LinkPreviewCard url={previewUrl} isOwn={msg.isOwn} /> : null;
-                  })()}
-                </>
+                <TranslatedMessageBody
+                  content={msg.content}
+                  isOwn={msg.isOwn}
+                  isEdited={msg.isEdited}
+                  targetLang={targetLang}
+                />
               )}
 
               {/* Timestamp + read receipt */}
