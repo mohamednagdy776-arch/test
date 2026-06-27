@@ -147,11 +147,17 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
+  // Gate client-only motion + the video embed so the first client render matches
+  // the server HTML exactly (fixes the React #418/#425 hydration mismatch that
+  // came from rendering reduced-motion-dependent elements only on the server).
+  const [mounted, setMounted] = useState(false);
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const floatA = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : -90]);
   const floatB = useTransform(scrollYProgress, [0, 1], [0, reduce ? 0 : 70]);
   const heroFade = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 16);
@@ -220,15 +226,32 @@ export default function Home() {
 
       {/* ── HERO ────────────────────────────────────────────── */}
       <section ref={heroRef} className="relative px-3 pt-3 sm:px-4 sm:pt-4">
-        <div className="relative overflow-hidden rounded-[2rem] sm:rounded-[2.75rem]" style={{ background: `linear-gradient(160deg, ${C.forestDeep} 0%, ${C.forest} 55%, ${C.emerald} 130%)` }}>
-          {!reduce && (
-            <>
-              <motion.div aria-hidden className="pointer-events-none absolute -top-24 right-[-10%] h-[28rem] w-[28rem] rounded-full" style={{ background: `radial-gradient(circle, ${C.gold}55, transparent 65%)`, filter: 'blur(20px)' }} animate={{ x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.12, 1] }} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }} />
-              <motion.div aria-hidden className="pointer-events-none absolute bottom-[-15%] left-[-10%] h-[30rem] w-[30rem] rounded-full" style={{ background: `radial-gradient(circle, ${C.emerald}88, transparent 65%)`, filter: 'blur(24px)' }} animate={{ x: [0, 50, 0], y: [0, -30, 0], scale: [1, 1.15, 1] }} transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }} />
-            </>
-          )}
-          <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.06]" style={patternStyle} />
-          <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(ellipse at 70% 0%, transparent 40%, ${C.forestDeep}66 100%)` }} />
+        <div className="relative rounded-[2rem] sm:rounded-[2.75rem]">
+          {/* Background layer — clips the video + decoration. The OUTER panel is
+              overflow-visible so the floating visual can hang below the video. */}
+          <div aria-hidden className="absolute inset-0 overflow-hidden rounded-[2rem] sm:rounded-[2.75rem]" style={{ background: `linear-gradient(160deg, ${C.forestDeep} 0%, ${C.forest} 55%, ${C.emerald} 130%)` }}>
+            {/* YouTube background video — heavily overscanned + center-cropped so
+                ALL YouTube chrome (title, logo, controls on every edge) is off
+                screen. Muted autoplay loop; mounted client-side only. */}
+            {mounted && (
+              <iframe
+                title="فيديو الخلفية"
+                tabIndex={-1}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                referrerPolicy="strict-origin-when-cross-origin"
+                src="https://www.youtube-nocookie.com/embed/r6EQdFFbMx0?autoplay=1&mute=1&loop=1&playlist=r6EQdFFbMx0&controls=0&modestbranding=1&showinfo=0&rel=0&disablekb=1&fs=0&playsinline=1&iv_load_policy=3"
+                className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[340%] w-[340%] sm:h-[185%] sm:w-[185%] lg:h-[155%] lg:w-[155%]"
+              />
+            )}
+            {/* Dark tint over the video for text legibility */}
+            <div aria-hidden className="absolute inset-0" style={{ background: `linear-gradient(105deg, ${C.forestDeep}f2 0%, ${C.forestDeep}c2 45%, ${C.forest}82 100%)` }} />
+            {/* Aurora glows — always in the DOM (identical on server + first client
+                render); animation starts only after mount. */}
+            <motion.div aria-hidden className="pointer-events-none absolute -top-24 right-[-10%] h-[28rem] w-[28rem] rounded-full" style={{ background: `radial-gradient(circle, ${C.gold}55, transparent 65%)`, filter: 'blur(20px)' }} animate={mounted && !reduce ? { x: [0, -40, 0], y: [0, 30, 0], scale: [1, 1.12, 1] } : undefined} transition={{ duration: 16, repeat: Infinity, ease: 'easeInOut' }} />
+            <motion.div aria-hidden className="pointer-events-none absolute bottom-[-15%] left-[-10%] h-[30rem] w-[30rem] rounded-full" style={{ background: `radial-gradient(circle, ${C.emerald}88, transparent 65%)`, filter: 'blur(24px)' }} animate={mounted && !reduce ? { x: [0, 50, 0], y: [0, -30, 0], scale: [1, 1.15, 1] } : undefined} transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }} />
+            <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.06]" style={patternStyle} />
+            <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: `radial-gradient(ellipse at 70% 0%, transparent 40%, ${C.forestDeep}66 100%)` }} />
+          </div>
 
           <motion.div style={{ opacity: heroFade }} className="relative mx-auto max-w-6xl px-5 pb-20 pt-28 sm:px-8 sm:pb-28 sm:pt-36">
             <div className="grid items-center gap-12 lg:grid-cols-2">
@@ -276,7 +299,9 @@ export default function Home() {
                 </motion.div>
               </motion.div>
 
-              <div className="relative hidden lg:block">
+              {/* Floating visual — pushed down so it sits half over the video and
+                  half below it (overflows the panel since it is overflow-visible). */}
+              <div className="relative z-20 hidden lg:block lg:translate-y-28">
                 <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.9, ease: EASE, delay: 0.2 }} className="relative mx-auto w-full max-w-md">
                   <div className="overflow-hidden rounded-[1.75rem] shadow-2xl" style={{ border: `5px solid ${C.card}` }}>
                     <img src={Images.couple1} alt="زوجان سعيدان" className="h-[22rem] w-full object-cover" />
@@ -313,7 +338,8 @@ export default function Home() {
       </section>
 
       {/* ── STATS — daisyUI `stats` component (scoped theme) ──── */}
-      <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+      {/* Extra top padding on lg leaves room for the hero visual that overhangs. */}
+      <section className="mx-auto max-w-5xl px-4 pb-16 pt-20 sm:px-6 sm:pb-20 lg:pt-40">
         <Reveal>
           <div data-theme="tayyibt" className="rounded-[1.75rem]" style={{ background: 'transparent' }}>
             <div className="stats stats-vertical w-full border sm:stats-horizontal" style={{ background: C.card, borderColor: C.border, boxShadow: '0 8px 30px -12px rgba(10,61,43,0.15)' }}>
@@ -462,9 +488,7 @@ export default function Home() {
         <Reveal y={40}>
           <div className="relative overflow-hidden rounded-[2rem] px-6 py-20 text-center sm:rounded-[2.5rem] sm:py-24" style={{ background: `linear-gradient(150deg, ${C.forestDeep}, ${C.forest} 60%, ${C.emerald})` }}>
             <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.07]" style={patternStyle} />
-            {!reduce && (
-              <motion.div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ background: `radial-gradient(circle, ${C.gold}40, transparent 65%)`, filter: 'blur(30px)' }} animate={{ scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] }} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} />
-            )}
+            <motion.div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[24rem] w-[24rem] -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ background: `radial-gradient(circle, ${C.gold}40, transparent 65%)`, filter: 'blur(30px)' }} animate={mounted && !reduce ? { scale: [1, 1.2, 1], opacity: [0.6, 1, 0.6] } : undefined} transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }} />
             <div className="relative mx-auto max-w-3xl">
               <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl" style={{ background: `${C.gold}22`, color: C.goldLight, border: `1px solid ${C.gold}55` }}>{Icons.heart}</div>
               <h2 className="mb-4 text-3xl font-bold sm:text-4xl lg:text-[2.75rem]" style={{ fontFamily: serif, color: C.parchment }}>
