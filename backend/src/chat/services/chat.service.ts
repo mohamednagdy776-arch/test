@@ -277,15 +277,20 @@ export class ChatService {
       throw new ForbiddenException('Cannot start a conversation with yourself');
     }
 
-    // Enforce match gate: users must have an accepted match before chatting (#805).
+    // Relationship gate: a 1:1 conversation needs an accepted match OR an
+    // accepted friendship (#805). Friends can DM without being matched.
     const match = await this.matchesRepo.findOne({
       where: [
         { user1: { id: userId }, user2: { id: targetUserId } },
         { user1: { id: targetUserId }, user2: { id: userId } },
       ],
     });
-    if (!match || !['accepted', 'chat'].includes(match.status)) {
-      throw new ForbiddenException('You must be matched before starting a conversation');
+    const isMatched = !!match && ['accepted', 'chat'].includes(match.status);
+    if (!isMatched) {
+      const friendIds = await this.friendsService.getFriendIds(userId);
+      if (!friendIds.includes(targetUserId)) {
+        throw new ForbiddenException('You must be matched or friends before starting a conversation');
+      }
     }
 
     // Find an existing 1:1 conversation containing both users (scalar columns).
