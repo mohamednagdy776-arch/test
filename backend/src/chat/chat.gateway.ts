@@ -377,4 +377,15 @@ export class ChatGateway implements OnGatewayConnection {
     if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
     this.emitToUser(payload.targetId, 'call:mute', { from, muted: !!payload.muted });
   }
+
+  /** Relay a participant's camera on/off (video calls) so the peer can show a placeholder. */
+  @SubscribeMessage('call:camera')
+  async handleCallCamera(
+    @MessageBody() payload: { conversationId: string; targetId: string; cameraOff: boolean },
+    @ConnectedSocket() client: Socket,
+  ) {
+    const from: string = client.data.userId;
+    if (!(await this.canSignal(payload.conversationId, from, payload.targetId))) return;
+    this.emitToUser(payload.targetId, 'call:camera', { from, cameraOff: !!payload.cameraOff });
+  }
 }

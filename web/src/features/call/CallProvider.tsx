@@ -27,6 +27,14 @@ interface CallContextValue {
   speakerOn: boolean;
   /** true when the OTHER party has muted their mic */
   peerMuted: boolean;
+  /** whether our camera is on (video calls only) */
+  cameraOn: boolean;
+  /** true when the OTHER party has turned their camera off (video calls) */
+  peerCameraOff: boolean;
+  /** our local media stream (for self-preview in video calls) */
+  localStream: MediaStream | null;
+  /** the remote party's media stream (rendered in video calls) */
+  remoteStream: MediaStream | null;
   /** rough live connection quality while a call is active */
   quality: CallQuality;
   /** error message (e.g. mic permission denied, callee offline) or null */
@@ -37,6 +45,7 @@ interface CallContextValue {
   endCall: () => void;
   toggleMute: () => void;
   toggleSpeaker: () => void;
+  toggleCamera: () => void;
 }
 
 const CallContext = createContext<CallContextValue | null>(null);
@@ -53,6 +62,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const [muted, setMuted] = useState(false);
   const [speakerOn, setSpeakerOn] = useState(true);
   const [peerMuted, setPeerMuted] = useState(false);
+  const [cameraOn, setCameraOn] = useState(true);
+  const [peerCameraOff, setPeerCameraOff] = useState(false);
+  const [localStream, setLocalStream] = useState<MediaStream | null>(null);
+  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [quality, setQuality] = useState<CallQuality>('unknown');
   const [error, setError] = useState<string | null>(null);
 
@@ -97,16 +110,24 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     setSpeakerOn(true);
     speakerOnRef.current = true;
     setPeerMuted(false);
+    setCameraOn(true);
+    setPeerCameraOff(false);
+    setLocalStream(null);
+    setRemoteStream(null);
     setQuality('unknown');
   }, []);
 
   /** Build the RTCPeerConnection, attach the mic stream, and wire signalling. */
   const buildPeerConnection = useCallback(async (target: CallPeer): Promise<RTCPeerConnection> => {
+    const isVideo = target.callType === 'video';
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
-      video: target.callType === 'video',
+      video: isVideo ? { facingMode: 'user' } : false,
     });
     localStreamRef.current = stream;
+    setLocalStream(stream);
+    // Video calls start with the camera live; audio calls have no video track.
+    setCameraOn(isVideo);
 
     const iceServers = await fetchIceServers();
     const pc = new RTCPeerConnection({ iceServers });
@@ -124,7 +145,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
     pc.ontrack = (e) => {
       const [remote] = e.streams;
-      if (remoteAudioRef.current && remote) {
+      if (!remote) return;
+      // Surface the stream so the overlay can render remote video.
+      setRemoteStream(remote);
+      if (remoteAudioRef.current) {
         remoteAudioRef.current.srcObject = remote;
         // Honour the current speaker toggle for this fresh stream.
         remoteAudioRef.current.muted = !speakerOnRef.current;
@@ -267,6 +291,21 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     if (remoteAudioRef.current) remoteAudioRef.current.muted = !next;
   }, []);
 
+  // Camera = enable/disable our outgoing video track (video calls only). The
+  // track stays in the sender so we don't renegotiate; the peer just receives
+  // black frames, and we relay the state so they can show a placeholder.
+  const toggleCamera = useCallback(() => {
+    const stream = localStreamRef.current;
+    if (!stream) return;
+    const tracks = stream.getVideoTracks();
+    if (tracks.length === 0) return;
+    const next = !cameraOn;
+    tracks.forEach((t) => { t.enabled = next; });
+    setCameraOn(next);
+    const p = peerRef.current;
+    if (p) getSocket().emit('call:camera', { conversationId: p.conversationId, targetId: p.userId, cameraOff: !next });
+  }, [cameraOn]);
+
   // ── Ringtone: ring while outgoing/incoming, silent otherwise ───────────
   useEffect(() => {
     const rt = ringtoneRef.current;
@@ -404,6 +443,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       setPeerMuted(!!d.muted);
     };
 
+    const onPeerCamera = (d: { from: string; cameraOff: boolean }) => {
+      if (d.from !== peerRef.current?.userId) return;
+      setPeerCameraOff(!!d.cameraOff);
+    };
+
     socket.on('call:incoming', onIncoming);
     socket.on('call:accepted', onAccepted);
     socket.on('call:offer', onOffer);
@@ -412,6 +456,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     socket.on('call:rejected', onRejected);
     socket.on('call:ended', onEnded);
     socket.on('call:mute', onPeerMute);
+    socket.on('call:camera', onPeerCamera);
 
     return () => {
       socket.off('call:incoming', onIncoming);
@@ -422,11 +467,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       socket.off('call:rejected', onRejected);
       socket.off('call:ended', onEnded);
       socket.off('call:mute', onPeerMute);
+      socket.off('call:camera', onPeerCamera);
     };
   }, [cleanup, drainPendingIce, setPeerBoth, setPhaseBoth]);
 
   return (
-    <CallContext.Provider value={{ phase, peer, muted, speakerOn, peerMuted, quality, error, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker }}>
+    <CallContext.Provider value={{ phase, peer, muted, speakerOn, peerMuted, cameraOn, peerCameraOff, localStream, remoteStream, quality, error, startCall, acceptCall, rejectCall, endCall, toggleMute, toggleSpeaker, toggleCamera }}>
       {children}
       {/* Hidden sink for the remote party's audio. */}
       <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
@@ -437,6 +483,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           muted={muted}
           speakerOn={speakerOn}
           peerMuted={peerMuted}
+          cameraOn={cameraOn}
+          peerCameraOff={peerCameraOff}
+          localStream={localStream}
+          remoteStream={remoteStream}
           quality={quality}
           error={error}
           onAccept={acceptCall}
@@ -444,6 +494,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           onEnd={endCall}
           onToggleMute={toggleMute}
           onToggleSpeaker={toggleSpeaker}
+          onToggleCamera={toggleCamera}
         />
       )}
     </CallContext.Provider>

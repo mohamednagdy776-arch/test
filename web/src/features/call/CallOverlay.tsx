@@ -5,6 +5,7 @@ import Image from 'next/image';
 import {
   Phone, PhoneSlash, Microphone, MicrophoneSlash,
   SpeakerHigh, SpeakerSlash, ArrowsIn, ArrowsOut,
+  VideoCamera, VideoCameraSlash,
 } from '@phosphor-icons/react';
 import { resolveMediaUrl } from '@/lib/media';
 import type { CallPeer, CallPhase, CallQuality } from './config';
@@ -15,6 +16,10 @@ interface Props {
   muted: boolean;
   speakerOn: boolean;
   peerMuted: boolean;
+  cameraOn: boolean;
+  peerCameraOff: boolean;
+  localStream: MediaStream | null;
+  remoteStream: MediaStream | null;
   quality: CallQuality;
   error: string | null;
   onAccept: () => void;
@@ -22,6 +27,7 @@ interface Props {
   onEnd: () => void;
   onToggleMute: () => void;
   onToggleSpeaker: () => void;
+  onToggleCamera: () => void;
 }
 
 const STATUS_TEXT: Record<CallPhase, string> = {
@@ -68,14 +74,47 @@ function QualityBars({ quality }: { quality: CallQuality }) {
   );
 }
 
+/** A <video> sink that binds a MediaStream imperatively (React can't pass srcObject as a prop). */
+function StreamVideo({
+  stream, muted, mirror, className, style,
+}: {
+  stream: MediaStream | null;
+  muted: boolean;
+  mirror?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  const ref = useRef<HTMLVideoElement | null>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (el.srcObject !== stream) {
+      el.srcObject = stream;
+      if (stream) void el.play().catch(() => { /* autoplay guard */ });
+    }
+  }, [stream]);
+  return (
+    <video
+      ref={ref}
+      autoPlay
+      playsInline
+      muted={muted}
+      className={className}
+      style={{ transform: mirror ? 'scaleX(-1)' : undefined, ...style }}
+    />
+  );
+}
+
 export function CallOverlay({
-  phase, peer, muted, speakerOn, peerMuted, quality, error,
-  onAccept, onReject, onEnd, onToggleMute, onToggleSpeaker,
+  phase, peer, muted, speakerOn, peerMuted, cameraOn, peerCameraOff,
+  localStream, remoteStream, quality, error,
+  onAccept, onReject, onEnd, onToggleMute, onToggleSpeaker, onToggleCamera,
 }: Props) {
   const [elapsed, setElapsed] = useState(0);
   const [minimized, setMinimized] = useState(false);
 
   const inCall = phase === 'active' || phase === 'reconnecting';
+  const isVideo = peer?.callType === 'video';
 
   // Tick the in-call timer while media is (or was briefly) flowing. Keep it
   // running across a transient 'reconnecting' so the duration isn't lost.
@@ -91,17 +130,23 @@ export function CallOverlay({
     if (typeof document === 'undefined') return;
     if (!prevTitle.current) prevTitle.current = document.title;
     const name = peer?.name || 'مكالمة';
-    if (inCall) document.title = `📞 ${fmt(elapsed)} · ${name}`;
-    else if (phase === 'incoming') document.title = `📞 مكالمة واردة · ${name}`;
-    else if (phase === 'outgoing' || phase === 'connecting') document.title = `📞 ${name}…`;
+    const icon = isVideo ? '📹' : '📞';
+    if (inCall) document.title = `${icon} ${fmt(elapsed)} · ${name}`;
+    else if (phase === 'incoming') document.title = `${icon} مكالمة واردة · ${name}`;
+    else if (phase === 'outgoing' || phase === 'connecting') document.title = `${icon} ${name}…`;
     return () => { if (prevTitle.current) document.title = prevTitle.current; };
-  }, [inCall, phase, elapsed, peer?.name]);
+  }, [inCall, phase, elapsed, peer?.name, isVideo]);
 
   const name = peer?.name || 'مستخدم';
   const avatar = resolveMediaUrl(peer?.avatar);
   const initial = name.charAt(0).toUpperCase();
   const subtitle = phase === 'active' ? fmt(elapsed) : (error || STATUS_TEXT[phase]);
   const canMinimize = phase !== 'incoming' && phase !== 'ended';
+  const callKindLabel = isVideo ? 'مكالمة فيديو' : 'مكالمة صوتية';
+
+  // Whether the remote party's video should actually be on screen.
+  const remoteVideoLive = isVideo && inCall && !peerCameraOff
+    && !!remoteStream && remoteStream.getVideoTracks().some((t) => t.readyState === 'live');
 
   // ── Minimized: compact floating bar so the user can keep browsing ──────
   if (minimized && canMinimize) {
@@ -144,7 +189,119 @@ export function CallOverlay({
     );
   }
 
-  // ── Full overlay ───────────────────────────────────────────────────────
+  // ── Video call: full-screen stage with remote feed + self-preview ──────
+  if (isVideo && phase !== 'incoming' && phase !== 'ended') {
+    return (
+      <div dir="rtl" className="fixed inset-0 z-[100] animate-fade-in" style={{ background: '#0b0b0b' }}>
+        {/* Remote feed (or avatar placeholder until it arrives / camera off) */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {remoteVideoLive ? (
+            <StreamVideo stream={remoteStream} muted className="w-full h-full object-cover" />
+          ) : (
+            <div className="flex flex-col items-center justify-center gap-4 text-center px-6">
+              <div className="relative">
+                {(phase === 'outgoing' || phase === 'connecting') && (
+                  <span className="absolute inset-0 rounded-full animate-ping" style={{ background: 'rgba(255,255,255,0.12)' }} />
+                )}
+                <div
+                  className="relative h-28 w-28 rounded-full overflow-hidden flex items-center justify-center text-4xl font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}
+                >
+                  {avatar ? <Image src={avatar} alt={name} width={112} height={112} className="w-full h-full object-cover" /> : initial}
+                </div>
+              </div>
+              <p className="text-lg font-bold text-white">{name}</p>
+              <p className="text-sm flex items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                {inCall && !error && <QualityBars quality={quality} />}
+                {inCall && !error ? (peerCameraOff ? 'أوقف الكاميرا' : 'في انتظار الفيديو…') : subtitle}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Top gradient + meta */}
+        <div className="absolute top-0 inset-x-0 px-5 py-4 flex items-start justify-between"
+          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55), transparent)' }}>
+          <div className="flex flex-col">
+            <span className="text-sm font-bold text-white flex items-center gap-1.5">
+              <VideoCamera size={15} weight="fill" /> {name}
+            </span>
+            <span className="text-xs tabular-nums flex items-center gap-1.5"
+              style={{ color: phase === 'reconnecting' ? '#f59e0b' : 'rgba(255,255,255,0.75)' }}>
+              {inCall && <QualityBars quality={quality} />}
+              {phase === 'active' ? fmt(elapsed) : (error || STATUS_TEXT[phase] || callKindLabel)}
+            </span>
+            {inCall && peerMuted && (
+              <span className="mt-1 text-[11px] flex items-center gap-1" style={{ color: 'rgba(255,255,255,0.75)' }}>
+                <MicrophoneSlash size={12} weight="fill" /> الطرف الآخر كتم الميكروفون
+              </span>
+            )}
+          </div>
+          {canMinimize && (
+            <button
+              onClick={() => setMinimized(true)}
+              title="تصغير"
+              className="flex h-9 w-9 items-center justify-center rounded-full transition-transform hover:scale-110"
+              style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}
+            >
+              <ArrowsIn size={18} weight="bold" />
+            </button>
+          )}
+        </div>
+
+        {/* Self-preview PiP */}
+        <div
+          className="absolute top-20 left-4 w-28 h-40 rounded-2xl overflow-hidden shadow-xl"
+          style={{ border: '2px solid rgba(255,255,255,0.25)', background: '#1a1a1a' }}
+        >
+          {cameraOn && localStream ? (
+            <StreamVideo stream={localStream} muted mirror className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              <VideoCameraSlash size={24} weight="fill" />
+            </div>
+          )}
+        </div>
+
+        {/* Controls */}
+        <div className="absolute bottom-0 inset-x-0 px-6 pb-8 pt-12 flex items-center justify-center gap-5"
+          style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent)' }}>
+          <CallButton
+            color={muted ? '#fff' : 'rgba(255,255,255,0.9)'}
+            bg={muted ? '#ef4444' : 'rgba(255,255,255,0.18)'}
+            label={muted ? 'إلغاء الكتم' : 'كتم'}
+            onClick={onToggleMute}
+            dark
+          >
+            {muted ? <MicrophoneSlash size={24} weight="fill" /> : <Microphone size={24} weight="fill" />}
+          </CallButton>
+          <CallButton
+            color="#fff"
+            bg={cameraOn ? 'rgba(255,255,255,0.18)' : '#ef4444'}
+            label={cameraOn ? 'إيقاف الكاميرا' : 'تشغيل الكاميرا'}
+            onClick={onToggleCamera}
+            dark
+          >
+            {cameraOn ? <VideoCamera size={24} weight="fill" /> : <VideoCameraSlash size={24} weight="fill" />}
+          </CallButton>
+          <CallButton
+            color="#fff"
+            bg={speakerOn ? 'rgba(255,255,255,0.18)' : '#ef4444'}
+            label={speakerOn ? 'مكبر الصوت' : 'كتم السماعة'}
+            onClick={onToggleSpeaker}
+            dark
+          >
+            {speakerOn ? <SpeakerHigh size={24} weight="fill" /> : <SpeakerSlash size={24} weight="fill" />}
+          </CallButton>
+          <CallButton color="#ef4444" label="إنهاء" onClick={onEnd}>
+            <PhoneSlash size={26} weight="fill" />
+          </CallButton>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Full overlay (audio calls + video ringing/incoming/ended) ──────────
   return (
     <div
       dir="rtl"
@@ -194,7 +351,7 @@ export function CallOverlay({
           {subtitle}
         </p>
         <p className="mt-0.5 text-xs flex items-center gap-1" style={{ color: 'var(--muted-foreground)' }}>
-          <Phone size={12} weight="fill" /> مكالمة صوتية
+          {isVideo ? <VideoCamera size={12} weight="fill" /> : <Phone size={12} weight="fill" />} {callKindLabel}
         </p>
         {/* Peer's mic state */}
         {inCall && peerMuted && (
@@ -211,7 +368,7 @@ export function CallOverlay({
                 <PhoneSlash size={26} weight="fill" />
               </CallButton>
               <CallButton color="#22c55e" label="قبول" onClick={onAccept} pulse>
-                <Phone size={26} weight="fill" />
+                {isVideo ? <VideoCamera size={26} weight="fill" /> : <Phone size={26} weight="fill" />}
               </CallButton>
             </>
           ) : (
@@ -250,7 +407,7 @@ export function CallOverlay({
 }
 
 function CallButton({
-  children, color, bg, label, onClick, pulse,
+  children, color, bg, label, onClick, pulse, dark,
 }: {
   children: React.ReactNode;
   color: string;
@@ -258,6 +415,7 @@ function CallButton({
   label: string;
   onClick: () => void;
   pulse?: boolean;
+  dark?: boolean;
 }) {
   const filled = !bg;
   return (
@@ -272,7 +430,7 @@ function CallButton({
       >
         {children}
       </span>
-      <span className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>{label}</span>
+      <span className="text-[11px]" style={{ color: dark ? 'rgba(255,255,255,0.85)' : 'var(--muted-foreground)' }}>{label}</span>
     </button>
   );
 }
