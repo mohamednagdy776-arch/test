@@ -272,7 +272,7 @@ function PostMenu({ postId, post, isOwnPost, onClose, onEdit, onHide }: { postId
 
   const menuItems = [
     ...(isOwnPost && onEdit ? [{ label: 'تعديل المنشور', icon: PencilSimple, action: () => { onEdit(); } }] : []),
-    { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId, { onSuccess: () => showToast('تم حفظ المنشور', 'success') }) },
+    { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId, { onSuccess: () => showToast('تم حفظ المنشور', 'success'), onError: (err: any) => showToast(err?.response?.data?.message === 'Already saved' ? 'المنشور محفوظ بالفعل' : 'فشل حفظ المنشور', 'error') }) },
     ...(isOwnPost ? [
       { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
       { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => pinPost.mutate({ postId, data: { isArchived: true } }, { onSuccess: () => { showToast('تمت أرشفة المنشور', 'success'); onHide?.(); } }) },

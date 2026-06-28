@@ -1,6 +1,7 @@
 'use client';
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { postsApi, storiesApi } from './api';
+import { savedPostsApi } from '@/features/memories/api';
 
 export function useFeed(cursor?: string, limit = 10) {
   return useInfiniteQuery({
@@ -98,9 +99,9 @@ export function useSharePost() {
 export function useSavePost() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (postId: string) => postsApi.savePost(postId),
+    mutationFn: (postId: string) => savedPostsApi.saveItem('post', postId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['saved-posts'] });
+      qc.invalidateQueries({ queryKey: ['saved-items'] });
     },
   });
 }
