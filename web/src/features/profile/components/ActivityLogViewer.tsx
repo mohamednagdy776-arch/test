@@ -23,7 +23,15 @@ export const ActivityLogViewer = ({ userId }: Props) => {
 
   const { data, isLoading } = useQuery({
     queryKey: ['activity-log', userId, { year, type }],
-    queryFn: () => apiClient.get(`/users/${userId}/activity`, { params: { year, type } }).then((r) => r.data),
+    queryFn: () => {
+      // Only send filters that are actually set — sending empty year/type made
+      // the backend 400 (empty `type` failed enum validation), breaking the
+      // whole tab (#832).
+      const params: Record<string, string> = {};
+      if (year) params.year = year;
+      if (type) params.type = type;
+      return apiClient.get(`/users/${userId}/activity`, { params }).then((r) => r.data);
+    },
     enabled: !!userId,
   });
 

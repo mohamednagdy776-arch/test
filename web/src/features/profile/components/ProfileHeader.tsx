@@ -1,8 +1,9 @@
 'use client';
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { relationshipStatusLabel } from '../labels';
 import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight, SealCheck } from '@phosphor-icons/react';
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
@@ -272,7 +273,7 @@ export const ProfileHeader = ({
               <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Briefcase size={14} className="inline mr-1" /> {profile.workplace}</p>
             )}
             {profile.relationshipStatus && (
-              <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Heart size={14} className="inline mr-1" weight="fill" /> {profile.relationshipStatus}</p>
+              <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Heart size={14} className="inline mr-1" weight="fill" /> {relationshipStatusLabel(profile.relationshipStatus)}</p>
             )}
             {profile.bio && (
               <p dir="auto" className="mt-2 text-sm text-[var(--foreground)]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
@@ -437,12 +438,22 @@ export const ProfileHeader = ({
   );
 };
 
-// Includes the core matchmaking fields (religion + preferences) so 100% means
-// the profile is actually ready for matching — not just bio/website filled.
-const fields = ['fullName', 'age', 'gender', 'country', 'city', 'bio', 'education', 'jobTitle', 'financialLevel', 'sect', 'prayerLevel', 'religiousCommitment', 'minAge', 'maxAge', 'relocateWilling', 'wantsChildren'];
+// Use the SAME backend completeness score the dashboard shows, so the two
+// surfaces never disagree (was a client-side calc here → 69% vs dashboard's
+// /users/me/completeness → 100%, #835).
 const ProfileCompletion = ({ profile }: { profile: any }) => {
-  const filled = fields.filter((f) => profile[f] != null && profile[f] !== '').length;
-  const pct = Math.round((filled / fields.length) * 100);
+  const { data } = useQuery({
+    queryKey: ['profile-completeness'],
+    queryFn: () => apiClient.get('/users/me/completeness').then((r) => r.data),
+    staleTime: 60_000,
+  });
+  const score = (data as any)?.data?.score ?? (data as any)?.score ?? null;
+  // Fall back to a local estimate only until the score loads.
+  const fallbackFields = ['fullName', 'age', 'gender', 'country', 'city', 'bio', 'education', 'sect', 'prayerLevel'];
+  const fallback = Math.round(
+    (fallbackFields.filter((f) => profile[f] != null && profile[f] !== '').length / fallbackFields.length) * 100,
+  );
+  const pct = Math.min(100, Math.max(0, Number(score ?? fallback)));
   return (
     <div className="mt-6 border-t border-[var(--border)]/40 pt-4">
       <div className="flex items-center justify-between mb-2">
