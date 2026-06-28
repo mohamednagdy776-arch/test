@@ -237,10 +237,10 @@ export default function FriendsPage() {
   const { mutate: updateList } = useUpdateFriendList();
   const { mutate: deleteList } = useDeleteFriendList();
 
-  const friends = friendsData?.data?.data ?? [];
+  const friends = friendsData?.data ?? [];
   const requests = requestsData?.data ?? [];
   const suggestions = suggestionsData?.data ?? [];
-  const birthdays = birthdaysData ?? [];
+  const birthdays = birthdaysData?.data ?? [];
   const friendLists = friendListsData?.data ?? [];
 
   const filteredAndSortedFriends = useMemo(() => {
