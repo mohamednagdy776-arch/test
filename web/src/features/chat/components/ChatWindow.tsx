@@ -61,7 +61,6 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const deleteMessage = useDeleteMessage();
   const [isOnline, setIsOnline] = useState(false);
-  const [callToast, setCallToast] = useState<string | null>(null);
   const [otherSeenAt, setOtherSeenAt] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -388,12 +387,6 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             )}
           </div>
 
-          {callToast && (
-            <span className="text-xs px-2.5 py-1 rounded-xl"
-              style={{ color: 'var(--muted-foreground)', background: 'var(--muted)' }}>
-              {callToast}
-            </span>
-          )}
           <button
             onClick={() => {
               if (!match.user2Id) return;
@@ -413,7 +406,16 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             <Phone size={18} />
           </button>
           <button
-            onClick={() => { setCallToast('مكالمات الفيديو قيد التطوير'); setTimeout(() => setCallToast(null), 3000); }}
+            onClick={() => {
+              if (!match.user2Id) return;
+              startCall({
+                conversationId: match.id,
+                calleeId: match.user2Id,
+                name: otherName,
+                avatar: (match as any).otherUserAvatar,
+                callType: 'video',
+              });
+            }}
             title="مكالمة فيديو"
             className="p-2 rounded-xl transition-all hover:scale-110"
             style={{ color: 'var(--muted-foreground)' }}
