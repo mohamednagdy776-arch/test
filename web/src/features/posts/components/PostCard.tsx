@@ -264,15 +264,18 @@ function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: ()
 }
 
 function PostMenu({ postId, post, isOwnPost, onClose, onEdit, onHide }: { postId: string; post: any; isOwnPost?: boolean; onClose: () => void; onEdit?: () => void; onHide?: () => void }) {
-  const savePost = useSavePost();
+  const { showToast } = useToast() as any;
+  const savePost = useSavePost({
+    onSuccess: () => showToast('تم حفظ المنشور', 'success'),
+    onError: (err: any) => showToast(err?.response?.data?.message === 'Already saved' ? 'المنشور محفوظ بالفعل' : 'فشل حفظ المنشور', 'error'),
+  });
   const hidePost = useHidePost();
   const deletePost = useDeletePost();
   const pinPost = useUpdatePost();
-  const { showToast } = useToast() as any;
 
   const menuItems = [
     ...(isOwnPost && onEdit ? [{ label: 'تعديل المنشور', icon: PencilSimple, action: () => { onEdit(); } }] : []),
-    { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId, { onSuccess: () => showToast('تم حفظ المنشور', 'success'), onError: (err: any) => showToast(err?.response?.data?.message === 'Already saved' ? 'المنشور محفوظ بالفعل' : 'فشل حفظ المنشور', 'error') }) },
+    { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId) },
     ...(isOwnPost ? [
       { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
       { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => pinPost.mutate({ postId, data: { isArchived: true } }, { onSuccess: () => { showToast('تمت أرشفة المنشور', 'success'); onHide?.(); } }) },

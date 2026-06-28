@@ -96,12 +96,16 @@ export function useSharePost() {
   });
 }
 
-export function useSavePost() {
+export function useSavePost(callbacks?: { onSuccess?: () => void; onError?: (err: any) => void }) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (postId: string) => savedPostsApi.saveItem('post', postId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['saved-items'] });
+      callbacks?.onSuccess?.();
+    },
+    onError: (err: any) => {
+      callbacks?.onError?.(err);
     },
   });
 }
