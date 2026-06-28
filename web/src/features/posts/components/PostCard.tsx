@@ -263,12 +263,8 @@ function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: ()
   );
 }
 
-function PostMenu({ postId, post, isOwnPost, onClose, onEdit, onHide }: { postId: string; post: any; isOwnPost?: boolean; onClose: () => void; onEdit?: () => void; onHide?: () => void }) {
+function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide }: { postId: string; post: any; isOwnPost?: boolean; savePost: ReturnType<typeof useSavePost>; onClose: () => void; onEdit?: () => void; onHide?: () => void }) {
   const { showToast } = useToast() as any;
-  const savePost = useSavePost({
-    onSuccess: () => showToast('تم حفظ المنشور', 'success'),
-    onError: (err: any) => showToast(err?.response?.data?.message === 'Already saved' ? 'المنشور محفوظ بالفعل' : 'فشل حفظ المنشور', 'error'),
-  });
   const hidePost = useHidePost();
   const deletePost = useDeletePost();
   const pinPost = useUpdatePost();
@@ -379,6 +375,11 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const [showEditModal, setShowEditModal] = useState(false);
   const [hidden, setHidden] = useState(false);
   const { data: myProfileData } = useMyProfile();
+  const { showToast } = useToast() as any;
+  const savePost = useSavePost({
+    onSuccess: () => showToast('تم حفظ المنشور', 'success'),
+    onError: (err: any) => showToast(err?.response?.data?.message === 'Already saved' ? 'المنشور محفوظ بالفعل' : 'فشل حفظ المنشور', 'error'),
+  });
   // `GET /users/me` returns a PROFILE object with both `id` (profile id) and
   // `userId` (the user id). `post.user.id` is a USER id, so we must compare
   // against `userId` — using the profile `id` made isOwnPost always false and
@@ -429,7 +430,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
           <button onClick={() => setShowMenu(!showMenu)} className="rounded-lg p-1.5 text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:shadow-soft transition-all duration-200 hover:scale-110">
             <DotsThreeVertical size={20} />
           </button>
-          {showMenu && <PostMenu postId={post.id} post={post} isOwnPost={!!isOwnPost} onClose={() => setShowMenu(false)} onEdit={() => { setShowMenu(false); setShowEditModal(true); }} onHide={() => { setShowMenu(false); setHidden(true); }} />}
+          {showMenu && <PostMenu postId={post.id} post={post} isOwnPost={!!isOwnPost} savePost={savePost} onClose={() => setShowMenu(false)} onEdit={() => { setShowMenu(false); setShowEditModal(true); }} onHide={() => { setShowMenu(false); setHidden(true); }} />}
         </div>
       </div>
 
