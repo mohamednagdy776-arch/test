@@ -59,18 +59,21 @@ export class ChatService {
     const other = parts.find(p => p.userId !== userId);
     if (!other) return null;
     const user = await this.usersRepo.findOne({ where: { id: other.userId } });
-    if (!user) return { id: other.userId, name: null, avatar: null };
+    if (!user) return { id: other.userId, name: null, avatar: null, username: null };
     const profile = await this.profilesRepo.findOne({ where: { user: { id: user.id } } });
+    // Fall back through every name source — including the username — so a
+    // conversation is never shown as the generic "محادثة" when we know who the
+    // other party is (#822).
     const name =
       `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() ||
-      profile?.fullName || user.fullName || null;
-    return { id: user.id, name, avatar: profile?.avatarUrl ?? null };
+      profile?.fullName || user.fullName || user.username || null;
+    return { id: user.id, name, avatar: profile?.avatarUrl ?? null, username: user.username ?? null };
   }
 
   private buildConversationDto(
     conv: Conversation,
     userId: string,
-    other: { id: string; name: string | null; avatar: string | null } | null,
+    other: { id: string; name: string | null; avatar: string | null; username?: string | null } | null,
   ) {
     const lastMessage = conv.messages?.length ? conv.messages[conv.messages.length - 1] : null;
     return {
@@ -81,6 +84,7 @@ export class ChatService {
       otherUserId: other?.id ?? null,
       otherUserName: other?.name ?? null,
       otherUserAvatar: other?.avatar ?? null,
+      otherUsername: other?.username ?? null,
       lastMessage: lastMessage ? {
         content: lastMessage.contentEncrypted,
         createdAt: lastMessage.createdAt,
@@ -89,7 +93,7 @@ export class ChatService {
     };
   }
 
-  async getConversations(userId: string) {
+  async getConversations(userId: string, page = 1, limit?: number) {
     // Use scalar columns (relations on ConversationParticipant join on
     // unpopulated FK columns in the current schema).
     const myParts = await this.participantRepo.find({ where: { userId } });
@@ -112,7 +116,25 @@ export class ChatService {
       const other = conv.isGroup ? null : await this.resolveOtherUser(conv.id, userId);
       out.push(this.buildConversationDto(conv, userId, other));
     }
-    return out;
+
+    // Collapse duplicate 1:1 threads with the same person — show only the most
+    // recent (the list is already sorted newest-first) so the list isn't full
+    // of repeated entries for one contact (#822). Groups are never collapsed.
+    const seenOtherIds = new Set<string>();
+    const deduped = out.filter((c) => {
+      if (c.isGroup || !c.otherUserId) return true;
+      if (seenOtherIds.has(c.otherUserId)) return false;
+      seenOtherIds.add(c.otherUserId);
+      return true;
+    });
+
+    // Optional server-side pagination (#823). Backward compatible: with no
+    // `limit` the full (deduped) list is returned, matching prior behaviour.
+    if (limit && limit > 0) {
+      const start = (page - 1) * limit;
+      return deduped.slice(start, start + limit);
+    }
+    return deduped;
   }
 
   async isParticipant(conversationId: string, userId: string): Promise<boolean> {

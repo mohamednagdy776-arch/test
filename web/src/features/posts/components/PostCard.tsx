@@ -263,7 +263,7 @@ function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: ()
   );
 }
 
-function PostMenu({ postId, post, isOwnPost, onClose, onEdit }: { postId: string; post: any; isOwnPost?: boolean; onClose: () => void; onEdit?: () => void }) {
+function PostMenu({ postId, post, isOwnPost, onClose, onEdit, onHide }: { postId: string; post: any; isOwnPost?: boolean; onClose: () => void; onEdit?: () => void; onHide?: () => void }) {
   const savePost = useSavePost();
   const hidePost = useHidePost();
   const deletePost = useDeletePost();
@@ -275,11 +275,11 @@ function PostMenu({ postId, post, isOwnPost, onClose, onEdit }: { postId: string
     { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId, { onSuccess: () => showToast('تم حفظ المنشور', 'success') }) },
     ...(isOwnPost ? [
       { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
-      { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => pinPost.mutate({ postId, data: { isArchived: true } }) },
-      { label: 'حذف المنشور', icon: Trash, action: () => deletePost.mutate(postId), danger: true },
+      { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => pinPost.mutate({ postId, data: { isArchived: true } }, { onSuccess: () => { showToast('تمت أرشفة المنشور', 'success'); onHide?.(); } }) },
+      { label: 'حذف المنشور', icon: Trash, action: () => deletePost.mutate(postId, { onSuccess: () => { showToast('تم حذف المنشور', 'success'); onHide?.(); } }), danger: true },
     ] : [
-      { label: 'عدم الاهتمام', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }) },
-      { label: 'إيقاف مؤقت 30 يوم', icon: Clock, action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }) },
+      { label: 'عدم الاهتمام', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }, { onSuccess: () => { showToast('لن تظهر هذه المنشورات بعد الآن', 'success'); onHide?.(); } }) },
+      { label: 'إيقاف مؤقت 30 يوم', icon: Clock, action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }, { onSuccess: () => { showToast('تم إيقاف المنشورات مؤقتاً', 'success'); onHide?.(); } }) },
     ]),
   ];
 
@@ -374,8 +374,17 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const { data: myProfileData } = useMyProfile();
-  const myUserId = (myProfileData as any)?.data?.user?.id ?? (myProfileData as any)?.data?.id ?? null;
+  // `GET /users/me` returns a PROFILE object with both `id` (profile id) and
+  // `userId` (the user id). `post.user.id` is a USER id, so we must compare
+  // against `userId` — using the profile `id` made isOwnPost always false and
+  // hid the owner menu (edit/pin/archive/delete) on your own posts (#828).
+  const myUserId =
+    (myProfileData as any)?.data?.userId ??
+    (myProfileData as any)?.data?.user?.id ??
+    (myProfileData as any)?.data?.id ??
+    null;
   const isOwnPost = myUserId && post.user?.id && myUserId === post.user.id;
 
   const userName = displayName(post.user);
@@ -383,6 +392,10 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const authorAvatar = resolveMediaUrl(post.user?.profile?.avatarUrl);
   const mediaUrl = resolveMediaUrl(post.mediaUrl) ?? undefined;
   const isShared = post.postType === 'shared' || post.originalPostId;
+
+  // Once hidden ("not interested"/snooze) remove the card from view immediately,
+  // even though the feed query may not refetch it out (#829).
+  if (hidden) return null;
 
   return (
     <article className="rounded-2xl bg-[var(--card)] shadow-card-hover border border-[var(--border)]/60 overflow-hidden transition-all duration-300 hover:shadow-glow-lg hover:-translate-y-1 relative group">
@@ -413,7 +426,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
           <button onClick={() => setShowMenu(!showMenu)} className="rounded-lg p-1.5 text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:shadow-soft transition-all duration-200 hover:scale-110">
             <DotsThreeVertical size={20} />
           </button>
-          {showMenu && <PostMenu postId={post.id} post={post} isOwnPost={!!isOwnPost} onClose={() => setShowMenu(false)} onEdit={() => { setShowMenu(false); setShowEditModal(true); }} />}
+          {showMenu && <PostMenu postId={post.id} post={post} isOwnPost={!!isOwnPost} onClose={() => setShowMenu(false)} onEdit={() => { setShowMenu(false); setShowEditModal(true); }} onHide={() => { setShowMenu(false); setHidden(true); }} />}
         </div>
       </div>
 

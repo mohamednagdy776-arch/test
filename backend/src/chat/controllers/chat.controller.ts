@@ -14,8 +14,16 @@ export class ChatController {
   constructor(private chatService: ChatService) {}
 
   @Get('conversations')
-  async getConversations(@CurrentUser() user: User) {
-    const conversations = await this.chatService.getConversations(user.id);
+  async getConversations(
+    @Query('page') page: string | undefined,
+    @Query('limit') limit: string | undefined,
+    @CurrentUser() user: User,
+  ) {
+    // Raw params (not PaginationDto) so an ABSENT limit means "return all",
+    // preserving prior behaviour for the client's own list rendering (#823).
+    const pageNum = page ? Math.max(1, parseInt(page, 10) || 1) : 1;
+    const limitNum = limit ? Math.max(1, parseInt(limit, 10) || 0) || undefined : undefined;
+    const conversations = await this.chatService.getConversations(user.id, pageNum, limitNum);
     return ok(conversations);
   }
 
