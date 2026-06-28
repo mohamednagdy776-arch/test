@@ -70,7 +70,7 @@ export default function SavedPage() {
                         <div className="w-32 h-20 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl">▶️</div>
                         <div>
                           <p className="font-semibold text-[var(--foreground)]">{item.entity.title || 'فيديو'}</p>
-                          <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.createdAt)}</p>
+                          <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.savedAt)}</p>
                         </div>
                       </div>
                     )}
@@ -79,7 +79,7 @@ export default function SavedPage() {
                         <div className="w-32 h-20 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl">📸</div>
                         <div>
                           <p className="font-semibold text-[var(--foreground)]">قصة</p>
-                          <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.createdAt)}</p>
+                          <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.savedAt)}</p>
                         </div>
                       </div>
                     )}

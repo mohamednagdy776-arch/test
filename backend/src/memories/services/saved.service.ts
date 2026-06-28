@@ -43,6 +43,10 @@ export class SavedService {
   }
 
   async save(userId: string, entityType: string, entityId: string, collectionId?: string) {
+    if (entityType === 'post') {
+      const postExists = await this.postRepo.findOne({ where: { id: entityId } });
+      if (!postExists) throw new NotFoundException('Post not found');
+    }
     const existing = await this.savedRepo.findOne({
       where: { user: { id: userId }, entityType: entityType as any, entityId },
     });
@@ -117,6 +121,12 @@ export class SavedService {
   }
 
   async getCollectionItems(userId: string, collectionId: string) {
+    const collection = await this.collectionRepo.findOne({
+      where: { id: collectionId, user: { id: userId } },
+    });
+    if (!collection) {
+      throw new NotFoundException('Collection not found');
+    }
     const saved = await this.savedRepo.find({
       where: { user: { id: userId }, collection: { id: collectionId } },
       relations: ['collection'],
