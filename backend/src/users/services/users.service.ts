@@ -14,6 +14,7 @@ import { SearchUsersDto } from '../dto/search-users.dto';
 import { ActivityLogQueryDto } from '../dto/activity-log.dto';
 import { FriendsService } from '../../friends/services/friends.service';
 import { PhotoPrivacyService } from '../../photo-privacy/photo-privacy.service';
+import { signMediaPath } from '../../common/utils/media-token';
 
 @Injectable()
 export class UsersService {
@@ -198,6 +199,19 @@ export class UsersService {
     return viewerFriendIds.filter((id) => userSet.has(id)).length;
   }
 
+  // Normalise a stored avatar/cover value to a servable, token-signed media URL.
+  // Legacy rows stored `/uploads/<type>/<file>` (404 — the only media route is
+  // the token-protected GET /api/v1/media/:type/:file). Newer uploads already
+  // store the full tokenized URL. (#833)
+  private toMediaUrl(stored?: string | null): string | null {
+    if (!stored) return null;
+    if (/^https?:\/\//i.test(stored)) return stored; // external/CDN
+    if (stored.startsWith('/api/v1/media/')) return stored; // already tokenized
+    const path = stored.replace(/^\/?uploads\//, '').replace(/^\/+/, ''); // -> "avatars/<file>"
+    if (!path) return null;
+    return `/api/v1/media/${path}?t=${signMediaPath(path)}`;
+  }
+
   private formatProfile(profile: Profile, userId?: string) {
     const u = profile.user;
     const nameFromUser = `${u?.firstName ?? ''} ${u?.lastName ?? ''}`.trim();
@@ -218,8 +232,8 @@ export class UsersService {
       socialStatus: profile.socialStatus,
       childrenCount: profile.childrenCount,
       bio: profile.bio,
-      avatarUrl: profile.avatarUrl,
-      coverUrl: profile.coverUrl,
+      avatarUrl: this.toMediaUrl(profile.avatarUrl),
+      coverUrl: this.toMediaUrl(profile.coverUrl),
       website: profile.website,
       relationshipStatus: profile.relationshipStatus,
       location: profile.location,

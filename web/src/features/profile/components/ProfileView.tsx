@@ -14,22 +14,13 @@ import { PostCard } from '@/features/posts/components/PostCard';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
 import { interestsApi } from '@/features/interests/api';
+import {
+  socialStatusLabel, educationLabel, lifestyleLabel,
+  sectLabel, prayerLevelLabel, religiousCommitmentLabel,
+} from '../labels';
 
 interface Props {
   userId?: string;
-}
-
-// Map the stored English status enum to an Arabic label (was rendered raw as
-// "single", #739). Mirrors the options in ProfileEditForm.
-const SOCIAL_STATUS_LABELS: Record<string, string> = {
-  single: 'أعزب',
-  married: 'متزوج',
-  divorced: 'مطلق',
-  widowed: 'أرمل',
-};
-function socialStatusLabel(value?: string | null): string {
-  if (!value) return '—';
-  return SOCIAL_STATUS_LABELS[value] ?? value;
 }
 
 export const ProfileView = ({ userId }: Props) => {
@@ -182,19 +173,19 @@ export const ProfileView = ({ userId }: Props) => {
 
       <ProfileSection title="التعليم والعمل" icon="💼">
         <Grid items={[
-          ['المستوى التعليمي', profile.education || '—'],
+          ['المستوى التعليمي', educationLabel(profile.education)],
           ['المسمى الوظيفي', profile.jobTitle || '—'],
           ['المستوى المادي', profile.financialLevel || '—'],
           ['المستوى الثقافي', profile.culturalLevel || '—'],
-          ['نمط الحياة', profile.lifestyle || '—'],
+          ['نمط الحياة', lifestyleLabel(profile.lifestyle)],
         ]} />
       </ProfileSection>
 
       <ProfileSection title="المعلومات الدينية" icon="🕌">
         <Grid items={[
-          ['المذهب', profile.sect || '—'],
-          ['مستوى الصلاة', profile.prayerLevel || '—'],
-          ['الالتزام الديني', profile.religiousCommitment || '—'],
+          ['المذهب', sectLabel(profile.sect)],
+          ['مستوى الصلاة', prayerLevelLabel(profile.prayerLevel)],
+          ['الالتزام الديني', religiousCommitmentLabel(profile.religiousCommitment)],
         ]} />
       </ProfileSection>
 
