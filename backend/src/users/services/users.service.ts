@@ -9,6 +9,9 @@ import { ProfileEducation } from '../entities/profile-education.entity';
 import { ActivityLog } from '../entities/activity-log.entity';
 import { User } from '../../auth/entities/user.entity';
 import { Post } from '../../posts/entities/post.entity';
+import { Comment } from '../../comments/entities/comment.entity';
+import { Reaction } from '../../reactions/entities/reaction.entity';
+import { Friendship, FriendshipStatus } from '../../friends/entities/friendship.entity';
 import { UpdateProfileWithEntriesDto } from '../dto/update-profile.dto';
 import { SearchUsersDto } from '../dto/search-users.dto';
 import { ActivityLogQueryDto } from '../dto/activity-log.dto';
@@ -412,22 +415,84 @@ export class UsersService {
   }
 
   async getActivityLog(userId: string, dto: ActivityLogQueryDto) {
-    const { page = 1, limit = 20, year, type } = dto;
+    const { page = 1, limit = 50, year, type } = dto;
 
-    const qb = this.activityRepo.createQueryBuilder('a')
-      .where('a.userId = :userId', { userId })
-      .andWhere('a.isHidden = :isHidden', { isHidden: false });
+    // The activity_logs table only ever recorded `photo` events (avatar/cover
+    // updates) — posts/likes/comments/friends were never logged, so the tab
+    // looked empty and the type filters returned nothing (#832 follow-up).
+    // Build the timeline by aggregating the user's REAL activity from the
+    // source tables, plus any explicitly-logged activity rows.
+    const PER_SOURCE = 200;
+    const want = (t: string) => !type || type === t;
+    type Item = { type: string; description: string; createdAt: Date; metadata?: any };
+    const items: Item[] = [];
 
-    if (year) qb.andWhere('EXTRACT(YEAR FROM a.createdAt) = :year', { year: parseInt(year) });
-    if (type) qb.andWhere('a.type = :type', { type });
+    if (want('post')) {
+      const posts = await this.postsRepo.find({
+        where: { user: { id: userId } },
+        order: { createdAt: 'DESC' }, take: PER_SOURCE,
+      });
+      for (const p of posts) {
+        const snippet = (p.content || '').trim().slice(0, 80);
+        items.push({ type: 'post', description: snippet ? `نشر منشوراً: ${snippet}` : 'نشر منشوراً', createdAt: p.createdAt, metadata: { postId: p.id } });
+      }
+    }
 
-    const [activities, total] = await qb
-      .orderBy('a.createdAt', 'DESC')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .getManyAndCount();
+    if (want('comment')) {
+      const comments = await this.dataSource.getRepository(Comment).find({
+        where: { user: { id: userId } },
+        order: { createdAt: 'DESC' }, take: PER_SOURCE,
+      });
+      for (const c of comments) {
+        const snippet = (c.content || '').trim().slice(0, 80);
+        items.push({ type: 'comment', description: snippet ? `علّق: ${snippet}` : 'أضاف تعليقاً', createdAt: c.createdAt });
+      }
+    }
 
-    return { data: activities, total, page, totalPages: Math.ceil(total / limit) };
+    if (want('like')) {
+      const reactions = await this.dataSource.getRepository(Reaction).find({
+        where: { user: { id: userId } },
+        order: { createdAt: 'DESC' }, take: PER_SOURCE,
+      });
+      for (const r of reactions) {
+        items.push({ type: 'like', description: 'تفاعل مع منشور', createdAt: r.createdAt });
+      }
+    }
+
+    if (want('friend_add')) {
+      const friendships = await this.dataSource.getRepository(Friendship).find({
+        where: [
+          { requesterId: userId, status: FriendshipStatus.ACCEPTED },
+          { addresseeId: userId, status: FriendshipStatus.ACCEPTED },
+        ],
+        order: { createdAt: 'DESC' }, take: PER_SOURCE,
+      });
+      for (const f of friendships) {
+        items.push({ type: 'friend_add', description: 'أصبح صديقاً جديداً', createdAt: f.createdAt });
+      }
+    }
+
+    // Explicitly-logged rows (photo/video/tag — e.g. avatar & cover updates).
+    const logged = await this.activityRepo.find({
+      where: { userId, isHidden: false, ...(type ? { type: type as any } : {}) },
+      order: { createdAt: 'DESC' }, take: PER_SOURCE,
+    });
+    // Avoid double-counting types we already aggregated from source tables.
+    const aggregatedTypes = new Set(['post', 'comment', 'like', 'friend_add']);
+    for (const a of logged) {
+      if (aggregatedTypes.has(a.type as any)) continue;
+      items.push({ type: a.type as any, description: a.description, createdAt: a.createdAt, metadata: a.metadata });
+    }
+
+    // Apply the year filter across the merged set, sort newest-first, paginate.
+    const filtered = year
+      ? items.filter((i) => new Date(i.createdAt).getFullYear() === parseInt(year))
+      : items;
+    filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const total = filtered.length;
+    const data = filtered.slice((page - 1) * limit, (page - 1) * limit + limit);
+    return { data, total, page, totalPages: Math.max(1, Math.ceil(total / limit)) };
   }
 
   async getFriends(userId: string, page = 1, limit = 20) {
