@@ -72,6 +72,15 @@ jobs:
             /tmp/deploy_stage/ /opt/tayyibt/
           rm -rf /tmp/deploy_stage
 
+          # NOTE: /opt/tayyibt is an rsync TARGET, not a git checkout. The
+          # authoritative source for "what is deployed" is THIS workflow's
+          # checkout (the pushed commit) + the rebuilt images below — never
+          # `git -C /opt/tayyibt log/status`. A leftover /opt/tayyibt/.git from
+          # an earlier git-based deploy is stale and unused (we --exclude it);
+          # it can read as "N commits behind / dirty" and must NOT be trusted.
+          # Remove it so inspection isn't misleading (#826).
+          rm -rf /opt/tayyibt/.git
+
           chmod +x /opt/tayyibt/scripts/cd-deploy.sh || true
           bash /opt/tayyibt/scripts/cd-deploy.sh
 

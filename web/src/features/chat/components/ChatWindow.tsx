@@ -9,13 +9,14 @@ import { postsApi } from '@/features/posts/api';
 import { resolveMediaUrl } from '@/lib/media';
 import { TranslatedMessageBody } from './TranslatedMessageBody';
 import { useCall } from '@/features/call/CallProvider';
+import { useToast } from '@/components/ui/Toast';
 import { useTargetLanguage } from '../useTranslation';
 import { LANGUAGES, LANGUAGE_BY_CODE } from '@/lib/translation';
 import type { Match } from '@/types';
 import {
   ArrowLeft, Phone, VideoCamera, DotsThreeVertical,
   PaperPlaneTilt, Image as ImageIcon, Smiley, Trash, ArrowBendUpLeft,
-  Translate, Check,
+  Translate, Check, Prohibit, UserCircle,
 } from '@phosphor-icons/react';
 
 
@@ -49,8 +50,11 @@ function avatarSrc(url?: string | null) {
 export const ChatWindow = ({ match, onBack }: Props) => {
   const myUserId = getCurrentUserId();
   const { startCall } = useCall();
+  const { showToast } = useToast() as any;
   const { lang: targetLang, setLang: setTargetLang } = useTargetLanguage();
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [blocking, setBlocking] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -242,6 +246,21 @@ export const ChatWindow = ({ match, onBack }: Props) => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
 
+  const handleBlock = async () => {
+    if (!match.user2Id || blocking) return;
+    setShowMenu(false);
+    setBlocking(true);
+    try {
+      await apiClient.post('/blocks', { blockedUserId: match.user2Id });
+      showToast?.('تم حظر المستخدم', 'success');
+      onBack();
+    } catch {
+      showToast?.('تعذّر حظر المستخدم', 'error');
+    } finally {
+      setBlocking(false);
+    }
+  };
+
   const sendImageMessage = async (file: File) => {
     if (!file || uploadingImage) return;
     setUploadingImage(true);
@@ -399,6 +418,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
               });
             }}
             title="مكالمة صوتية"
+            aria-label="بدء مكالمة صوتية"
             className="p-2 rounded-xl transition-all hover:scale-110"
             style={{ color: 'var(--muted-foreground)' }}
             onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--muted)')}
@@ -417,19 +437,65 @@ export const ChatWindow = ({ match, onBack }: Props) => {
               });
             }}
             title="مكالمة فيديو"
+            aria-label="بدء مكالمة فيديو"
             className="p-2 rounded-xl transition-all hover:scale-110"
             style={{ color: 'var(--muted-foreground)' }}
             onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--muted)')}
             onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
             <VideoCamera size={18} />
           </button>
-          <button title="مزيد من الخيارات"
-            className="p-2 rounded-xl transition-all hover:scale-110"
-            style={{ color: 'var(--muted-foreground)' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--muted)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-            <DotsThreeVertical size={20} weight="bold" />
-          </button>
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu((v) => !v)}
+              title="مزيد من الخيارات"
+              aria-label="مزيد من الخيارات"
+              aria-haspopup="menu"
+              aria-expanded={showMenu}
+              className="p-2 rounded-xl transition-all hover:scale-110"
+              style={{ color: 'var(--muted-foreground)', background: showMenu ? 'var(--muted)' : 'transparent' }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--muted)')}
+              onMouseLeave={(e) => { if (!showMenu) e.currentTarget.style.background = 'transparent'; }}>
+              <DotsThreeVertical size={20} weight="bold" />
+            </button>
+
+            {showMenu && (
+              <>
+                {/* Click-away layer */}
+                <div className="fixed inset-0 z-30" onClick={() => setShowMenu(false)} />
+                <div
+                  role="menu"
+                  className="absolute z-40 mt-2 left-0 w-52 rounded-2xl overflow-hidden shadow-xl"
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+                >
+                  {match.user2Id && (
+                    <a
+                      href={(match as any).username ? `/${(match as any).username}` : `/profile/${match.user2Id}`}
+                      role="menuitem"
+                      className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-right"
+                      style={{ color: 'var(--foreground)' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--muted)')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                    >
+                      <UserCircle size={18} />
+                      <span className="flex-1">عرض الملف الشخصي</span>
+                    </a>
+                  )}
+                  <button
+                    onClick={handleBlock}
+                    disabled={blocking}
+                    role="menuitem"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-right disabled:opacity-50"
+                    style={{ color: 'var(--destructive)' }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = 'color-mix(in srgb, var(--destructive) 8%, transparent)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <Prohibit size={18} weight="bold" />
+                    <span className="flex-1">{blocking ? 'جارٍ الحظر…' : 'حظر المستخدم'}</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -475,7 +541,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                   style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}>
                   <ArrowBendUpLeft size={11} />
                 </button>
-                <button onClick={() => handleDelete(msg.id, false)} title="حذف للي"
+                <button onClick={() => handleDelete(msg.id, false)} title="حذف لي" aria-label="حذف لي فقط"
                   className="flex items-center justify-center w-6 h-6 rounded-full transition-all hover:scale-110"
                   style={{ background: 'color-mix(in srgb, var(--destructive) 10%, var(--muted))', color: 'var(--destructive)' }}>
                   <Trash size={10} />

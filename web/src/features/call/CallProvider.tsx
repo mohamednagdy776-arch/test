@@ -206,6 +206,23 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     }, 1500);
   }, [cleanup, setPhaseBoth, setPeerBoth]);
 
+  // Fail a call attempt WITH visible feedback: keep the overlay up in an
+  // "ended" state showing the error for a moment, instead of snapping straight
+  // back to idle (which unmounts the overlay before the user can read why the
+  // call failed — e.g. callee offline). (#819)
+  const failCall = useCallback((message: string) => {
+    setError(message);
+    cleanup();
+    setPhaseBoth('ended');
+    window.setTimeout(() => {
+      if (phaseRef.current === 'ended') {
+        setPhaseBoth('idle');
+        setPeerBoth(null);
+        setError(null);
+      }
+    }, 2500);
+  }, [cleanup, setPhaseBoth, setPeerBoth]);
+
   // ── Public actions ────────────────────────────────────────────────────
 
   const startCall = useCallback(async ({ conversationId, calleeId, name, avatar, callType = 'audio' }: StartCallArgs) => {
@@ -217,10 +234,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     try {
       await buildPeerConnection(target);
     } catch {
-      setError('تعذّر الوصول إلى الميكروفون. تأكّد من منح الإذن.');
-      cleanup();
-      setPhaseBoth('idle');
-      setPeerBoth(null);
+      failCall('تعذّر الوصول إلى الميكروفون. تأكّد من منح الإذن.');
       return;
     }
     getSocket().emit(
@@ -234,14 +248,11 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
       },
       (ack: { ok: boolean; reason?: string }) => {
         if (!ack?.ok) {
-          setError(ack?.reason === 'offline' ? 'المستخدم غير متصل حالياً' : 'تعذّر بدء المكالمة');
-          cleanup();
-          setPhaseBoth('idle');
-          setPeerBoth(null);
+          failCall(ack?.reason === 'offline' ? 'المستخدم غير متصل حالياً' : 'تعذّر بدء المكالمة');
         }
       },
     );
-  }, [buildPeerConnection, cleanup, setPeerBoth, setPhaseBoth]);
+  }, [buildPeerConnection, failCall, setPeerBoth, setPhaseBoth]);
 
   const acceptCall = useCallback(async () => {
     const p = peerRef.current;
