@@ -29,7 +29,10 @@ export class FamilyRelationship {
   @Column({ name: 'ward_user_id' })
   wardUserId: string;
 
-  @Column({ type: 'enum', enum: RelationshipType })
+  // DB column is snake_case `relationship_type`; without an explicit name
+  // TypeORM queried `relationshipType` and threw "column does not exist",
+  // 500-ing the whole guardians feature (#816).
+  @Column({ name: 'relationship_type', type: 'enum', enum: RelationshipType })
   relationshipType: RelationshipType;
 
   @Column({

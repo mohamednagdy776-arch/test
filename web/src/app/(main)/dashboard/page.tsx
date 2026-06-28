@@ -545,7 +545,9 @@ function TrendingTopics() {
   const router = useRouter();
   const { data, isLoading } = useQuery({
     queryKey: ['trending-posts'],
-    queryFn: () => apiClient.get('/posts', { params: { page: 1, limit: 5, sortBy: 'feedScore', order: 'DESC' } }).then((r) => r.data),
+    // Use the user-facing ranked feed. Root GET /posts is the admin-only listing
+    // (RolesGuard) and 403s for normal users, spamming a retry loop (#815).
+    queryFn: () => apiClient.get('/feed/scored', { params: { limit: 5 } }).then((r) => r.data),
     staleTime: 120_000,
   });
   const posts: any[] = data?.data ?? data?.posts ?? [];

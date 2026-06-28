@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException }
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Affiliate } from '../entities/affiliate.entity';
+import { AffiliateReferral } from '../entities/affiliate-referral.entity';
 import { CreateAffiliateDto } from '../dto/create-affiliate.dto';
 import * as crypto from 'crypto';
 
@@ -9,10 +10,26 @@ import * as crypto from 'crypto';
 export class AffiliatesService {
   constructor(
     @InjectRepository(Affiliate) private affiliateRepo: Repository<Affiliate>,
+    @InjectRepository(AffiliateReferral) private referralRepo: Repository<AffiliateReferral>,
   ) {}
 
   async findByUser(userId: string) {
     return this.affiliateRepo.findOne({ where: { user: { id: userId } } });
+  }
+
+  /**
+   * Referral history for the current user's affiliate account (#820). Returns
+   * an empty list (not 404) when the user has no affiliate account or no
+   * referrals yet, so the UI resolves its skeletons to an empty state.
+   */
+  async getReferralsForUser(userId: string) {
+    const affiliate = await this.affiliateRepo.findOne({ where: { user: { id: userId } } });
+    if (!affiliate) return [];
+    return this.referralRepo.find({
+      where: { affiliateId: affiliate.id },
+      order: { attributionTimestamp: 'DESC' },
+      take: 100,
+    });
   }
 
   async findByReferralCode(code: string) {

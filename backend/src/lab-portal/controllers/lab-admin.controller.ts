@@ -8,12 +8,17 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
 import { LabPortalService } from '../services/lab-portal.service';
 import { LabStatus } from '../entities/lab.entity';
 import { LabUserRole } from '../entities/lab-user.entity';
 
+// Admin-only — every route here manages labs/lab-users/invoices. Was previously
+// guarded by jwt ONLY, letting any authenticated user manage labs (#812).
 @Controller('admin/labs')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles('admin')
 export class LabAdminController {
   constructor(private service: LabPortalService) {}
 

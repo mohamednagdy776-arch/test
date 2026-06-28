@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../../auth/entities/user.entity';
 import { LabPortalService } from '../services/lab-portal.service';
@@ -31,7 +32,12 @@ export class LabPortalController {
     return this.service.generateReferralCode(req.user.id, labId);
   }
 
+  // Intentionally unauthenticated (labs without app accounts submit via a
+  // referral code), but rate-limit it so the referral-code gate can't be
+  // brute-forced anonymously (#813).
   @Post('results/submit')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   async submitResult(
     @Body() dto: { referralCode: string; labId: string; resultType: string },
   ) {
