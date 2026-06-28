@@ -3,10 +3,13 @@ import {
   Post,
   UploadedFiles,
   UseInterceptors,
+  UseGuards,
   BadRequestException,
   HttpCode,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
+import { AuthGuard } from '@nestjs/passport';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { memoryStorage } from 'multer';
 import sharp from 'sharp';
 import { ChildPredictionService } from './child-prediction.service';
@@ -35,12 +38,17 @@ async function assertUsableFaceImage(buffer: Buffer, label: string): Promise<voi
   }
 }
 
+// Auth + throttle: this drives a heavy AI pipeline. It was previously
+// UNGUARDED, so anonymous clients could drive the ollama-backed upload with no
+// per-account rate limit — a denial-of-wallet vector (#814).
 @Controller('features/child-prediction')
+@UseGuards(AuthGuard('jwt'), ThrottlerGuard)
 export class ChildPredictionController {
   constructor(private readonly svc: ChildPredictionService) {}
 
   @Post()
   @HttpCode(200)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @UseInterceptors(
     FilesInterceptor('images', 2, {
       storage: memoryStorage(),

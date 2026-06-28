@@ -20,6 +20,14 @@ export class AffiliatesController {
     return ok(affiliate);
   }
 
+  // Referral history for the signed-in user (#820). Previously 404 — the page's
+  // "سجل الإحالات" list was stuck on skeletons.
+  @Get('referrals')
+  async getMyReferrals(@CurrentUser() user: User) {
+    const referrals = await this.affiliatesService.getReferralsForUser(user.id);
+    return ok(referrals);
+  }
+
   @Post()
   async create(@Body() dto: CreateAffiliateDto, @CurrentUser() user: User) {
     const affiliate = await this.affiliatesService.create(user.id, dto);
