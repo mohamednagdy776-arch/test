@@ -15,6 +15,10 @@ export class CreateGroupDto {
 
   @IsOptional()
   @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsString()
   coverPhoto?: string;
 
   @IsOptional()

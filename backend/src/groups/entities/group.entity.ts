@@ -18,6 +18,11 @@ export class Group {
   @Column({ default: 'public' })
   privacy: GroupPrivacy;
 
+  // Persisted group category. Was never a column, so categories sent on create
+  // were dropped and the category filter had nothing to match (#37).
+  @Column({ nullable: true })
+  category: string;
+
   @Column({ nullable: true })
   coverPhoto: string;
 
