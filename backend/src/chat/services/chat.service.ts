@@ -335,9 +335,13 @@ export class ChatService {
       }
     }
 
-    // None exists → this is first contact, so enforce the target's messaging
-    // privacy before opening the conversation (#457).
-    await this.assertCanMessage(userId, targetUserId);
+    // None exists — first contact. Only enforce messaging privacy when the
+    // initiator is a friend but NOT a matched user. An accepted match already
+    // represents mutual consent, so the target's "friends only" privacy
+    // setting must not block a matched pair from opening a conversation.
+    if (!isMatched) {
+      await this.assertCanMessage(userId, targetUserId);
+    }
 
     const conversation = await this.conversationRepo.save(
       this.conversationRepo.create({ isGroup: false, createdBy: { id: userId } as any }),

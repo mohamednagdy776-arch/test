@@ -214,7 +214,7 @@ export const MatchCard = ({
               <ArrowCounterClockwise size={13} /> تراجع عن الرفض
             </button>
           )}
-          {(isPending || isAccepted) && (onViewProfile || onSendMessage) && (
+          {(isPending || isAccepted) && (onViewProfile || (isAccepted && onSendMessage)) && (
             <div className="flex gap-2">
               {onViewProfile && (
                 <button onClick={onViewProfile}
@@ -223,7 +223,7 @@ export const MatchCard = ({
                   <Eye size={12} /> الملف
                 </button>
               )}
-              {onSendMessage && (
+              {isAccepted && onSendMessage && (
                 <button onClick={onSendMessage}
                   className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95"
                   style={{ background: 'linear-gradient(135deg, var(--accent), #c8952e)', color: 'white' }}>
