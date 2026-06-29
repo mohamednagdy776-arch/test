@@ -654,13 +654,97 @@ export class AuthService {
     };
   }
 
+  // Front-end base URL the OAuth callback redirects back to once cookies are set.
+  // Behind nginx the web app and API share an origin, so an empty base yields a
+  // relative redirect (e.g. `/dashboard`) that lands on the web app. In dev they
+  // run on different ports, so FRONTEND_URL must point at the web app (:3002).
+  private frontendUrl(): string {
+    const fromEnv =
+      process.env.FRONTEND_URL ||
+      process.env.APP_URL ||
+      process.env.WEB_URL ||
+      (process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',')[0].trim() : '') ||
+      (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3002');
+    return fromEnv.replace(/\/+$/, '');
+  }
+
+  /** Absolute (or same-origin relative) URL to send the browser to post-login. */
+  oauthRedirectTarget(returnPath: string): string {
+    const safe = returnPath && returnPath.startsWith('/') ? returnPath : '/dashboard';
+    return `${this.frontendUrl()}${safe}`;
+  }
+
+  // Sign the post-login return path into a short-lived JWT used as the OAuth
+  // `state`. This doubles as CSRF protection (the callback only accepts a state
+  // we signed) and prevents open-redirect (only relative paths are honored).
+  signOAuthState(returnPath: string): string {
+    const safe = returnPath && returnPath.startsWith('/') ? returnPath : '/dashboard';
+    return this.jwtService.sign({ ret: safe, type: 'oauth-state' }, { expiresIn: '10m' });
+  }
+
+  /** Verify the `state` and recover the return path; default to /dashboard. */
+  verifyOAuthState(state: string): string {
+    try {
+      const payload: any = this.jwtService.verify(state, { secret: process.env.JWT_SECRET });
+      if (payload.type !== 'oauth-state') return '/dashboard';
+      return typeof payload.ret === 'string' && payload.ret.startsWith('/') ? payload.ret : '/dashboard';
+    } catch {
+      return '/dashboard';
+    }
+  }
+
+  /** Build the provider consent-screen URL to redirect the user to. */
+  getOAuthAuthorizationUrl(provider: 'google' | 'github', state: string): string {
+    if (provider === 'google') {
+      const clientId = process.env.GOOGLE_CLIENT_ID;
+      const redirectUri = process.env.GOOGLE_REDIRECT_URI;
+      if (!clientId || !redirectUri) {
+        throw new ForbiddenException('Google login is not configured on the server');
+      }
+      const params = new URLSearchParams({
+        client_id: clientId,
+        redirect_uri: redirectUri,
+        response_type: 'code',
+        scope: 'openid email profile',
+        access_type: 'online',
+        include_granted_scopes: 'true',
+        prompt: 'select_account',
+        state,
+      });
+      return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+    }
+
+    const clientId = process.env.GITHUB_CLIENT_ID;
+    const redirectUri = process.env.GITHUB_REDIRECT_URI;
+    if (!clientId || !redirectUri) {
+      throw new ForbiddenException('GitHub login is not configured on the server');
+    }
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: 'read:user user:email',
+      state,
+    });
+    return `https://github.com/login/oauth/authorize?${params.toString()}`;
+  }
+
   async handleOAuthCallback(provider: 'google' | 'github', code: string) {
+    if (!code) throw new UnauthorizedException('Missing OAuth authorization code');
+
     let oauthUser: { email: string; name: string; id: string };
 
     if (provider === 'google') {
       oauthUser = await this.getGoogleUser(code);
     } else {
       oauthUser = await this.getGithubUser(code);
+    }
+
+    // Never proceed without a verified email. Without this guard a failed token
+    // exchange yields `email: undefined`, and findOne({ email: undefined })
+    // matches the FIRST user in the table — logging the visitor into a random
+    // account. (This is the bug behind the "random user" Google login.)
+    if (!oauthUser?.email) {
+      throw new UnauthorizedException(`Could not retrieve an email from ${provider}`);
     }
 
     let user = await this.usersRepo.findOne({ where: { email: oauthUser.email } });
