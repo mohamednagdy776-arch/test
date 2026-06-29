@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { MatchingStats } from '@/features/matching/components/MatchingStats';
 import { MatchingTabs } from '@/features/matching/components/MatchingTabs';
@@ -19,6 +19,7 @@ type Tab = 'pending' | 'accepted' | 'rejected';
 
 export default function MatchingPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>('pending');
   const [showFilters, setShowFilters] = useState(false);
   const [ageMin, setAgeMin] = useState(18);
@@ -61,10 +62,34 @@ export default function MatchingPage() {
   const handleAction = async (matchId: string, action: 'accept' | 'reject') => {
     setActionLoading(matchId + action);
     setActionError(null);
+    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
+
+    const prevAllData = queryClient.getQueryData<any>(['matches-all-counts']);
+    if (prevAllData?.data) {
+      queryClient.setQueryData(['matches-all-counts'], {
+        ...prevAllData,
+        data: prevAllData.data.map((m: Match) =>
+          m.id === matchId ? { ...m, status: newStatus } : m
+        ),
+      });
+    }
+
+    const filteredKey = ['matches-filtered', tab, ageMin, ageMax, debouncedLocation, prayerLevel];
+    const prevFilteredData = queryClient.getQueryData<any>(filteredKey);
+    if (prevFilteredData?.data) {
+      queryClient.setQueryData(filteredKey, {
+        ...prevFilteredData,
+        data: prevFilteredData.data.filter((m: Match) => m.id !== matchId),
+      });
+    }
+
     try {
       await apiClient.patch(`/matches/${matchId}/${action}`);
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['matches-all-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['matches-filtered'] });
     } catch (err: any) {
+      if (prevAllData !== undefined) queryClient.setQueryData(['matches-all-counts'], prevAllData);
+      if (prevFilteredData !== undefined) queryClient.setQueryData(filteredKey, prevFilteredData);
       setActionError(err?.response?.data?.message || 'فشلت العملية، يرجى المحاولة مجدداً');
     } finally {
       setActionLoading(null);
