@@ -6,7 +6,7 @@ import type { Match } from '@/types';
 
 export const MatchingStats = () => {
   const { data, isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['matches-stats'],
+    queryKey: ['matches-all-counts'],
     queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 100 } }).then((r) => r.data),
     staleTime: 60_000,
   });
