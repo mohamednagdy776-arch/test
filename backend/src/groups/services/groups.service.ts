@@ -28,13 +28,33 @@ export class GroupsService {
     return saved;
   }
 
+  // Attach the real member count to a list of groups in ONE grouped query.
+  // List endpoints returned raw Group rows with no memberCount, so every card
+  // rendered "0 members" while only the detail page (which counts separately)
+  // was correct (#34). Pending join requests are excluded so the count matches
+  // actual membership.
+  private async attachMemberCounts<T extends { id: string }>(groups: T[]): Promise<(T & { memberCount: number })[]> {
+    if (groups.length === 0) return groups as any;
+    const rows = await this.memberRepo
+      .createQueryBuilder('m')
+      .leftJoin('m.group', 'g')
+      .select('g.id', 'gid')
+      .addSelect('COUNT(m.id)', 'cnt')
+      .where('g.id IN (:...ids)', { ids: groups.map((g) => g.id) })
+      .andWhere('m.status = :active', { active: 'active' })
+      .groupBy('g.id')
+      .getRawMany();
+    const countById = new Map(rows.map((r: any) => [r.gid, Number(r.cnt)]));
+    return groups.map((g) => ({ ...g, memberCount: countById.get(g.id) || 0 }));
+  }
+
   async findAll(page: number, limit: number) {
     const [data, total] = await this.groupsRepo.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
     });
-    return { data, total };
+    return { data: await this.attachMemberCounts(data), total };
   }
 
   async search(query: string, userId: string) {
@@ -62,7 +82,10 @@ export class GroupsService {
     const joinedGroups = allGroups.filter(g => joinedGroupIds.has(g.id));
     const otherGroups = allGroups.filter(g => !joinedGroupIds.has(g.id));
 
-    return { joinedGroups, otherGroups };
+    return {
+      joinedGroups: await this.attachMemberCounts(joinedGroups),
+      otherGroups: await this.attachMemberCounts(otherGroups),
+    };
   }
 
   async autocomplete(query: string) {
@@ -91,9 +114,11 @@ export class GroupsService {
     const group = await this.groupsRepo.findOne({ where: { id: groupId } });
     if (!group) throw new NotFoundException('Group not found');
 
-    // Only public groups can be joined directly; private/secret groups require
-    // an invitation (the privacy field was fetched but never enforced).
-    if (group.privacy && group.privacy !== 'public') {
+    // Secret groups are invite-only and aren't even discoverable, so a direct
+    // join attempt is still rejected. Public groups join instantly; private
+    // groups create a PENDING join request awaiting admin approval (#36) — the
+    // old code 403'd private joins outright, so the Join button did nothing.
+    if (group.privacy === 'secret') {
       throw new ForbiddenException('This group requires an invitation to join');
     }
 
@@ -102,15 +127,17 @@ export class GroupsService {
     });
     if (existing?.isBanned) throw new ForbiddenException('You have been banned from this group');
     // Idempotent join: a double-clicked Join button used to fire two POSTs, the
-    // second 409-ing as an unhandled console error (#734). Already-a-member is a
-    // success — just return the group.
-    if (existing) return group;
+    // second 409-ing as an unhandled console error (#734). Already a member (or
+    // already pending) is a success — return the group with the current status.
+    if (existing) return { ...group, joinStatus: existing.status };
 
+    const status: 'active' | 'pending' = group.privacy === 'private' ? 'pending' : 'active';
     await this.memberRepo.save(this.memberRepo.create({
       group: { id: groupId } as any,
       user,
+      status,
     }));
-    return group;
+    return { ...group, joinStatus: status };
   }
 
   async leave(groupId: string, userId: string) {
@@ -123,22 +150,23 @@ export class GroupsService {
 
   async getMyGroups(userId: string) {
     const memberships = await this.memberRepo.find({
-      where: { user: { id: userId } },
+      where: { user: { id: userId }, status: 'active' },
       relations: ['group'],
       order: { joinedAt: 'DESC' },
     });
-    return memberships.map(m => m.group);
+    return this.attachMemberCounts(memberships.map(m => m.group));
   }
 
   async isMember(groupId: string, userId: string): Promise<boolean> {
+    // A pending join request is NOT yet membership.
     const count = await this.memberRepo.count({
-      where: { group: { id: groupId }, user: { id: userId } },
+      where: { group: { id: groupId }, user: { id: userId }, status: 'active' },
     });
     return count > 0;
   }
 
   async getMemberCount(groupId: string): Promise<number> {
-    return this.memberRepo.count({ where: { group: { id: groupId } } });
+    return this.memberRepo.count({ where: { group: { id: groupId }, status: 'active' } });
   }
 
   async getMembers(groupId: string, page: number, limit: number) {
@@ -201,15 +229,19 @@ export class GroupsService {
     return member?.role || 'none';
   }
 
-  // Paginated list of groups by privacy ('public' | 'private').
-  async findByPrivacy(privacy: GroupPrivacy, page: number, limit: number) {
+  // Paginated list of groups by privacy ('public' | 'private'), optionally
+  // filtered by category. The category param was previously dropped on the
+  // floor, so the Groups page category filter did nothing (#37).
+  async findByPrivacy(privacy: GroupPrivacy, page: number, limit: number, category?: string) {
+    const where: any = { privacy };
+    if (category && category.trim()) where.category = category.trim();
     const [data, total] = await this.groupsRepo.findAndCount({
-      where: { privacy },
+      where,
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
     });
-    return { data, total };
+    return { data: await this.attachMemberCounts(data), total };
   }
 
   // Public groups the user has not joined yet.
@@ -222,18 +254,25 @@ export class GroupsService {
     // Exclude joined groups at the DB level instead of over-fetching
     // (limit + joined.size) rows into memory and filtering — that was a
     // memory/DoS risk for users with very many memberships.
-    return this.groupsRepo.find({
+    const groups = await this.groupsRepo.find({
       where: joinedIds.length
         ? { privacy: 'public', id: Not(In(joinedIds)) }
         : { privacy: 'public' },
       order: { createdAt: 'DESC' },
       take: limit,
     });
+    return this.attachMemberCounts(groups);
   }
 
-  // No join-request model exists in the schema yet, so there are no pending
-  // requests to return. Kept as an endpoint so the client gets a clean [].
-  async getPendingRequests(_userId: string) {
-    return [];
+  // Groups the user has requested to join (private groups) that are awaiting
+  // admin approval. Powers the "pending requests" UI and the per-card
+  // "قيد الانتظار" badge (#36).
+  async getPendingRequests(userId: string) {
+    const pending = await this.memberRepo.find({
+      where: { user: { id: userId }, status: 'pending' },
+      relations: ['group'],
+      order: { joinedAt: 'DESC' },
+    });
+    return pending.map((m) => m.group);
   }
 }

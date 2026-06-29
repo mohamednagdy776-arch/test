@@ -48,6 +48,8 @@ export function useUploadVideo() {
       videosApi.uploadVideo(file, title, description),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['videos'] });
+      qc.invalidateQueries({ queryKey: ['videos-recommended'] });
+      qc.invalidateQueries({ queryKey: ['videos-trending'] });
     },
   });
 }
