@@ -216,19 +216,46 @@ export class AuthController {
     return ok(result);
   }
 
+  // Step 1 — kick off the OAuth flow: redirect the browser to Google's consent
+  // screen. `return` is where to land in the web app afterwards; it's signed into
+  // the `state` param so the callback can recover it (and reject forged states).
+  @Get('oauth/google/start')
+  oauthGoogleStart(@Query('return') ret: string, @Res() res: Response) {
+    const state = this.authService.signOAuthState(ret);
+    return res.redirect(this.authService.getOAuthAuthorizationUrl('google', state));
+  }
+
+  // Step 2 — Google redirects back here with `code` + `state`. Exchange the code,
+  // set the auth cookies, then redirect the browser back INTO the web app. (It
+  // used to return JSON, which is why the tokens were dumped as raw text.)
   @Get('oauth/google')
-  async oauthGoogle(@Req() req: any, @Res({ passthrough: true }) res: Response) {
-    const code = req.query.code as string;
-    const result = await this.authService.handleOAuthCallback('google', code);
-    setAuthCookies(res, result as any);
-    return ok(result, 'Google login successful');
+  async oauthGoogle(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+    const returnPath = this.authService.verifyOAuthState(state);
+    try {
+      const result = await this.authService.handleOAuthCallback('google', code);
+      setAuthCookies(res, result as any);
+      return res.redirect(this.authService.oauthRedirectTarget(returnPath));
+    } catch {
+      // Send the user back to login with an error flag rather than a JSON 500.
+      return res.redirect(this.authService.oauthRedirectTarget('/login?error=oauth'));
+    }
+  }
+
+  @Get('oauth/github/start')
+  oauthGithubStart(@Query('return') ret: string, @Res() res: Response) {
+    const state = this.authService.signOAuthState(ret);
+    return res.redirect(this.authService.getOAuthAuthorizationUrl('github', state));
   }
 
   @Get('oauth/github')
-  async oauthGithub(@Req() req: any, @Res({ passthrough: true }) res: Response) {
-    const code = req.query.code as string;
-    const result = await this.authService.handleOAuthCallback('github', code);
-    setAuthCookies(res, result as any);
-    return ok(result, 'GitHub login successful');
+  async oauthGithub(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+    const returnPath = this.authService.verifyOAuthState(state);
+    try {
+      const result = await this.authService.handleOAuthCallback('github', code);
+      setAuthCookies(res, result as any);
+      return res.redirect(this.authService.oauthRedirectTarget(returnPath));
+    } catch {
+      return res.redirect(this.authService.oauthRedirectTarget('/login?error=oauth'));
+    }
   }
 }
