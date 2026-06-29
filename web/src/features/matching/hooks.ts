@@ -29,7 +29,10 @@ export function useAcceptMatch() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => matchingApi.acceptMatch(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['matches'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['matches-all-counts'] });
+      qc.invalidateQueries({ queryKey: ['matches-filtered'] });
+    },
   });
 }
 
@@ -37,7 +40,10 @@ export function useRejectMatch() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => matchingApi.rejectMatch(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['matches'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['matches-all-counts'] });
+      qc.invalidateQueries({ queryKey: ['matches-filtered'] });
+    },
   });
 }
 
@@ -45,6 +51,9 @@ export function useGenerateMatches() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: () => matchingApi.generateMatches(),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['matches'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['matches-all-counts'] });
+      qc.invalidateQueries({ queryKey: ['matches-filtered'] });
+    },
   });
 }
