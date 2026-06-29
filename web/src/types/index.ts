@@ -37,8 +37,10 @@ export interface Match {
   status: 'pending' | 'accepted' | 'rejected' | 'chat';
   createdAt: string;
   // Additional fields returned by the API
+  otherUserId?: string;
   otherUserName?: string | null;
   otherUserAvatar?: string | null;
+  breakdown?: Record<string, number> | null;
   user?: {
     id: string;
     username: string;

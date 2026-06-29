@@ -288,11 +288,11 @@ export default function MatchingPage() {
               onAccept={match.status !== 'accepted' ? () => handleAction(match.id, 'accept') : undefined}
               onReject={match.status !== 'rejected' ? () => handleAction(match.id, 'reject') : undefined}
               onViewProfile={() => {
-                const username = (match as any).user?.username || (match as any).otherUsername;
-                if (username) router.push(`/${username}`);
+                const uid = (match as any).otherUserId;
+                if (uid) router.push(`/profile/${uid}`);
               }}
               onSendMessage={() => {
-                const uid = (match as any).user?.id || (match as any).otherUserId;
+                const uid = (match as any).otherUserId;
                 if (uid) router.push(`/chat?user=${uid}`);
               }}
               accepting={actionLoading === match.id + 'accept'}
