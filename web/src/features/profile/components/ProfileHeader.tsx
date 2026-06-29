@@ -58,7 +58,7 @@ export const ProfileHeader = ({
   const [coverCropFile, setCoverCropFile] = useState<File | null>(null);
   const [removeImageKind, setRemoveImageKind] = useState<'avatar' | 'cover' | null>(null);
 
-  const uploadBlob = async (blob: Blob, endpoint: string, filename: string) => {
+  const uploadBlob = async (blob: Blob, endpoint: string, filename: string, successMsg: string) => {
     if (uploading) return;
     setUploading(true);
     try {
@@ -78,6 +78,7 @@ export const ProfileHeader = ({
       // from the server, but avoids firing a background GET /users/me right now
       // that could race with and overwrite the setQueryData above.
       qc.invalidateQueries({ queryKey: ['my-profile'], refetchType: 'none' });
+      showToast(successMsg, 'success');
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
       showToast(`${msg} — الصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`, 'error');
@@ -88,12 +89,12 @@ export const ProfileHeader = ({
 
   const handleAvatarCrop = async (blob: Blob) => {
     setAvatarCropFile(null);
-    await uploadBlob(blob, '/users/me/avatar', 'avatar.jpg');
+    await uploadBlob(blob, '/users/me/avatar', 'avatar.jpg', 'تم تحديث صورة الملف الشخصي');
   };
 
   const handleCoverCrop = async (blob: Blob) => {
     setCoverCropFile(null);
-    await uploadBlob(blob, '/users/me/cover', 'cover.jpg');
+    await uploadBlob(blob, '/users/me/cover', 'cover.jpg', 'تم تحديث صورة الغلاف');
   };
 
   const removeImage = async () => {
@@ -111,6 +112,7 @@ export const ProfileHeader = ({
         }));
       }
       qc.invalidateQueries({ queryKey: ['my-profile'], refetchType: 'none' });
+      showToast(kind === 'avatar' ? 'تم إزالة صورة الملف الشخصي' : 'تم إزالة صورة الغلاف', 'success');
     } catch (err: any) {
       showToast(err?.response?.data?.message ?? 'فشل إزالة الصورة', 'error');
     } finally {

@@ -188,14 +188,39 @@ export default function GroupDetailPage() {
                 </button>
               )}
               {group.isMember ? (
-                <button onClick={() => leaveGroup.mutate(id)} disabled={leaveGroup.isPending}
+                <button
+                  onClick={async () => {
+                    try {
+                      await leaveGroup.mutateAsync(id);
+                      showToast('غادرت المجتمع', 'success');
+                      router.push('/groups');
+                    } catch (err: any) {
+                      showToast(err?.response?.data?.message || 'فشل مغادرة المجتمع', 'error');
+                    }
+                  }}
+                  disabled={leaveGroup.isPending}
                   className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                   style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
                   <SignOut size={13} />
                   {leaveGroup.isPending ? '...' : 'مغادرة'}
                 </button>
               ) : (
-                <button onClick={() => joinGroup.mutate(id)} disabled={joinGroup.isPending}
+                <button
+                  onClick={async () => {
+                    try {
+                      const res: any = await joinGroup.mutateAsync(id);
+                      const joinStatus = res?.data?.joinStatus ?? res?.joinStatus;
+                      showToast(
+                        joinStatus === 'pending'
+                          ? 'تم إرسال طلب الانضمام، في انتظار موافقة المشرف'
+                          : 'انضممت إلى المجتمع',
+                        'success',
+                      );
+                    } catch (err: any) {
+                      showToast(err?.response?.data?.message || 'فشل الانضمام إلى المجتمع', 'error');
+                    }
+                  }}
+                  disabled={joinGroup.isPending}
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                   style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', boxShadow: '0 4px 14px color-mix(in srgb, var(--primary) 30%, transparent)' }}>
                   <Users size={14} weight="fill" />

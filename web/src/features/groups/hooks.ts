@@ -71,13 +71,17 @@ export function useJoinGroup() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => groupsApi.joinGroup(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ['my-groups'] });
       qc.invalidateQueries({ queryKey: ['groups'] });
       qc.invalidateQueries({ queryKey: ['groups-search'] });
       qc.invalidateQueries({ queryKey: ['public-groups'] });
       qc.invalidateQueries({ queryKey: ['private-groups'] });
       qc.invalidateQueries({ queryKey: ['suggested-groups'] });
+      // Refresh the pending-requests list/badge and the open detail page so a
+      // private-group join request shows as "pending" immediately (#36).
+      qc.invalidateQueries({ queryKey: ['pending-requests'] });
+      qc.invalidateQueries({ queryKey: ['group', id] });
     },
   });
 }
@@ -86,13 +90,16 @@ export function useLeaveGroup() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => groupsApi.leaveGroup(id),
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: ['my-groups'] });
       qc.invalidateQueries({ queryKey: ['groups'] });
       qc.invalidateQueries({ queryKey: ['groups-search'] });
       qc.invalidateQueries({ queryKey: ['public-groups'] });
       qc.invalidateQueries({ queryKey: ['private-groups'] });
       qc.invalidateQueries({ queryKey: ['suggested-groups'] });
+      // Refresh the detail page so isMember flips and the UI updates without a
+      // manual reload (#35).
+      qc.invalidateQueries({ queryKey: ['group', id] });
     },
   });
 }

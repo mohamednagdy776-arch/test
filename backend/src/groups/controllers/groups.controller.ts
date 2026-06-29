@@ -52,15 +52,17 @@ export class GroupsController {
   // Static segments MUST be declared before @Get(':id'); otherwise they are
   // captured by the :id param and rejected as a non-UUID ("Invalid identifier
   // format").
+  // `category` is read separately from the PaginationDto because the global
+  // ValidationPipe whitelist strips properties not declared on the DTO (#37).
   @Get('public')
-  async findPublic(@Query() query: PaginationDto) {
-    const { data, total } = await this.groupsService.findByPrivacy('public', query.page!, query.limit!);
+  async findPublic(@Query() query: PaginationDto, @Query('category') category?: string) {
+    const { data, total } = await this.groupsService.findByPrivacy('public', query.page!, query.limit!, category);
     return paginated(data, total, query.page!, query.limit!);
   }
 
   @Get('private')
-  async findPrivate(@Query() query: PaginationDto) {
-    const { data, total } = await this.groupsService.findByPrivacy('private', query.page!, query.limit!);
+  async findPrivate(@Query() query: PaginationDto, @Query('category') category?: string) {
+    const { data, total } = await this.groupsService.findByPrivacy('private', query.page!, query.limit!, category);
     return paginated(data, total, query.page!, query.limit!);
   }
 

@@ -33,12 +33,46 @@ export class PagesService {
       order: { createdAt: 'DESC' },
       relations: ['createdBy'],
     });
-    const data = rows.map((p) => ({
+    const withCounts = await this.attachCounts(rows);
+    const data = withCounts.map((p) => ({
       ...p,
       ownerId: p.createdBy?.id ?? null,
-      followersCount: 0,
     }));
     return { data, total };
+  }
+
+  // Batched follower/like counts for a list of pages. Two grouped queries
+  // instead of N+1, matching the followerCount/likeCount fields findOne returns.
+  private async attachCounts<T extends { id: string }>(
+    pages: T[],
+  ): Promise<(T & { followerCount: number; likeCount: number })[]> {
+    if (pages.length === 0) return [];
+    const ids = pages.map((p) => p.id);
+    const followerRows = await this.followerRepo
+      .createQueryBuilder('f')
+      .select('f.page_id', 'pageId')
+      .addSelect('COUNT(*)', 'count')
+      .where('f.page_id IN (:...ids)', { ids })
+      .groupBy('f.page_id')
+      .getRawMany();
+    const likeRows = await this.likeRepo
+      .createQueryBuilder('l')
+      .select('l.page_id', 'pageId')
+      .addSelect('COUNT(*)', 'count')
+      .where('l.page_id IN (:...ids)', { ids })
+      .groupBy('l.page_id')
+      .getRawMany();
+    const followerMap = new Map<string, number>(
+      followerRows.map((r) => [r.pageId, Number(r.count)]),
+    );
+    const likeMap = new Map<string, number>(
+      likeRows.map((r) => [r.pageId, Number(r.count)]),
+    );
+    return pages.map((p) => ({
+      ...p,
+      followerCount: followerMap.get(p.id) ?? 0,
+      likeCount: likeMap.get(p.id) ?? 0,
+    }));
   }
 
   async findOne(pageId: string, userId?: string) {
@@ -111,7 +145,7 @@ export class PagesService {
       relations: ['page'],
       order: { followedAt: 'DESC' },
     });
-    return follows.map(f => f.page);
+    return this.attachCounts(follows.map(f => f.page));
   }
 
   async isFollowing(pageId: string, userId: string): Promise<boolean> {
@@ -130,10 +164,11 @@ export class PagesService {
 
   // Pages created by the user (the FE "created" tab).
   async getCreated(userId: string) {
-    return this.pagesRepo.find({
+    const pages = await this.pagesRepo.find({
       where: { createdBy: { id: userId } },
       order: { createdAt: 'DESC' },
     });
+    return this.attachCounts(pages);
   }
 
   // Public pages the user does not already follow.
@@ -148,7 +183,8 @@ export class PagesService {
       order: { createdAt: 'DESC' },
       take: limit + followed.size,
     });
-    return pages.filter((p) => !followed.has(p.id)).slice(0, limit);
+    const suggested = pages.filter((p) => !followed.has(p.id)).slice(0, limit);
+    return this.attachCounts(suggested);
   }
 
   // Posts are not associated to pages in the current schema (posts belong to a

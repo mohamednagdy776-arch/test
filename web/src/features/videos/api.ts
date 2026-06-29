@@ -16,14 +16,25 @@ export const videosApi = {
   getContinueWatching: () =>
     apiClient.get('/videos/continue-watching').then((r) => r.data),
 
+  // Videos are created in two steps, mirroring how posts/stories handle media:
+  // 1) upload the raw file to the shared media endpoint to obtain a signed URL,
+  // 2) create the video record referencing that URL. (The backend exposes
+  // POST /upload/media and POST /videos — there is no single /videos/upload.)
   uploadVideo: async (file: File, title: string, description?: string) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('title', title);
-    if (description) formData.append('description', description);
-    return apiClient.post('/videos/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => r.data);
+    const uploaded = await apiClient
+      .post('/upload/media', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((r) => r.data);
+
+    const url: string | undefined = uploaded?.data?.url ?? uploaded?.url;
+    if (!url) throw new Error('فشل رفع ملف الفيديو');
+
+    return apiClient
+      .post('/videos', { title, description, url })
+      .then((r) => r.data);
   },
 
   deleteVideo: (videoId: string) =>

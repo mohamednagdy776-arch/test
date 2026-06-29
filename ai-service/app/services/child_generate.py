@@ -1,9 +1,11 @@
 from __future__ import annotations
-import base64, io, logging, os
+import base64, hashlib, io, logging, os
+import cv2
 import httpx
 import torch
-from diffusers import DiffusionPipeline, LCMScheduler
+from diffusers import AutoPipelineForImage2Image, LCMScheduler
 from PIL import Image
+from app.services.child_blend import _decode, _crop, _morph, _childify
 
 log = logging.getLogger(__name__)
 
@@ -13,12 +15,14 @@ HF_CACHE    = os.environ.get("HF_HOME", "/app/model-cache")
 _pipe       = None
 
 
-def _load_pipe() -> DiffusionPipeline:
+def _load_pipe() -> AutoPipelineForImage2Image:
     global _pipe
     if _pipe is not None:
         return _pipe
     os.makedirs(HF_CACHE, exist_ok=True)
-    _pipe = DiffusionPipeline.from_pretrained(
+    # Image-to-image (same cached LCM Dreamshaper weights, no extra download) so the
+    # parents' actual blended face conditions the generation instead of text alone.
+    _pipe = AutoPipelineForImage2Image.from_pretrained(
         "SimianLuo/LCM_Dreamshaper_v7",
         cache_dir=HF_CACHE,
         torch_dtype=torch.float32,
@@ -28,6 +32,15 @@ def _load_pipe() -> DiffusionPipeline:
     _pipe.scheduler = LCMScheduler.from_config(_pipe.scheduler.config)
     _pipe.to("cpu")
     return _pipe
+
+
+def _parent_blend_image(p1_b64: str, p2_b64: str) -> Image.Image:
+    """Genuine Delaunay morph of BOTH parent faces -> 512x512 RGB init image.
+    This is what ties the generated child to the specific uploaded parents."""
+    img1 = _crop(_decode(p1_b64))
+    img2 = _crop(_decode(p2_b64))
+    morph = _childify(_morph(img1, img2, size=512))
+    return Image.fromarray(cv2.cvtColor(morph, cv2.COLOR_BGR2RGB))
 
 
 def _clean(b64: str) -> str:
@@ -85,14 +98,27 @@ def predict_child(p1_b64: str, p2_b64: str) -> str:
 
     child_prompt = _describe_child(p1, p2)
 
+    # Real per-parent face blend drives the generation; text only refines it.
+    init_image = _parent_blend_image(p1_b64, p2_b64)
+
+    # Seed = parent-derived component XOR per-request randomness: different parents
+    # diverge, and repeated runs on the same pair still vary (pose), without ever
+    # collapsing to a single fixed result.
+    parent_seed = int.from_bytes(
+        hashlib.sha256((p1 + p2).encode()).digest()[:4], "big"
+    )
+    seed = (parent_seed ^ int.from_bytes(os.urandom(4), "big")) & 0xFFFFFFFF
+    generator = torch.Generator(device="cpu").manual_seed(seed)
+
     pipe = _load_pipe()
     image = pipe(
         prompt=child_prompt,
+        image=init_image,
+        strength=0.55,
         negative_prompt="blurry, distorted, ugly, deformed, cartoon, anime, painting",
         num_inference_steps=8,
-        guidance_scale=0.0,
-        width=512,
-        height=512,
+        guidance_scale=1.0,
+        generator=generator,
     ).images[0]
 
     buf = io.BytesIO()
