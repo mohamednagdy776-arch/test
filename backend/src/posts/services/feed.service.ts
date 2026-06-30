@@ -21,18 +21,22 @@ export class FeedService {
       .loadRelationCountAndMap('post.commentsCount', 'post.comments', 'comment', (cq) =>
         cq.andWhere('comment.deleted_at IS NULL'),
       )
+      // Engagement as a selected alias to ORDER BY. feed_score is never
+      // recalculated (stays 0), so we rank by live engagement instead. A raw
+      // subquery in orderBy with .take() made TypeORM misparse it as an alias and
+      // 500 the feed; an addSelect alias + .limit() (the only join is many-to-one)
+      // is safe.
+      .addSelect(
+        '(SELECT COUNT(*) FROM reactions r WHERE r.post_id = post.id) + (SELECT COUNT(*) FROM comments c WHERE c.post_id = post.id AND c.deleted_at IS NULL)',
+        'engagement',
+      )
       .where('post.deleted_at IS NULL')
       .andWhere('post.audience IN (:...audiences)', {
         audiences: ['public', 'friends', 'friends_of_friends'],
       })
-      // feed_score is never recalculated (it stays 0), so order by live
-      // engagement to surface genuinely trending posts.
-      .orderBy(
-        '((SELECT COUNT(*) FROM reactions r WHERE r.post_id = post.id) + (SELECT COUNT(*) FROM comments c WHERE c.post_id = post.id AND c.deleted_at IS NULL))',
-        'DESC',
-      )
+      .orderBy('engagement', 'DESC')
       .addOrderBy('post.createdAt', 'DESC')
-      .take(limit + 1);
+      .limit(limit + 1);
 
     if (cursor) {
       qb.andWhere('post.id < :cursor', { cursor });

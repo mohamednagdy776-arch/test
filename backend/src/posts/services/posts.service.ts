@@ -107,16 +107,22 @@ export class PostsService {
       // source author + content/media instead of just the added text (#21).
       .leftJoinAndSelect('post.originalPost', 'originalPost')
       .leftJoinAndSelect('originalPost.user', 'originalPostUser')
-      .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
-      // "Most Relevant" ranks by real engagement (reactions + comments) so this
-      // feed differs from the chronological /feed/recent (#16). Pinned first.
-      .orderBy('post.isPinned', 'DESC')
-      .addOrderBy(
-        '((SELECT COUNT(*) FROM reactions r WHERE r.post_id = post.id) + (SELECT COUNT(*) FROM comments c WHERE c.post_id = post.id AND c.deleted_at IS NULL))',
-        'DESC',
+      // Engagement (reactions + live comments) as a selected alias we can ORDER
+      // BY. A raw subquery passed straight to orderBy with .take() made TypeORM's
+      // distinct-pagination misparse it as an alias and 500 the feed; ordering by
+      // a named addSelect with .limit() (safe — every join here is many-to-one)
+      // avoids that.
+      .addSelect(
+        '(SELECT COUNT(*) FROM reactions r WHERE r.post_id = post.id) + (SELECT COUNT(*) FROM comments c WHERE c.post_id = post.id AND c.deleted_at IS NULL)',
+        'engagement',
       )
+      .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      // "Most Relevant" ranks by real engagement so this feed differs from the
+      // chronological /feed/recent (#16). Pinned first.
+      .orderBy('post.isPinned', 'DESC')
+      .addOrderBy('engagement', 'DESC')
       .addOrderBy('post.createdAt', 'DESC')
-      .take(limit + 1);
+      .limit(limit + 1);
     if (cursor) {
       qb.andWhere('post.created_at < :cursor', { cursor: new Date(cursor) });
     }
