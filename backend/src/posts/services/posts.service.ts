@@ -103,13 +103,24 @@ export class PostsService {
     const qb = this.postsRepo.createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.group', 'group')
+      // Embed the original on shared/reposted posts so PostCard can render the
+      // source author + content/media instead of just the added text (#21).
+      .leftJoinAndSelect('post.originalPost', 'originalPost')
+      .leftJoinAndSelect('originalPost.user', 'originalPostUser')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      // "Most Relevant" ranks by real engagement (reactions + comments) so this
+      // feed differs from the chronological /feed/recent (#16). Pinned first.
       .orderBy('post.isPinned', 'DESC')
+      .addOrderBy(
+        '((SELECT COUNT(*) FROM reactions r WHERE r.post_id = post.id) + (SELECT COUNT(*) FROM comments c WHERE c.post_id = post.id AND c.deleted_at IS NULL))',
+        'DESC',
+      )
       .addOrderBy('post.createdAt', 'DESC')
       .take(limit + 1);
     if (cursor) {
       qb.andWhere('post.created_at < :cursor', { cursor: new Date(cursor) });
     }
+    this.applyHiddenFilter(qb, viewerId);
     this.applyAudienceFilter(qb, viewerId);
     const data = await qb.getMany();
     const hasMore = data.length > limit;
@@ -123,18 +134,41 @@ export class PostsService {
     const qb = this.postsRepo.createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.group', 'group')
+      .leftJoinAndSelect('post.originalPost', 'originalPost')
+      .leftJoinAndSelect('originalPost.user', 'originalPostUser')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
       .orderBy('post.createdAt', 'DESC')
       .take(limit + 1);
     if (cursor) {
       qb.andWhere('post.createdAt < :cursor', { cursor: new Date(cursor) });
     }
+    this.applyHiddenFilter(qb, viewerId);
     this.applyAudienceFilter(qb, viewerId);
     const data = await qb.getMany();
     const hasMore = data.length > limit;
     const results = hasMore ? data.slice(0, limit) : data;
     const nextCursor = hasMore ? results[results.length - 1]?.createdAt?.toISOString() : undefined;
     return { data: results, nextCursor, hasMore };
+  }
+
+  // Exclude posts the viewer hid ("not interested") or snoozed (until the snooze
+  // window lapses). hidden_posts is written by StoriesService.hidePost, but the
+  // user-facing feed runs through this service, so it must honour those rows too
+  // — otherwise hidden posts reappear on the next refetch (#15).
+  private applyHiddenFilter(qb: SelectQueryBuilder<Post>, viewerId?: string) {
+    if (!viewerId) return;
+    qb.andWhere(
+      `NOT EXISTS (
+        SELECT 1 FROM hidden_posts hp
+        WHERE hp.post_id = post.id
+          AND hp.user_id = :hiddenViewerId
+          AND (
+            hp.hide_type = 'not_interested'
+            OR (hp.hide_type = 'snooze' AND hp.snooze_until > NOW())
+          )
+      )`,
+      { hiddenViewerId: viewerId },
+    );
   }
 
   private applyAudienceFilter(qb: SelectQueryBuilder<Post>, viewerId?: string) {

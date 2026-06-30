@@ -15,11 +15,22 @@ export class FeedService {
     const qb = this.postsRepo
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
+      // Expose real interaction counts so the "Trending Posts" widget shows the
+      // number of likes/comments instead of a hard-coded 0 (#23).
+      .loadRelationCountAndMap('post.likesCount', 'post.reactions')
+      .loadRelationCountAndMap('post.commentsCount', 'post.comments', 'comment', (cq) =>
+        cq.andWhere('comment.deleted_at IS NULL'),
+      )
       .where('post.deleted_at IS NULL')
       .andWhere('post.audience IN (:...audiences)', {
         audiences: ['public', 'friends', 'friends_of_friends'],
       })
-      .orderBy('post.feedScore', 'DESC')
+      // feed_score is never recalculated (it stays 0), so order by live
+      // engagement to surface genuinely trending posts.
+      .orderBy(
+        '((SELECT COUNT(*) FROM reactions r WHERE r.post_id = post.id) + (SELECT COUNT(*) FROM comments c WHERE c.post_id = post.id AND c.deleted_at IS NULL))',
+        'DESC',
+      )
       .addOrderBy('post.createdAt', 'DESC')
       .take(limit + 1);
 

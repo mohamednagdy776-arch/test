@@ -17,7 +17,7 @@ export class Reaction {
   user: User;
 
   @Column({ default: 'like' })
-  type: string; // 'like' | 'love' | 'support'
+  type: string; // 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry' | 'support'
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

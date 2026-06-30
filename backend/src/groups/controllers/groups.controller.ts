@@ -1,5 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, ForbiddenException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, UseInterceptors, UploadedFile, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
+import { memoryStorage } from 'multer';
+import { join } from 'path';
+import { writeFileSync, mkdirSync } from 'fs';
+import sharp from 'sharp';
+import { signMediaPath } from '../../common/utils/media-token';
 import { GroupsService } from '../services/groups.service';
 import { PostsService } from '../../posts/services/posts.service';
 import { CreateGroupDto } from '../dto/create-group.dto';
@@ -19,8 +25,52 @@ export class GroupsController {
     private postsService: PostsService,
   ) {}
 
+  // Accepts both a JSON-only body and a multipart form with an optional
+  // `coverPhoto` file. FileInterceptor makes multer parse the multipart request
+  // (otherwise @Body() is empty and ValidationPipe 400s on the missing `name` —
+  // #33). The cover is validated/persisted exactly like the user avatar/cover
+  // upload (sharp-validate bytes + write to uploads + signed media url).
   @Post()
-  async create(@Body() dto: CreateGroupDto, @CurrentUser() user: User) {
+  @UseInterceptors(FileInterceptor('coverPhoto', {
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const okExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname);
+      const okMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype);
+      if (!okExt || !okMime) {
+        return cb(new BadRequestException('Only image files are allowed'), false);
+      }
+      cb(null, true);
+    },
+  }))
+  async create(
+    @Body() dto: CreateGroupDto,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @CurrentUser() user: User,
+  ) {
+    if (file) {
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+      // Persist under the existing whitelisted `covers/` media type so the signed
+      // url is actually servable by MediaController (which only allows a fixed set
+      // of types). Same dir/treatment as the user cover upload.
+      const destDir = join(process.cwd(), 'uploads', 'covers');
+      mkdirSync(destDir, { recursive: true });
+      // Decode the real bytes with sharp so a file that lies about being an
+      // image fails as a clean 400 rather than a 500 (#750 pattern).
+      let processed: Buffer;
+      try {
+        processed = await sharp(file.buffer)
+          .resize(1200, 375, { fit: 'cover', position: 'centre' })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+      } catch {
+        throw new BadRequestException('File is not a valid image');
+      }
+      writeFileSync(join(destDir, filename), processed);
+      const mediaPath = `covers/${filename}`;
+      const token = signMediaPath(mediaPath);
+      dto.coverPhoto = `/api/v1/media/${mediaPath}?t=${token}`;
+    }
     const group = await this.groupsService.create(dto, user);
     return ok(group, 'Group created');
   }
