@@ -23,13 +23,28 @@ export class FriendsService {
   // the user-facing POST /blocks writes to, in BOTH directions (#758).
   async isBlockedEither(userA: string, userB: string): Promise<boolean> {
     if (!userA || !userB || userA === userB) return false;
+    // Relation-based `blocks` table (Block entity, via userBlockRepo).
     const count = await this.userBlockRepo.count({
       where: [
         { blocker: { id: userA }, blocked: { id: userB } },
         { blocker: { id: userB }, blocked: { id: userA } },
       ],
     });
-    return count > 0;
+    if (count > 0) return true;
+    // ALSO check the scalar `user_blocks` table (UserBlock entity, via blocksRepo)
+    // that blockUser() actually writes to. The two block tables were disconnected,
+    // so a block created via POST /friends/block was never enforced (#28). Guarded
+    // so unit tests that only stub one repo still pass.
+    if (this.blocksRepo && typeof (this.blocksRepo as any).count === 'function') {
+      const scalar = await this.blocksRepo.count({
+        where: [
+          { blockerId: userA, blockedId: userB } as any,
+          { blockerId: userB, blockedId: userA } as any,
+        ],
+      });
+      if (scalar > 0) return true;
+    }
+    return false;
   }
 
   async sendRequest(requesterId: string, addresseeId: string) {
@@ -272,13 +287,22 @@ export class FriendsService {
     return { success: true };
   }
 
+  // Follow is a one-directional relationship, independent of friendship. It used
+  // to alias to sendRequest(), which 400'd ("Friend request already exists") the
+  // moment any friendship/request row existed — so the /friends Follow button on
+  // an existing friend always failed (#29). Now it writes an idempotent Follow
+  // row (mirrors FollowsService.follow): already-following is a clean no-op.
   async followUser(followerId: string, followedId: string) {
     if (followerId === followedId) throw new BadRequestException('Cannot follow yourself');
-    return this.sendRequest(followerId, followedId);
+    const existing = await this.followsRepo.findOne({ where: { followerId, followingId: followedId } });
+    if (existing) return { following: true }; // idempotent — no duplicate rows
+    await this.followsRepo.save(this.followsRepo.create({ followerId, followingId: followedId }));
+    return { following: true };
   }
 
   async unfollowUser(followerId: string, followedId: string) {
-    return this.deleteFriendship(followerId, followedId);
+    await this.followsRepo.delete({ followerId, followingId: followedId });
+    return { following: false };
   }
 
   async getFriendshipStatus(userId: string, otherUserId: string) {

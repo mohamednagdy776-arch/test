@@ -273,8 +273,14 @@ function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide }
     ...(isOwnPost && onEdit ? [{ label: 'تعديل المنشور', icon: PencilSimple, action: () => { onEdit(); } }] : []),
     { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId) },
     ...(isOwnPost ? [
-      { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }) },
-      { label: 'أرشفة المنشور', icon: BookmarkSimple, action: () => pinPost.mutate({ postId, data: { isArchived: true } }, { onSuccess: () => { showToast('تمت أرشفة المنشور', 'success'); onHide?.(); } }) },
+      // Pin/unpin uses the MapPin (pushpin) icon. It persists via PATCH /posts
+      // (isPinned is whitelisted) and reorders the feed; the toast makes the
+      // action visibly responsive instead of feeling dead (#11).
+      { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }, { onSuccess: () => showToast(post.isPinned ? 'تم إلغاء تثبيت المنشور' : 'تم تثبيت المنشور', 'success') }) },
+      // (#12) Removed the duplicate Bookmark "أرشفة المنشور" item: it reused the
+      // same icon as "حفظ المنشور" and was dead — isArchived isn't a whitelisted
+      // CreatePostDto field, so the global ValidationPipe stripped it and the
+      // PATCH did nothing.
       { label: 'حذف المنشور', icon: Trash, action: () => deletePost.mutate(postId, { onSuccess: () => { showToast('تم حذف المنشور', 'success'); onHide?.(); } }), danger: true },
     ] : [
       { label: 'عدم الاهتمام', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }, { onSuccess: () => { showToast('لن تظهر هذه المنشورات بعد الآن', 'success'); onHide?.(); } }) },
@@ -434,48 +440,57 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
         </div>
       </div>
 
-      {post.bgColor && !mediaUrl ? (
-        <div className="px-4 py-6 m-4 rounded-xl text-center shadow-card-hover" style={{ backgroundColor: post.bgColor }}>
-          <p dir="auto" className="text-lg text-[var(--card)] font-medium">{renderWithHashtags(post.content)}</p>
+      {/* Content. The colored-text background and the poll/image are rendered
+          independently so a post can have BOTH a coloured background AND a poll
+          (#18) or AND an image (#19) — previously the coloured branch returned
+          early and dropped everything else. */}
+      {post.bgColor ? (
+        <div className="px-4 pt-3">
+          <div className="px-4 py-6 rounded-xl text-center shadow-card-hover" style={{ backgroundColor: post.bgColor }}>
+            <p dir="auto" className="text-lg text-[var(--card)] font-medium whitespace-pre-wrap">{renderWithHashtags(post.content)}</p>
+          </div>
         </div>
       ) : (
-        <>
-          <div className="px-4 py-3">
-            <p dir="auto" className="text-sm text-[var(--foreground)]/85 leading-relaxed whitespace-pre-wrap">{renderWithHashtags(post.content)}</p>
-            {isShared && post.originalPost && (
-              <div className="mt-3 p-3 rounded-xl bg-[var(--muted)]/40 border border-[var(--border)]/40 shadow-card-hover transition-all duration-300 hover:shadow-glow">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-[var(--card)] text-xs flex items-center justify-center shadow-soft">
-                    {displayName(post.originalPost.user).charAt(0)}
-                  </div>
-                  {post.originalPost.user?.id ? (
-                    <Link href={post.originalPost.user?.username ? `/${post.originalPost.user.username}` : `/profile/${post.originalPost.user.id}`} className="text-xs font-medium text-[var(--foreground)] hover:underline">{displayName(post.originalPost.user)}</Link>
-                  ) : (
-                    <span className="text-xs font-medium text-[var(--foreground)]">{displayName(post.originalPost.user)}</span>
-                  )}
-                </div>
-                <p className="text-sm text-[var(--muted-foreground)] line-clamp-2">{post.originalPost.content}</p>
+        <div className="px-4 py-3">
+          <p dir="auto" className="text-sm text-[var(--foreground)]/85 leading-relaxed whitespace-pre-wrap">{renderWithHashtags(post.content)}</p>
+        </div>
+      )}
+      {isShared && post.originalPost && (
+        <div className="px-4 pt-1 pb-2">
+          <div className="p-3 rounded-xl bg-[var(--muted)]/40 border border-[var(--border)]/40 shadow-card-hover transition-all duration-300 hover:shadow-glow">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-[var(--card)] text-xs flex items-center justify-center shadow-soft">
+                {displayName(post.originalPost.user).charAt(0)}
               </div>
-            )}
-          </div>
-          {post.linkUrl && <LinkPreview url={post.linkUrl} title={post.linkTitle} description={post.linkDescription} image={post.linkImage} />}
-          {post.pollOptions && <PollDisplay postId={post.id} options={post.pollOptions} />}
-          {mediaUrl && (
-            <div>
-              {post.mediaType === 'video' ? (
-                <video src={mediaUrl} controls className="w-full max-h-[480px] object-cover shadow-inner-soft" />
-              ) : post.mediaUrls?.length > 1 ? (
-                <div className="grid grid-cols-2 gap-1">
-                  {post.mediaUrls.map((url: string, i: number) => (
-                    <img key={i} src={resolveMediaUrl(url) ?? ''} alt="" className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
-                  ))}
-                </div>
+              {post.originalPost.user?.id ? (
+                <Link href={post.originalPost.user?.username ? `/${post.originalPost.user.username}` : `/profile/${post.originalPost.user.id}`} className="text-xs font-medium text-[var(--foreground)] hover:underline">{displayName(post.originalPost.user)}</Link>
               ) : (
-                <img src={mediaUrl} alt="" className="w-full max-h-[600px] object-contain bg-[var(--muted)]/30 hover:scale-[1.02] transition-transform duration-300" loading="lazy" />
+                <span className="text-xs font-medium text-[var(--foreground)]">{displayName(post.originalPost.user)}</span>
               )}
             </div>
+            {post.originalPost.content && <p className="text-sm text-[var(--muted-foreground)] whitespace-pre-wrap">{post.originalPost.content}</p>}
+            {resolveMediaUrl(post.originalPost.mediaUrl) && (
+              <img src={resolveMediaUrl(post.originalPost.mediaUrl) ?? ''} alt="" className="mt-2 w-full max-h-80 object-cover rounded-lg" loading="lazy" />
+            )}
+          </div>
+        </div>
+      )}
+      {post.linkUrl && <div className="px-4"><LinkPreview url={post.linkUrl} title={post.linkTitle} description={post.linkDescription} image={post.linkImage} /></div>}
+      {post.pollOptions && <div className="px-4"><PollDisplay postId={post.id} options={post.pollOptions} /></div>}
+      {mediaUrl && (
+        <div className="mt-3">
+          {post.mediaType === 'video' ? (
+            <video src={mediaUrl} controls className="w-full max-h-[480px] object-cover shadow-inner-soft" />
+          ) : post.mediaUrls?.length > 1 ? (
+            <div className="grid grid-cols-2 gap-1">
+              {post.mediaUrls.map((url: string, i: number) => (
+                <img key={i} src={resolveMediaUrl(url) ?? ''} alt="" className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300" />
+              ))}
+            </div>
+          ) : (
+            <img src={mediaUrl} alt="" className="w-full max-h-[600px] object-contain bg-[var(--muted)]/30 hover:scale-[1.02] transition-transform duration-300" loading="lazy" />
           )}
-        </>
+        </div>
       )}
 
       <div className="px-4 py-3 space-y-3">

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useViewStory, useStoryViewers, useAddToHighlight } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
+import { useToast } from '@/components/ui/Toast';
 
 function resolveMedia(url?: string): string | undefined {
   return resolveMediaUrl(url) ?? undefined;
@@ -43,6 +44,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   const viewStory = useViewStory();
   const { data: viewersData } = useStoryViewers(currentStory?.id || '');
   const addToHighlight = useAddToHighlight();
+  const { showToast } = useToast() as any;
   const viewers = viewersData?.data || [];
 
   const goNext = useCallback(() => {
@@ -253,7 +255,18 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                   </button>
                   <button
                     onClick={() => {
-                      if (currentStory?.id) addToHighlight.mutate({ storyId: currentStory.id, name: 'الأهم' });
+                      // Save the story to the user's "الأهم" (Highlights/Favorites)
+                      // via the existing POST /stories/:id/highlights endpoint, with
+                      // toast feedback so the action isn't silent (#22).
+                      if (currentStory?.id) {
+                        addToHighlight.mutate(
+                          { storyId: currentStory.id, name: 'الأهم' },
+                          {
+                            onSuccess: () => showToast('تمت الإضافة إلى الأهم', 'success'),
+                            onError: () => showToast('تعذّرت الإضافة إلى الأهم', 'error'),
+                          },
+                        );
+                      }
                       setShowMenu(false);
                     }}
                     className="w-full px-4 py-2.5 text-right text-sm text-white/90 hover:bg-white/10 flex items-center gap-2.5 transition-colors"

@@ -101,6 +101,13 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
       pollOpts = pollOptions.filter(o => o.trim()).map(o => ({ text: o, votes: 0 }));
     }
 
+    // The poll question was previously dropped entirely, so an image+poll (or any
+    // poll) submitted with an empty caption sent content:'' and the backend
+    // rejected it with "Post content cannot be empty" — the post never published
+    // (#20). Fall back to the poll question as the post body so it both passes
+    // validation and is shown above the poll.
+    const finalContent = content.trim() || (pollOpts ? pollQuestion.trim() : '');
+
     // Carry the previewed link through so the server persists it without a
     // refetch; if the author dismissed it, tell the server to skip enrichment.
     const linkFields = hasPreview && activeUrl
@@ -116,7 +123,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
 
     await createPost.mutateAsync({
       groupId: groupId || '',
-      content: content.trim(),
+      content: finalContent,
       mediaUrl,
       mediaType,
       mediaUrls,
@@ -419,7 +426,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
           </div>
           <button
             type="submit"
-            disabled={(!content.trim() && mediaFiles.length === 0) || createPost.isPending}
+            disabled={(!content.trim() && mediaFiles.length === 0 && !pollQuestion.trim()) || createPost.isPending}
             className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--card)] hover:shadow-md disabled:opacity-40 transition-all"
             style={{ background: 'linear-gradient(to right, var(--primary), var(--secondary))' }}
           >
