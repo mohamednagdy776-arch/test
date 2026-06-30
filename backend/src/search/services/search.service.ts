@@ -19,11 +19,11 @@ export class SearchService {
     @InjectRepository(Event)   private eventRepo: Repository<Event>,
   ) {}
 
-  async search(query: string, userId: string, category?: string) {
+  async search(query: string, userId: string, category?: string, minAge?: number, maxAge?: number) {
     const q = `%${query.trim()}%`;
 
     const userSearch = async () => {
-      const users = await this.userRepo
+      const qb = this.userRepo
         .createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
         .where(
@@ -51,9 +51,11 @@ export class SearchService {
              UNION
              SELECT blocker_id FROM blocks WHERE blocked_id = :userId
            )`,
-        )
-        .take(20)
-        .getMany();
+        );
+      // #24: age filters (already sanitized in the controller — negatives ignored).
+      if (minAge) qb.andWhere('profile.age >= :minAge', { minAge });
+      if (maxAge) qb.andWhere('profile.age <= :maxAge', { maxAge });
+      const users = await qb.take(20).getMany();
 
       return users.map(u => ({
         id:          u.id,

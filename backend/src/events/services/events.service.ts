@@ -24,6 +24,12 @@ export class EventsService {
     if (endDate && endDate < startDate) {
       throw new BadRequestException('endDate must be after startDate');
     }
+    // #32: the list only shows events with start_date >= NOW(), so an event whose
+    // time has already fully passed would be created but never appear. Reject it up
+    // front instead of silently creating an invisible event.
+    if ((endDate ?? startDate) < new Date()) {
+      throw new BadRequestException('لا يمكن إنشاء حدث في وقت ماضٍ');
+    }
     const event = this.eventsRepo.create({
       ...dto,
       startDate,
@@ -45,14 +51,46 @@ export class EventsService {
     }
   }
 
+  // #31: attach real going/interested/notGoing counts to a list of events with a
+  // single grouped query (instead of N+1), matching the goingCount/interestedCount
+  // field names that findOne returns and the cards read.
+  private async attachCounts<T extends { id: string }>(
+    events: T[],
+  ): Promise<(T & { goingCount: number; interestedCount: number; notGoingCount: number })[]> {
+    if (events.length === 0) return [];
+    const ids = events.map((e) => e.id);
+    const rows = await this.rsvpRepo
+      .createQueryBuilder('rsvp')
+      .select('rsvp.event_id', 'eventId')
+      .addSelect('rsvp.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .where('rsvp.event_id IN (:...ids)', { ids })
+      .groupBy('rsvp.event_id')
+      .addGroupBy('rsvp.status')
+      .getRawMany();
+    const countsByEvent = new Map<string, { goingCount: number; interestedCount: number; notGoingCount: number }>();
+    for (const e of events) countsByEvent.set(e.id, { goingCount: 0, interestedCount: 0, notGoingCount: 0 });
+    for (const r of rows) {
+      const c = countsByEvent.get(r.eventId);
+      if (!c) continue;
+      const n = Number(r.count);
+      if (r.status === 'going') c.goingCount = n;
+      else if (r.status === 'interested') c.interestedCount = n;
+      else if (r.status === 'not_going') c.notGoingCount = n;
+    }
+    return events.map((e) => ({ ...e, ...countsByEvent.get(e.id)! }));
+  }
+
   async findAll(page: number, limit: number, userId?: string) {
-    const [data, total] = await this.eventsRepo
+    const [rawData, total] = await this.eventsRepo
       .createQueryBuilder('event')
       .where('event.start_date >= NOW()')
       .orderBy('event.start_date', 'ASC')
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
+
+    const data = await this.attachCounts(rawData);
 
     if (!userId) {
       return { data, total };

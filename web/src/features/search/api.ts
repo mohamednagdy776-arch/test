@@ -84,7 +84,7 @@ export const searchApi = {
     apiClient.get('/users/search', { params }).then((r) => r.data),
 
   searchAll: async (params: SearchParams): Promise<SearchResult> => {
-    const { type = 'all', q, cursor, limit = 12, ...rest } = params;
+    const { type = 'all', q, cursor, limit = 12, minAge, maxAge, ...rest } = params;
     const results: SearchResult = { hasMore: false, nextCursor: undefined };
 
     const categoryMap: Record<string, string> = {
@@ -97,7 +97,7 @@ export const searchApi = {
     const category = type === 'all' ? undefined : categoryMap[type];
 
     try {
-      const res = await apiClient.get('/search', { params: { q, category, limit, cursor } });
+      const res = await apiClient.get('/search', { params: { q, category, limit, cursor, minAge, maxAge } });
       const data = res.data?.data ?? res.data ?? {};
 
       if (data.users) results.users = data.users;

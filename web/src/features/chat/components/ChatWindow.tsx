@@ -149,12 +149,23 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       }
     });
 
+    // Live reaction sync (#26). Ignore our own echo — already applied optimistically.
+    socket.on('reactionUpdated', (d: { messageId: string; userId: string; emoji: string; action: string }) => {
+      if (d.userId === myUserId) return;
+      setMessages(prev => prev.map(m => {
+        if (m.id !== d.messageId) return m;
+        const others = (m.reactions || []).filter(r => r.userId !== d.userId);
+        return { ...m, reactions: d.action === 'removed' ? others : [...others, { emoji: d.emoji, userId: d.userId }] };
+      }));
+    });
+
     return () => {
       socket.emit('leaveConversation', { conversationId: match.id });
       socket.off('presence', onPresence);
       socket.off('newMessage');
       socket.off('userTyping');
       socket.off('messageSeen');
+      socket.off('reactionUpdated');
     };
   }, [match.id, myUserId, match.user2Id, markSeen]);
 
@@ -209,9 +220,14 @@ export const ChatWindow = ({ match, onBack }: Props) => {
         message: { id: saved.id, content, senderId: myUserId, type: 'text', replyToId: replyId, createdAt: saved.createdAt ?? new Date().toISOString() },
       });
       socket.emit('typing', { conversationId: match.id, userId: myUserId, isTyping: false });
-    } catch {
+    } catch (err: any) {
       setMessages((prev) => prev.filter(m => m.id !== tempId));
       setInput(content);
+      // Surface a blocked-pair rejection (#28) rather than silently failing.
+      const msg = err?.response?.status === 403
+        ? (err?.response?.data?.message || 'لا يمكنك مراسلة هذا المستخدم')
+        : 'تعذّر إرسال الرسالة';
+      showToast?.(msg, 'error');
     } finally {
       setSending(false);
     }
@@ -229,17 +245,24 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   };
 
   const handleReaction = async (messageId: string, emoji: string) => {
-    try {
-      await apiClient.post(`/chat/messages/${messageId}/reactions`, { emoji });
-      setMessages(prev => prev.map(m =>
-        m.id === messageId
-          ? { ...m, reactions: [...(m.reactions || []), { emoji, userId: myUserId ?? '' }] }
-          : m,
-      ));
-      const socket = getSocket();
-      socket.emit('addReaction', { messageId, userId: myUserId, emoji });
-    } catch (e) { console.error(e); }
+    // One reaction per user (#26): clicking the same emoji removes it, a different
+    // emoji replaces it. Update local state by upsert/toggle so reactions are never
+    // duplicated, then persist via REST (server mirrors the upsert/toggle).
+    const msg = messages.find(m => m.id === messageId);
+    const mine = msg?.reactions?.find(r => r.userId === myUserId);
+    const isToggleOff = mine?.emoji === emoji;
+    setMessages(prev => prev.map(m => {
+      if (m.id !== messageId) return m;
+      const others = (m.reactions || []).filter(r => r.userId !== (myUserId ?? ''));
+      return { ...m, reactions: isToggleOff ? others : [...others, { emoji, userId: myUserId ?? '' }] };
+    }));
     setShowReactions(null);
+    try {
+      const { data } = await apiClient.post(`/chat/messages/${messageId}/reactions`, { emoji });
+      const action: string = data?.data?.action ?? (isToggleOff ? 'removed' : 'added');
+      // Relay the resulting change so the peer's open chat updates in real time.
+      getSocket().emit('addReaction', { conversationId: match.id, messageId, userId: myUserId, emoji, action });
+    } catch (e) { console.error(e); }
   };
 
   const handleKey = (e: React.KeyboardEvent) => {
@@ -295,6 +318,14 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   const otherName = (match as any).otherUserName || `مستخدم ${match.user2Id?.slice(0, 8)}`;
   const otherAvatarSrc = avatarSrc((match as any).otherUserAvatar);
   const otherInitial = otherName.charAt(0).toUpperCase();
+  // Link to the other user's profile (#9/#27). Prefer the canonical /[username]
+  // route the rest of the app uses; fall back to /profile/{id} by user id.
+  const otherUsername = (match as any).otherUsername as string | undefined;
+  const profileHref = otherUsername
+    ? `/${otherUsername}`
+    : match.user2Id
+      ? `/profile/${match.user2Id}`
+      : null;
 
   return (
     <div className="flex flex-col h-full rounded-2xl overflow-hidden"
@@ -309,17 +340,24 @@ export const ChatWindow = ({ match, onBack }: Props) => {
           <ArrowLeft size={16} />
         </button>
 
-        {/* Avatar */}
-        <div className="h-9 w-9 shrink-0 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold text-white"
+        {/* Avatar — links to the other user's profile (#9) */}
+        <a
+          href={profileHref ?? undefined}
+          aria-label={profileHref ? `عرض ملف ${otherName} الشخصي` : undefined}
+          className={`h-9 w-9 shrink-0 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold text-white ${profileHref ? 'cursor-pointer transition-opacity hover:opacity-90' : ''}`}
           style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
           {otherAvatarSrc ? (
             <Image src={otherAvatarSrc} alt={otherName} width={36} height={36} className="w-full h-full object-cover" />
           ) : otherInitial}
-        </div>
+        </a>
 
         {/* Name + status */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{otherName}</p>
+          {profileHref ? (
+            <a href={profileHref} className="text-sm font-bold truncate block hover:underline" style={{ color: 'var(--foreground)' }}>{otherName}</a>
+          ) : (
+            <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{otherName}</p>
+          )}
           {typingUsers.length > 0 ? (
             <p className="text-xs font-medium" style={{ color: 'var(--accent)' }}>يكتب الآن...</p>
           ) : (
@@ -467,9 +505,9 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                   className="absolute z-40 mt-2 left-0 w-52 rounded-2xl overflow-hidden shadow-xl"
                   style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                 >
-                  {match.user2Id && (
+                  {profileHref && (
                     <a
-                      href={(match as any).username ? `/${(match as any).username}` : `/profile/${match.user2Id}`}
+                      href={profileHref}
                       role="menuitem"
                       className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors text-right"
                       style={{ color: 'var(--foreground)' }}

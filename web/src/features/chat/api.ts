@@ -8,8 +8,10 @@ export const chatApi = {
   getMessages: (conversationId: string, page = 1, limit = 50) =>
     apiClient.get(`/chat/conversations/${conversationId}/messages`, { params: { page, limit } }).then(r => r.data),
 
+  // Unwrap to the inner payload ({ count }) so consumers can read `.count`
+  // directly (the dashboard "Messages" stat reads chatData?.count) — #30.
   getUnreadCount: () =>
-    apiClient.get('/chat/unread').then(r => r.data),
+    apiClient.get('/chat/unread').then(r => r.data?.data ?? r.data),
 
   // Messages
   sendMessage: (conversationId: string, content: string, type = 'text', replyToId?: string, mediaUrl?: string) =>

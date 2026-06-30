@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { relationshipStatusLabel } from '../labels';
-import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight, SealCheck } from '@phosphor-icons/react';
+import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight, SealCheck, LinkSimple } from '@phosphor-icons/react';
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
@@ -117,6 +117,25 @@ export const ProfileHeader = ({
       showToast(err?.response?.data?.message ?? 'فشل إزالة الصورة', 'error');
     } finally {
       setUploading(false);
+    }
+  };
+
+  // Each profile has a unique shareable URL (#8). The canonical route is
+  // /{username} (the same route posts/chat link to — #13); fall back to the
+  // id route for users who never set a username.
+  const copyProfileLink = async () => {
+    if (typeof window === 'undefined') return;
+    const path = profile.username
+      ? `/${profile.username}`
+      : profile.userId
+        ? `/profile/${profile.userId}`
+        : null;
+    if (!path) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}${path}`);
+      showToast('تم نسخ رابط الملف الشخصي', 'success');
+    } catch {
+      showToast('تعذّر نسخ الرابط', 'error');
     }
   };
 
@@ -259,6 +278,15 @@ export const ProfileHeader = ({
                   موثّق الهوية
                 </span>
               )}
+              {/* Copy the profile's unique shareable link (#8). */}
+              <button
+                onClick={copyProfileLink}
+                aria-label="نسخ رابط الملف الشخصي"
+                title="نسخ رابط الملف الشخصي"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-full text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              >
+                <LinkSimple size={16} />
+              </button>
             </div>
             {profile.username && (
               <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium">

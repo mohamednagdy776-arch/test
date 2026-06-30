@@ -14,6 +14,8 @@ export class SearchController {
   async search(
     @Query('q') q: string,
     @Query('category') category: string,
+    @Query('minAge') minAge: string,
+    @Query('maxAge') maxAge: string,
     @CurrentUser() user: User,
   ) {
     if (!q || q.trim().length === 0) {
@@ -21,8 +23,16 @@ export class SearchController {
         users: [], posts: [], groups: [], pages: [], events: [], photos: [], videos: []
       });
     }
-    const results = await this.searchService.search(q, user.id, category);
+    const results = await this.searchService.search(
+      q, user.id, category, this.parseAge(minAge), this.parseAge(maxAge),
+    );
     return ok(results);
+  }
+
+  // #24: parse an age query param, ignoring negative/out-of-range/invalid values.
+  private parseAge(v?: string): number | undefined {
+    const n = v != null ? parseInt(v, 10) : NaN;
+    return Number.isFinite(n) && n >= 18 && n <= 120 ? n : undefined;
   }
 
   @Get('autocomplete')
