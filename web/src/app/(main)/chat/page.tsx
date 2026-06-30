@@ -42,7 +42,8 @@ export default function ChatPage() {
           createdAt: conv.createdAt || new Date().toISOString(),
           otherUserName: conv.otherUserName ?? null,
           otherUserAvatar: conv.otherUserAvatar ?? null,
-        });
+          otherUsername: conv.otherUsername ?? null,
+        } as any);
       } catch (error: any) {
         console.error('Failed to create conversation:', error);
         handledRef.current = null;

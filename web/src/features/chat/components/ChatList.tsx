@@ -86,14 +86,14 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
 
   const handleSelect = async (item: any, isConversation: boolean) => {
     if (isConversation) {
-      onSelect({ id: item.id, user2Id: item.otherUserId, otherUserName: item.otherUserName || item.name, otherUserAvatar: item.otherUserAvatar || item.avatar } as any);
+      onSelect({ id: item.id, user2Id: item.otherUserId, otherUserName: item.otherUserName || item.name, otherUserAvatar: item.otherUserAvatar || item.avatar, otherUsername: item.otherUsername } as any);
       return;
     }
     const otherId = item.otherUserId || item.user2Id;
     try {
       const { data } = await apiClient.post('/chat/conversations', { targetUserId: otherId });
       const conv = data.data;
-      onSelect({ id: conv.id, user2Id: conv.otherUserId || otherId, otherUserName: conv.otherUserName || item.otherUserName, otherUserAvatar: conv.otherUserAvatar || item.otherUserAvatar } as any);
+      onSelect({ id: conv.id, user2Id: conv.otherUserId || otherId, otherUserName: conv.otherUserName || item.otherUserName, otherUserAvatar: conv.otherUserAvatar || item.otherUserAvatar, otherUsername: conv.otherUsername || item.otherUsername } as any);
     } catch (e) { console.error('Failed to open conversation:', e); }
   };
 

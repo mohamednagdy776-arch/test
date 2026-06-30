@@ -303,7 +303,11 @@ export const SearchPage = () => {
       runSearch(query, activeTab, applied);
     }, 600);
     return () => { if (autoRef.current) clearTimeout(autoRef.current); };
-  }, [query, activeTab, applied, runSearch]);
+    // #25: tab switches are searched explicitly in handleTabChange, so activeTab
+    // is intentionally excluded here — including it fired a duplicate request on
+    // every tab switch (effect re-run + handleTabChange both calling runSearch).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, applied, runSearch]);
 
   const handleSearch = (searchQuery?: string) => {
     const q = (searchQuery ?? query).trim();

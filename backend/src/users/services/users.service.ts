@@ -163,7 +163,35 @@ export class UsersService {
         .leftJoinAndSelect('p.educationEntries', 'education')
         .getOne();
     }
-    if (!profile) return null;
+    if (!profile) {
+      // The user EXISTS (resolveUserId matched) but has no profile row yet — e.g.
+      // registered/onboarded but never edited their profile. Returning null here
+      // 404s a real person, so a post author with no profile shows "User not
+      // found" (#13). Synthesize a minimal profile from the user so their page
+      // loads. (A truly nonexistent user already short-circuited to null above.)
+      const user = await this.usersRepo.findOne({ where: { id: userId } });
+      if (!user) return null;
+      const name = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.fullName || '';
+      const { total: friendCount } = await this.friendsService.getFriends(userId, 1, 1);
+      return {
+        id: null,
+        userId: user.id,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null,
+        username: user.username ?? null,
+        fullName: name,
+        gender: user.gender ?? null,
+        avatarUrl: null,
+        coverUrl: null,
+        joinDate: user.createdAt,
+        createdAt: user.createdAt,
+        photoVisibility: 'public',
+        photoLocked: false,
+        mutualFriends: 0,
+        friendCount,
+        isSelf: viewerId === userId,
+      } as any;
+    }
 
     const isSelf = viewerId === userId;
     const mutualFriends = isSelf ? 0 : await this.getMutualFriendsCount(userId, viewerId ?? '');
@@ -332,9 +360,20 @@ export class UsersService {
     return this.formatProfile(profile, userId);
   }
 
-  async updateCover(userId: string, coverUrl: string) {
+  // Return the user's profile row, creating an empty one (column defaults) if it
+  // doesn't exist yet. Avatar/cover uploads used profilesRepo.update({ user }),
+  // which silently affects 0 rows for a user who onboarded but never edited their
+  // profile — so the image was written to disk but never persisted (#7). Upserting
+  // the row first guarantees the subsequent update actually sticks.
+  private async ensureProfile(userId: string): Promise<Profile> {
     const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
-    if (existing?.coverUrl && existing.coverUrl !== coverUrl) {
+    if (existing) return existing;
+    return this.profilesRepo.save(this.profilesRepo.create({ user: { id: userId } as any }));
+  }
+
+  async updateCover(userId: string, coverUrl: string) {
+    const existing = await this.ensureProfile(userId);
+    if (existing.coverUrl && existing.coverUrl !== coverUrl) {
       await this.deleteUploadedFile(existing.coverUrl);
     }
     await this.profilesRepo.update({ user: { id: userId } }, { coverUrl });
@@ -343,8 +382,8 @@ export class UsersService {
   }
 
   async updateAvatar(userId: string, avatarUrl: string) {
-    const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
-    if (existing?.avatarUrl && existing.avatarUrl !== avatarUrl) {
+    const existing = await this.ensureProfile(userId);
+    if (existing.avatarUrl && existing.avatarUrl !== avatarUrl) {
       await this.deleteUploadedFile(existing.avatarUrl);
     }
     await this.profilesRepo.update({ user: { id: userId } }, { avatarUrl });

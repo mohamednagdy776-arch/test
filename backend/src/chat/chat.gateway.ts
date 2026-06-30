@@ -180,14 +180,23 @@ export class ChatGateway implements OnGatewayConnection {
    * sender never receives a duplicate of their own message.
    */
   @SubscribeMessage('relayMessage')
-  handleRelay(
+  async handleRelay(
     @MessageBody() payload: { conversationId: string; message: any },
     @ConnectedSocket() client: Socket,
   ) {
-    client.to(`conversation:${payload.conversationId}`).emit('newMessage', {
-      ...payload.message,
-      conversationId: payload.conversationId,
-    });
+    const senderId: string = client.data.userId;
+    const message = { ...payload.message, conversationId: payload.conversationId };
+
+    // Deliver to every OTHER participant's own sockets (not just the conversation
+    // room) so messages arrive in real time even when the recipient is not on the
+    // chat screen / hasn't joined the room (#6). `newMessage` updates an open
+    // ChatWindow; `newMessageNotification` drives the app-wide unread/badge.
+    const participantIds = await this.chatService.getParticipantIds(payload.conversationId);
+    for (const uid of participantIds) {
+      if (uid === senderId) continue;
+      this.emitToUser(uid, 'newMessage', message);
+      this.emitToUser(uid, 'newMessageNotification', message);
+    }
   }
 
   @SubscribeMessage('typing')
@@ -215,21 +224,24 @@ export class ChatGateway implements OnGatewayConnection {
     });
   }
 
+  /**
+   * Relay a reaction change to the OTHER participants in real time (#26). The
+   * REST endpoint (POST /chat/messages/:id/reactions) is the single source of
+   * truth for persistence + upsert/toggle; this only broadcasts the resulting
+   * `action` so peers converge on one-reaction-per-user without double-applying.
+   */
   @SubscribeMessage('addReaction')
-  async handleReaction(
-    @MessageBody() payload: { messageId: string; userId: string; emoji: string },
+  handleReaction(
+    @MessageBody() payload: { conversationId: string; messageId: string; userId: string; emoji: string; action?: string },
     @ConnectedSocket() client: Socket,
   ) {
-    const reaction: any = await this.chatService.reactToMessage(payload.messageId, payload.userId, payload.emoji);
-    
-    const conversationId = (reaction as any).message?.conversation?.id;
-    if (conversationId) {
-      this.server.to(`conversation:${conversationId}`).emit('reactionAdded', {
-        messageId: payload.messageId,
-        emoji: payload.emoji,
-        userId: payload.userId,
-      });
-    }
+    if (!payload.conversationId) return;
+    client.to(`conversation:${payload.conversationId}`).emit('reactionUpdated', {
+      messageId: payload.messageId,
+      emoji: payload.emoji,
+      userId: client.data.userId || payload.userId,
+      action: payload.action ?? 'added',
+    });
   }
 
   @SubscribeMessage('removeReaction')

@@ -4,6 +4,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { CallProvider } from '@/features/call/CallProvider';
+import { ChatRealtime } from '@/features/chat/ChatRealtime';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (

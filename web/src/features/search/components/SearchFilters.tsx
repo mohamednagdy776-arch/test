@@ -32,6 +32,13 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 export const SearchFilters = ({ filters, onChange, onReset, onSearch }: Props) => {
   const s = set(filters, onChange);
 
+  // #24: reject negative ages on input; the 18 floor is enforced via min + backend.
+  const setAge = (k: keyof SearchFiltersState) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const v = e.target.value;
+    if (v !== '' && Number(v) < 0) return;
+    onChange({ ...filters, [k]: v });
+  };
+
   const inp = (k: keyof SearchFiltersState, label: string, ph = '') => (
     <Field label={label}>
       <input type="text" value={filters[k]} onChange={s(k)} placeholder={ph}
@@ -60,11 +67,11 @@ export const SearchFilters = ({ filters, onChange, onReset, onSearch }: Props) =
 
         <Field label="الفئة العمرية">
           <div className="flex gap-1.5 items-center">
-            <input type="number" value={filters.minAge} onChange={s('minAge')} placeholder="من"
+            <input type="number" min={18} value={filters.minAge} onChange={setAge('minAge')} placeholder="من"
               className="w-full rounded-xl px-2 py-2.5 text-sm text-center transition-all focus:outline-none focus:ring-2"
               style={inputStyle} />
             <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>—</span>
-            <input type="number" value={filters.maxAge} onChange={s('maxAge')} placeholder="إلى"
+            <input type="number" min={18} value={filters.maxAge} onChange={setAge('maxAge')} placeholder="إلى"
               className="w-full rounded-xl px-2 py-2.5 text-sm text-center transition-all focus:outline-none focus:ring-2"
               style={inputStyle} />
           </div>

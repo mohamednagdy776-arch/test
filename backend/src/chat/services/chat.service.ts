@@ -181,7 +181,21 @@ export class ChatService {
     };
   }
 
+  /** All user ids participating in a conversation (scalar column). */
+  async getParticipantIds(conversationId: string): Promise<string[]> {
+    const parts = await this.participantRepo.find({ where: { conversationId } });
+    return parts.map((p) => p.userId);
+  }
+
   async sendMessage(conversationId: string, senderId: string, content: string, type: string = 'text', replyToId?: string, mediaUrl?: string): Promise<Message> {
+    // Block enforcement (#28): a blocked pair cannot exchange messages. Reject the
+    // send if the sender has blocked — or is blocked by — any other participant.
+    const participantIds = await this.getParticipantIds(conversationId);
+    for (const otherId of participantIds) {
+      if (otherId !== senderId && await this.friendsService.isBlockedEither(senderId, otherId)) {
+        throw new ForbiddenException('Cannot send messages to this user');
+      }
+    }
     const msg = this.messagesRepo.create({
       conversation: { id: conversationId } as any,
       sender: { id: senderId } as any,
@@ -222,25 +236,40 @@ export class ChatService {
     }
   }
 
-  async reactToMessage(messageId: string, userId: string, emoji: string) {
+  /**
+   * One reaction per user per message (#26). Toggling the SAME emoji removes it;
+   * a different emoji replaces the existing one. Returns the resulting action and
+   * the conversation id so the gateway can broadcast the change to the room.
+   */
+  async reactToMessage(
+    messageId: string,
+    userId: string,
+    emoji: string,
+  ): Promise<{ action: 'added' | 'updated' | 'removed'; conversationId: string | null }> {
+    const msg = await this.messagesRepo.findOne({ where: { id: messageId }, relations: ['conversation'] });
+    if (!msg) throw new NotFoundException('Message not found');
+    const conversationId = msg.conversation?.id ?? null;
+
     const existing = await this.reactionRepo.findOne({
       where: { message: { id: messageId }, user: { id: userId } },
-      relations: ['message'],
     });
     if (existing) {
+      if (existing.emoji === emoji) {
+        await this.reactionRepo.remove(existing);
+        return { action: 'removed', conversationId };
+      }
       existing.emoji = emoji;
-      return this.reactionRepo.save(existing);
+      await this.reactionRepo.save(existing);
+      return { action: 'updated', conversationId };
     }
-    const reaction = this.reactionRepo.create({
-      message: { id: messageId } as any,
-      user: { id: userId } as any,
-      emoji,
-    });
-    const saved = await this.reactionRepo.save(reaction);
-    return this.reactionRepo.findOne({
-      where: { id: saved.id },
-      relations: ['message'],
-    });
+    await this.reactionRepo.save(
+      this.reactionRepo.create({
+        message: { id: messageId } as any,
+        user: { id: userId } as any,
+        emoji,
+      }),
+    );
+    return { action: 'added', conversationId };
   }
 
   async removeReaction(messageId: string, userId: string) {
@@ -297,6 +326,11 @@ export class ChatService {
   async getOrCreateDirectConversation(userId: string, targetUserId: string) {
     if (userId === targetUserId) {
       throw new ForbiddenException('Cannot start a conversation with yourself');
+    }
+
+    // Block enforcement (#28): a blocked pair cannot open/resume a conversation.
+    if (await this.friendsService.isBlockedEither(userId, targetUserId)) {
+      throw new ForbiddenException('Cannot start a conversation with this user');
     }
 
     // Relationship gate: a 1:1 conversation needs an accepted match OR an
@@ -443,7 +477,19 @@ export class ChatService {
     await this.conversationRepo.update({ id: conversationId }, { disappearingMode: enabled });
   }
 
+  // Count of messages the user has received from OTHER participants across all
+  // their conversations (#30). There is no persisted per-user read state yet, so
+  // this reflects total incoming messages — a real, non-zero activity figure for
+  // the dashboard "Messages" stat (was hard-coded to 0).
   async getUnreadCount(userId: string): Promise<number> {
-    return 0;
+    const myParts = await this.participantRepo.find({ where: { userId } });
+    const convIds = myParts.map((p) => p.conversationId);
+    if (convIds.length === 0) return 0;
+    return this.messagesRepo
+      .createQueryBuilder('message')
+      .where('message.conversation_id IN (:...convIds)', { convIds })
+      .andWhere('message.sender_id != :userId', { userId })
+      .andWhere('message.deleted_at IS NULL')
+      .getCount();
   }
 }
