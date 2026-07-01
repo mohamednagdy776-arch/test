@@ -2,9 +2,10 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 
-export type Theme = 
+export type Theme =
   // Base themes
-  | 'light' 
+  | 'luxury'
+  | 'light'
   | 'dark'
   // Color variants (light)
   | 'light-green'
@@ -38,7 +39,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 // All available themes list
 const allThemes: Theme[] = [
-  'light', 'dark',
+  'luxury', 'light', 'dark',
   'light-green', 'light-blue', 'light-purple', 'light-pink', 'light-orange',
   'dark-green', 'dark-blue', 'dark-purple', 'dark-pink', 'dark-orange',
   'world-cup', 'winter', 'ramadan', 'summer', 'eid', 'national-day'
@@ -46,6 +47,7 @@ const allThemes: Theme[] = [
 
 export const availableThemes: { value: Theme; label: string; icon: string; category: string }[] = [
   // Base
+  { value: 'luxury', label: 'الفخامة', icon: '💎', category: 'base' },
   { value: 'light', label: 'فاتح', icon: '☀️', category: 'base' },
   { value: 'dark', label: 'داكن', icon: '🌙', category: 'base' },
   // Light variants
@@ -71,6 +73,8 @@ export const availableThemes: { value: Theme; label: string; icon: string; categ
 
 // Get the theme family (light or dark) based on theme name
 function getThemeFamily(theme: Theme): 'light' | 'dark' {
+  // Luxury (Emerald Sanctum) is a light-family palette.
+  if (theme === 'luxury') return 'light';
   // Light family themes
   if (theme === 'light' || theme.startsWith('light-')) return 'light';
   // Dark family themes
@@ -102,11 +106,10 @@ function getInitialTheme(): Theme {
   if (stored && allThemes.includes(stored)) {
     return stored;
   }
-  // Check system preference
-  if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return 'dark';
-  }
-  return 'light';
+  // Default to the app's signature luxury (Emerald Sanctum) look when the user
+  // hasn't picked a theme — this used to be forced via a hard-coded
+  // data-theme="luxury" wrapper that also broke theme switching (#48).
+  return 'luxury';
 }
 
 // Initialize theme before hydration to prevent flash
@@ -117,7 +120,7 @@ function initTheme() {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>('luxury');
   const [mounted, setMounted] = useState(false);
 
   const themeFamily = getThemeFamily(theme);
@@ -148,7 +151,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Provide theme context immediately after mount to prevent content flash
   return (
-    <ThemeContext.Provider value={{ theme: mounted ? theme : 'light', themeFamily, toggleTheme, setTheme, availableThemes }}>
+    <ThemeContext.Provider value={{ theme: mounted ? theme : 'luxury', themeFamily, toggleTheme, setTheme, availableThemes }}>
       {children}
     </ThemeContext.Provider>
   );

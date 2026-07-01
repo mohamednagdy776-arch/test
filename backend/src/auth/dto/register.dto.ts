@@ -1,7 +1,48 @@
-import { IsEmail, IsString, Matches, MinLength, MaxLength, IsOptional, IsDateString, IsEnum } from 'class-validator';
+import {
+  IsEmail,
+  IsString,
+  Matches,
+  MinLength,
+  MaxLength,
+  IsOptional,
+  IsDateString,
+  IsEnum,
+  Validate,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
 import { Gender } from '../entities/user.entity';
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+// Arabic-first app: names must accept Arabic letters as well as Latin. The
+// ranges cover the core Arabic block, Arabic Supplement, Extended-A and the
+// presentation forms, plus Latin letters, spaces, hyphen and apostrophe (#54).
+const NAME_REGEX = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿a-zA-Z\s'-]+$/;
+
+// Username: Arabic + Latin + digits + . _ - , but never spaces (#54).
+const USERNAME_REGEX = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿a-zA-Z0-9._-]+$/;
+
+// Reject registrations from users under 18. dateOfBirth is optional, so an
+// absent value passes here (@IsOptional already short-circuits) and only a
+// provided-but-too-young date is rejected (#55).
+@ValidatorConstraint({ name: 'isAtLeast18', async: false })
+export class IsAtLeast18Constraint implements ValidatorConstraintInterface {
+  validate(value: unknown): boolean {
+    if (typeof value !== 'string' || !value) return true;
+    const dob = new Date(value);
+    if (Number.isNaN(dob.getTime())) return true; // @IsDateString reports bad format
+    const now = new Date();
+    let age = now.getFullYear() - dob.getFullYear();
+    const monthDiff = now.getMonth() - dob.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) age--;
+    return age >= 18;
+  }
+
+  defaultMessage(): string {
+    return 'You must be at least 18 years old to register';
+  }
+}
 
 export class RegisterDto {
   @IsEmail()
@@ -20,23 +61,32 @@ export class RegisterDto {
 
   @IsString()
   @IsOptional()
+  @MinLength(1)
+  @MaxLength(50)
+  @Matches(NAME_REGEX, { message: 'first name contains invalid characters' })
   firstName?: string;
 
   @IsString()
   @IsOptional()
+  @MinLength(1)
+  @MaxLength(50)
+  @Matches(NAME_REGEX, { message: 'last name contains invalid characters' })
   lastName?: string;
 
-  // Username charset whitelist (no spaces/special chars) and length bounds
-  // (#408, #409). This is the only place a username is set.
+  // Username charset whitelist (Arabic + Latin + digits + . _ - , no spaces)
+  // and length bounds (#54, #408, #409). This is the only place a username is set.
   @IsString()
   @IsOptional()
   @MinLength(3)
   @MaxLength(30)
-  @Matches(/^[a-zA-Z0-9_]+$/, { message: 'username may only contain letters, numbers, and underscores' })
+  @Matches(USERNAME_REGEX, {
+    message: 'username may only contain letters, numbers, and . _ -',
+  })
   username?: string;
 
   @IsDateString()
   @IsOptional()
+  @Validate(IsAtLeast18Constraint)
   dateOfBirth?: string;
 
   @IsEnum(Gender)

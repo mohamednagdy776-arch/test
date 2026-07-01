@@ -59,6 +59,9 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
     if (form.fullName && !fullName) { setTab(0); setFormError('يرجى إدخال اسم صحيح'); return; }
     if (!form.gender) { setTab(0); setFormError('يرجى اختيار الجنس'); return; }
     if (!form.age || form.age < 18 || form.age > 99) { setTab(0); setFormError('يرجى إدخال عمر صحيح (18-99)'); return; }
+    // Children count cannot be negative — the backend @Min(0) would otherwise
+    // reject with a generic 400 and no clear message (#44).
+    if (form.childrenCount != null && form.childrenCount < 0) { setTab(0); setFormError('عدد الأطفال لا يمكن أن يكون سالباً'); return; }
     if (form.minAge && form.maxAge && form.minAge > form.maxAge) {
       setTab(3); setFormError('الحد الأدنى للعمر يجب أن يكون أقل من الحد الأقصى'); return;
     }
@@ -73,9 +76,9 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const bool = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLSelectElement>) =>
     setForm((f: typeof form) => ({ ...f, [k]: e.target.value === 'true' }));
 
-  const inp = (k: keyof typeof form, label: string, type = 'text', ph = '', maxLength?: number) => (
+  const inp = (k: keyof typeof form, label: string, type = 'text', ph = '', maxLength?: number, min?: number) => (
     <Field label={label}>
-      <input type={type} value={(form as any)[k] ?? ''} onChange={type === 'number' ? num(k) : str(k)} placeholder={ph} maxLength={maxLength}
+      <input type={type} value={(form as any)[k] ?? ''} onChange={type === 'number' ? num(k) : str(k)} placeholder={ph} maxLength={maxLength} min={min}
         className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]/30" />
     </Field>
   );
@@ -116,7 +119,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
         ['engaged', form.gender === 'female' ? 'مخطوبة' : 'مخطوب'],
         ['married', form.gender === 'female' ? 'متزوجة' : 'متزوج'],
       ])}
-      {inp('childrenCount', 'عدد الأطفال', 'number', '0')}
+      {inp('childrenCount', 'عدد الأطفال', 'number', '0', undefined, 0)}
       {inp('workplace', 'مكان العمل', 'text', 'شركة تقنية')}
       {inp('website', 'الموقع الإلكتروني', 'url', 'https://example.com')}
       <div className="sm:col-span-2">

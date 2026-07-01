@@ -1,9 +1,15 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useViewStory, useStoryViewers, useAddToHighlight } from '../hooks';
+import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
+import { useViewStory, useStoryViewers, useAddToHighlight, useReactToStory } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
+import { apiClient } from '@/lib/api-client';
+import { chatApi } from '@/features/chat/api';
+
+const QUICK_REACTIONS = ['❤️', '😍', '😂', '😮', '😢', '👏', '🔥'];
 
 function resolveMedia(url?: string): string | undefined {
   return resolveMediaUrl(url) ?? undefined;
@@ -11,7 +17,7 @@ function resolveMedia(url?: string): string | undefined {
 
 interface StoryItem {
   id: string;
-  user: { id: string; profile?: { fullName?: string }; email?: string };
+  user: { id: string; username?: string; profile?: { fullName?: string }; email?: string };
   mediaUrl?: string;
   mediaType?: string;
   text?: string;
@@ -21,7 +27,7 @@ interface StoryItem {
 }
 
 interface StoryGroup {
-  user: { id: string; profile?: { fullName?: string }; email?: string };
+  user: { id: string; username?: string; profile?: { fullName?: string }; email?: string };
   stories: StoryItem[];
 }
 
@@ -38,14 +44,60 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   const [isPaused, setIsPaused] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [replyFocused, setReplyFocused] = useState(false);
+  const [sendingReply, setSendingReply] = useState(false);
 
   const currentUser = stories[userIndex];
   const currentStory = currentUser?.stories[storyIndex];
   const viewStory = useViewStory();
   const { data: viewersData } = useStoryViewers(currentStory?.id || '');
   const addToHighlight = useAddToHighlight();
+  const reactToStory = useReactToStory();
   const { showToast } = useToast() as any;
   const viewers = viewersData?.data || [];
+
+  // Current user — used to hide the reply/reactions bar on your own story.
+  const { data: meData } = useQuery({
+    queryKey: ['my-profile'],
+    queryFn: () => apiClient.get('/users/me').then((r) => r.data),
+    staleTime: 60_000,
+  });
+  const meId = (meData as any)?.data?.id;
+  const ownerId = currentUser?.user?.id;
+  const ownerUsername = currentUser?.user?.username;
+  const profileHref = ownerUsername ? `/${ownerUsername}` : `/profile/${ownerId}`;
+  const isOwnStory = !!meId && !!ownerId && meId === ownerId;
+
+  // Send a story reply as a direct chat message to the story owner (#59).
+  const sendReply = async () => {
+    const text = replyText.trim();
+    if (!text || !ownerId || sendingReply) return;
+    setSendingReply(true);
+    try {
+      const conv = await chatApi.createConversation(ownerId);
+      const conversationId = conv?.data?.id ?? conv?.id;
+      await chatApi.sendMessage(conversationId, text);
+      setReplyText('');
+      showToast('تم إرسال الرد', 'success');
+    } catch {
+      showToast('تعذّر إرسال الرد', 'error');
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
+  // Quick emoji reaction to the current story (#60).
+  const handleReact = (emoji: string) => {
+    if (!currentStory?.id) return;
+    reactToStory.mutate(
+      { storyId: currentStory.id, emoji },
+      {
+        onSuccess: () => showToast(`تم إرسال ${emoji}`, 'success'),
+        onError: () => showToast('تعذّر إرسال التفاعل', 'error'),
+      },
+    );
+  };
 
   const goNext = useCallback(() => {
     if (storyIndex < currentUser.stories.length - 1) {
@@ -83,8 +135,11 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   }, [currentStory?.id]);
 
   useEffect(() => {
-    setIsPaused(showViewers || showMenu);
-  }, [showViewers, showMenu]);
+    setIsPaused(showViewers || showMenu || replyFocused);
+  }, [showViewers, showMenu, replyFocused]);
+
+  // Clear any half-typed reply when moving to a different person's stories.
+  useEffect(() => { setReplyText(''); }, [userIndex]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -171,7 +226,10 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
               {/* Mute/unmute button — bottom-left, above tap zones */}
               <button
                 onClick={() => setIsMuted(m => !m)}
-                className="absolute bottom-6 left-4 z-20 h-9 w-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+                className={cn(
+                  'absolute left-4 z-30 h-9 w-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors',
+                  isOwnStory ? 'bottom-6' : 'bottom-32',
+                )}
                 aria-label={isMuted ? 'تشغيل الصوت' : 'كتم الصوت'}
               >
                 {isMuted ? (
@@ -200,8 +258,8 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
 
           {/* Top gradient */}
           <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />
-          {/* Bottom gradient */}
-          <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/50 to-transparent pointer-events-none" />
+          {/* Bottom gradient — taller when the reply bar is shown so text stays legible */}
+          <div className={cn('absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none', isOwnStory ? 'h-20' : 'h-44')} />
 
           {/* Progress bars — z-10 */}
           <div className="absolute top-4 inset-x-3 flex gap-[3px] z-10">
@@ -217,14 +275,23 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
 
           {/* Header — z-20 so it sits above the tap zones (z-10) */}
           <div className="absolute top-9 inset-x-3 flex items-center gap-2.5 z-20">
-            <div
-              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ring-2 ring-white/70"
+            <Link
+              href={profileHref}
+              onClick={onClose}
+              aria-label={`عرض الملف الشخصي لـ ${userName}`}
+              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ring-2 ring-white/70 hover:ring-white transition-all"
               style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}
             >
               {userName.charAt(0)}
-            </div>
+            </Link>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white leading-tight truncate">{userName}</p>
+              <Link
+                href={profileHref}
+                onClick={onClose}
+                className="block text-sm font-bold text-white leading-tight truncate hover:underline w-fit max-w-full"
+              >
+                {userName}
+              </Link>
               <p className="text-[11px] text-white/60 leading-tight">{timeLabel}</p>
             </div>
             <span className="text-[11px] text-white/50 tabular-nums flex-shrink-0">
@@ -293,6 +360,53 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
           {/* Tap zones — z-10, below header (z-20) */}
           <button className="absolute left-0 top-0 w-[40%] h-full z-10" onClick={goPrev} aria-label="السابق" />
           <button className="absolute right-0 top-0 w-[40%] h-full z-10" onClick={goNext} aria-label="التالي" />
+
+          {/* Reply + quick reactions bar — hidden on your own story (#59, #60).
+              z-20 so it sits above the tap zones (z-10). */}
+          {!isOwnStory && (
+            <div
+              className="absolute inset-x-0 bottom-0 z-20 px-3 pb-4 pt-2 flex flex-col gap-2.5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Quick reactions */}
+              <div className="flex items-center justify-center gap-1">
+                {QUICK_REACTIONS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    onClick={() => handleReact(emoji)}
+                    className="h-9 w-9 rounded-full flex items-center justify-center text-xl leading-none hover:scale-125 active:scale-110 transition-transform"
+                    aria-label={`تفاعل ${emoji}`}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+
+              {/* Reply input */}
+              <form onSubmit={(e) => { e.preventDefault(); sendReply(); }} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  onFocus={() => setReplyFocused(true)}
+                  onBlur={() => setReplyFocused(false)}
+                  placeholder={`الرد على ${userName}...`}
+                  className="flex-1 h-11 rounded-full bg-white/10 border border-white/25 px-4 text-sm text-white placeholder-white/50 focus:outline-none focus:border-white/60 backdrop-blur-sm"
+                />
+                <button
+                  type="submit"
+                  disabled={!replyText.trim() || sendingReply}
+                  className="h-11 w-11 rounded-full bg-[var(--primary)] flex items-center justify-center text-white disabled:opacity-40 hover:opacity-90 transition-opacity flex-shrink-0"
+                  aria-label="إرسال الرد"
+                >
+                  {/* Paper plane — mirrored for RTL so it points toward the send direction */}
+                  <svg className="h-5 w-5 -scale-x-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+                  </svg>
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </div>
 

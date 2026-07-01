@@ -44,7 +44,27 @@ const AR_MESSAGES: Record<string, string> = {
     'كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل مع حرف كبير وصغير ورقم ورمز خاص',
   'phone must be a valid phone number': 'رقم الهاتف غير صحيح',
   'Referenced record does not exist': 'تعذّر إكمال الطلب، تحقّق من البيانات',
+  'You must be at least 18 years old to register': 'يجب أن يكون عمرك 18 عاماً على الأقل للتسجيل',
+  'username may only contain letters, numbers, and . _ -':
+    'اسم المستخدم يمكن أن يحتوي على أحرف وأرقام والرموز . _ - فقط (بدون مسافات)',
+  'first name contains invalid characters': 'الاسم الأول يحتوي على رموز غير مسموحة',
+  'last name contains invalid characters': 'اسم العائلة يحتوي على رموز غير مسموحة',
 };
+
+// Arabic (+ Latin) letters, spaces, hyphen, apostrophe — for names.
+const NAME_REGEX = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿a-zA-Z\s'-]+$/;
+// Arabic + Latin + digits + . _ - , no spaces — for username.
+const USERNAME_REGEX = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿a-zA-Z0-9._-]+$/;
+
+// Age (in whole years) from a yyyy-mm-dd date string.
+function ageFrom(dateStr: string): number {
+  const dob = new Date(dateStr);
+  const now = new Date();
+  let age = now.getFullYear() - dob.getFullYear();
+  const monthDiff = now.getMonth() - dob.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && now.getDate() < dob.getDate())) age--;
+  return age;
+}
 const translate = (m: string) => AR_MESSAGES[m] ?? m;
 
 function formatAuthError(err: any): string {
@@ -81,8 +101,15 @@ export const RegisterForm = () => {
   const [showUpsell, setShowUpsell] = useState(false);
   const router = useRouter();
 
-  const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => 
+  const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  // Latest date that still makes the user 18 today (used as the date input max, #55).
+  const maxBirthDate = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 18);
+    return d.toISOString().split('T')[0];
+  }, []);
 
   const passwordStrength = useMemo(() => {
     const pwd = form.password;
@@ -106,7 +133,13 @@ export const RegisterForm = () => {
     // Validate in JS (the form is noValidate to suppress the browser's English
     // validation bubbles on this Arabic/RTL form, #735), with Arabic messages.
     if (!form.firstName.trim() || !form.lastName.trim()) { setError('يرجى إدخال الاسم الأول واسم العائلة'); return; }
+    if (!NAME_REGEX.test(form.firstName.trim())) { setError('الاسم الأول يحتوي على رموز غير مسموحة'); return; }
+    if (!NAME_REGEX.test(form.lastName.trim())) { setError('اسم العائلة يحتوي على رموز غير مسموحة'); return; }
+    if (form.username.trim() && (form.username.trim().length < 3 || form.username.trim().length > 30 || !USERNAME_REGEX.test(form.username.trim()))) {
+      setError('اسم المستخدم يجب أن يكون 3-30 حرفاً ويحتوي على أحرف وأرقام والرموز . _ - فقط (بدون مسافات)'); return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('صيغة البريد الإلكتروني غير صحيحة'); return; }
+    if (form.dateOfBirth && ageFrom(form.dateOfBirth) < 18) { setError('يجب أن يكون عمرك 18 عاماً على الأقل للتسجيل'); return; }
     if (!/^\+?[1-9]\d{6,14}$/.test(form.phone.trim())) { setError('رقم الهاتف غير صحيح'); return; }
     if (!form.gender) { setError('يرجى اختيار الجنس'); return; }
     if (!agreedToTerms) { setError('يرجى الموافقة على الشروط والأحكام'); return; }
@@ -205,7 +238,7 @@ export const RegisterForm = () => {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-[#374151]">تاريخ الميلاد</label>
-          <input type="date" value={form.dateOfBirth} onChange={set('dateOfBirth')}
+          <input type="date" value={form.dateOfBirth} onChange={set('dateOfBirth')} max={maxBirthDate}
             className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
         </div>
         <div className="space-y-2">

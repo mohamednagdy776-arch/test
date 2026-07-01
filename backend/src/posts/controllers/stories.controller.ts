@@ -67,6 +67,12 @@ export class StoriesController {
     return ok(viewers, 'Viewers retrieved');
   }
 
+  @Post('stories/:id/reactions')
+  async reactToStory(@CurrentUser() user: User, @Param('id') storyId: string, @Body() body: { emoji: string }) {
+    const result = await this.storiesService.reactToStory(storyId, user.id, body.emoji);
+    return ok(result, 'Reaction recorded');
+  }
+
   @Post('stories/:id/highlights')
   async addToHighlight(@CurrentUser() user: User, @Param('id') storyId: string, @Body() body: { name: string }) {
     const highlight = await this.storiesService.addToHighlight(user.id, storyId, body.name);

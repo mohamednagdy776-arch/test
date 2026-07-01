@@ -274,10 +274,20 @@ export class UsersService {
       educationEntries: profile.educationEntries,
       education: profile.education,
       jobTitle: profile.jobTitle,
+      // Education & Work details — these were persisted but never returned, so
+      // the edit form re-loaded them blank and the values looked "not saved" (#45).
+      financialLevel: profile.financialLevel,
+      culturalLevel: profile.culturalLevel,
       lifestyle: profile.lifestyle,
       sect: profile.sect,
       prayerLevel: profile.prayerLevel,
       religiousCommitment: profile.religiousCommitment,
+      // Marriage preferences — same read-path omission as above (#46).
+      minAge: profile.minAge,
+      maxAge: profile.maxAge,
+      preferredCountry: profile.preferredCountry,
+      relocateWilling: profile.relocateWilling,
+      wantsChildren: profile.wantsChildren,
       isHealthVerified: profile.isHealthVerified ?? false,
       isIdentityVerified: profile.isIdentityVerified ?? false,
       photoVisibility: profile.photoVisibility ?? 'public',

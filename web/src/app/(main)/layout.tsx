@@ -10,8 +10,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   return (
     <AuthGuard>
       <CallProvider>
+      {/* No hard-coded data-theme here: a data-theme on this wrapper would redefine
+          every color CSS variable for all descendants and override the theme the
+          user picks in Settings → Appearance (which ThemeProvider applies on <html>).
+          Leave it unset so the selected theme actually cascades in (#48). */}
       <div
-        data-theme="luxury"
         className="min-h-screen transition-colors duration-300"
         style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
       >

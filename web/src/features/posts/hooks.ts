@@ -231,6 +231,12 @@ export function useStoryViewers(storyId: string) {
   });
 }
 
+export function useReactToStory() {
+  return useMutation({
+    mutationFn: ({ storyId, emoji }: { storyId: string; emoji: string }) => storiesApi.reactToStory(storyId, emoji),
+  });
+}
+
 export function useAddToHighlight() {
   const qc = useQueryClient();
   return useMutation({

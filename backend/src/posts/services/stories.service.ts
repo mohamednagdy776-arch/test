@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Story, StoryView, StoryHighlight, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
+import { Story, StoryView, StoryHighlight, StoryReaction, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
 import { Post } from '../entities/post.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { SettingsService } from '../../settings/services/settings.service';
@@ -13,6 +13,7 @@ export class StoriesService {
     @InjectRepository(Story) private storyRepo: Repository<Story>,
     @InjectRepository(StoryView) private viewRepo: Repository<StoryView>,
     @InjectRepository(StoryHighlight) private highlightRepo: Repository<StoryHighlight>,
+    @InjectRepository(StoryReaction) private reactionRepo: Repository<StoryReaction>,
     @InjectRepository(SavedPost) private savedRepo: Repository<SavedPost>,
     @InjectRepository(PostReport) private reportRepo: Repository<PostReport>,
     @InjectRepository(HiddenPost) private hiddenRepo: Repository<HiddenPost>,
@@ -107,6 +108,44 @@ export class StoriesService {
       order: { viewedAt: 'DESC' },
     });
     return views;
+  }
+
+  async reactToStory(storyId: string, userId: string, emoji: string) {
+    // Quick emoji reaction to a story (#60). One reaction per user per story —
+    // reacting again just updates the emoji (idempotent upsert).
+    if (!emoji || !emoji.trim()) {
+      throw new BadRequestException('Emoji is required');
+    }
+    const story = await this.storyRepo.findOne({ where: { id: storyId } });
+    if (!story) throw new NotFoundException('Story not found');
+
+    let reaction = await this.reactionRepo.findOne({ where: { storyId, userId } });
+    if (reaction) {
+      reaction.emoji = emoji;
+    } else {
+      reaction = new StoryReaction();
+      reaction.storyId = storyId;
+      reaction.userId = userId;
+      reaction.emoji = emoji;
+    }
+    await this.reactionRepo.save(reaction);
+
+    // Notify the story owner (never for self-reactions). Non-fatal.
+    if (story.userId !== userId) {
+      try {
+        await this.notifications.notifyUser(
+          story.userId,
+          userId,
+          'story_reaction',
+          `reacted ${emoji} to your story`,
+          'story',
+          storyId,
+        );
+      } catch {
+        /* notification failure must not fail the reaction */
+      }
+    }
+    return { success: true, emoji };
   }
 
   async addToHighlight(userId: string, storyId: string, highlightName: string) {

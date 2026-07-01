@@ -13,19 +13,47 @@ export default function ForgotPasswordPage() {
   const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const router = useRouter();
 
-  useEffect(() => {
-    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
-  }, []);
+  // Persist the cooldown expiry so a page refresh can't reset the 60s timer (#53).
+  const COOLDOWN_KEY = 'forgotPasswordCooldownUntil';
+
+  // Drive the countdown off a stored absolute expiry timestamp so it survives reloads.
+  const runCooldown = (until: number) => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    const tick = () => {
+      const remaining = Math.ceil((until - Date.now()) / 1000);
+      if (remaining <= 0) {
+        setCooldown(0);
+        if (cooldownRef.current) clearInterval(cooldownRef.current);
+        try { localStorage.removeItem(COOLDOWN_KEY); } catch {}
+      } else {
+        setCooldown(remaining);
+      }
+    };
+    tick();
+    cooldownRef.current = setInterval(tick, 1000);
+  };
 
   const startCooldown = () => {
-    setCooldown(60);
-    cooldownRef.current = setInterval(() => {
-      setCooldown((c) => {
-        if (c <= 1) { clearInterval(cooldownRef.current!); return 0; }
-        return c - 1;
-      });
-    }, 1000);
+    const until = Date.now() + 60_000;
+    try { localStorage.setItem(COOLDOWN_KEY, String(until)); } catch {}
+    // A resend implies the email was (re)sent, so reflect that in the UI on reload.
+    try { localStorage.setItem(`${COOLDOWN_KEY}:sent`, '1'); } catch {}
+    setSuccess(true);
+    runCooldown(until);
   };
+
+  // On mount, restore any remaining cooldown from a previous (pre-refresh) send.
+  useEffect(() => {
+    let until = 0;
+    try { until = Number(localStorage.getItem(COOLDOWN_KEY)) || 0; } catch {}
+    if (until > Date.now()) {
+      try { if (localStorage.getItem(`${COOLDOWN_KEY}:sent`)) setSuccess(true); } catch {}
+      runCooldown(until);
+    } else {
+      try { localStorage.removeItem(COOLDOWN_KEY); } catch {}
+    }
+    return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

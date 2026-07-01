@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
+import QRCode from 'react-qr-code';
 
 interface Session {
   id: string;
@@ -28,7 +29,7 @@ export default function SecurityPage() {
   const [show2FASetup, setShow2FASetup] = useState(false);
   const [showDisable2FA, setShowDisable2FA] = useState(false);
   const [twoFactorLoading, setTwoFactorLoading] = useState(false);
-  const [setupData, setSetupData] = useState<{ qrCode: string; secret: string } | null>(null);
+  const [setupData, setSetupData] = useState<{ otpauthUrl: string; secret: string } | null>(null);
   const [verifyCode, setVerifyCode] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const [error, setError] = useState('');
@@ -102,7 +103,9 @@ export default function SecurityPage() {
     setTwoFactorLoading(true);
     try {
       const res = await authApi.setup2FA();
-      setSetupData({ qrCode: res.data.qrCode || '', secret: res.data.secret || '' });
+      // Backend returns { secret, otpauthUrl } — render the QR client-side from
+      // otpauthUrl (there is no server-side qrCode image) (#57).
+      setSetupData({ otpauthUrl: res.data.otpauthUrl || '', secret: res.data.secret || '' });
       setShow2FASetup(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'فشل في إعداد التحقق');
@@ -374,9 +377,14 @@ export default function SecurityPage() {
 
         <Modal open={show2FASetup} onClose={() => setShow2FASetup(false)} title="تفعيل التحقق بخطوتين">
           <div className="space-y-4">
-            {setupData?.qrCode && (
-              <div className="flex justify-center p-4 bg-[var(--card)] rounded-xl">
-                <img src={setupData.qrCode} alt="QR Code" className="w-48 h-48" />
+            {setupData?.otpauthUrl && (
+              <div className="flex flex-col items-center gap-2">
+                <p className="text-sm text-[var(--primary)]">امسح رمز QR بتطبيق المصادقة</p>
+                {/* QR must sit on a solid white background with a quiet zone so
+                    authenticator cameras can read it reliably. */}
+                <div className="p-4 bg-white rounded-xl">
+                  <QRCode value={setupData.otpauthUrl} size={192} />
+                </div>
               </div>
             )}
             {setupData?.secret && (

@@ -41,6 +41,7 @@ import { VerificationModule } from './verification/verification.module';
 import { PhotoPrivacyModule } from './photo-privacy/photo-privacy.module';
 import { SavedSearchesModule } from './saved-searches/saved-searches.module';
 import { GuardianChatModule } from './guardian-chat/guardian-chat.module';
+import { SupportModule } from './support/support.module';
 
 @Module({
   imports: [
@@ -91,6 +92,7 @@ import { GuardianChatModule } from './guardian-chat/guardian-chat.module';
     PhotoPrivacyModule,
     SavedSearchesModule,
     GuardianChatModule,
+    SupportModule,
     ...(process.env.NODE_ENV !== 'production' ? [SeedModule] : []),
   ],
   providers: [

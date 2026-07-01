@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Post, Put, UseGuards, Req, Res, HttpCode, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post, Put, UseGuards, Req, Res, HttpCode, Query, Logger } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -23,6 +23,7 @@ import { parseUserAgent } from '../utils/user-agent';
 @Throttle({ default: { limit: 10, ttl: 60000 } })
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new Logger(AuthController.name);
   constructor(private authService: AuthService) {}
 
   @Post('register')
@@ -229,14 +230,27 @@ export class AuthController {
   // set the auth cookies, then redirect the browser back INTO the web app. (It
   // used to return JSON, which is why the tokens were dumped as raw text.)
   @Get('oauth/google')
-  async oauthGoogle(@Query('code') code: string, @Query('state') state: string, @Res() res: Response) {
+  async oauthGoogle(
+    @Query('code') code: string,
+    @Query('state') state: string,
+    @Query('error') error: string,
+    @Res() res: Response,
+  ) {
     const returnPath = this.authService.verifyOAuthState(state);
+    // Google denied the request (e.g. app in "Testing" mode + non-test user, or
+    // the user cancelled). Surface the real reason instead of a generic failure.
+    if (error) {
+      this.logger.warn(`Google OAuth denied at consent: ${error}`);
+      return res.redirect(this.authService.oauthRedirectTarget(`/login?error=oauth&reason=${encodeURIComponent(error)}`));
+    }
     try {
       const result = await this.authService.handleOAuthCallback('google', code);
       setAuthCookies(res, result as any);
       return res.redirect(this.authService.oauthRedirectTarget(returnPath));
-    } catch {
-      // Send the user back to login with an error flag rather than a JSON 500.
+    } catch (e: any) {
+      // Log the real cause (token-exchange failure, missing email, etc.) so an
+      // OAuth failure is diagnosable instead of a silent ?error=oauth.
+      this.logger.error(`Google OAuth callback failed: ${e?.message || e}`);
       return res.redirect(this.authService.oauthRedirectTarget('/login?error=oauth'));
     }
   }

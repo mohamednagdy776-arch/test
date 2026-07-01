@@ -70,6 +70,32 @@ export class StoryView {
   viewedAt: Date;
 }
 
+@Entity('story_reactions')
+export class StoryReaction {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @ManyToOne(() => Story, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'story_id' })
+  story: Story;
+
+  @Column({ name: 'story_id' })
+  storyId: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
+
+  @Column({ name: 'user_id' })
+  userId: string;
+
+  @Column()
+  emoji: string;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
+}
+
 @Entity('story_highlights')
 export class StoryHighlight {
   @PrimaryGeneratedColumn('uuid')

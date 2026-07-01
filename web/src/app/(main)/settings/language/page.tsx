@@ -21,7 +21,16 @@ export default function LanguagePage() {
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) setCurrentLang(stored);
+    if (stored) {
+      setCurrentLang(stored);
+      // Re-apply the stored text direction on mount so a previously-chosen
+      // language stays visually consistent after a reload/navigation. NOTE: this
+      // only flips direction — translating the UI requires an i18n framework +
+      // message catalogs, which this app does not yet have (#49).
+      const lang = LANGUAGES.find((l) => l.code === stored);
+      document.documentElement.dir = lang?.dir ?? 'rtl';
+      document.documentElement.lang = stored;
+    }
   }, []);
 
   const handleSave = () => {

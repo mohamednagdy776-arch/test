@@ -11,6 +11,7 @@ interface AuthResponse {
     userId?: string;
     preAuthToken?: string;
     qrCode?: string;
+    otpauthUrl?: string;
     secret?: string;
     twoFactorEnabled?: boolean;
   };

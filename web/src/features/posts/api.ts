@@ -86,6 +86,9 @@ export const storiesApi = {
   getStoryViewers: (storyId: string) =>
     apiClient.get(`/stories/${storyId}/viewers`).then((r) => r.data),
 
+  reactToStory: (storyId: string, emoji: string) =>
+    apiClient.post(`/stories/${storyId}/reactions`, { emoji }).then((r) => r.data),
+
   addToHighlight: (storyId: string, name: string) =>
     apiClient.post(`/stories/${storyId}/highlights`, { name }).then((r) => r.data),
 
