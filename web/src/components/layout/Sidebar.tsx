@@ -12,51 +12,52 @@ import {
 } from '@phosphor-icons/react';
 import { authApi } from '@/features/auth/api';
 import { resolveMediaUrl } from '@/lib/media';
+import { useT } from '@/i18n/I18nProvider';
 
 const navGroups = [
   {
-    label: 'الرئيسية',
+    labelKey: 'section.main',
     items: [
-      { label: 'الرئيسية', href: '/dashboard', icon: House },
-      { label: 'البحث', href: '/search', icon: MagnifyingGlass },
-      { label: 'المحادثات', href: '/chat', icon: ChatCircle },
-      { label: 'الإشعارات', href: '/notifications', icon: Bell },
-      { label: 'المحفوظات', href: '/saved', icon: BookmarkSimple },
+      { labelKey: 'nav.home', href: '/dashboard', icon: House },
+      { labelKey: 'nav.search', href: '/search', icon: MagnifyingGlass },
+      { labelKey: 'nav.messages', href: '/chat', icon: ChatCircle },
+      { labelKey: 'nav.notifications', href: '/notifications', icon: Bell },
+      { labelKey: 'nav.saved', href: '/saved', icon: BookmarkSimple },
     ],
   },
   {
-    label: 'التواصل',
+    labelKey: 'section.connect',
     items: [
-      { label: 'التوافق', href: '/matching', icon: Heart },
-      { label: 'الاهتمامات', href: '/interests', icon: HeartStraight },
-      { label: 'الأصدقاء', href: '/friends', icon: UsersThree },
-      { label: 'العائلة', href: '/family', icon: ShieldCheck },
-      { label: 'الفعاليات', href: '/events', icon: CalendarBlank },
-      { label: 'المجتمعات', href: '/groups', icon: UsersFour },
-      { label: 'الصفحات', href: '/pages', icon: Flag },
+      { labelKey: 'nav.matching', href: '/matching', icon: Heart },
+      { labelKey: 'nav.interests', href: '/interests', icon: HeartStraight },
+      { labelKey: 'nav.friends', href: '/friends', icon: UsersThree },
+      { labelKey: 'nav.family', href: '/family', icon: ShieldCheck },
+      { labelKey: 'nav.events', href: '/events', icon: CalendarBlank },
+      { labelKey: 'nav.communities', href: '/groups', icon: UsersFour },
+      { labelKey: 'nav.pages', href: '/pages', icon: Flag },
     ],
   },
   {
-    label: 'المحتوى',
+    labelKey: 'section.content',
     items: [
-      { label: 'الذكريات', href: '/memories', icon: Clock },
-      { label: 'Watch', href: '/watch', icon: PlayCircle },
-      { label: 'ريلز', href: '/reels', icon: FilmStrip },
+      { labelKey: 'nav.memories', href: '/memories', icon: Clock },
+      { labelKey: 'nav.watch', href: '/watch', icon: PlayCircle },
+      { labelKey: 'nav.reels', href: '/reels', icon: FilmStrip },
     ],
   },
   {
-    label: 'المميز',
+    labelKey: 'section.premium',
     items: [
-      { label: 'توقع شكل طفلك', href: '/child-prediction', icon: Baby },
-      { label: 'بوابة المختبرات', href: '/lab-portal', icon: TestTube },
-      { label: 'برنامج الإحالة', href: '/affiliates', icon: ShareNetwork },
+      { labelKey: 'nav.childPrediction', href: '/child-prediction', icon: Baby },
+      { labelKey: 'nav.labPortal', href: '/lab-portal', icon: TestTube },
+      { labelKey: 'nav.affiliates', href: '/affiliates', icon: ShareNetwork },
     ],
   },
   {
-    label: 'الحساب',
+    labelKey: 'section.account',
     items: [
-      { label: 'الملف الشخصي', href: '/profile', icon: User },
-      { label: 'الإعدادات', href: '/settings', icon: Gear },
+      { labelKey: 'nav.profile', href: '/profile', icon: User },
+      { labelKey: 'nav.settings', href: '/settings', icon: Gear },
     ],
   },
 ];
@@ -64,10 +65,11 @@ const navGroups = [
 export const Sidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useT();
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
   const avatarUrl = resolveMediaUrl(user?.avatar);
-  const displayName = user?.name || user?.username || 'المستخدم';
+  const displayName = user?.name || user?.username || t('nav.user');
   const username = user?.username ? `@${user.username}` : '';
 
   const logout = async () => {
@@ -143,14 +145,14 @@ export const Sidebar = () => {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto p-2 space-y-0.5" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.08) transparent' }}>
         {navGroups.map((group) => (
-          <div key={group.label} className="mb-1">
+          <div key={group.labelKey} className="mb-1">
             <p
               className="px-3 pt-2 pb-1 text-[9px] font-bold uppercase tracking-[0.12em]"
               style={{ color: 'var(--sidebar-label)' }}
             >
-              {group.label}
+              {t(group.labelKey)}
             </p>
-            {group.items.map(({ href, label, icon: Icon }) => {
+            {group.items.map(({ href, labelKey, icon: Icon }) => {
               const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
               return (
                 <Link
@@ -183,7 +185,7 @@ export const Sidebar = () => {
                     weight={isActive ? 'fill' : 'regular'}
                     className="shrink-0 transition-transform duration-200 group-hover:scale-110"
                   />
-                  <span className="truncate">{label}</span>
+                  <span className="truncate">{t(labelKey)}</span>
                 </Link>
               );
             })}
@@ -208,7 +210,7 @@ export const Sidebar = () => {
           }}
         >
           <SignOut size={17} className="shrink-0" />
-          تسجيل الخروج
+          {t('nav.logout')}
         </button>
       </nav>
 
@@ -230,14 +232,14 @@ export const Sidebar = () => {
           />
           <div className="relative flex items-center gap-2 mb-1.5">
             <Crown size={15} weight="fill" style={{ color: '#E8C57A' }} />
-            <span className="text-sm font-bold" style={{ color: '#E8C57A' }}>ترقية الحساب</span>
+            <span className="text-sm font-bold" style={{ color: '#E8C57A' }}>{t('upgrade.title')}</span>
           </div>
           <p className="text-xs leading-relaxed" style={{ color: '#7DAC8D' }}>
-            احصل على توافق متقدم وفلاتر حصرية
+            {t('upgrade.desc')}
           </p>
           <div className="mt-2.5 flex items-center gap-1 text-xs font-semibold" style={{ color: '#B8892A' }}>
             <Sparkle size={12} weight="fill" />
-            <span>ابدأ الآن مجاناً</span>
+            <span>{t('upgrade.cta')}</span>
             <span className="mr-auto text-base leading-none">←</span>
           </div>
         </button>

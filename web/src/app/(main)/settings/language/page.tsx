@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useT } from '@/i18n/I18nProvider';
+import type { Locale } from '@/i18n/messages';
 
 const LANGUAGES = [
   { code: 'ar', name: 'العربية', native: 'العربية', flag: '🇸🇦', dir: 'rtl' },
@@ -13,30 +15,20 @@ const LANGUAGES = [
   { code: 'fr', name: 'Français', native: 'Français', flag: '🇫🇷', dir: 'ltr' },
 ];
 
-const STORAGE_KEY = 'tayyibt_lang';
-
 export default function LanguagePage() {
-  const [currentLang, setCurrentLang] = useState('ar');
+  const { t, locale, setLocale } = useT();
+  const [currentLang, setCurrentLang] = useState<string>(locale);
   const [saved, setSaved] = useState(false);
 
+  // Keep the local selection in sync with the active locale from the provider.
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      setCurrentLang(stored);
-      // Re-apply the stored text direction on mount so a previously-chosen
-      // language stays visually consistent after a reload/navigation. NOTE: this
-      // only flips direction — translating the UI requires an i18n framework +
-      // message catalogs, which this app does not yet have (#49).
-      const lang = LANGUAGES.find((l) => l.code === stored);
-      document.documentElement.dir = lang?.dir ?? 'rtl';
-      document.documentElement.lang = stored;
-    }
-  }, []);
+    setCurrentLang(locale);
+  }, [locale]);
 
   const handleSave = () => {
-    localStorage.setItem(STORAGE_KEY, currentLang);
-    document.documentElement.dir = LANGUAGES.find(l => l.code === currentLang)?.dir ?? 'rtl';
-    document.documentElement.lang = currentLang;
+    // setLocale persists to localStorage, flips <html> dir/lang, and re-renders
+    // the whole tree with the new translations (#49).
+    setLocale(currentLang as Locale);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   };
@@ -45,7 +37,7 @@ export default function LanguagePage() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-md mx-auto space-y-6">
         <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
-          <span>←</span> العودة للإعدادات
+          <span>←</span> {t('lang.back')}
         </Link>
 
         {/* Header */}
@@ -55,8 +47,8 @@ export default function LanguagePage() {
               🌐
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[var(--primary)]">اللغة</h1>
-              <p className="text-xs text-[var(--primary)]">اختر لغة واجهة التطبيق</p>
+              <h1 className="text-xl font-bold text-[var(--primary)]">{t('lang.title')}</h1>
+              <p className="text-xs text-[var(--primary)]">{t('lang.subtitle')}</p>
             </div>
           </div>
         </div>
@@ -93,21 +85,21 @@ export default function LanguagePage() {
         {/* Save */}
         <div className="flex items-center justify-between">
           <p className="text-xs text-[var(--primary)]">
-            {saved ? '✓ تم حفظ اللغة بنجاح' : 'اختر اللغة ثم اضغط حفظ'}
+            {saved ? `✓ ${t('lang.savedMsg')}` : t('lang.hint')}
           </p>
           <button
             onClick={handleSave}
             className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 transition-all"
           >
-            {saved ? '✓ محفوظ' : 'حفظ'}
+            {saved ? `✓ ${t('lang.saved')}` : t('lang.save')}
           </button>
         </div>
 
         {/* Note */}
         <div className="rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 p-4">
-          <p className="text-xs font-bold text-[var(--accent)] mb-1">ℹ️ ملاحظة</p>
+          <p className="text-xs font-bold text-[var(--accent)] mb-1">ℹ️ {t('lang.noteTitle')}</p>
           <p className="text-xs text-[var(--accent)] leading-relaxed">
-            سيتم تطبيق اللغة فور الضغط على حفظ. قد يلزم تحديث الصفحة لرؤية التغيير بالكامل.
+            {t('lang.note')}
           </p>
         </div>
       </div>

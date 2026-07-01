@@ -15,24 +15,41 @@ import {
 } from '@phosphor-icons/react';
 
 import { resolveMediaUrl } from '@/lib/media';
+import { useT } from '@/i18n/I18nProvider';
 
 const navLinks = [
-  { href: '/dashboard', label: 'الرئيسية', icon: House },
-  { href: '/matching', label: 'التوافق', icon: Heart },
-  { href: '/search', label: 'البحث', icon: MagnifyingGlass },
-  { href: '/groups', label: 'المجتمعات', icon: UsersFour },
-  { href: '/events', label: 'الفعاليات', icon: CalendarBlank },
-  { href: '/chat', label: 'المحادثات', icon: ChatCircle },
+  { href: '/dashboard', labelKey: 'nav.home', icon: House },
+  { href: '/matching', labelKey: 'nav.matching', icon: Heart },
+  { href: '/search', labelKey: 'nav.search', icon: MagnifyingGlass },
+  { href: '/groups', labelKey: 'nav.communities', icon: UsersFour },
+  { href: '/events', labelKey: 'nav.events', icon: CalendarBlank },
+  { href: '/chat', labelKey: 'nav.messages', icon: ChatCircle },
+];
+
+const drawerLinks = [
+  { href: '/friends',          labelKey: 'nav.friends',              icon: UsersThree },
+  { href: '/family',           labelKey: 'nav.family',               icon: ShieldCheck },
+  { href: '/events',           labelKey: 'nav.events',               icon: CalendarBlank },
+  { href: '/groups',           labelKey: 'nav.communities',          icon: UsersFour },
+  { href: '/saved',            labelKey: 'nav.saved',                icon: BookmarkSimple },
+  { href: '/memories',         labelKey: 'nav.memories',             icon: Clock },
+  { href: '/reels',            labelKey: 'nav.reels',                icon: FilmStrip },
+  { href: '/watch',            labelKey: 'nav.watch',                icon: PlayCircle },
+  { href: '/child-prediction', labelKey: 'nav.childPredictionShort', icon: Baby },
+  { href: '/lab-portal',       labelKey: 'nav.labPortalShort',       icon: TestTube },
+  { href: '/affiliates',       labelKey: 'nav.affiliatesShort',      icon: ShareNetwork },
+  { href: '/settings',         labelKey: 'nav.settings',             icon: Gear },
 ];
 
 export const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const { t } = useT();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
   const avatarUrl = resolveMediaUrl(user?.avatar);
-  const displayName = user?.name || user?.username || 'حسابي';
+  const displayName = user?.name || user?.username || t('nav.account');
 
   const logout = async () => {
     try { await authApi.logout(); } catch {}
@@ -74,13 +91,13 @@ export const Navbar = () => {
                 backgroundClip: 'text',
               }}
             >
-              طيبت
+              {t('app.name')}
             </span>
           </Link>
 
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-0.5">
-            {navLinks.map(({ href, label, icon: Icon }) => {
+            {navLinks.map(({ href, labelKey, icon: Icon }) => {
               const isActive = pathname === href || pathname.startsWith(href + '/');
               return (
                 <Link
@@ -107,7 +124,7 @@ export const Navbar = () => {
                   }}
                 >
                   <Icon size={22} weight={isActive ? 'fill' : 'regular'} className="transition-transform duration-200 group-hover:scale-110" />
-                  {label}
+                  {t(labelKey)}
                   {isActive && (
                     <span
                       className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full"
@@ -133,7 +150,7 @@ export const Navbar = () => {
               }}
             >
               <Crown size={14} weight="fill" />
-              مميز
+              {t('nav.premium')}
             </Link>
 
             <Link
@@ -187,7 +204,7 @@ export const Navbar = () => {
                 (e.currentTarget as HTMLElement).style.background = '';
                 (e.currentTarget as HTMLElement).style.color = 'var(--muted-foreground)';
               }}
-              aria-label="تسجيل الخروج"
+              aria-label={t('nav.logout')}
             >
               <SignOut size={18} />
             </button>
@@ -202,7 +219,7 @@ export const Navbar = () => {
               style={{ color: 'var(--primary)' }}
               onMouseEnter={(e) => (e.currentTarget as HTMLElement).style.background = 'color-mix(in srgb, var(--primary) 8%, transparent)'}
               onMouseLeave={(e) => (e.currentTarget as HTMLElement).style.background = ''}
-              aria-label="القائمة"
+              aria-label={t('nav.menu')}
             >
               {mobileOpen ? <X size={22} weight="bold" /> : <List size={22} weight="bold" />}
             </button>
@@ -229,26 +246,13 @@ export const Navbar = () => {
               )}
               <div>
                 <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{displayName}</p>
-                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>مرحباً بك في طيبت</p>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{t('nav.welcome')}</p>
               </div>
             </div>
 
             {/* Secondary features — not in the bottom nav */}
             <div className="p-3 grid grid-cols-4 gap-1">
-              {[
-                { href: '/friends',          label: 'الأصدقاء',   icon: UsersThree },
-                { href: '/family',           label: 'العائلة',    icon: ShieldCheck },
-                { href: '/events',           label: 'الفعاليات',  icon: CalendarBlank },
-                { href: '/groups',           label: 'المجتمعات',  icon: UsersFour },
-                { href: '/saved',            label: 'المحفوظات',  icon: BookmarkSimple },
-                { href: '/memories',         label: 'الذكريات',   icon: Clock },
-                { href: '/reels',            label: 'ريلز',       icon: FilmStrip },
-                { href: '/watch',            label: 'Watch',      icon: PlayCircle },
-                { href: '/child-prediction', label: 'التوقع',     icon: Baby },
-                { href: '/lab-portal',       label: 'المختبرات',  icon: TestTube },
-                { href: '/affiliates',       label: 'الإحالة',    icon: ShareNetwork },
-                { href: '/settings',         label: 'الإعدادات',  icon: Gear },
-              ].map(({ href, label, icon: Icon }) => {
+              {drawerLinks.map(({ href, labelKey, icon: Icon }) => {
                 const isActive = pathname === href;
                 return (
                   <Link
@@ -262,7 +266,7 @@ export const Navbar = () => {
                     }}
                   >
                     <Icon size={20} weight={isActive ? 'fill' : 'regular'} />
-                    {label}
+                    {t(labelKey)}
                   </Link>
                 );
               })}
@@ -280,7 +284,7 @@ export const Navbar = () => {
                 }}
               >
                 <Crown size={16} weight="fill" />
-                ترقية الحساب
+                {t('upgrade.title')}
               </Link>
               <button
                 onClick={() => { setMobileOpen(false); logout(); }}
@@ -288,7 +292,7 @@ export const Navbar = () => {
                 style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}
               >
                 <SignOut size={16} />
-                خروج
+                {t('nav.logoutShort')}
               </button>
             </div>
           </div>
