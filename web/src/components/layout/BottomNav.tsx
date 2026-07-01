@@ -2,17 +2,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { House, Heart, ChatCircle, MagnifyingGlass, User } from '@phosphor-icons/react';
+import { useT } from '@/i18n/I18nProvider';
 
 const tabs = [
-  { href: '/dashboard',  label: 'الرئيسية',  icon: House },
-  { href: '/matching',   label: 'التوافق',    icon: Heart },
-  { href: '/chat',       label: 'المحادثات',  icon: ChatCircle },
-  { href: '/search',     label: 'البحث',      icon: MagnifyingGlass },
-  { href: '/profile',    label: 'ملفي',       icon: User },
+  { href: '/dashboard',  labelKey: 'nav.home',         icon: House },
+  { href: '/matching',   labelKey: 'nav.matching',     icon: Heart },
+  { href: '/chat',       labelKey: 'nav.messages',     icon: ChatCircle },
+  { href: '/search',     labelKey: 'nav.search',       icon: MagnifyingGlass },
+  { href: '/profile',    labelKey: 'nav.profileShort', icon: User },
 ];
 
 export const BottomNav = () => {
   const pathname = usePathname();
+  const { t } = useT();
 
   return (
     <nav
@@ -24,7 +26,7 @@ export const BottomNav = () => {
       }}
     >
       <div className="flex items-stretch" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        {tabs.map(({ href, label, icon: Icon }) => {
+        {tabs.map(({ href, labelKey, icon: Icon }) => {
           const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'));
           return (
             <Link
@@ -40,7 +42,7 @@ export const BottomNav = () => {
                 />
               )}
               <Icon size={22} weight={isActive ? 'fill' : 'regular'} />
-              <span className="text-[10px] font-semibold leading-none">{label}</span>
+              <span className="text-[10px] font-semibold leading-none">{t(labelKey)}</span>
             </Link>
           );
         })}
