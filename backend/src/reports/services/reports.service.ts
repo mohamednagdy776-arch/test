@@ -30,7 +30,7 @@ export class ReportsService {
   // covers user/post/group; the user-report route passes targetType='user'.
   async createReport(
     reporterId: string,
-    targetType: 'user' | 'post' | 'group',
+    targetType: 'user' | 'post' | 'group' | 'video' | 'comment',
     targetId: string,
     reason: string,
     details?: string,

@@ -29,7 +29,7 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
       role="button"
       tabIndex={0}
       aria-label={video.title || 'تشغيل الفيديو'}
-      className="rounded-2xl overflow-hidden cursor-pointer group transition-all duration-200"
+      className="h-full flex flex-col rounded-2xl overflow-hidden cursor-pointer group transition-all duration-200"
       style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -123,7 +123,7 @@ function ContinueWatchingSection() {
       </h2>
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
         {data.data.slice(0, 5).map((video: any) => (
-          <div key={video.id} className="w-72 shrink-0">
+          <div key={video.id} className="w-72 shrink-0 h-full">
             <VideoCard video={video} onPlay={() => router.push(`/watch/${video.id}`)} />
           </div>
         ))}

@@ -142,10 +142,18 @@ function VideoPlayer({ video }: { video: any }) {
             <>
               <p className="text-sm text-[var(--primary)]">حدد سبب الإبلاغ:</p>
               <div className="space-y-2">
-                {['محتوى غير لائق', 'انتهاك الخصوصية', 'معلومات مضللة', 'محتوى عنيف', 'بريد مزعج', 'سبب آخر'].map((r) => (
-                  <button key={r} onClick={() => setReportReason(r)}
-                    className={`w-full text-right px-4 py-2.5 rounded-xl text-sm border transition-all ${reportReason === r ? 'border-[var(--destructive)]/50 bg-[var(--destructive)]/10 text-[var(--destructive)] font-semibold' : 'border-[var(--border)] bg-[var(--muted)] text-[var(--foreground)] hover:border-[var(--border)]'}`}>
-                    {r}
+                {/* Send the reason *id* the backend catalog expects (#79) — it
+                    previously sent the Arabic label, which the API rejects. */}
+                {[
+                  { id: 'inappropriate', label: 'محتوى غير لائق' },
+                  { id: 'harassment', label: 'تحرّش أو إساءة' },
+                  { id: 'scam', label: 'احتيال أو معلومات مضللة' },
+                  { id: 'off_platform', label: 'محتوى مزعج / غير مرغوب' },
+                  { id: 'other', label: 'سبب آخر' },
+                ].map((r) => (
+                  <button key={r.id} onClick={() => setReportReason(r.id)}
+                    className={`w-full text-right px-4 py-2.5 rounded-xl text-sm border transition-all ${reportReason === r.id ? 'border-[var(--destructive)]/50 bg-[var(--destructive)]/10 text-[var(--destructive)] font-semibold' : 'border-[var(--border)] bg-[var(--muted)] text-[var(--foreground)] hover:border-[var(--border)]'}`}>
+                    {r.label}
                   </button>
                 ))}
               </div>
