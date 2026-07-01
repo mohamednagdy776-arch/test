@@ -32,6 +32,35 @@ jobs:
       - name: Run tests
         run: npm test
 
+  # ========== Lockfile Drift Guard ==========
+  # A merge has twice silently reset backend/package-lock.json to a state that
+  # was out of sync with package.json (dropping nodemailer), turning every
+  # subsequent commit red at `npm ci`. This job fails fast — and with a clear
+  # message — the moment any app's lockfile drifts from its package.json, so the
+  # regression is caught on the PR instead of after it lands on main.
+  lockfile-drift:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [backend, web, admin]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify ${{ matrix.app }} lockfile is in sync
+        working-directory: ${{ matrix.app }}
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          if ! git diff --exit-code -- package-lock.json; then
+            echo "::error file=${{ matrix.app }}/package-lock.json::${{ matrix.app }}/package-lock.json is out of sync with package.json. Run 'npm install --package-lock-only' in ${{ matrix.app }}/ and commit the result."
+            exit 1
+          fi
+
   # ========== Frontend Tests ==========
   web-test:
     runs-on: ubuntu-latest
@@ -149,11 +178,15 @@ jobs:
   # ========== Build Status ==========
   build-complete:
     runs-on: ubuntu-latest
-    needs: [backend-test, web-test, admin-test, docker-build]
+    needs: [lockfile-drift, backend-test, web-test, admin-test, docker-build]
     if: always()
     steps:
       - name: Check build status
         run: |
+          if [ "${{ needs.lockfile-drift.result }}" != "success" ]; then
+            echo "Lockfile drift check failed"
+            exit 1
+          fi
           if [ "${{ needs.backend-test.result }}" != "success" ]; then
             echo "Backend tests failed"
             exit 1
