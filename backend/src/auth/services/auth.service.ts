@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -87,6 +87,13 @@ export class AuthService {
     // raw DB unique-violation (which leaked that phone enumeration differs).
     const phoneExists = dto.phone ? await this.usersRepo.findOne({ where: { phone: dto.phone } }) : null;
     if (phoneExists) throw new ConflictException('Phone number already registered');
+
+    if (dto.dateOfBirth) {
+      const dob = new Date(dto.dateOfBirth);
+      const minAge = new Date();
+      minAge.setFullYear(minAge.getFullYear() - 18);
+      if (dob > minAge) throw new BadRequestException('You must be at least 18 years old to register');
+    }
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
     const verificationToken = randomBytes(32).toString('hex');

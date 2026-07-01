@@ -6,7 +6,7 @@ import { useMyAffiliate, useCreateAffiliate } from '@/features/affiliates/hooks'
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/components/ui/Toast';
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tayyibt.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? (typeof window !== 'undefined' ? window.location.origin : '');
 
 function StatCard({ value, label, icon }: { value: string | number; label: string; icon: string }) {
   return (

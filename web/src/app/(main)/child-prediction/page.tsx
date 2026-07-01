@@ -418,7 +418,7 @@ export default function ChildPredictionPage() {
           {/* share */}
           <div className="mt-3 flex gap-2 flex-wrap">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت: https://tayyibt.com/child-prediction')}`}
+              href={`https://wa.me/?text=${encodeURIComponent(`شاهد كيف سيبدو طفلي 👶💕 جرّب الآن: ${typeof window !== 'undefined' ? window.location.origin : ''}/child-prediction`)}`}
               target="_blank" rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ background: '#25D366' }}
@@ -426,7 +426,7 @@ export default function ChildPredictionPage() {
               <WhatsappLogo size={18} weight="fill" /> واتساب
             </a>
             <a
-              href={`https://t.me/share/url?url=${encodeURIComponent('https://tayyibt.com/child-prediction')}&text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت!')}`}
+              href={`https://t.me/share/url?url=${encodeURIComponent(`${typeof window !== 'undefined' ? window.location.origin : ''}/child-prediction`)}&text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن!')}`}
               target="_blank" rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ background: '#229ED9' }}

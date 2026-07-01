@@ -1,9 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useViewStory, useStoryViewers, useAddToHighlight } from '../hooks';
+import { useRouter } from 'next/navigation';
+import { useViewStory, useStoryViewers, useAddToHighlight, useReactToStory } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
+import { chatApi } from '@/features/chat/api';
 
 function resolveMedia(url?: string): string | undefined {
   return resolveMediaUrl(url) ?? undefined;
@@ -38,14 +40,59 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   const [isPaused, setIsPaused] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [sendingReply, setSendingReply] = useState(false);
+  const [showReactions, setShowReactions] = useState(false);
 
   const currentUser = stories[userIndex];
   const currentStory = currentUser?.stories[storyIndex];
   const viewStory = useViewStory();
   const { data: viewersData } = useStoryViewers(currentStory?.id || '');
   const addToHighlight = useAddToHighlight();
+  const reactToStory = useReactToStory();
   const { showToast } = useToast() as any;
+  const router = useRouter();
   const viewers = viewersData?.data || [];
+
+  const REACTIONS = ['❤️', '😍', '😂', '😮', '😢', '🔥'];
+
+  const handleReaction = (emoji: string) => {
+    if (!currentStory?.id) return;
+    setShowReactions(false);
+    reactToStory.mutate(
+      { storyId: currentStory.id, emoji },
+      {
+        onSuccess: () => showToast(`أرسلت ${emoji}`, 'success'),
+        onError: () => showToast('تعذّر إرسال التفاعل', 'error'),
+      },
+    );
+  };
+
+  const handleSendReply = async () => {
+    if (!replyText.trim() || !currentUser?.user?.id) return;
+    setSendingReply(true);
+    try {
+      const convRes = await chatApi.createConversation(currentUser.user.id);
+      const convId = convRes.data?.id;
+      if (convId) {
+        await chatApi.sendMessage(convId, replyText.trim());
+        setReplyText('');
+        showToast('تم إرسال الرد', 'success');
+      }
+    } catch {
+      showToast('تعذّر إرسال الرد', 'error');
+    } finally {
+      setSendingReply(false);
+    }
+  };
+
+  const navigateToOwnerProfile = () => {
+    if (!currentUser?.user) return;
+    const user = currentUser.user as any;
+    const slug = user.username || user.id;
+    onClose();
+    router.push(`/${slug}`);
+  };
 
   const goNext = useCallback(() => {
     if (storyIndex < currentUser.stories.length - 1) {
@@ -83,8 +130,8 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   }, [currentStory?.id]);
 
   useEffect(() => {
-    setIsPaused(showViewers || showMenu);
-  }, [showViewers, showMenu]);
+    setIsPaused(showViewers || showMenu || showReactions || !!replyText);
+  }, [showViewers, showMenu, showReactions, replyText]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -217,16 +264,18 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
 
           {/* Header — z-20 so it sits above the tap zones (z-10) */}
           <div className="absolute top-9 inset-x-3 flex items-center gap-2.5 z-20">
-            <div
-              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ring-2 ring-white/70"
+            <button
+              onClick={navigateToOwnerProfile}
+              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ring-2 ring-white/70 hover:opacity-80 transition-opacity"
               style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}
+              aria-label={`الانتقال لملف ${userName}`}
             >
               {userName.charAt(0)}
-            </div>
-            <div className="flex-1 min-w-0">
+            </button>
+            <button onClick={navigateToOwnerProfile} className="flex-1 min-w-0 text-right hover:opacity-80 transition-opacity">
               <p className="text-sm font-bold text-white leading-tight truncate">{userName}</p>
               <p className="text-[11px] text-white/60 leading-tight">{timeLabel}</p>
-            </div>
+            </button>
             <span className="text-[11px] text-white/50 tabular-nums flex-shrink-0">
               {storyIndex + 1} / {currentUser.stories.length}
             </span>
@@ -293,6 +342,57 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
           {/* Tap zones — z-10, below header (z-20) */}
           <button className="absolute left-0 top-0 w-[40%] h-full z-10" onClick={goPrev} aria-label="السابق" />
           <button className="absolute right-0 top-0 w-[40%] h-full z-10" onClick={goNext} aria-label="التالي" />
+
+          {/* Reply + reactions bar — z-20, above tap zones */}
+          <div className="absolute bottom-0 inset-x-0 px-3 pb-4 z-20 flex items-center gap-2">
+            {/* Reactions picker */}
+            <div className="relative">
+              <button
+                onClick={() => setShowReactions(v => !v)}
+                className="h-9 w-9 flex items-center justify-center rounded-full bg-black/40 text-white/80 hover:text-white hover:bg-black/60 transition-colors text-lg"
+                aria-label="تفاعل"
+              >
+                😊
+              </button>
+              {showReactions && (
+                <div className="absolute bottom-11 left-0 flex gap-1 bg-black/80 rounded-2xl px-2 py-1.5 shadow-xl">
+                  {REACTIONS.map(emoji => (
+                    <button
+                      key={emoji}
+                      onClick={() => handleReaction(emoji)}
+                      className="text-2xl hover:scale-125 transition-transform"
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Reply input */}
+            <div className="flex-1 flex items-center gap-2 rounded-full bg-black/40 px-4 py-2 border border-white/20">
+              <input
+                type="text"
+                value={replyText}
+                onChange={e => setReplyText(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleSendReply(); }}
+                placeholder="أرسل ردًا..."
+                className="flex-1 bg-transparent text-sm text-white placeholder:text-white/40 outline-none"
+                dir="rtl"
+              />
+              {replyText.trim() && (
+                <button
+                  onClick={handleSendReply}
+                  disabled={sendingReply}
+                  className="text-white/80 hover:text-white transition-colors disabled:opacity-50"
+                  aria-label="إرسال"
+                >
+                  <svg className="h-5 w-5 rotate-180" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

@@ -43,6 +43,7 @@ const AR_MESSAGES: Record<string, string> = {
   'Password must be at least 8 characters with uppercase, lowercase, number, and special character':
     'كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل مع حرف كبير وصغير ورقم ورمز خاص',
   'phone must be a valid phone number': 'رقم الهاتف غير صحيح',
+  'You must be at least 18 years old to register': 'يجب أن يكون عمرك 18 سنة أو أكثر للتسجيل',
   'Referenced record does not exist': 'تعذّر إكمال الطلب، تحقّق من البيانات',
 };
 const translate = (m: string) => AR_MESSAGES[m] ?? m;
@@ -109,6 +110,12 @@ export const RegisterForm = () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('صيغة البريد الإلكتروني غير صحيحة'); return; }
     if (!/^\+?[1-9]\d{6,14}$/.test(form.phone.trim())) { setError('رقم الهاتف غير صحيح'); return; }
     if (!form.gender) { setError('يرجى اختيار الجنس'); return; }
+    if (form.dateOfBirth) {
+      const dob = new Date(form.dateOfBirth);
+      const minAge = new Date();
+      minAge.setFullYear(minAge.getFullYear() - 18);
+      if (dob > minAge) { setError('يجب أن يكون عمرك 18 سنة أو أكثر للتسجيل'); return; }
+    }
     if (!agreedToTerms) { setError('يرجى الموافقة على الشروط والأحكام'); return; }
     if (form.password !== form.confirm) { setError('كلمتا المرور غير متطابقتين'); return; }
     if (form.password.length < 8) { setError('كلمة المرور يجب أن تكون 8 أحرف على الأقل'); return; }
@@ -164,22 +171,22 @@ export const RegisterForm = () => {
           <p className="text-sm font-medium text-[#EF4444]">{error}</p>
         </div>
       )}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-[#374151]">الاسم الأول</label>
           <input type="text" required value={form.firstName} onChange={set('firstName')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-[#374151]">اسم العائلة</label>
           <input type="text" required value={form.lastName} onChange={set('lastName')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
         </div>
       </div>
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-[#374151]">اسم المستخدم</label>
-        <input type="text" value={form.username} onChange={set('username')}
-          className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
+        <label className="block text-sm font-medium text-[#374151]">اسم المستخدم <span className="text-[#9CA3AF] font-normal text-xs">(اختياري — حروف إنجليزية وأرقام فقط)</span></label>
+        <input type="text" value={form.username} onChange={set('username')} placeholder="e.g. ahmed_1990"
+          className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
       </div>
       <div className="space-y-2">
         <label className="block text-sm font-medium text-[#374151]">البريد الإلكتروني</label>
@@ -188,7 +195,7 @@ export const RegisterForm = () => {
             <svg className="h-5 w-5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.96V6.75"/></svg>
           </div>
           <input type="email" required value={form.email} onChange={set('email')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
         </div>
       </div>
       <div className="space-y-2">
@@ -198,20 +205,20 @@ export const RegisterForm = () => {
             <svg className="h-5 w-5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.151l-4.423-1.106c-.44-.11-.902.275-.902.814v1.26c0 .624.564 1.001 1.158.714l2.756 1.382a20.087 20.087 0 01-4.12 4.121l-2.756-1.382c-.594-.291-1.158.09-1.158.714v1.26c0 .539.451.924.902.814l4.423-1.106c.5-.185.852-.635.852-1.151V18a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6.75z"/></svg>
           </div>
           <input type="tel" required value={form.phone} onChange={set('phone')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
             placeholder="+966 50 000 0000" />
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-[#374151]">تاريخ الميلاد</label>
           <input type="date" value={form.dateOfBirth} onChange={set('dateOfBirth')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-base sm:text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-[#374151]">الجنس</label>
           <select required value={form.gender} onChange={set('gender')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200">
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-base sm:text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200">
             <option value="" disabled>اختر...</option>
             <option value="male">ذكر</option>
             <option value="female">أنثى</option>
@@ -225,7 +232,7 @@ export const RegisterForm = () => {
             <svg className="h-5 w-5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
           </div>
           <input type={showPassword ? 'text' : 'password'} required value={form.password} onChange={set('password')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 pr-12 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 pr-12 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
             placeholder="8+ أحرف, حرف كبير, رقم, رمز" />
           <button type="button" onClick={() => setShowPassword(!showPassword)}
             className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] transition-colors">
@@ -255,7 +262,7 @@ export const RegisterForm = () => {
             <svg className="h-5 w-5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
           </div>
           <input type={showPassword ? 'text' : 'password'} required value={form.confirm} onChange={set('confirm')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 pr-12 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 pr-12 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
             placeholder="••••••••" />
         </div>
       </div>

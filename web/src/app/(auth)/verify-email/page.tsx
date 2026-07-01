@@ -46,7 +46,7 @@ function VerifyEmailForm() {
 
   if (status === 'loading') {
     return (
-      <main className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#EAE0CF]">
+      <main className="relative min-h-screen flex items-center justify-center overflow-x-hidden bg-[#EAE0CF]">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #D4E8EE 0%, #EAE0CF 50%, #FDFAF5 100%)' }} />
         <div className="relative w-full max-w-md px-4">
           <div className="rounded-2xl bg-[#FDFAF5] shadow-elevated p-8 text-center">
@@ -65,7 +65,7 @@ function VerifyEmailForm() {
 
   if (status === 'success') {
     return (
-      <main className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#EAE0CF]">
+      <main className="relative min-h-screen flex items-center justify-center overflow-x-hidden bg-[#EAE0CF]">
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #D4E8EE 0%, #EAE0CF 50%, #FDFAF5 100%)' }} />
         <div className="absolute top-20 left-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#94B4C1', opacity: 0.2 }} />
         <div className="absolute bottom-20 right-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#547792', opacity: 0.15 }} />
@@ -90,7 +90,7 @@ function VerifyEmailForm() {
   }
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#EAE0CF]">
+    <main className="relative min-h-screen flex items-center justify-center overflow-x-hidden bg-[#EAE0CF]">
       <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #D4E8EE 0%, #EAE0CF 50%, #FDFAF5 100%)' }} />
       <div className="absolute top-20 left-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#94B4C1', opacity: 0.2 }} />
       <div className="absolute bottom-20 right-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#547792', opacity: 0.15 }} />
@@ -117,7 +117,7 @@ function VerifyEmailForm() {
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-[#213448]">البريد الإلكتروني</label>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
+                className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-base sm:text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
                 placeholder="you@example.com" />
             </div>
             <button type="submit" disabled={loading}

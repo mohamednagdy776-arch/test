@@ -241,6 +241,12 @@ export function useAddToHighlight() {
   });
 }
 
+export function useReactToStory() {
+  return useMutation({
+    mutationFn: ({ storyId, emoji }: { storyId: string; emoji: string }) => storiesApi.reactToStory(storyId, emoji),
+  });
+}
+
 export function useHighlights() {
   return useQuery({
     queryKey: ['highlights'],

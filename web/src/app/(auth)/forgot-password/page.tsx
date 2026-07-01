@@ -14,14 +14,32 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // Restore cooldown from sessionStorage so page refresh doesn't bypass it.
+    const stored = sessionStorage.getItem('fp_cooldown_until');
+    if (stored) {
+      const remaining = Math.ceil((parseInt(stored, 10) - Date.now()) / 1000);
+      if (remaining > 0) {
+        setCooldown(remaining);
+        cooldownRef.current = setInterval(() => {
+          setCooldown((c) => {
+            if (c <= 1) { clearInterval(cooldownRef.current!); sessionStorage.removeItem('fp_cooldown_until'); return 0; }
+            return c - 1;
+          });
+        }, 1000);
+      } else {
+        sessionStorage.removeItem('fp_cooldown_until');
+      }
+    }
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current); };
   }, []);
 
   const startCooldown = () => {
+    const until = Date.now() + 60000;
+    sessionStorage.setItem('fp_cooldown_until', String(until));
     setCooldown(60);
     cooldownRef.current = setInterval(() => {
       setCooldown((c) => {
-        if (c <= 1) { clearInterval(cooldownRef.current!); return 0; }
+        if (c <= 1) { clearInterval(cooldownRef.current!); sessionStorage.removeItem('fp_cooldown_until'); return 0; }
         return c - 1;
       });
     }, 1000);
@@ -43,7 +61,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#EAE0CF]">
+    <main className="relative min-h-screen flex items-center justify-center overflow-x-hidden bg-[#EAE0CF]">
       <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #D4E8EE 0%, #EAE0CF 50%, #FDFAF5 100%)' }} />
       <div className="absolute top-20 left-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#94B4C1', opacity: 0.2 }} />
       <div className="absolute bottom-20 right-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#547792', opacity: 0.15 }} />
@@ -78,7 +96,7 @@ export default function ForgotPasswordPage() {
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-[#213448]">البريد الإلكتروني</label>
                   <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                    className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
+                    className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-base sm:text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
                     placeholder="you@example.com" />
                 </div>
                 <button type="submit" disabled={loading}

@@ -381,7 +381,7 @@ export default function FriendsPage() {
                   placeholder="البحث عن الأصدقاء..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-2.5 pr-10 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
+                  className="w-full px-4 py-2.5 pr-10 rounded-xl border border-[var(--border)] bg-[var(--card)] text-base sm:text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
                 />
                 <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -531,7 +531,7 @@ export default function FriendsPage() {
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateList()}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
+                className="flex-1 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-base sm:text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
               />
               <button
                 onClick={handleCreateList}
@@ -600,7 +600,7 @@ export default function FriendsPage() {
               type="text"
               value={editListName}
               onChange={(e) => setEditListName(e.target.value)}
-              className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm text-[var(--foreground)] focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)] bg-[var(--card)]"
+              className="w-full rounded-xl border border-[var(--border)] px-4 py-2.5 text-base sm:text-sm text-[var(--foreground)] focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)] bg-[var(--card)]"
             />
           </div>
           <div>

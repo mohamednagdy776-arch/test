@@ -71,7 +71,7 @@ export const LoginForm = () => {
                 <svg className="h-5 w-5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.96V6.75"/></svg>
               </div>
               <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
+                className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
                 placeholder="you@example.com" />
             </div>
           </div>
@@ -82,7 +82,7 @@ export const LoginForm = () => {
                 <svg className="h-5 w-5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
               </div>
               <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)}
-                className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 pr-12 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
+                className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 pr-12 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
                 placeholder="••••••••" />
               <button type="button" onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280] transition-colors">
@@ -108,7 +108,7 @@ export const LoginForm = () => {
           <div className="p-5 rounded-2xl bg-[#F0FDF4] border border-[#10B981]/30">
             <p className="text-sm text-[#374151] mb-3">أدخل رمز التحقق من تطبيق المصادقة</p>
             <input type="text" required value={twoFactorCode} onChange={(e) => setTwoFactorCode(e.target.value)}
-              className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
+              className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-base sm:text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
               placeholder="000000" maxLength={6} />
           </div>
         </div>

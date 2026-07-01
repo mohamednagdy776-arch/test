@@ -89,6 +89,9 @@ export const storiesApi = {
   addToHighlight: (storyId: string, name: string) =>
     apiClient.post(`/stories/${storyId}/highlights`, { name }).then((r) => r.data),
 
+  reactToStory: (storyId: string, emoji: string) =>
+    apiClient.post(`/stories/${storyId}/react`, { emoji }).then((r) => r.data),
+
   getHighlights: () =>
     apiClient.get('/highlights').then((r) => r.data),
 };

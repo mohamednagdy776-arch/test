@@ -58,7 +58,7 @@ export default function GroupsPage() {
     }
   };
 
-  const inputClass = "w-full rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--ring)]";
+  const inputClass = "w-full rounded-xl px-4 py-3 text-base sm:text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--ring)]";
   const inputStyle = { background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' };
 
   return (

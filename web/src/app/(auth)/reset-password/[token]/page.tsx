@@ -60,7 +60,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#EAE0CF]">
+    <main className="relative min-h-screen flex items-center justify-center overflow-x-hidden bg-[#EAE0CF]">
       <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, #D4E8EE 0%, #EAE0CF 50%, #FDFAF5 100%)' }} />
       <div className="absolute top-20 left-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#94B4C1', opacity: 0.2 }} />
       <div className="absolute bottom-20 right-20 h-72 w-72 rounded-full blur-3xl" style={{ background: '#547792', opacity: 0.15 }} />
@@ -102,7 +102,7 @@ export default function ResetPasswordPage() {
                   <label className="block text-sm font-medium text-[#213448]">كلمة المرور الجديدة</label>
                   <div className="relative">
                     <input type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)}
-                      className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 pr-10 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
+                      className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 pr-10 text-base sm:text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
                       placeholder="••••••••" />
                     <button type="button" onClick={() => setShowPassword(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#547792] hover:text-[#213448]" aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}>
                       {showPassword ? '🙈' : '👁'}
@@ -123,7 +123,7 @@ export default function ResetPasswordPage() {
                   <label className="block text-sm font-medium text-[#213448]">تأكيد كلمة المرور</label>
                   <div className="relative">
                     <input type={showConfirm ? 'text' : 'password'} required value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 pr-10 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
+                      className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 pr-10 text-base sm:text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
                       placeholder="••••••••" />
                     <button type="button" onClick={() => setShowConfirm(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#547792] hover:text-[#213448]" aria-label={showConfirm ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}>
                       {showConfirm ? '🙈' : '👁'}

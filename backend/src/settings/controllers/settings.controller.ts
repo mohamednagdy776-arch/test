@@ -1,5 +1,6 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { SettingsService } from '../services/settings.service';
 import { UpdatePrivacyDto } from '../dto/update-privacy.dto';
 import { UpdateAppearanceDto } from '../dto/update-appearance.dto';
@@ -83,5 +84,18 @@ export class SettingsController {
   async unblockUser(@CurrentUser() user: User, @Param('id') blockedUserId: string) {
     await this.settingsService.unblockUser(user.id, blockedUserId);
     return ok(null, 'User unblocked');
+  }
+
+  // ==================== Support Reports ====================
+  @Post('support/report')
+  @UseInterceptors(FilesInterceptor('attachments', 3))
+  async submitSupportReport(
+    @CurrentUser() user: User,
+    @Body() body: { type?: string; description?: string; email?: string },
+    @UploadedFiles() attachments?: Express.Multer.File[],
+  ) {
+    // Log report server-side; in production this would persist to a table or forward to a helpdesk.
+    console.log(`[support/report] user=${user.id} type=${body.type} files=${attachments?.length ?? 0}`);
+    return ok({ received: true }, 'تم استلام بلاغك، شكراً لك');
   }
 }

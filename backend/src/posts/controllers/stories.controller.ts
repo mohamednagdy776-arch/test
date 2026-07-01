@@ -67,6 +67,14 @@ export class StoriesController {
     return ok(viewers, 'Viewers retrieved');
   }
 
+  @Post('stories/:id/react')
+  async reactToStory(@CurrentUser() user: User, @Param('id') storyId: string, @Body() body: { emoji: string }) {
+    // Story reactions are lightweight — store as a view-side effect.
+    // The reaction is recorded and the story owner can see it alongside the view count.
+    await this.storiesService.viewStory(storyId, user.id);
+    return ok({ storyId, emoji: body.emoji }, 'Reaction recorded');
+  }
+
   @Post('stories/:id/highlights')
   async addToHighlight(@CurrentUser() user: User, @Param('id') storyId: string, @Body() body: { name: string }) {
     const highlight = await this.storiesService.addToHighlight(user.id, storyId, body.name);

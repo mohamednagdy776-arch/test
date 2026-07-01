@@ -556,7 +556,24 @@
     font-family: 'Noto Sans Arabic', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+<<<<<<< Updated upstream
     overflow-x: hidden;
+=======
+    /* Prevent horizontal overflow on mobile */
+    overflow-x: hidden;
+  }
+
+  /* Prevent iOS double-tap zoom on interactive elements */
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+
+  /* Minimum touch target size for interactive elements on mobile */
+  @media (max-width: 768px) {
+    button, [role="button"] {
+      min-height: 44px;
+    }
+>>>>>>> Stashed changes
   }
 
   .dark body {

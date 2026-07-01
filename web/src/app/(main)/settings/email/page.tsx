@@ -108,40 +108,4 @@ export default function ChangeEmailPage() {
               required
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
-              placeholder="example@email.com"
-              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-[var(--foreground)] mb-1.5">كلمة المرور الحالية</label>
-            <input
-              type="password"
-              required
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="••••••••"
-              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !newEmail || !currentPassword}
-            className="w-full rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {loading ? 'جارٍ الإرسال...' : 'إرسال رابط التأكيد'}
-          </button>
-        </form>
-
-        {/* Security note */}
-        <div className="rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 p-4">
-          <p className="text-xs font-bold text-[var(--accent)] mb-1">🔐 ملاحظة أمنية</p>
-          <p className="text-xs text-[var(--accent)] leading-relaxed">
-            لن يتغير بريدك الإلكتروني حتى تضغط على رابط التأكيد المرسل إلى البريد الجديد. إذا لم تطلب هذا التغيير، تجاهل الرابط.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
+              placeholder="example@email.com"

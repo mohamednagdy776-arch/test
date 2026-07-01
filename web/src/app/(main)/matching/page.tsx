@@ -184,13 +184,13 @@ export default function MatchingPage() {
                 <input type="number" value={ageMin} min={18} max={ageMax}
                   onChange={(e) => setAgeMin(parseInt(e.target.value) || 18)}
                   placeholder="من"
-                  className="w-full px-3 py-2.5 rounded-xl text-sm text-center transition-all focus:outline-none focus:ring-2"
+                  className="w-full px-3 py-2.5 rounded-xl text-base sm:text-sm text-center transition-all focus:outline-none focus:ring-2"
                   style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
                 <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>—</span>
                 <input type="number" value={ageMax} min={ageMin} max={99}
                   onChange={(e) => setAgeMax(parseInt(e.target.value) || 45)}
                   placeholder="إلى"
-                  className="w-full px-3 py-2.5 rounded-xl text-sm text-center transition-all focus:outline-none focus:ring-2"
+                  className="w-full px-3 py-2.5 rounded-xl text-base sm:text-sm text-center transition-all focus:outline-none focus:ring-2"
                   style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
               </div>
             </div>
@@ -201,7 +201,7 @@ export default function MatchingPage() {
                   style={{ color: 'var(--muted-foreground)' }} />
                 <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
                   placeholder="المدينة أو المنطقة"
-                  className="w-full pr-8 pl-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2"
+                  className="w-full pr-8 pl-3 py-2.5 rounded-xl text-base sm:text-sm transition-all focus:outline-none focus:ring-2"
                   style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
               </div>
             </div>
