@@ -497,6 +497,13 @@ export class AuthService {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
+    // 2FA is already on — re-running setup would mint a fresh secret and silently
+    // reset the user's existing 2FA (and let it be "enabled" a second time). Refuse
+    // and tell them to disable first, so an active enrolment can't be clobbered (#64).
+    if (user.twoFactorEnabled) {
+      throw new ConflictException('Two-factor authentication is already enabled. Disable it first to set it up again.');
+    }
+
     // Base32 secret + otpauth URI so standard authenticators can enroll (#743).
     // Do NOT enable 2FA yet — only persist the pending secret. 2FA turns on once
     // the user proves their authenticator works in verifyTwoFactorSetup, so a
@@ -516,6 +523,12 @@ export class AuthService {
   async verifyTwoFactorSetup(userId: string, code: string) {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user || !user.totpSecret) throw new NotFoundException('No 2FA setup in progress');
+
+    // Defence in depth for #64: never re-enable (and re-issue backup codes) when
+    // 2FA is already active — the enable path must go through a fresh setup.
+    if (user.twoFactorEnabled) {
+      throw new ConflictException('Two-factor authentication is already enabled.');
+    }
 
     const valid = verifyTotp(code, user.totpSecret);
     if (!valid) throw new UnauthorizedException('Invalid code');

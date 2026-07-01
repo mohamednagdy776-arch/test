@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { describe, it, expect, afterEach } from '@jest/globals';
 import { createHash } from 'crypto';
-import { UnauthorizedException } from '@nestjs/common';
+import { UnauthorizedException, ConflictException } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { base32Encode } from '../utils/totp';
 
@@ -67,5 +67,21 @@ describe('[Body_Sadek] 2FA enrollment & recovery (#759)', () => {
     const { svc } = makeService(user);
     Date.now = () => 59 * 1000;
     await expect(svc.disableTwoFactor('u1', '000000')).rejects.toBeInstanceOf(UnauthorizedException);
+  });
+
+  // #64 — 2FA must not be re-enabled while already active (which would mint a new
+  // secret + fresh backup codes and silently clobber the existing enrolment).
+  it('setup refuses when 2FA is already enabled (#64)', async () => {
+    const user = { id: 'u1', email: 'u@tayyibt.test', totpSecret: RFC_SECRET, twoFactorEnabled: true };
+    const { svc, updates } = makeService(user);
+    await expect(svc.setupTwoFactor('u1')).rejects.toBeInstanceOf(ConflictException);
+    expect(updates).toHaveLength(0); // nothing was overwritten
+  });
+
+  it('verifySetup refuses when 2FA is already enabled (#64)', async () => {
+    Date.now = () => 59 * 1000;
+    const user = { id: 'u1', email: 'u@tayyibt.test', totpSecret: RFC_SECRET, twoFactorEnabled: true };
+    const { svc } = makeService(user);
+    await expect(svc.verifyTwoFactorSetup('u1', '287082')).rejects.toBeInstanceOf(ConflictException);
   });
 });

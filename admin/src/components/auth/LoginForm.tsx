@@ -18,7 +18,15 @@ export const LoginForm = () => {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       {login.isError && (
-        <ErrorMessage message="Invalid email or password. Please try again." />
+        <ErrorMessage
+          message={
+            // Surface the specific reason for the non-admin block (#73); fall back
+            // to the generic credential error otherwise.
+            login.error instanceof Error && login.error.message.includes('administrator')
+              ? login.error.message
+              : 'Invalid email or password. Please try again.'
+          }
+        />
       )}
 
       <div>
