@@ -207,7 +207,7 @@ export const ProfileHeader = ({
       </div>
 
       <div className="px-6 pb-6 relative">
-        <div className="flex flex-col sm:flex-row sm:items-start gap-4 sm:gap-5 -mt-14 relative">
+        <div className="flex items-start gap-5 -mt-14 relative">
           {/* Avatar with enhanced styling */}
           <div className="relative shrink-0 group">
             <div
@@ -252,4 +252,250 @@ export const ProfileHeader = ({
             )}
           </div>
 
-          {/* Info */}
+          {/* Info */}
+          <div className="flex-1 min-w-0 pt-16">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-2xl font-bold text-gradient">{profile.fullName}</h2>
+              {profile.isHealthVerified && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm"
+                  style={{ background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', color: 'var(--foreground)' }}
+                  title="تم التحقق من السلامة الصحية"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                  مُحقَّق صحياً
+                </span>
+              )}
+              {profile.isIdentityVerified && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm"
+                  style={{ background: 'linear-gradient(135deg, var(--accent), #D4A853)', color: '#0A3D2B' }}
+                  title="تم التحقق من الهوية"
+                >
+                  <SealCheck size={14} weight="fill" />
+                  موثّق الهوية
+                </span>
+              )}
+              {/* Copy the profile's unique shareable link (#8). */}
+              <button
+                onClick={copyProfileLink}
+                aria-label="نسخ رابط الملف الشخصي"
+                title="نسخ رابط الملف الشخصي"
+                className="inline-flex items-center justify-center h-7 w-7 rounded-full text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              >
+                <LinkSimple size={16} />
+              </button>
+            </div>
+            {profile.username && (
+              <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium">
+                @{profile.username}
+              </p>
+            )}
+            {profile.userId && <FollowSection userId={profile.userId} isSelf={isSelf} />}
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              {profile.location
+                  ? profile.location
+                  : [profile.city, profile.country].filter(Boolean).join('، ')}
+            </p>
+            {profile.workplace && (
+              <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Briefcase size={14} className="inline mr-1" /> {profile.workplace}</p>
+            )}
+            {profile.relationshipStatus && (
+              <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Heart size={14} className="inline mr-1" weight="fill" /> {relationshipStatusLabel(profile.relationshipStatus)}</p>
+            )}
+            {profile.bio && (
+              <p dir="auto" className="mt-2 text-sm text-[var(--foreground)]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
+            )}
+            <p className="mt-2 text-xs text-[var(--muted-foreground)]">
+              انضم في {formatDate(profile.joinDate || profile.createdAt)}
+              {!!profile.friendCount && (
+                <span className="mr-2">• {profile.friendCount} {profile.friendCount === 1 ? 'صديق' : 'أصدقاء'}</span>
+              )}
+              {!!profile.mutualFriends && profile.mutualFriends > 0 && (
+                <span className="mr-2">• {profile.mutualFriends} {profile.mutualFriends === 1 ? 'صديق مشترك' : 'أصدقاء مشترك'}</span>
+              )}
+            </p>
+          </div>
+
+          {/* Self: edit button */}
+          {isSelf && onEdit && (
+            <button
+              onClick={onEdit}
+              className="shrink-0 mt-16 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
+            >
+              <PencilSimple size={16} className="inline mr-1" />
+              تعديل الملف
+            </button>
+          )}
+
+          {/* Viewer: friend action + message */}
+          {!isSelf && (
+            <div className="shrink-0 mt-16 flex gap-2 flex-wrap">
+
+              {/* No relationship → Add Friend */}
+              {(!friendshipStatus || friendshipStatus.status === 'none') && (
+                <button
+                  onClick={onAddFriend}
+                  disabled={friendActionPending}
+                  className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2 text-sm font-medium text-[var(--card)] hover:shadow-glow hover:scale-105 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <UserPlus size={16} />
+                  {friendActionPending ? '...' : 'إضافة صديق'}
+                </button>
+              )}
+
+              {/* Pending — I sent the request → Cancel */}
+              {friendshipStatus?.status === 'pending' && friendshipStatus?.isRequester && (
+                <button
+                  onClick={onCancelRequest}
+                  disabled={friendActionPending}
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Clock size={16} />
+                  {friendActionPending ? '...' : 'تم الإرسال'}
+                </button>
+              )}
+
+              {/* Pending — they sent the request → Accept */}
+              {friendshipStatus?.status === 'pending' && !friendshipStatus?.isRequester && (
+                <button
+                  onClick={onAcceptRequest}
+                  disabled={friendActionPending}
+                  className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2 text-sm font-medium text-[var(--card)] hover:shadow-glow transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <CheckCircle size={16} />
+                  {friendActionPending ? '...' : 'قبول الطلب'}
+                </button>
+              )}
+
+              {/* Already friends → Unfriend */}
+              {friendshipStatus?.status === 'accepted' && (
+                <button
+                  onClick={onUnfriend}
+                  disabled={friendActionPending}
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)]/30 hover:text-[var(--destructive)] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Users size={16} />
+                  {friendActionPending ? '...' : 'أصدقاء'}
+                </button>
+              )}
+
+              {/* Send Salam — directed marriage-intent interest (#754) */}
+              {onSendInterest && (
+                <button
+                  onClick={onSendInterest}
+                  disabled={sendInterestPending}
+                  className="rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 active:scale-95"
+                  style={{ background: 'linear-gradient(135deg, var(--accent) 0%, #D4A853 100%)', color: '#0A3D2B' }}
+                >
+                  <HeartStraight size={16} weight="fill" />
+                  {sendInterestPending ? '...' : 'أرسل السلام'}
+                </button>
+              )}
+
+              {/* Message — always visible */}
+              <button
+                onClick={() => router.push(`/chat?user=${profile.userId}`)}
+                className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] transition-all duration-300 flex items-center gap-1.5"
+              >
+                <ChatCircle size={16} />
+                رسالة
+              </button>
+
+              {/* Block user */}
+              {onBlock && friendshipStatus?.status !== 'blocked' && (
+                <button
+                  onClick={onBlock}
+                  className="rounded-xl border border-[var(--destructive)]/30 px-4 py-2 text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 transition-all duration-300"
+                >
+                  حظر
+                </button>
+              )}
+
+              {/* Report user (#751) */}
+              {onReport && (
+                <button
+                  onClick={onReport}
+                  aria-label="إبلاغ عن المستخدم"
+                  className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--destructive)] transition-all duration-300 flex items-center gap-1.5"
+                >
+                  <Flag size={16} />
+                  إبلاغ
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Completion bar — only on your own profile (private metric) */}
+        {isSelf && <ProfileCompletion profile={profile} />}
+      </div>
+
+      {avatarCropFile && (
+        <ImageCropper
+          file={avatarCropFile}
+          aspectRatio={1}
+          circular={true}
+          onCrop={handleAvatarCrop}
+          onCancel={() => setAvatarCropFile(null)}
+        />
+      )}
+
+      {coverCropFile && (
+        <ImageCropper
+          file={coverCropFile}
+          aspectRatio={16 / 5}
+          circular={false}
+          onCrop={handleCoverCrop}
+          onCancel={() => setCoverCropFile(null)}
+        />
+      )}
+
+      <Modal open={!!removeImageKind} onClose={() => setRemoveImageKind(null)} title="إزالة الصورة">
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--primary)]">
+            {removeImageKind === 'avatar' ? 'هل أنت متأكد من إزالة صورة الملف الشخصي؟' : 'هل أنت متأكد من إزالة صورة الغلاف؟'}
+          </p>
+          <div className="flex gap-3">
+            <button onClick={() => setRemoveImageKind(null)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
+            <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors">إزالة</button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+};
+
+// Use the SAME backend completeness score the dashboard shows, so the two
+// surfaces never disagree (was a client-side calc here → 69% vs dashboard's
+// /users/me/completeness → 100%, #835).
+const ProfileCompletion = ({ profile }: { profile: any }) => {
+  const { data } = useQuery({
+    queryKey: ['profile-completeness'],
+    queryFn: () => apiClient.get('/users/me/completeness').then((r) => r.data),
+    staleTime: 60_000,
+  });
+  const score = (data as any)?.data?.score ?? (data as any)?.score ?? null;
+  // Fall back to a local estimate only until the score loads.
+  const fallbackFields = ['fullName', 'age', 'gender', 'country', 'city', 'bio', 'education', 'sect', 'prayerLevel'];
+  const fallback = Math.round(
+    (fallbackFields.filter((f) => profile[f] != null && profile[f] !== '').length / fallbackFields.length) * 100,
+  );
+  const pct = Math.min(100, Math.max(0, Number(score ?? fallback)));
+  return (
+    <div className="mt-6 border-t border-[var(--border)]/40 pt-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-[var(--muted-foreground)] font-medium">اكتمال الملف الشخصي</span>
+        <span className="text-xs font-bold text-gradient">{pct}%</span>
+      </div>
+      <div className="h-2 rounded-full bg-[var(--muted)] overflow-hidden">
+        <div 
+          className="h-2 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] transition-all duration-500 shadow-soft" 
+          style={{ width: `${pct}%` }} 
+        />
+      </div>
+    </div>
+  );
+};

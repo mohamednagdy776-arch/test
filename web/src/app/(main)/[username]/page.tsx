@@ -285,4 +285,166 @@ function FriendsTab({ userId }: { userId: string }) {
     );
   }
 
-  return (
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {friends.map((friend: any, i: number) => (
+          <Link key={i} href={friend.username ? `/${friend.username}` : '#'} className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 text-center shadow-sm hover:shadow-md hover:shadow-black/5 transition-all">
+            <div className="h-16 w-16 mx-auto rounded-full bg-[var(--muted)] flex items-center justify-center mb-2">
+              {friend.avatarUrl ? (
+                <img src={resolveMediaUrl(friend.avatarUrl) ?? ''} alt="" className="h-full w-full object-cover rounded-full" />
+              ) : (
+                <span className="text-xl font-bold text-[var(--primary)]">{friend.fullName?.charAt(0)}</span>
+              )}
+            </div>
+            <p className="text-sm font-semibold text-[var(--foreground)] truncate">{friend.fullName}</p>
+            {friend.mutualFriends > 0 && (
+              <p className="text-xs text-[var(--primary)] mt-0.5">{friend.mutualFriends} مشترك</p>
+            )}
+          </Link>
+        ))}
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">السابق</button>
+          <span className="text-sm text-[var(--primary)]">{page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">التالي</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PhotosTab({ userId }: { userId: string }) {
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['photos', userId, page],
+    queryFn: () => apiClient.get(`/users/${userId}/photos`, { params: { page, limit: PAGE_SIZE } }).then((r) => r.data),
+    enabled: !!userId,
+  });
+
+  const photos = (data as any)?.data?.data || [];
+  const total: number = (data as any)?.data?.total ?? photos.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+        {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+          <div key={i} className="aspect-square bg-[var(--muted)]/60 rounded-xl animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center">
+        <p className="text-[var(--primary)] text-sm">تعذّر تحميل الصور</p>
+      </div>
+    );
+  }
+
+  if (photos.length === 0) {
+    return (
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
+        <p className="text-3xl mb-2">🖼️</p>
+        <p className="text-[var(--primary)]">لا توجد صور</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+        {photos.map((photo: any, i: number) => (
+          <div key={i} className="aspect-square bg-[var(--muted)]/40 rounded-xl overflow-hidden border border-[var(--border)]">
+            {photo.metadata?.url && (
+              <img src={resolveMediaUrl(photo.metadata.url) ?? ''} alt="" className="w-full h-full object-cover" />
+            )}
+          </div>
+        ))}
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">السابق</button>
+          <span className="text-sm text-[var(--primary)]">{page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">التالي</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function VideosTab({ userId }: { userId: string }) {
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 12;
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['videos', userId, page],
+    queryFn: () => apiClient.get(`/users/${userId}/videos`, { params: { page, limit: PAGE_SIZE } }).then((r) => r.data),
+    enabled: !!userId,
+  });
+
+  const videos = (data as any)?.data?.data || [];
+  const total: number = (data as any)?.data?.total ?? videos.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <div key={i} className="aspect-video bg-[var(--muted)]/60 rounded-xl animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center">
+        <p className="text-[var(--primary)] text-sm">تعذّر تحميل الفيديوهات</p>
+      </div>
+    );
+  }
+
+  if (videos.length === 0) {
+    return (
+      <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
+        <p className="text-3xl mb-2">🎬</p>
+        <p className="text-[var(--primary)]">لا توجد فيديوهات</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {videos.map((video: any) => (
+          <Link key={video.id} href={`/watch/${video.id}`} className="group relative aspect-video bg-[var(--muted)]/40 rounded-xl overflow-hidden border border-[var(--border)]">
+            {video.thumbnail ? (
+              <img src={resolveMediaUrl(video.thumbnail) ?? ''} alt={video.title || ''} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-3xl">🎬</div>
+            )}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
+              <span className="text-white opacity-0 group-hover:opacity-100 text-2xl transition-opacity">▶️</span>
+            </div>
+            {video.title && (
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 p-2">
+                <p className="text-white text-xs line-clamp-1">{video.title}</p>
+              </div>
+            )}
+          </Link>
+        ))}
+      </div>
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">السابق</button>
+          <span className="text-sm text-[var(--primary)]">{page} / {totalPages}</span>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--primary)] border border-[var(--border)] hover:bg-[var(--muted)] disabled:opacity-40 transition-colors">التالي</button>
+        </div>
+      )}
+    </div>
+  );
+}

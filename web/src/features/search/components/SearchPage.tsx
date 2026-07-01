@@ -345,4 +345,263 @@ export const SearchPage = () => {
                 onChange={(e) => { setQuery(e.target.value); setShowSuggestions(true); }}
                 onFocus={() => query.trim() && setShowSuggestions(true)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                placeholder="ابحث بالاسم أو البلد أو المهنة أو المذهب..."
+                placeholder="ابحث بالاسم أو البلد أو المهنة أو المذهب..."
+                aria-label="حقل البحث"
+                className="w-full pr-10 pl-3 py-3 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+                style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+              />
+              {query && (
+                <button onClick={() => { setQuery(''); setResults([]); setHasSearched(false); setSuggestions([]); inputRef.current?.focus(); }}
+                  aria-label="مسح البحث"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-100 transition-opacity"
+                  style={{ color: 'var(--muted-foreground)' }}>
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            <button onClick={() => handleSearch()} disabled={isLoading}
+              className="shrink-0 px-5 py-3 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
+              {isLoading ? '...' : 'بحث'}
+            </button>
+
+            <button onClick={() => setShowAdvanced((v) => !v)}
+              aria-label="الفلاتر المتقدمة"
+              className="shrink-0 flex items-center gap-1.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all"
+              style={showAdvanced
+                ? { background: 'color-mix(in srgb, var(--primary) 12%, var(--muted))', color: 'var(--primary)', border: '1px solid color-mix(in srgb, var(--primary) 25%, var(--border))' }
+                : { background: 'var(--muted)', color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}>
+              <SlidersHorizontal size={15} />
+              <span className="hidden sm:inline">متقدم</span>
+            </button>
+          </div>
+
+          {showAdvanced && (
+            <SearchFilters
+              filters={filters}
+              onChange={setFilters}
+              onReset={() => { setFilters(emptyFilters); setApplied(emptyFilters); }}
+              onSearch={() => { setApplied({ ...filters }); runSearch(query, activeTab, filters); }}
+            />
+          )}
+
+          {/* Saved searches (#757) */}
+          <SavedSearchesStrip
+            query={query}
+            filters={applied}
+            onApply={(s) => {
+              setQuery(s.query ?? '');
+              setFilters(s.filters ?? emptyFilters);
+              setApplied(s.filters ?? emptyFilters);
+              runSearch(s.query ?? '', activeTab, s.filters ?? emptyFilters);
+            }}
+          />
+        </div>
+
+        {/* Autocomplete dropdown */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1.5 rounded-2xl shadow-xl overflow-hidden z-50"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            {suggestions.map((s, i) => (
+              <button key={`${s.type}-${s.id}-${i}`}
+                onClick={() => { setQuery(s.name); setShowSuggestions(false); handleSearch(s.name); }}
+                className="w-full flex items-center gap-3 px-4 py-3 text-right transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--muted))]">
+                <span className="text-base shrink-0 w-6 text-center">{suggestionIcon[s.type] ?? '🔍'}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{s.name}</p>
+                  {s.subtext && <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{s.subtext}</p>}
+                </div>
+                <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}>
+                  {s.type === 'user' ? 'شخص' : s.type === 'group' ? 'مجتمع' : s.type === 'page' ? 'صفحة' : 'فعالية'}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Tabs ──────────────────────────────────────────────────── */}
+      <div className="flex gap-1 rounded-xl p-1 overflow-x-auto"
+        style={{ background: 'var(--muted)' }}>
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.key;
+          return (
+            <button key={tab.key} onClick={() => handleTabChange(tab.key)}
+              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-semibold whitespace-nowrap transition-all active:scale-95"
+              style={isActive
+                ? { background: 'var(--card)', color: 'var(--primary)', boxShadow: '0 1px 6px rgba(0,0,0,0.08)' }
+                : { color: 'var(--muted-foreground)' }}>
+              <tab.icon size={13} weight={isActive ? 'fill' : 'regular'} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Discovery state ───────────────────────────────────────── */}
+      {!hasSearched && !isLoading && (
+        <div className="rounded-2xl p-5 space-y-5"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+
+          {recentSearches.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Clock size={14} style={{ color: 'var(--muted-foreground)' }} />
+                  <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>عمليات بحث سابقة</h3>
+                </div>
+                <button onClick={() => { clearRecentSearches(); setRecentSearches([]); }}
+                  className="text-xs font-semibold hover:opacity-70 transition-opacity"
+                  style={{ color: 'var(--accent)' }}>
+                  مسح الكل
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {recentSearches.map((r) => (
+                  <button key={r}
+                    onClick={() => { setQuery(r); handleSearch(r); }}
+                    className="group flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm transition-all hover:bg-[color-mix(in_srgb,var(--primary)_8%,var(--muted))]"
+                    style={{ background: 'var(--muted)', color: 'var(--foreground)' }}>
+                    <Clock size={11} style={{ color: 'var(--muted-foreground)' }} />
+                    <span>{r}</span>
+                    <span role="button" aria-label="حذف"
+                      onClick={(e) => { e.stopPropagation(); removeRecentSearch(r); setRecentSearches(getRecentSearches()); }}
+                      className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition-opacity"
+                      style={{ color: 'var(--muted-foreground)' }}>
+                      <X size={10} />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <Fire size={14} style={{ color: 'var(--accent)' }} />
+              <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>البحث الشائع</h3>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {POPULAR_ARABIC.map((p) => (
+                <button key={p} onClick={() => { setQuery(p); handleSearch(p); }}
+                  className="flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold transition-all hover:scale-105 active:scale-95"
+                  style={{ background: 'color-mix(in srgb, var(--accent) 10%, var(--muted))', color: 'var(--accent)' }}>
+                  <Fire size={11} />
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Loading skeleton ──────────────────────────────────────── */}
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-52 rounded-2xl animate-pulse" style={{ background: 'var(--muted)' }} />
+          ))}
+        </div>
+      )}
+
+      {/* ── No results ────────────────────────────────────────────── */}
+      {!isLoading && hasSearched && results.length === 0 && (
+        <div className="rounded-2xl p-12 text-center"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+          <div className="mx-auto mb-4 w-16 h-16 rounded-2xl flex items-center justify-center"
+            style={{ background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))' }}>
+            <MagnifyingGlass size={30} weight="light" style={{ color: 'var(--primary)', opacity: 0.5 }} />
+          </div>
+          <p className="font-bold" style={{ color: 'var(--foreground)' }}>لا توجد نتائج</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+            جرّب كلمات مختلفة أو غيّر الفلاتر
+          </p>
+        </div>
+      )}
+
+      {/* ── Results grid ──────────────────────────────────────────── */}
+      {!isLoading && results.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {activeTab === 'people' && results.map((u) => (
+            <UserCard key={u.id} user={u} onView={() => setSelectedUser(u)} />
+          ))}
+          {activeTab === 'groups' && results.map((item: any) => (
+            <GroupResultCard key={item.id} item={item} />
+          ))}
+          {activeTab === 'pages' && results.map((item: any) => (
+            <PageResultCard key={item.id} item={item} />
+          ))}
+          {activeTab === 'events' && results.map((item: any) => (
+            <EventResultCard key={item.id} item={item} />
+          ))}
+          {activeTab === 'posts' && results.map((item: any) => (
+            <PostResultCard key={item.id} item={item} />
+          ))}
+        </div>
+      )}
+
+      {selectedUser && (
+        <UserProfileModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+      )}
+    </div>
+  );
+};
+
+// [Body_Sadek] #757 — saved searches strip: save the current query+filters and
+// re-run saved ones with one tap.
+function SavedSearchesStrip({ query, filters, onApply }: {
+  query: string;
+  filters: any;
+  onApply: (s: { query?: string; filters?: any }) => void;
+}) {
+  const [saved, setSaved] = useState<any[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(() => {
+    savedSearchesApi.list().then((r) => setSaved(r?.data ?? [])).catch(() => undefined);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const save = async () => {
+    const name = (query || '').trim() || 'بحث محفوظ';
+    setBusy(true);
+    try {
+      await savedSearchesApi.create(name, { query, criteria: filters });
+      load();
+    } finally { setBusy(false); }
+  };
+
+  const remove = async (id: string) => {
+    await savedSearchesApi.remove(id).catch(() => undefined);
+    load();
+  };
+
+  const canSave = !!(query?.trim()) && saved.length < 20;
+
+  return (
+    <div className="mt-3 flex items-center gap-2 flex-wrap">
+      {canSave && (
+        <button
+          onClick={save}
+          disabled={busy}
+          className="rounded-full px-3 py-1.5 text-xs font-semibold border border-[var(--border)] text-[var(--primary)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
+        >
+          ★ احفظ هذا البحث
+        </button>
+      )}
+      {saved.map((s) => (
+        <span
+          key={s.id}
+          className="group inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)]"
+        >
+          <button onClick={() => onApply({ query: s.filters?.query, filters: s.filters?.criteria })} className="hover:text-[var(--primary)] transition-colors">
+            {s.name}
+          </button>
+          <button onClick={() => remove(s.id)} aria-label="حذف البحث المحفوظ" className="text-[var(--muted-foreground)] hover:text-[var(--destructive)] transition-colors">✕</button>
+        </span>
+      ))}
+    </div>
+  );
+}

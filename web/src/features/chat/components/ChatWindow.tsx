@@ -559,4 +559,228 @@ export const ChatWindow = ({ match, onBack }: Props) => {
         {messages.map((msg) => (
           <div key={msg.id}
             className={`group flex items-end gap-1.5 ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
-            onMouseEnter={() => setHoveredMsgId(msg.id)}
+            onMouseEnter={() => setHoveredMsgId(msg.id)}
+            onMouseLeave={() => setHoveredMsgId(null)}>
+
+            {/* Received-message reply button (appears to the right of the bubble since bubble is on left) */}
+            {!msg.isOwn && hoveredMsgId === msg.id && !msg.isDeletedForEveryone && (
+              <button onClick={() => setReplyTo(msg)}
+                className="flex items-center justify-center w-6 h-6 rounded-full mb-1 opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
+                style={{ background: 'var(--muted)', color: 'var(--muted-foreground)', order: 2 }}>
+                <ArrowBendUpLeft size={11} />
+              </button>
+            )}
+
+            {/* Own-message action buttons (appear to the left of the bubble) */}
+            {msg.isOwn && hoveredMsgId === msg.id && !msg.isDeletedForEveryone && !String(msg.id).startsWith('temp-') && (
+              <div className="flex items-center gap-1 mb-1 opacity-0 group-hover:opacity-100 transition-all" style={{ order: 0 }}>
+                <button onClick={() => setReplyTo(msg)} title="رد"
+                  className="flex items-center justify-center w-6 h-6 rounded-full transition-all hover:scale-110"
+                  style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}>
+                  <ArrowBendUpLeft size={11} />
+                </button>
+                <button onClick={() => handleDelete(msg.id, false)} title="حذف لي" aria-label="حذف لي فقط"
+                  className="flex items-center justify-center w-6 h-6 rounded-full transition-all hover:scale-110"
+                  style={{ background: 'color-mix(in srgb, var(--destructive) 10%, var(--muted))', color: 'var(--destructive)' }}>
+                  <Trash size={10} />
+                </button>
+                <button onClick={() => handleDelete(msg.id, true)} title="حذف للجميع"
+                  className="text-[10px] font-bold px-2 h-6 rounded-full transition-all hover:scale-105"
+                  style={{ background: 'var(--destructive)', color: 'white' }}>
+                  للجميع
+                </button>
+              </div>
+            )}
+
+            {/* Bubble */}
+            <div className="flex flex-col gap-0.5">
+            <div
+              className={`relative max-w-xs lg:max-w-md rounded-2xl px-4 py-2.5 text-sm ${msg.isOwn ? 'rounded-tl-sm' : 'rounded-tr-sm'}`}
+              style={msg.isOwn
+                ? { background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }
+                : { background: 'var(--muted)', border: '1px solid var(--border)' }}>
+
+              {/* Reply preview — always show when a message has a replyToId */}
+              {msg.replyToId && (
+                <div className="mb-2 p-2 rounded-lg text-xs"
+                  style={msg.isOwn
+                    ? { background: 'rgba(255,255,255,0.15)', borderRight: '2px solid rgba(255,255,255,0.45)', color: 'rgba(255,255,255,0.85)' }
+                    : { background: 'color-mix(in srgb, var(--primary) 6%, var(--muted))', borderRight: '2px solid var(--primary)', color: 'var(--muted-foreground)' }}>
+                  {(() => {
+                    const replied = getReplyMessage(msg.replyToId);
+                    // Not in the loaded thread → genuinely gone. A media message
+                    // has empty content but is NOT deleted — show a media label.
+                    if (!replied) return 'رسالة محذوفة';
+                    if (replied.isDeletedForEveryone) return 'تم حذف الرسالة';
+                    if (replied.type === 'image' || (!replied.content && replied.mediaUrl)) return '📷 صورة';
+                    const replyContent = replied.content || 'رسالة محذوفة';
+                    return replyContent.length > 40 ? replyContent.slice(0, 40) + '...' : replyContent;
+                  })()}
+                </div>
+              )}
+
+              {/* Message body */}
+              {msg.isDeletedForEveryone ? (
+                <span className="italic text-xs" style={{ opacity: 0.55, color: msg.isOwn ? 'white' : 'var(--muted-foreground)' }}>
+                  تم حذف الرسالة
+                </span>
+              ) : msg.type === 'image' && msg.mediaUrl ? (
+                <div className="rounded-xl overflow-hidden max-w-[200px]">
+                  <Image src={resolveMediaUrl(msg.mediaUrl) ?? ''} alt="صورة" width={200} height={200} className="w-full h-auto object-cover" />
+                </div>
+              ) : (
+                <TranslatedMessageBody
+                  content={msg.content}
+                  isOwn={msg.isOwn}
+                  isEdited={msg.isEdited}
+                  targetLang={targetLang}
+                />
+              )}
+
+              {/* Timestamp + read receipt */}
+              <div className="mt-1 flex items-center justify-end gap-1.5 text-[10px]">
+                <span style={{ color: msg.isOwn ? 'rgba(255,255,255,0.65)' : 'var(--muted-foreground)' }}>
+                  {formatTime(msg.timestamp)}
+                </span>
+                {msg.isOwn && !String(msg.id).startsWith('temp-') && (() => {
+                  const seen = !!otherSeenAt && new Date(msg.timestamp).getTime() <= new Date(otherSeenAt).getTime();
+                  return (
+                    <span title={seen ? 'تمت القراءة' : 'تم الإرسال'}
+                      style={{ color: seen ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: seen ? 700 : 400 }}>
+                      {seen ? '✓✓' : '✓'}
+                    </span>
+                  );
+                })()}
+                {msg.isOwn && String(msg.id).startsWith('temp-') && (
+                  <span title="جارٍ الإرسال" style={{ color: 'rgba(255,255,255,0.45)' }}>○</span>
+                )}
+              </div>
+
+              {/* Emoji picker trigger */}
+              <button
+                onClick={() => setShowReactions(showReactions === msg.id ? null : msg.id)}
+                className={`absolute top-1/2 -translate-y-1/2 ${msg.isOwn ? '-left-7' : '-right-7'} w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:scale-110`}
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
+                <Smiley size={13} />
+              </button>
+
+              {showReactions === msg.id && (
+                <div
+                  className={`absolute bottom-full mb-2 z-20 flex gap-1 p-1.5 rounded-full shadow-xl ${msg.isOwn ? 'right-0' : 'left-0'}`}
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                  {EMOJI_REACTIONS.map(emoji => (
+                    <button key={emoji}
+                      onClick={() => handleReaction(msg.id, emoji)}
+                      className="text-base hover:scale-125 transition-transform">
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Reactions display — outside bubble so it doesn't overlap next message */}
+            {msg.reactions && msg.reactions.length > 0 && (
+              <div className={`flex gap-0.5 ${msg.isOwn ? 'justify-end' : 'justify-start'}`}>
+                {msg.reactions.map((r, i) => (
+                  <span key={i} className="rounded-full px-1.5 py-0.5 text-xs shadow-sm"
+                    style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                    {r.emoji}
+                  </span>
+                ))}
+              </div>
+            )}
+            </div>
+          </div>
+        ))}
+
+        {/* Typing indicator */}
+        {typingUsers.length > 0 && (
+          <div className="flex justify-start">
+            <div className="flex items-center gap-1 rounded-2xl rounded-tr-sm px-4 py-2.5"
+              style={{ background: 'var(--muted)', border: '1px solid var(--border)' }}>
+              {[0, 1, 2].map(i => (
+                <span key={i} className="block w-1.5 h-1.5 rounded-full animate-bounce"
+                  style={{ background: 'var(--muted-foreground)', animationDelay: `${i * 0.15}s` }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div ref={bottomRef} />
+      </div>
+
+      {/* ── Reply preview strip ─────────────────────────────────── */}
+      {replyTo && (
+        <div className="flex items-center gap-3 px-4 py-2 shrink-0"
+          style={{ borderTop: '1px solid var(--border)', background: 'color-mix(in srgb, var(--primary) 4%, var(--card))' }}>
+          <ArrowBendUpLeft size={14} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold" style={{ color: 'var(--primary)' }}>رد على رسالة</p>
+            <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>
+              {replyTo.content?.slice(0, 50) || 'رسالة صورة'}
+            </p>
+          </div>
+          <button onClick={() => setReplyTo(null)}
+            className="text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center transition-all hover:scale-110"
+            style={{ background: 'var(--muted)', color: 'var(--muted-foreground)' }}>
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* ── Input area ─────────────────────────────────────────── */}
+      <div className="shrink-0 px-3 py-2.5"
+        style={{ borderTop: '1px solid var(--border)', background: 'var(--card)' }}>
+        <div className="flex items-end gap-2">
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) { sendImageMessage(f); e.target.value = ''; } }}
+          />
+          <button
+            title="إرسال صورة"
+            disabled={uploadingImage}
+            onClick={() => imageInputRef.current?.click()}
+            className="flex items-center justify-center w-10 h-10 rounded-xl shrink-0 transition-all hover:scale-110 disabled:opacity-40"
+            style={{ color: uploadingImage ? 'var(--muted-foreground)' : 'var(--primary)', background: 'var(--muted)' }}>
+            {uploadingImage ? (
+              <span className="w-4 h-4 border-2 border-transparent rounded-full animate-spin"
+                style={{ borderTopColor: 'var(--primary)' }} />
+            ) : (
+              <ImageIcon size={18} />
+            )}
+          </button>
+
+          <textarea
+            value={input}
+            onChange={handleInputChange}
+            onKeyDown={handleKey}
+            placeholder="اكتب رسالة..."
+            rows={1}
+            dir="auto"
+            className="flex-1 resize-none rounded-xl px-4 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--ring)] max-h-32"
+            style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+          />
+
+          <button
+            onClick={sendMessage}
+            disabled={!input.trim() || sending}
+            className="flex items-center justify-center w-10 h-10 shrink-0 rounded-xl text-white transition-all hover:scale-110 active:scale-95 disabled:opacity-40"
+            style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
+            {sending ? (
+              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : (
+              <PaperPlaneTilt size={16} weight="fill" />
+            )}
+          </button>
+        </div>
+        <p className="mt-1 text-center text-[10px]" style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}>
+          Enter للإرسال · Shift+Enter لسطر جديد
+        </p>
+      </div>
+    </div>
+  );
+};

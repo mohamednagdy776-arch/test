@@ -328,4 +328,116 @@ const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
   if (isLoading) return feedShell('جاري تحميل الأصدقاء...');
   if (isError) return feedShell('تعذّر تحميل الأصدقاء');
   if (friends.length === 0) return feedShell('لا توجد أصدقاء');
-  return (
+  return (
+    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-3 gap-4">
+      {friends.map((f: any, i: number) => (
+        <Link key={f.id ?? i} href={f.username ? `/${f.username}` : f.id ? `/profile/${f.id}` : '#'} className="rounded-lg bg-[var(--muted)] p-3 text-center hover:bg-[var(--muted)]/40 transition-colors">
+          <div className="h-16 w-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
+            {f.avatarUrl ? <img src={resolveMediaUrl(f.avatarUrl) ?? ''} alt="" className="h-full w-full object-cover" /> : <span className="text-xl font-bold text-[var(--muted-foreground)]">{f.fullName?.charAt(0)}</span>}
+          </div>
+          <p className="mt-2 text-sm font-semibold text-[var(--foreground)] truncate">{f.fullName}</p>
+        </Link>
+      ))}
+    </div>
+  );
+};
+
+// Photos grid for the profile "Photos" tab (was a placeholder).
+const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['profile-photos', userId],
+    queryFn: () => profileApi.getPhotos(userId),
+    enabled: !!userId,
+  });
+  const photos: any[] = (data as any)?.data?.data ?? [];
+  if (isLoading) return feedShell('جاري تحميل الصور...');
+  if (isError) return feedShell('تعذّر تحميل الصور');
+  if (photos.length === 0) return feedShell('لا توجد صور');
+  return (
+    <>
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            onClick={() => setLightboxUrl(null)}
+            aria-label="إغلاق"
+            className="absolute top-4 left-4 text-white text-2xl hover:text-[var(--muted-foreground)]/70 transition-colors"
+          >
+            ✕
+          </button>
+          <img
+            src={resolveMediaUrl(lightboxUrl) ?? ''}
+            alt=""
+            className="max-w-full max-h-full rounded-xl shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+      <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-4 gap-2">
+        {photos.map((p: any, i: number) => {
+          const photoUrl = p.metadata?.url ?? p.metadata?.coverUrl ?? p.metadata?.avatarUrl ?? p.metadata?.mediaUrl ?? null;
+          return photoUrl ? (
+            <button
+              key={i}
+              onClick={() => setLightboxUrl(photoUrl)}
+              className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+              aria-label={`عرض الصورة ${i + 1}`}
+            >
+              <img src={resolveMediaUrl(photoUrl) ?? ''} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
+            </button>
+          ) : (
+            <div key={i} className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden" />
+          );
+        })}
+      </div>
+    </>
+  );
+};
+
+// Videos for the profile "Videos" tab (was a placeholder).
+const ProfileVideosFeed = ({ userId }: { userId: string }) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['profile-videos', userId],
+    queryFn: () => profileApi.getVideos(userId),
+    enabled: !!userId,
+  });
+  const videos: any[] = (data as any)?.data?.data ?? [];
+  if (isLoading) return feedShell('جاري تحميل الفيديوهات...');
+  if (isError) return feedShell('تعذّر تحميل الفيديوهات');
+  if (videos.length === 0) return feedShell('لا توجد فيديوهات');
+  return (
+    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
+      {videos.map((v: any, i: number) => (
+        <Link key={v.id ?? i} href={`/watch/${v.id}`} className="group relative aspect-video bg-[var(--muted)] rounded-lg overflow-hidden block hover:opacity-90 transition-opacity">
+          {v.thumbnail ? (
+            <img src={resolveMediaUrl(v.thumbnail) ?? ''} alt={v.title || ''} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-3xl text-[var(--muted-foreground)]">🎬</div>
+          )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 flex items-center justify-center transition-all">
+            <span className="text-white opacity-0 group-hover:opacity-100 text-2xl">▶️</span>
+          </div>
+          {v.title && (
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 p-2">
+              <p className="text-white text-xs line-clamp-1">{v.title}</p>
+            </div>
+          )}
+        </Link>
+      ))}
+    </div>
+  );
+};
+
+const Grid = ({ items }: { items: [string, string][] }) => (
+  <div className="grid grid-cols-2 gap-3">
+    {items.map(([k, v]) => (
+      <div key={k} className="rounded-lg bg-[var(--muted)] p-3">
+        <dt className="text-xs font-medium text-[var(--muted-foreground)]">{k}</dt>
+        <dd className="mt-0.5 text-sm font-semibold text-[var(--foreground)]">{v}</dd>
+      </div>
+    ))}
+  </div>
+);

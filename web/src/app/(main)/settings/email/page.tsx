@@ -108,4 +108,41 @@ export default function ChangeEmailPage() {
               required
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
-              placeholder="example@email.com"
+              placeholder="example@email.com"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-base sm:text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-[var(--foreground)] mb-1.5">كلمة المرور الحالية</label>
+            <input
+              type="password"
+              required
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full rounded-xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-base sm:text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading || !newEmail || !currentPassword}
+            className="w-full h-11 rounded-xl text-sm font-semibold text-white shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]"
+            style={{ background: 'linear-gradient(to left, var(--primary), var(--secondary))' }}
+          >
+            {loading ? 'جارٍ الإرسال...' : 'إرسال رابط التأكيد'}
+          </button>
+        </form>
+
+        {/* Security note */}
+        <div className="rounded-2xl bg-[var(--muted)] border border-[var(--border)] p-4">
+          <p className="text-xs font-bold text-[var(--foreground)] mb-1">🔐 ملاحظة أمنية</p>
+          <p className="text-xs text-[var(--muted-foreground)] leading-relaxed">
+            لن يتغير بريدك الإلكتروني حتى تضغط على رابط التأكيد المرسل إلى البريد الجديد. إذا لم تطلب هذا التغيير، تجاهل الرابط.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
