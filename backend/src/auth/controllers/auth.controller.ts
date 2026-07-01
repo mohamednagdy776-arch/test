@@ -98,6 +98,21 @@ export class AuthController {
     return ok(null, 'Logged out');
   }
 
+  // Current authenticated identity + role. The admin dashboard uses this to gate
+  // access to non-admins (#73): a valid session alone must not grant admin UI.
+  // Returns only safe fields (never the password hash / TOTP secret).
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async me(@Req() req: any) {
+    const u = req.user;
+    return ok({
+      id: u.id,
+      email: u.email,
+      accountType: u.accountType,
+      twoFactorEnabled: !!u.twoFactorEnabled,
+    });
+  }
+
   @Get('sessions')
   @UseGuards(AuthGuard('jwt'))
   async getSessions(@Req() req: any) {
