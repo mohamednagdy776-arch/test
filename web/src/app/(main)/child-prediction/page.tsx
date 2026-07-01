@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useAppOrigin } from '@/lib/app-url';
 import {
   Baby, Sparkle, Heart, ShieldCheck, Camera, X, Star,
   ArrowClockwise, DownloadSimple, WhatsappLogo, TelegramLogo, MagicWand,
@@ -34,6 +35,9 @@ export default function ChildPredictionPage() {
   const [drag1,   setDrag1]   = useState(false);
   const [drag2,   setDrag2]   = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const appOrigin = useAppOrigin();
+  const shareUrl = `${appOrigin}/child-prediction`;
+  const shareText = 'شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت';
 
   const ref1        = useRef<HTMLInputElement>(null);
   const ref2        = useRef<HTMLInputElement>(null);
@@ -418,7 +422,7 @@ export default function ChildPredictionPage() {
           {/* share */}
           <div className="mt-3 flex gap-2 flex-wrap">
             <a
-              href={`https://wa.me/?text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت: https://tayyibt.com/child-prediction')}`}
+              href={`https://wa.me/?text=${encodeURIComponent(`${shareText}: ${shareUrl}`)}`}
               target="_blank" rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ background: '#25D366' }}
@@ -426,7 +430,7 @@ export default function ChildPredictionPage() {
               <WhatsappLogo size={18} weight="fill" /> واتساب
             </a>
             <a
-              href={`https://t.me/share/url?url=${encodeURIComponent('https://tayyibt.com/child-prediction')}&text=${encodeURIComponent('شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت!')}`}
+              href={`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText + '!')}`}
               target="_blank" rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ background: '#229ED9' }}

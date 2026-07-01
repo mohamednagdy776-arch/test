@@ -5,8 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMyAffiliate, useCreateAffiliate } from '@/features/affiliates/hooks';
 import { apiClient } from '@/lib/api-client';
 import { useToast } from '@/components/ui/Toast';
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://tayyibt.com';
+import { useAppOrigin } from '@/lib/app-url';
 
 function StatCard({ value, label, icon }: { value: string | number; label: string; icon: string }) {
   return (
@@ -102,7 +101,8 @@ function WithdrawModal({ commission, onClose }: { commission: string; onClose: (
 }
 
 function AffiliateDashboard({ affiliate }: { affiliate: any }) {
-  const referralLink = `${APP_URL}?ref=${affiliate.referralCode}`;
+  const appOrigin = useAppOrigin();
+  const referralLink = `${appOrigin}?ref=${affiliate.referralCode}`;
   const commission = Number(affiliate.commissionBalance ?? 0).toFixed(2);
   const [showWithdraw, setShowWithdraw] = useState(false);
 

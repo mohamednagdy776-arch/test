@@ -17,8 +17,9 @@ export class Report {
   @JoinColumn({ name: 'reported_by' })
   reportedBy: User;
 
+  // Free-text column, so widening the union needs no DB migration.
   @Column({ name: 'target_type' })
-  targetType: 'user' | 'post' | 'group';
+  targetType: 'user' | 'post' | 'group' | 'video' | 'comment';
 
   @Column({ name: 'target_id' })
   targetId: string;
