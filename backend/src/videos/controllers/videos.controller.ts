@@ -49,13 +49,25 @@ export class VideosController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @CurrentUser() user: User) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(id)) {
       throw new HttpException('Video not found', HttpStatus.NOT_FOUND);
     }
-    const video = await this.videosService.findOne(id);
+    const video = await this.videosService.findOne(id, user?.id);
     return ok(video);
+  }
+
+  @Post(':id/like')
+  async like(@Param('id') id: string, @CurrentUser() user: User) {
+    const result = await this.videosService.like(id, user);
+    return ok(result, 'Video liked');
+  }
+
+  @Delete(':id/like')
+  async unlike(@Param('id') id: string, @CurrentUser() user: User) {
+    const result = await this.videosService.unlike(id, user.id);
+    return ok(result, 'Video unliked');
   }
 
   @Delete(':id')

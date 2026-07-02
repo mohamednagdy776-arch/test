@@ -233,4 +233,15 @@ export class ChatController {
     const count = await this.chatService.getUnreadCount(user.id);
     return ok({ count });
   }
+
+  // Mark a conversation as read (#63) — clears its unread badge and lowers the
+  // global unread counter.
+  @Post('conversations/:conversationId/read')
+  async markRead(
+    @Param('conversationId') conversationId: string,
+    @CurrentUser() user: User,
+  ) {
+    await this.chatService.markConversationRead(conversationId, user.id);
+    return ok(null, 'Conversation marked as read');
+  }
 }

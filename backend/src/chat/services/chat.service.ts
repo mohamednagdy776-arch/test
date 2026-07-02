@@ -74,6 +74,7 @@ export class ChatService {
     conv: Conversation,
     userId: string,
     other: { id: string; name: string | null; avatar: string | null; username?: string | null } | null,
+    unreadCount = 0,
   ) {
     const lastMessage = conv.messages?.length ? conv.messages[conv.messages.length - 1] : null;
     return {
@@ -89,8 +90,40 @@ export class ChatService {
         content: lastMessage.contentEncrypted,
         createdAt: lastMessage.createdAt,
       } : null,
+      unreadCount,
       createdAt: conv.createdAt,
     };
+  }
+
+  // Per-conversation unread counts for a user in ONE query: messages from other
+  // participants created after the user's last_read_at (null = never read, so
+  // all incoming count). Backs both the per-thread badge and the global counter
+  // so they stay consistent and reset when a thread is opened (#63).
+  private async getUnreadCountsByConversation(userId: string): Promise<Map<string, number>> {
+    const rows = await this.messagesRepo
+      .createQueryBuilder('m')
+      .select('m.conversation_id', 'conversationId')
+      .addSelect('COUNT(*)', 'count')
+      .innerJoin(
+        ConversationParticipant,
+        'p',
+        'p.conversation_id = m.conversation_id AND p.user_id = :userId',
+        { userId },
+      )
+      .where('m.sender_id != :userId', { userId })
+      .andWhere('m.deleted_at IS NULL')
+      .andWhere('(p.last_read_at IS NULL OR m.created_at > p.last_read_at)')
+      .groupBy('m.conversation_id')
+      .getRawMany<{ conversationId: string; count: string }>();
+    return new Map(rows.map((r) => [r.conversationId, Number(r.count)]));
+  }
+
+  // Mark every message in a conversation as read for this user (#63): advance
+  // last_read_at to now so the thread's unread count drops to zero.
+  async markConversationRead(conversationId: string, userId: string): Promise<void> {
+    const participant = await this.participantRepo.findOne({ where: { conversationId, userId } });
+    if (!participant) throw new ForbiddenException('Not a participant');
+    await this.participantRepo.update({ conversationId, userId }, { lastReadAt: new Date() });
   }
 
   async getConversations(userId: string, page = 1, limit?: number) {
@@ -111,10 +144,11 @@ export class ChatService {
       return new Date(bMsg).getTime() - new Date(aMsg).getTime();
     });
 
+    const unreadByConv = await this.getUnreadCountsByConversation(userId);
     const out = [];
     for (const conv of sorted) {
       const other = conv.isGroup ? null : await this.resolveOtherUser(conv.id, userId);
-      out.push(this.buildConversationDto(conv, userId, other));
+      out.push(this.buildConversationDto(conv, userId, other, unreadByConv.get(conv.id) ?? 0));
     }
 
     // Collapse duplicate 1:1 threads with the same person — show only the most
@@ -477,19 +511,13 @@ export class ChatService {
     await this.conversationRepo.update({ id: conversationId }, { disappearingMode: enabled });
   }
 
-  // Count of messages the user has received from OTHER participants across all
-  // their conversations (#30). There is no persisted per-user read state yet, so
-  // this reflects total incoming messages — a real, non-zero activity figure for
-  // the dashboard "Messages" stat (was hard-coded to 0).
+  // Total count of genuinely-unread messages across all the user's conversations
+  // (#30/#63): messages from others created after each thread's last_read_at.
+  // Resets as threads are opened, and increments on each new incoming message.
   async getUnreadCount(userId: string): Promise<number> {
-    const myParts = await this.participantRepo.find({ where: { userId } });
-    const convIds = myParts.map((p) => p.conversationId);
-    if (convIds.length === 0) return 0;
-    return this.messagesRepo
-      .createQueryBuilder('message')
-      .where('message.conversation_id IN (:...convIds)', { convIds })
-      .andWhere('message.sender_id != :userId', { userId })
-      .andWhere('message.deleted_at IS NULL')
-      .getCount();
+    const unreadByConv = await this.getUnreadCountsByConversation(userId);
+    let total = 0;
+    for (const count of unreadByConv.values()) total += count;
+    return total;
   }
 }

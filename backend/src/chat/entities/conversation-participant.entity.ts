@@ -33,6 +33,12 @@ export class ConversationParticipant {
   @Column({ default: false })
   isAdmin: boolean;
 
+  // Timestamp of the last message this participant has read in the conversation.
+  // Unread counts = messages from others created after this (#63). Null = the
+  // user has never opened the thread, so every incoming message counts.
+  @Column({ name: 'last_read_at', type: 'timestamptz', nullable: true })
+  lastReadAt: Date | null;
+
   @CreateDateColumn({ name: 'joined_at' })
   joinedAt: Date;
 }
