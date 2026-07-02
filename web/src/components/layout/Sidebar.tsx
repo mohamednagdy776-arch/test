@@ -68,8 +68,8 @@ export const Sidebar = () => {
   const { t } = useT();
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
-  const avatarUrl = resolveMediaUrl(user?.avatar);
-  const displayName = user?.name || user?.username || t('nav.user');
+  const avatarUrl = resolveMediaUrl(user?.avatarUrl ?? user?.avatar);
+  const displayName = user?.fullName || user?.name || user?.username || t('nav.user');
   const username = user?.username ? `@${user.username}` : '';
 
   const logout = async () => {

@@ -24,7 +24,7 @@ import { resolveMediaUrl } from '@/lib/media';
 function GreetingBanner() {
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
-  const name = user?.name?.split(' ')[0] || user?.username || '';
+  const name = (user?.fullName ?? user?.name)?.split(' ')[0] || user?.username || '';
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'صباح الخير' : hour < 17 ? 'مساء الخير' : 'مساء النور';
   const today = new Date().toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });

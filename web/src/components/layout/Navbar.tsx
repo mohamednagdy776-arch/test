@@ -48,8 +48,8 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
-  const avatarUrl = resolveMediaUrl(user?.avatar);
-  const displayName = user?.name || user?.username || t('nav.account');
+  const avatarUrl = resolveMediaUrl(user?.avatarUrl ?? user?.avatar);
+  const displayName = user?.fullName || user?.name || user?.username || t('nav.account');
 
   const logout = async () => {
     try { await authApi.logout(); } catch {}

@@ -78,6 +78,11 @@ export const ProfileHeader = ({
       // from the server, but avoids firing a background GET /users/me right now
       // that could race with and overwrite the setQueryData above.
       qc.invalidateQueries({ queryKey: ['my-profile'], refetchType: 'none' });
+      // The public /{username} and /profile/{id} routes render from
+      // ['user-profile', …] (not ['my-profile']); refresh those too so a
+      // self-upload there updates on screen. Safe to refetch: that key is fed
+      // by GET /users/:id, so it can't race the setQueryData above.
+      qc.invalidateQueries({ queryKey: ['user-profile'] });
       showToast(successMsg, 'success');
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
@@ -112,6 +117,7 @@ export const ProfileHeader = ({
         }));
       }
       qc.invalidateQueries({ queryKey: ['my-profile'], refetchType: 'none' });
+      qc.invalidateQueries({ queryKey: ['user-profile'] });
       showToast(kind === 'avatar' ? 'تم إزالة صورة الملف الشخصي' : 'تم إزالة صورة الغلاف', 'success');
     } catch (err: any) {
       showToast(err?.response?.data?.message ?? 'فشل إزالة الصورة', 'error');
