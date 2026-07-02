@@ -13,6 +13,11 @@ export const chatApi = {
   getUnreadCount: () =>
     apiClient.get('/chat/unread').then(r => r.data?.data ?? r.data),
 
+  // Mark a conversation as read — clears its unread badge + lowers the global
+  // unread counter (#63).
+  markConversationRead: (conversationId: string) =>
+    apiClient.post(`/chat/conversations/${conversationId}/read`).then(r => r.data),
+
   // Messages
   sendMessage: (conversationId: string, content: string, type = 'text', replyToId?: string, mediaUrl?: string) =>
     apiClient.post('/chat/messages', { conversationId, content, type, replyToId, mediaUrl }).then(r => r.data),

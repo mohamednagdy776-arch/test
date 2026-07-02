@@ -1,9 +1,10 @@
 'use client';
 import Image from 'next/image';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { getSocket, getCurrentUserId } from '@/lib/socket-client';
+import { chatApi } from '@/features/chat/api';
 import { useDeleteMessage } from '@/features/chat/hooks';
 import { postsApi } from '@/features/posts/api';
 import { resolveMediaUrl } from '@/lib/media';
@@ -99,15 +100,32 @@ export const ChatWindow = ({ match, onBack }: Props) => {
     })));
   }, [data, myUserId]);
 
+  const qc = useQueryClient();
+
+  // Persist read state so the unread badge + global counter clear/stay in sync
+  // (#63), and tell the sender their message was seen (socket).
+  const markRead = useCallback(() => {
+    if (!match.id) return;
+    chatApi.markConversationRead(match.id)
+      .then(() => {
+        qc.invalidateQueries({ queryKey: ['chat-unread'] });
+        qc.invalidateQueries({ queryKey: ['conversations'] });
+      })
+      .catch(() => {});
+  }, [match.id, qc]);
+
   const markSeen = useCallback(() => {
     if (!match.id) return;
     getSocket().emit('markSeen', { conversationId: match.id, userId: myUserId, messageId: null });
-  }, [match.id, myUserId]);
+    markRead();
+  }, [match.id, myUserId, markRead]);
 
   useEffect(() => {
     if (!match.id) return;
     const socket = getSocket();
     socket.emit('joinConversation', { conversationId: match.id, userId: myUserId });
+    // Opening the thread reads it — clear its unread badge + global counter (#63).
+    markRead();
 
     setOtherSeenAt(null);
     setIsOnline(false);
@@ -167,7 +185,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       socket.off('messageSeen');
       socket.off('reactionUpdated');
     };
-  }, [match.id, myUserId, match.user2Id, markSeen]);
+  }, [match.id, myUserId, match.user2Id, markSeen, markRead]);
 
   useEffect(() => {
     if (messages.length === 0) return;
