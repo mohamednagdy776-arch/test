@@ -173,8 +173,18 @@ export const ProfileHeader = ({
             </div>
           </div>
         )}
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--foreground)]/30 to-transparent pointer-events-none" />
+        {/* Subtle bottom-up scrim for depth. Must use an explicit inline gradient:
+            the Tailwind `from-[var(--foreground)]/30` opacity modifier on an
+            arbitrary CSS var does NOT compile, so the element inherited the parent
+            cover div's OPAQUE --tw-gradient-stops and painted a solid green gradient
+            right over the cover image (cover "not shown"). Only draw it over a real
+            cover so the placeholder stays clean. */}
+        {mediaUrl(profile.coverUrl) && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(to top, color-mix(in srgb, var(--foreground) 28%, transparent), transparent 55%)' }}
+          />
+        )}
         {isSelf && (
           <>
             {/* Compact icon controls tucked in the top corner so they don't sit
