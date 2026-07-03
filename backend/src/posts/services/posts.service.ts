@@ -217,7 +217,10 @@ export class PostsService {
       relations: ['user', 'group', 'originalPost', 'originalPost.user'],
     });
     if (!post) throw new NotFoundException('Post not found');
-    if (post.user?.isDeactivated) throw new NotFoundException('Post not found'); // #149
+    // A deactivated/deleted author is excluded from the relation join (comes
+    // back as `user: null`), not surfaced as `isDeactivated: true` — check for
+    // both so the post 404s instead of rendering with a null author (#149).
+    if (!post.user || post.user.isDeactivated) throw new NotFoundException('Post not found');
 
     if (post.userId === viewerId) return post;
 
