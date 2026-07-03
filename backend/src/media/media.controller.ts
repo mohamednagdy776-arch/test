@@ -13,7 +13,7 @@ export class MediaController {
     @Query('t') token: string,
     @Res() res: Response,
   ) {
-    const allowed = new Set(['avatars', 'covers', 'posts', 'stories']);
+    const allowed = new Set(['avatars', 'covers', 'posts', 'stories', 'predictions']);
     if (!allowed.has(type)) throw new NotFoundException();
 
     const mediaPath = `${type}/${filename}`;

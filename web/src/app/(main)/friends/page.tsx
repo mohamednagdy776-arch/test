@@ -6,15 +6,14 @@ import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
 import { useFriends, usePendingRequests, useSuggestions, useAcceptFriendRequest, useDeclineFriendRequest, useSendFriendRequest, useUnfriend, useFollowUser, useBlockUser, useFriendBirthdays, useFriendLists, useCreateFriendList, useUpdateFriendList, useDeleteFriendList } from '@/features/friends/hooks';
 import { cn, displayName } from '@/lib/utils';
-import { DotsThreeVertical, ChatCircle, UserMinus, UserPlus, Prohibit, UsersThree } from '@phosphor-icons/react';
+import { DotsThreeVertical, ChatCircle, UserMinus, Prohibit, UsersThree } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
 
 import { resolveMediaUrl } from '@/lib/media';
 
-function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: any; onUnfriend?: () => void; onMessage?: () => void; onBlock?: () => void; onFollow?: () => void }) {
+function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnfriend?: () => void; onMessage?: () => void; onBlock?: () => void }) {
   const name = displayName(user);
   const [showMenu, setShowMenu] = useState(false);
-  const isFriend = user.friendshipStatus === 'friends' || user.isFriend;
   const avatarSrc = resolveMediaUrl(user.avatar);
 
   return (
@@ -46,18 +45,10 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
                 style={{ color: 'var(--foreground)' }}>
                 <ChatCircle size={15} /> رسالة
               </button>
-              {isFriend ? (
-                <button onClick={() => { onUnfriend?.(); setShowMenu(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm transition-colors hover:bg-[var(--destructive)]/10 text-[var(--destructive)]">
-                  <UserMinus size={15} /> إلغاء الصداقة
-                </button>
-              ) : (
-                <button onClick={() => { onFollow?.(); setShowMenu(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_6%,transparent)]"
-                  style={{ color: 'var(--primary)' }}>
-                  <UserPlus size={15} /> متابعة
-                </button>
-              )}
+              <button onClick={() => { onUnfriend?.(); setShowMenu(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm transition-colors hover:bg-[var(--destructive)]/10 text-[var(--destructive)]">
+                <UserMinus size={15} /> إلغاء الصداقة
+              </button>
               <button onClick={() => { onBlock?.(); setShowMenu(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10">
                 <Prohibit size={15} /> حظر
@@ -72,19 +63,11 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock, onFollow }: { user: 
           style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: 'var(--primary-foreground)' }}>
           رسالة
         </button>
-        {isFriend ? (
-          <button onClick={onUnfriend}
-            className="flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors"
-            style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}>
-            إلغاء الصداقة
-          </button>
-        ) : (
-          <button onClick={onFollow}
-            className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: 'var(--primary-foreground)' }}>
-            متابعة
-          </button>
-        )}
+        <button onClick={onUnfriend}
+          className="flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors"
+          style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}>
+          إلغاء الصداقة
+        </button>
       </div>
     </div>
   );
@@ -428,7 +411,6 @@ export default function FriendsPage() {
                     onMessage={() => handleMessage(user.id)}
                     onUnfriend={() => handleUnfriend(user.id)}
                     onBlock={() => handleBlock(user.id)}
-                    onFollow={() => handleFollow(user.id)}
                   />
                 ))}
               </div>

@@ -11,8 +11,14 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { memoryStorage } from 'multer';
+import { writeFileSync, mkdirSync } from 'fs';
+import { join } from 'path';
+import { randomUUID } from 'crypto';
 import sharp from 'sharp';
 import { ChildPredictionService } from './child-prediction.service';
+import { signMediaPath } from '../common/utils/media-token';
+
+const PREDICTIONS_DIR = join(process.cwd(), 'uploads', 'predictions');
 
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const ALLOWED_FORMATS = new Set(['jpeg', 'png', 'webp']);
@@ -71,6 +77,23 @@ export class ChildPredictionController {
       assertUsableFaceImage(files[1].buffer, 'Second parent image'),
     ]);
     const image = await this.svc.predict(files[0].buffer, files[1].buffer);
-    return { success: true, image, format: 'jpeg' };
+
+    // Also persist the result so it has a real shareable link — the WhatsApp/
+    // Telegram share buttons previously shared a static `shareUrl` pointing at
+    // this tool's own homepage because the generated image only ever existed
+    // as an ephemeral base64 data URI in the response, never saved anywhere
+    // with an id/URL (#86).
+    let mediaUrl: string | null = null;
+    try {
+      mkdirSync(PREDICTIONS_DIR, { recursive: true });
+      const filename = `${randomUUID()}.jpg`;
+      writeFileSync(join(PREDICTIONS_DIR, filename), Buffer.from(image, 'base64'));
+      const mediaPath = `predictions/${filename}`;
+      mediaUrl = `/api/v1/media/${mediaPath}?t=${signMediaPath(mediaPath)}`;
+    } catch {
+      // Sharing is best-effort; never fail the prediction itself over it.
+    }
+
+    return { success: true, image, format: 'jpeg', mediaUrl };
   }
 }

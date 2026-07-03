@@ -31,12 +31,15 @@ export default function ChildPredictionPage() {
   const [parent2, setParent2] = useState<ParentImage | null>(null);
   const [stage,   setStage]   = useState<Stage>('idle');
   const [result,  setResult]  = useState<string | null>(null);
+  const [resultMediaUrl, setResultMediaUrl] = useState<string | null>(null);
   const [errMsg,  setErrMsg]  = useState<string | null>(null);
   const [drag1,   setDrag1]   = useState(false);
   const [drag2,   setDrag2]   = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const appOrigin = useAppOrigin();
-  const shareUrl = `${appOrigin}/child-prediction`;
+  // Share the specific generated result once it exists (server-persisted with
+  // a token-signed permalink), not the tool's own homepage (#86).
+  const shareUrl = resultMediaUrl ? `${appOrigin}${resultMediaUrl}` : `${appOrigin}/child-prediction`;
   const shareText = 'شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت';
 
   const ref1        = useRef<HTMLInputElement>(null);
@@ -92,6 +95,7 @@ export default function ChildPredictionPage() {
   const handleSubmit = async () => {
     if (!parent1 || !parent2 || isLoading) return;
     setResult(null);
+    setResultMediaUrl(null);
     setErrMsg(null);
 
     const fd = new FormData();
@@ -129,8 +133,9 @@ export default function ChildPredictionPage() {
         const body = await res.json().catch(() => ({})) as { message?: string };
         throw new Error(body.message ?? `خطأ ${res.status}`);
       }
-      const data = await res.json() as { image: string };
+      const data = await res.json() as { image: string; mediaUrl?: string | null };
       setResult(`data:image/jpeg;base64,${data.image}`);
+      setResultMediaUrl(data.mediaUrl ?? null);
       setStage('done');
     } catch (e: unknown) {
       abortCtrl.abort();

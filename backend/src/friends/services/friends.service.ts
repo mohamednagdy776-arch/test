@@ -71,7 +71,17 @@ export class FriendsService {
     }
 
     const friendship = this.friendshipsRepo.create({ requesterId, addresseeId, status: FriendshipStatus.PENDING });
-    return this.friendshipsRepo.save(friendship);
+    const saved = await this.friendshipsRepo.save(friendship);
+
+    // Notify the addressee that they received a friend request — this was
+    // never wired up (#84); only acceptRequest notified anyone.
+    try {
+      await this.notifications.notifyUser(addresseeId, requesterId, 'friend_request', 'أرسل لك طلب صداقة');
+    } catch {
+      // Never fail the send operation if the notification dispatch fails.
+    }
+
+    return saved;
   }
 
   async acceptRequest(userId: string, requestId: string) {
