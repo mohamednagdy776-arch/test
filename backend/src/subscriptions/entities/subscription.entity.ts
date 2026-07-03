@@ -11,7 +11,7 @@ export class Subscription {
   user: User;
 
   @Column({ default: 'free' })
-  plan: 'free' | 'premium';
+  plan: 'free' | 'premium' | 'family';
 
   @Column({ name: 'start_date', type: 'timestamp' })
   startDate: Date;

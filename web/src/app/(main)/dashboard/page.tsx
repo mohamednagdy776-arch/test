@@ -22,6 +22,7 @@ import { resolveMediaUrl } from '@/lib/media';
 
 // ─── Greeting Banner ──────────────────────────────────────────────────────────
 function GreetingBanner() {
+  const router = useRouter();
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
   const name = (user?.fullName ?? user?.name)?.split(' ')[0] || user?.username || '';
@@ -50,7 +51,7 @@ function GreetingBanner() {
           </h2>
         </div>
         <button
-          onClick={() => document.getElementById('post-composer-trigger')?.click()}
+          onClick={() => router.push('/posts')}
           className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
           style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}>
           <PencilSimple size={15} weight="bold" />

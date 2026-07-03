@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useActiveSubscription, useCreateSubscription, useCancelSubscription } from '@/features/subscriptions/hooks';
 
-function PaymentModal({ plan, onClose, onConfirm, isPending }: { plan: { id: string; name: string; price: string }; onClose: () => void; onConfirm: () => void; isPending: boolean }) {
+function PaymentModal({ plan, billingPeriod, onClose, onConfirm, isPending }: { plan: { id: string; name: string; price: string }; billingPeriod: 'monthly' | 'annual'; onClose: () => void; onConfirm: () => void; isPending: boolean }) {
   const [method, setMethod] = useState<'card' | 'apple_pay' | 'bank'>('card');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
@@ -15,6 +15,13 @@ function PaymentModal({ plan, onClose, onConfirm, isPending }: { plan: { id: str
 
   const canSubmit = method !== 'card' || (cardNumber.replace(/\s/g,'').length === 16 && expiry.length === 5 && cvv.length >= 3);
 
+  // Mirror the annual-vs-monthly math shown on the plan cards — this modal
+  // previously always showed the flat monthly `plan.price`/"شهر" regardless
+  // of the selected billing period (#89).
+  const isAnnual = billingPeriod === 'annual' && plan.price !== 'مجاناً';
+  const displayPrice = isAnnual ? Math.round(Number(plan.price) * 10 / 12) : plan.price;
+  const annualTotal = Math.round(Number(plan.price) * 10);
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
       <div className="w-full max-w-sm rounded-3xl bg-[var(--card)] p-6 shadow-2xl space-y-5" onClick={e => e.stopPropagation()}>
@@ -22,7 +29,10 @@ function PaymentModal({ plan, onClose, onConfirm, isPending }: { plan: { id: str
           <h3 className="font-bold text-[var(--foreground)]">إتمام الاشتراك — {plan.name}</h3>
           <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)] text-xl">✕</button>
         </div>
-        <p className="text-2xl font-bold text-[var(--primary)] text-center">{plan.price} ر.س <span className="text-sm font-normal text-[var(--muted-foreground)]">/ شهر</span></p>
+        <p className="text-2xl font-bold text-[var(--primary)] text-center">{displayPrice} ر.س <span className="text-sm font-normal text-[var(--muted-foreground)]">/ شهر</span></p>
+        {isAnnual && (
+          <p className="text-center text-xs text-[var(--muted-foreground)] -mt-3">يُدفع سنوياً {annualTotal} ر.س</p>
+        )}
 
         <div className="flex gap-2">
           {(['card', 'apple_pay', 'bank'] as const).map(m => (
@@ -154,6 +164,7 @@ export default function UpgradePage() {
       {paymentPlan && (
         <PaymentModal
           plan={paymentPlan}
+          billingPeriod={billingPeriod}
           onClose={() => setPaymentPlan(null)}
           onConfirm={confirmPayment}
           isPending={createSub.isPending}
