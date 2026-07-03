@@ -53,4 +53,13 @@ export class MatchingController {
     const match = await this.matchingService.respondToMatch(id, user.id, 'rejected');
     return ok(match, 'Match rejected');
   }
+
+  // The web "تراجع عن الرفض" (Undo Reject) button had no dedicated endpoint
+  // and reused /accept, which set the match straight to Accepted instead of
+  // back to its default Pending state (#137).
+  @Patch(':id/undo-reject')
+  async undoReject(@Param('id') id: string, @CurrentUser() user: User) {
+    const match = await this.matchingService.undoReject(id, user.id);
+    return ok(match, 'Match restored to pending');
+  }
 }

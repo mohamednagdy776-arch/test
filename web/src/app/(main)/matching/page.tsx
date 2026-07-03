@@ -59,10 +59,10 @@ export default function MatchingPage() {
   });
   const matches: Match[] = data?.data ?? [];
 
-  const handleAction = async (matchId: string, action: 'accept' | 'reject') => {
+  const handleAction = async (matchId: string, action: 'accept' | 'reject' | 'undo-reject') => {
     setActionLoading(matchId + action);
     setActionError(null);
-    const newStatus = action === 'accept' ? 'accepted' : 'rejected';
+    const newStatus = action === 'accept' ? 'accepted' : action === 'reject' ? 'rejected' : 'pending';
 
     const prevAllData = queryClient.getQueryData<any>(['matches-all-counts']);
     if (prevAllData?.data) {
@@ -285,8 +285,9 @@ export default function MatchingPage() {
               key={match.id}
               match={match}
               onView={() => setDetailMatch(match)}
-              onAccept={match.status !== 'accepted' ? () => handleAction(match.id, 'accept') : undefined}
-              onReject={match.status !== 'rejected' ? () => handleAction(match.id, 'reject') : undefined}
+              onAccept={match.status === 'pending' ? () => handleAction(match.id, 'accept') : undefined}
+              onReject={match.status === 'pending' ? () => handleAction(match.id, 'reject') : undefined}
+              onUndoReject={match.status === 'rejected' ? () => handleAction(match.id, 'undo-reject') : undefined}
               onViewProfile={() => {
                 const uid = (match as any).otherUserId;
                 if (uid) router.push(`/profile/${uid}`);
@@ -295,7 +296,7 @@ export default function MatchingPage() {
                 const uid = (match as any).otherUserId;
                 if (uid) router.push(`/chat?user=${uid}`);
               }}
-              accepting={actionLoading === match.id + 'accept'}
+              accepting={actionLoading === match.id + 'accept' || actionLoading === match.id + 'undo-reject'}
               rejecting={actionLoading === match.id + 'reject'}
             />
           ))}

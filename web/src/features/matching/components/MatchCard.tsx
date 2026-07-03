@@ -83,6 +83,7 @@ interface Props {
   onView?: () => void;
   onAccept?: () => void;
   onReject?: () => void;
+  onUndoReject?: () => void;
   onViewProfile?: () => void;
   onSendMessage?: () => void;
   accepting?: boolean;
@@ -90,7 +91,7 @@ interface Props {
 }
 
 export const MatchCard = ({
-  match, onView, onAccept, onReject, onViewProfile, onSendMessage,
+  match, onView, onAccept, onReject, onUndoReject, onViewProfile, onSendMessage,
   accepting, rejecting,
 }: Props) => {
   const displayName = (match as any).otherUserName || (match as any).user?.fullName || 'مستخدم';
@@ -207,8 +208,8 @@ export const MatchCard = ({
               )}
             </>
           )}
-          {match.status === 'rejected' && onAccept && (
-            <button onClick={onAccept} disabled={accepting}
+          {match.status === 'rejected' && onUndoReject && (
+            <button onClick={onUndoReject} disabled={accepting}
               className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] disabled:opacity-50"
               style={{ border: '1px solid var(--border)', color: 'var(--accent)' }}>
               <ArrowCounterClockwise size={13} /> تراجع عن الرفض

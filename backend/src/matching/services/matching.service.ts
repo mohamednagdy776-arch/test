@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { HttpService } from '@nestjs/axios';
@@ -186,6 +186,20 @@ export class MatchingService {
       throw new ForbiddenException('Access denied');
     }
     match.status = status;
+    return this.matchesRepo.save(match);
+  }
+
+  // Reverts a rejected match to its default pending state (#137). Only valid
+  // from 'rejected' — this is a dedicated undo, not a generic status reset.
+  async undoReject(matchId: string, userId: string) {
+    const match = await this.matchesRepo.findOneOrFail({ where: { id: matchId }, relations: ['user1', 'user2'] });
+    if (match.user1.id !== userId && match.user2.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    if (match.status !== 'rejected') {
+      throw new BadRequestException('Only a rejected match can be undone');
+    }
+    match.status = 'pending';
     return this.matchesRepo.save(match);
   }
 
