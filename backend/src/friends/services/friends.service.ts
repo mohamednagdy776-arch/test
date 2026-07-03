@@ -122,8 +122,12 @@ export class FriendsService {
     if (!friendship) throw new NotFoundException('Friend request not found');
     if (friendship.addresseeId !== userId) throw new ForbiddenException('Not authorized');
 
-    friendship.status = FriendshipStatus.DECLINED;
-    return this.friendshipsRepo.save(friendship);
+    // Delete rather than leave status=DECLINED (like cancelRequest already
+    // does). A left-behind row hit the `uq_friendship_pair` unique constraint
+    // and sendRequest's existing-row check, permanently blocking the
+    // requester from ever sending a new request to this person again (#109).
+    await this.friendshipsRepo.delete(requestId);
+    return { success: true };
   }
 
   async cancelRequest(userId: string, requestId: string) {

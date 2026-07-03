@@ -5,6 +5,7 @@ import {
   MinLength,
   MaxLength,
   IsOptional,
+  IsNotEmpty,
   IsDateString,
   IsEnum,
   Validate,
@@ -23,9 +24,9 @@ const NAME_REGEX = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿a-zA-Z\s'-]+$/;
 // Username: Arabic + Latin + digits + . _ - , but never spaces (#54).
 const USERNAME_REGEX = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿a-zA-Z0-9._-]+$/;
 
-// Reject registrations from users under 18. dateOfBirth is optional, so an
-// absent value passes here (@IsOptional already short-circuits) and only a
-// provided-but-too-young date is rejected (#55).
+// Reject registrations from users under 18 (#55). dateOfBirth itself is
+// required (@IsNotEmpty below) — this constraint only handles the
+// too-young/malformed cases once a value is present.
 @ValidatorConstraint({ name: 'isAtLeast18', async: false })
 export class IsAtLeast18Constraint implements ValidatorConstraintInterface {
   validate(value: unknown): boolean {
@@ -84,10 +85,12 @@ export class RegisterDto {
   })
   username?: string;
 
+  // Required (#124) — was @IsOptional, so registration silently succeeded
+  // with no date of birth at all.
+  @IsNotEmpty()
   @IsDateString()
-  @IsOptional()
   @Validate(IsAtLeast18Constraint)
-  dateOfBirth?: string;
+  dateOfBirth: string;
 
   @IsEnum(Gender)
   @IsOptional()

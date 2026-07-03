@@ -111,8 +111,8 @@ export const UserCard = ({ user, onView }: Props) => {
             <Eye size={13} weight="fill" />
             عرض الملف
           </button>
-          {user.username && (
-            <button onClick={() => router.push(`/chat?username=${user.username}`)}
+          {user.id && (
+            <button onClick={() => router.push(`/chat?user=${user.id}`)}
               aria-label="إرسال رسالة"
               className="flex items-center justify-center w-10 h-10 rounded-xl transition-all hover:scale-105 active:scale-95"
               style={{ background: 'linear-gradient(135deg, var(--accent), #c8952e)', color: 'white' }}>

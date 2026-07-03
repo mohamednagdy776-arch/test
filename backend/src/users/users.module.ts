@@ -15,6 +15,7 @@ import { ColdStartService } from '../matching/services/cold-start.service';
 import { ReportsModule } from '../reports/reports.module';
 import { InterestsModule } from '../interests/interests.module';
 import { PhotoPrivacyModule } from '../photo-privacy/photo-privacy.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { PhotoPrivacyModule } from '../photo-privacy/photo-privacy.module';
     ReportsModule,
     InterestsModule,
     PhotoPrivacyModule,
+    SettingsModule,
   ],
   providers: [UsersService, ColdStartService],
   controllers: [UsersController, PublicProfileController],

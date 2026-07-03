@@ -17,6 +17,7 @@ import { SearchUsersDto } from '../dto/search-users.dto';
 import { ActivityLogQueryDto } from '../dto/activity-log.dto';
 import { FriendsService } from '../../friends/services/friends.service';
 import { PhotoPrivacyService } from '../../photo-privacy/photo-privacy.service';
+import { SettingsService } from '../../settings/services/settings.service';
 import { signMediaPath } from '../../common/utils/media-token';
 
 @Injectable()
@@ -30,6 +31,7 @@ export class UsersService {
     @InjectRepository(Post) private postsRepo: Repository<Post>,
     private friendsService: FriendsService,
     private photoPrivacyService: PhotoPrivacyService,
+    private settingsService: SettingsService,
     private dataSource: DataSource,
   ) {}
 
@@ -579,7 +581,23 @@ export class UsersService {
     return { data, total, page, totalPages: Math.max(1, Math.ceil(total / limit)) };
   }
 
-  async getFriends(userId: string, page = 1, limit = 20) {
+  async getFriends(userId: string, page = 1, limit = 20, viewerId?: string) {
+    // "Who can view my friends" was never consulted at all — the friends list
+    // stayed visible to every viewer regardless of the setting (#110). Same
+    // fix shape as getUserPosts (#103).
+    if (viewerId && viewerId !== userId) {
+      try {
+        const privacy: any = await this.settingsService.getPrivacySettings(userId);
+        const setting = privacy?.whoCanSeeFriends ?? 'friends';
+        if (setting === 'only_me') return { data: [], total: 0 };
+        if (setting === 'friends' || setting === 'friends_of_friends') {
+          const friendIds = await this.friendsService.getFriendIds(userId);
+          if (!friendIds.includes(viewerId)) return { data: [], total: 0 };
+        }
+      } catch {
+        /* fail open on privacy-lookup errors, matching the existing pattern elsewhere */
+      }
+    }
     return this.friendsService.getFriends(userId, page, limit);
   }
 

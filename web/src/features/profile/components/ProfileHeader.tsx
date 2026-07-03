@@ -154,7 +154,10 @@ export const ProfileHeader = ({
   return (
     <div className="rounded-2xl bg-[var(--card)] shadow-card-hover border border-[var(--border)]/60 overflow-hidden transition-all duration-300 hover:shadow-glow-lg">
       {/* Cover Photo with enhanced styling */}
-      <div className="relative h-56 bg-gradient-to-br from-[var(--primary)] via-[var(--secondary)] to-[var(--muted)] overflow-hidden group">
+      {/* Match the 16:5 ratio the upload cropper (aspectRatio=16/5 below) produces —
+          a fixed height regardless of container width cropped a different slice at
+          every breakpoint, showing the cover stretched/mis-cropped (#94). */}
+      <div className="relative w-full aspect-[16/5] bg-gradient-to-br from-[var(--primary)] via-[var(--secondary)] to-[var(--muted)] overflow-hidden group">
         {mediaUrl(profile.coverUrl) ? (
           // Plain <img>, not next/image: next/image mis-cached freshly-uploaded
           // signed-token media and rendered a stale/blank green-pad cover.

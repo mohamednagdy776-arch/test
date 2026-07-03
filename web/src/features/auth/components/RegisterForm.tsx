@@ -139,7 +139,10 @@ export const RegisterForm = () => {
       setError('اسم المستخدم يجب أن يكون 3-30 حرفاً ويحتوي على أحرف وأرقام والرموز . _ - فقط (بدون مسافات)'); return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) { setError('صيغة البريد الإلكتروني غير صحيحة'); return; }
-    if (form.dateOfBirth && ageFrom(form.dateOfBirth) < 18) { setError('يجب أن يكون عمرك 18 عاماً على الأقل للتسجيل'); return; }
+    // dateOfBirth is required (#124) — the backend now rejects registration
+    // without it too, but block the submit locally with a clear message.
+    if (!form.dateOfBirth) { setError('يرجى إدخال تاريخ الميلاد'); return; }
+    if (ageFrom(form.dateOfBirth) < 18) { setError('يجب أن يكون عمرك 18 عاماً على الأقل للتسجيل'); return; }
     if (!/^\+?[1-9]\d{6,14}$/.test(form.phone.trim())) { setError('رقم الهاتف غير صحيح'); return; }
     if (!form.gender) { setError('يرجى اختيار الجنس'); return; }
     if (!agreedToTerms) { setError('يرجى الموافقة على الشروط والأحكام'); return; }
@@ -152,23 +155,22 @@ export const RegisterForm = () => {
     setLoading(true);
     try {
       // Only send optional fields when they have a value. The backend marks
-      // username/dateOfBirth/gender @IsOptional(), but class-validator only
-      // skips null/undefined — an empty string still runs @IsDateString() and
-      // 400s. Sending dateOfBirth: '' (the default when the user leaves the
-      // non-required birth-date blank) was rejecting otherwise-valid signups.
+      // username/gender @IsOptional(), but class-validator only skips
+      // null/undefined — an empty string still runs validators and 400s.
+      // dateOfBirth is required (#124) and always set by this point (checked above).
       const payload: {
         email: string; phone: string; password: string;
         firstName?: string; lastName?: string; username?: string;
-        dateOfBirth?: string; gender?: string;
+        dateOfBirth: string; gender?: string;
       } = {
         email: form.email.trim(),
         phone: form.phone.trim(),
         password: form.password,
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
+        dateOfBirth: form.dateOfBirth,
       };
       if (form.username.trim()) payload.username = form.username.trim();
-      if (form.dateOfBirth) payload.dateOfBirth = form.dateOfBirth;
       if (form.gender) payload.gender = form.gender;
       // Tokens are set as HttpOnly cookies by the backend — nothing to store
       // client-side (avoids XSS token theft from localStorage).
@@ -238,7 +240,7 @@ export const RegisterForm = () => {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <label className="block text-sm font-medium text-[#374151]">تاريخ الميلاد</label>
-          <input type="date" value={form.dateOfBirth} onChange={set('dateOfBirth')} max={maxBirthDate}
+          <input type="date" required value={form.dateOfBirth} onChange={set('dateOfBirth')} max={maxBirthDate}
             className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200" />
         </div>
         <div className="space-y-2">

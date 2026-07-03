@@ -196,8 +196,8 @@ export class UsersController {
   }
 
   @Get(':id/friends')
-  async getFriends(@Param('id') id: string, @Query() query: PaginationDto) {
-    return ok(await this.usersService.getFriends(id, query.page!, query.limit!));
+  async getFriends(@Param('id') id: string, @Query() query: PaginationDto, @CurrentUser() user: User) {
+    return ok(await this.usersService.getFriends(id, query.page!, query.limit!, user.id));
   }
 
   @Get(':id/photos')
