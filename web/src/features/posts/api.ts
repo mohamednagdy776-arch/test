@@ -16,13 +16,21 @@ export const postsApi = {
   createPost: (groupId: string, data: any) =>
     apiClient.post(`/posts`, { ...data, ...(groupId ? { groupId } : {}) }).then((r) => r.data),
 
-  createPostWithMedia: (groupId: string, content: string, file: File) => {
+  createPostWithMedia: async (groupId: string, content: string, file: File) => {
+    // POST /groups/:id/posts/upload never existed on the backend (404) — the
+    // real media-upload endpoint is generic (/upload/media), then create the
+    // post separately with the returned mediaUrl (#101).
     const formData = new FormData();
-    formData.append('content', content);
     formData.append('file', file);
-    return apiClient.post(`/groups/${groupId}/posts/upload`, formData, {
+    const uploadRes = await apiClient.post('/upload/media', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-    }).then((r) => r.data);
+    });
+    const { url, type } = uploadRes.data?.data ?? {};
+    const body = { content, mediaUrl: url, mediaType: type };
+    const createRes = groupId
+      ? await apiClient.post(`/groups/${groupId}/posts`, body)
+      : await apiClient.post('/posts', body);
+    return createRes.data;
   },
 
   deletePost: (postId: string) =>
