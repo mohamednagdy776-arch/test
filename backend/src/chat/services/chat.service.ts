@@ -100,6 +100,15 @@ export class ChatService {
   // all incoming count). Backs both the per-thread badge and the global counter
   // so they stay consistent and reset when a thread is opened (#63).
   private async getUnreadCountsByConversation(userId: string): Promise<Map<string, number>> {
+    // ConversationParticipant has a scalar `conversationId`/`userId` primary key
+    // AND a separate `conversation`/`user` relation with its own @JoinColumn — per
+    // the note on resolveOtherUser above, that relation's FK columns are a distinct,
+    // unpopulated pair, so joining through them (or through the equally-named raw
+    // snake_case columns, which map to that same unpopulated relation) always
+    // matched zero rows — the actual root cause of the counter being stuck at 0,
+    // even for never-read threads. Referencing the scalar property names directly
+    // (`p.conversationId`/`p.userId`) resolves via metadata to whichever column is
+    // truly populated, sidestepping the ambiguity (#63 regression fix).
     const rows = await this.messagesRepo
       .createQueryBuilder('m')
       .select('m.conversation_id', 'conversationId')
@@ -107,12 +116,12 @@ export class ChatService {
       .innerJoin(
         ConversationParticipant,
         'p',
-        'p.conversation_id = m.conversation_id AND p.user_id = :userId',
+        'p.conversationId = m.conversation_id AND p.userId = :userId',
         { userId },
       )
       .where('m.sender_id != :userId', { userId })
-      .andWhere('m.deleted_at IS NULL')
-      .andWhere('(p.last_read_at IS NULL OR m.created_at > p.last_read_at)')
+      .andWhere('m.deletedAt IS NULL')
+      .andWhere('(p.lastReadAt IS NULL OR m.createdAt > p.lastReadAt)')
       .groupBy('m.conversation_id')
       .getRawMany<{ conversationId: string; count: string }>();
     return new Map(rows.map((r) => [r.conversationId, Number(r.count)]));

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Post, Put, UseGuards, Req, Res, HttpCode, Query, Logger } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Post, Put, UseGuards, Req, Res, HttpCode, Query, Logger } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Response } from 'express';
 import { AuthGuard } from '@nestjs/passport';
@@ -212,8 +212,9 @@ export class AuthController {
 
   @Post('delete')
   @UseGuards(AuthGuard('jwt'))
-  async deleteAccount(@Req() req: any, @Res({ passthrough: true }) res: Response) {
-    const result = await this.authService.deleteAccount(req.user.id);
+  async deleteAccount(@Req() req: any, @Body() body: { password?: string }, @Res({ passthrough: true }) res: Response) {
+    if (!body?.password) throw new BadRequestException('Password is required');
+    const result = await this.authService.deleteAccount(req.user.id, body.password);
     clearAuthCookies(res);
     return ok(result, 'Account scheduled for deletion');
   }

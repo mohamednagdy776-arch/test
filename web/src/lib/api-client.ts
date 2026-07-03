@@ -20,11 +20,14 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (res) => res,
   (error) => {
-    // A 401 on the login/auth endpoints means "bad credentials", not "session
-    // expired". Let those propagate so the form can show an inline error
-    // instead of forcing a full-page redirect that wipes the message.
+    // A 401 on these endpoints means "bad credentials/code", not "session
+    // expired" — the JWT guard already passed, a *service-level* check (wrong
+    // password/2FA code) rejected the request. Let those propagate so the form
+    // can show an inline error instead of forcing a full-page redirect that
+    // wipes the message (#144: wrong 2FA setup code, #146: wrong delete-account
+    // password both silently logged the user out via this interceptor).
     const url: string = error.config?.url ?? '';
-    const isAuthAttempt = /\/auth\/(login|register|reactivate|2fa\/verify-login)/.test(url);
+    const isAuthAttempt = /\/auth\/(login|register|reactivate|2fa\/verify|2fa\/disable|2fa\/backup-codes|delete|change-password)/.test(url);
     if (error.response?.status === 401 && typeof window !== 'undefined' && !isAuthAttempt) {
       localStorage.removeItem('access_token');
       window.location.href = '/login';

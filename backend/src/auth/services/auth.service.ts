@@ -152,10 +152,10 @@ export class AuthService {
       return { requiresTwoFactor: true, preAuthToken };
     }
 
-    await this.handleSuccessfulLogin(user, dto.rememberMe, deviceInfo);
+    const sessionId = await this.handleSuccessfulLogin(user, dto.rememberMe, deviceInfo);
 
     return {
-      ...this.signTokens(user, dto.rememberMe ? '30d' : '7d'),
+      ...this.signTokens(user, dto.rememberMe ? '30d' : '7d', sessionId),
       user: this.sanitizeUser(user),
     };
   }
@@ -184,10 +184,10 @@ export class AuthService {
     }
 
     await this.usersRepo.update(userId, { twoFactorVerified: true });
-    await this.handleSuccessfulLogin(user, false, deviceInfo);
+    const sessionId = await this.handleSuccessfulLogin(user, false, deviceInfo);
 
     return {
-      ...this.signTokens(user),
+      ...this.signTokens(user, '7d', sessionId),
       user: this.sanitizeUser(user),
     };
   }
@@ -236,9 +236,9 @@ export class AuthService {
     }
   }
 
-  private async handleSuccessfulLogin(user: User, rememberMe?: boolean, deviceInfo?: { browser?: string; ip?: string; deviceName?: string }) {
-    await this.usersRepo.update(user.id, { 
-      failedLoginAttempts: 0, 
+  private async handleSuccessfulLogin(user: User, rememberMe?: boolean, deviceInfo?: { browser?: string; ip?: string; deviceName?: string }): Promise<string> {
+    await this.usersRepo.update(user.id, {
+      failedLoginAttempts: 0,
       lockedUntil: null as any,
       status: user.status === 'pending' ? 'active' : user.status,
     });
@@ -264,6 +264,12 @@ export class AuthService {
       deviceInfo?.deviceName || 'Unknown device',
       deviceInfo?.ip || 'Unknown IP'
     );
+
+    // Returned so the caller can bind the access token to this session (#143)
+    // — without this, "Revoke" on the sessions list flipped a DB row that the
+    // JWT guard never consulted, so the already-issued access token kept
+    // authenticating on the target device until it naturally expired.
+    return session.id;
   }
 
   // Store only a SHA-256 hash of email/reset tokens. The raw token goes in the
@@ -425,9 +431,15 @@ export class AuthService {
       const user = await this.usersRepo.findOne({ where: { id: payload.sub } });
       if (!user || user.isDeactivated) throw new UnauthorizedException();
 
-      // Issue new refresh token and create a fresh session
-      const newTokens = this.signTokens(user);
-      const refreshTokenHash = await bcrypt.hash(newTokens.refreshToken, 12);
+      // Issue a new refresh token and create a fresh session BEFORE signing the
+      // access token, so the access token can be bound to that session's id
+      // (#143) — otherwise a "Revoke" on this refreshed session would flip a DB
+      // row the JWT guard never checks, and the device stays logged in.
+      const refreshTokenJwt = this.jwtService.sign(
+        { sub: user.id, type: 'refresh' },
+        { expiresIn: '7d' },
+      );
+      const refreshTokenHash = await bcrypt.hash(refreshTokenJwt, 12);
       const newSession = this.sessionsRepo.create({
         userId: user.id,
         refreshTokenHash,
@@ -435,7 +447,12 @@ export class AuthService {
       });
       await this.sessionsRepo.save(newSession);
 
-      return newTokens;
+      const accessToken = this.jwtService.sign(
+        { sub: user.id, role: user.accountType, sessionId: newSession.id },
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
+      );
+
+      return { accessToken, refreshToken: refreshTokenJwt };
     } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -600,18 +617,25 @@ export class AuthService {
     // and issue tokens so the controller's setAuthCookies actually logs the user
     // in (previously this returned a message only, leaving them unauthenticated — #146).
     await this.sessionsRepo.delete({ userId: user.id });
-    await this.handleSuccessfulLogin(user, false, deviceInfo);
+    const sessionId = await this.handleSuccessfulLogin(user, false, deviceInfo);
 
     return {
-      ...this.signTokens(user),
+      ...this.signTokens(user, '7d', sessionId),
       user: this.sanitizeUser(user),
       message: 'Account reactivated',
     };
   }
 
-  async deleteAccount(userId: string) {
+  async deleteAccount(userId: string, password: string) {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
+
+    // The password was accepted by the client but never checked server-side, so
+    // deletion always succeeded regardless of what was typed and the frontend's
+    // unconditional post-success logout made a wrong password look like it had
+    // logged the user out instead of showing a validation error (#146).
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) throw new UnauthorizedException('Incorrect password');
 
     const scheduledDeletion = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await this.usersRepo.update(userId, { 
@@ -647,10 +671,13 @@ export class AuthService {
     };
   }
 
-  private signTokens(user: User, refreshExpiry = '7d') {
+  private signTokens(user: User, refreshExpiry = '7d', sessionId?: string) {
     const payload = { sub: user.id, role: user.accountType };
     return {
-      accessToken: this.jwtService.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }),
+      accessToken: this.jwtService.sign(
+        sessionId ? { ...payload, sessionId } : payload,
+        { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
+      ),
       refreshToken: this.jwtService.sign({ ...payload, type: 'refresh' }, { expiresIn: refreshExpiry }),
     };
   }
@@ -783,10 +810,10 @@ export class AuthService {
     }
 
     const deviceInfo = { browser: 'OAuth', ip: '0.0.0.0', deviceName: 'OAuth login' };
-    await this.handleSuccessfulLogin(user, false, deviceInfo);
+    const sessionId = await this.handleSuccessfulLogin(user, false, deviceInfo);
 
     return {
-      ...this.signTokens(user),
+      ...this.signTokens(user, '7d', sessionId),
       user: this.sanitizeUser(user),
     };
   }
