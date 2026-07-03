@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Brackets, Repository } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 import { Profile } from '../../users/entities/profile.entity';
 import { Post } from '../../posts/entities/post.entity';
@@ -23,24 +23,35 @@ export class SearchService {
     const q = `%${query.trim()}%`;
 
     const userSearch = async () => {
+      // The free-text match is itself a big OR group; every filter below
+      // (self-exclusion, active status, block list, age, gender) MUST bind
+      // as a sibling AND condition, not get absorbed into that OR group. The
+      // previous version passed the OR group to `.where()` as one long raw
+      // multi-line string and relied on QueryBuilder's implicit wrapping —
+      // live behaviour showed every subsequent `.andWhere()` having no
+      // effect at all (a search for your own username returned yourself;
+      // minAge/maxAge/gender were no-ops), which is exactly the symptom of
+      // the OR group not actually being isolated in its own parens. Using an
+      // explicit `Brackets` group removes any ambiguity (#119, #131).
       const qb = this.userRepo
         .createQueryBuilder('user')
         .leftJoinAndSelect('user.profile', 'profile')
         .where(
-          `user.firstName      ILIKE :q
-        OR user.lastName       ILIKE :q
-        OR user.username       ILIKE :q
-        OR user.fullName       ILIKE :q
-        OR profile.fullName    ILIKE :q
-        OR profile.country     ILIKE :q
-        OR profile.city        ILIKE :q
-        OR profile.jobTitle    ILIKE :q
-        OR profile.bio         ILIKE :q
-        OR profile.sect        ILIKE :q
-        OR profile.education   ILIKE :q
-        OR profile.lifestyle   ILIKE :q
-        OR profile.jobTitle    ILIKE :q`,
-          { q },
+          new Brackets((qb2) => {
+            qb2
+              .where('user.firstName ILIKE :q', { q })
+              .orWhere('user.lastName ILIKE :q', { q })
+              .orWhere('user.username ILIKE :q', { q })
+              .orWhere('user.fullName ILIKE :q', { q })
+              .orWhere('profile.fullName ILIKE :q', { q })
+              .orWhere('profile.country ILIKE :q', { q })
+              .orWhere('profile.city ILIKE :q', { q })
+              .orWhere('profile.jobTitle ILIKE :q', { q })
+              .orWhere('profile.bio ILIKE :q', { q })
+              .orWhere('profile.sect ILIKE :q', { q })
+              .orWhere('profile.education ILIKE :q', { q })
+              .orWhere('profile.lifestyle ILIKE :q', { q });
+          }),
         )
         .andWhere('user.id != :userId', { userId })
         .andWhere('user.status = :status', { status: 'active' })
