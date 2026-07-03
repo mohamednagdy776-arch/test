@@ -37,6 +37,11 @@ export class UsersService {
   async getUserPosts(idOrUsername: string, page: number, limit: number) {
     const userId = await this.resolveUserId(idOrUsername);
     if (!userId) return { data: [] as Post[], total: 0 };
+    // resolveUserId's UUID branch returns the id as-is without checking the DB
+    // at all, so a deleted/deactivated account's posts kept showing here even
+    // though the deletion flow promises content is gone (#149).
+    const author = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!author || author.isDeactivated) return { data: [] as Post[], total: 0 };
     const [data, total] = await this.postsRepo.findAndCount({
       where: { user: { id: userId } },
       order: { createdAt: 'DESC' },

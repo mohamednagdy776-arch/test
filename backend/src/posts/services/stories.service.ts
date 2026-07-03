@@ -62,6 +62,9 @@ export class StoriesService {
       .leftJoinAndSelect('user.profile', 'profile')
       .where('story.createdAt > :twentyFourHoursAgo', { twentyFourHoursAgo })
       .andWhere('story.isArchived = :isArchived', { isArchived: false })
+      // Deleting an account is supposed to take its content down too, but
+      // nothing filtered stories by the author's deactivated flag (#149).
+      .andWhere('user.isDeactivated = false')
       .orderBy('story.createdAt', 'DESC')
       .getMany();
     const grouped = stories.reduce((acc: Record<string, any[]>, story) => {

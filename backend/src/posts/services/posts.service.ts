@@ -178,6 +178,11 @@ export class PostsService {
   }
 
   private applyAudienceFilter(qb: SelectQueryBuilder<Post>, viewerId?: string) {
+    // Deleting an account promises the user's content is gone too ("سيتم حذف
+    // جميع منشوراتك... نهائياً"), but nothing ever hid it — deleteAccount only
+    // flags the user row, and no post query checked that flag, so a deleted
+    // account's posts stayed fully visible to everyone (#149).
+    qb.andWhere('user.isDeactivated = false');
     if (viewerId) {
       qb.andWhere(`(
         post.user_id = :viewerId
@@ -212,6 +217,7 @@ export class PostsService {
       relations: ['user', 'group', 'originalPost', 'originalPost.user'],
     });
     if (!post) throw new NotFoundException('Post not found');
+    if (post.user?.isDeactivated) throw new NotFoundException('Post not found'); // #149
 
     if (post.userId === viewerId) return post;
 
