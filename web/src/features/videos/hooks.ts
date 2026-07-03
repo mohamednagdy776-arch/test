@@ -64,12 +64,22 @@ export function useDeleteVideo() {
   });
 }
 
+// Patch the cached video detail with the like response instead of
+// invalidating (which would refetch GET /videos/:id — and that endpoint
+// increments the view counter on every fetch, so liking/unliking was
+// incrementing views as a side effect) (#150).
+function patchVideoLikeCache(qc: ReturnType<typeof useQueryClient>, videoId: string, result: any) {
+  qc.setQueryData(['video', videoId], (old: any) =>
+    old?.data ? { ...old, data: { ...old.data, ...result } } : old,
+  );
+}
+
 export function useLikeVideo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (videoId: string) => videosApi.likeVideo(videoId),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ['video', variables] });
+    onSuccess: (data, variables) => {
+      patchVideoLikeCache(qc, variables, data?.data);
     },
   });
 }
@@ -78,8 +88,8 @@ export function useUnlikeVideo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (videoId: string) => videosApi.unlikeVideo(videoId),
-    onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ['video', variables] });
+    onSuccess: (data, variables) => {
+      patchVideoLikeCache(qc, variables, data?.data);
     },
   });
 }

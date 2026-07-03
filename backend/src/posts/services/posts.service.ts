@@ -339,6 +339,10 @@ export class PostsService {
     if (original.audience === 'only_me') {
       throw new ForbiddenException('Private posts cannot be shared');
     }
+    // Sharing your own post just creates a duplicate in the feed (#100).
+    if (original.userId === userId) {
+      throw new ForbiddenException('You cannot share your own post');
+    }
 
     const shared = this.postsRepo.create({
       content: content || '',

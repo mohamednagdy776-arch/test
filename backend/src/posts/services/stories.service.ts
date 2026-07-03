@@ -121,6 +121,12 @@ export class StoriesService {
     }
     const story = await this.storyRepo.findOne({ where: { id: storyId } });
     if (!story) throw new NotFoundException('Story not found');
+    // Reacting to your own story always silently "succeeded" client-side even
+    // though the UI hides the reaction bar for it — reject explicitly so any
+    // client-side race never fakes a success toast (#99).
+    if (story.userId === userId) {
+      throw new ForbiddenException('Cannot react to your own story');
+    }
 
     let reaction = await this.reactionRepo.findOne({ where: { storyId, userId } });
     if (reaction) {
@@ -133,20 +139,18 @@ export class StoriesService {
     }
     await this.reactionRepo.save(reaction);
 
-    // Notify the story owner (never for self-reactions). Non-fatal.
-    if (story.userId !== userId) {
-      try {
-        await this.notifications.notifyUser(
-          story.userId,
-          userId,
-          'story_reaction',
-          `reacted ${emoji} to your story`,
-          'story',
-          storyId,
-        );
-      } catch {
-        /* notification failure must not fail the reaction */
-      }
+    // Notify the story owner. Non-fatal.
+    try {
+      await this.notifications.notifyUser(
+        story.userId,
+        userId,
+        'story_reaction',
+        `reacted ${emoji} to your story`,
+        'story',
+        storyId,
+      );
+    } catch {
+      /* notification failure must not fail the reaction */
     }
     return { success: true, emoji };
   }

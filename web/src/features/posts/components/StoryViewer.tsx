@@ -87,9 +87,12 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     }
   };
 
-  // Quick emoji reaction to the current story (#60).
+  // Quick emoji reaction to the current story (#60). Defense-in-depth against
+  // reacting to your own story: the reaction bar is already gated by
+  // !isOwnStory, but that depends on the async 'my-profile' query, which can
+  // still be loading on the first render — guard here too (#99).
   const handleReact = (emoji: string) => {
-    if (!currentStory?.id) return;
+    if (!currentStory?.id || isOwnStory) return;
     reactToStory.mutate(
       { storyId: currentStory.id, emoji },
       {

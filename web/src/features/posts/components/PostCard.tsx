@@ -504,10 +504,12 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
             <ChatCircle size={18} />
             تعليقات
           </button>
-          <button onClick={() => setShowShareModal(true)} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50 hover:-translate-y-0.5 hover:shadow-soft transition-all duration-300 flex-1 justify-center">
-            <ShareNetwork size={18} />
-            مشاركة
-          </button>
+          {!isOwnPost && (
+            <button onClick={() => setShowShareModal(true)} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50 hover:-translate-y-0.5 hover:shadow-soft transition-all duration-300 flex-1 justify-center">
+              <ShareNetwork size={18} />
+              مشاركة
+            </button>
+          )}
         </div>
       </div>
       {showComments && <div className="px-4 pb-4"><CommentSection postId={post.id} /></div>}
