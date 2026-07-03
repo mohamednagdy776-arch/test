@@ -49,6 +49,11 @@ export class UsersService {
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
       .leftJoinAndSelect('post.group', 'group')
+      // The feed queries (posts.service.ts) also join originalPost so a
+      // shared post can render its source; this query never did, so shared
+      // posts rendered broken/empty on the profile Posts tab only (#98).
+      .leftJoinAndSelect('post.originalPost', 'originalPost')
+      .leftJoinAndSelect('originalPost.user', 'originalPostUser')
       .where('post.user_id = :userId', { userId })
       .orderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)

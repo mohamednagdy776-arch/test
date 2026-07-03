@@ -185,7 +185,13 @@ export const GroupList = () => {
       if (activeTab === 'private') return [];
       return ((searchData?.data as any)?.otherGroups || []);
     }
-    if (activeTab === 'my') return ((myGroupsData?.data as any[]) || []);
+    if (activeTab === 'my') {
+      // The category select is shown on this tab too, but useMyGroups/the
+      // backend "my groups" endpoint never took a category param — selecting
+      // one silently did nothing (#68). Filter client-side.
+      const list = (myGroupsData?.data as any[]) || [];
+      return category ? list.filter((g: any) => g.category === category) : list;
+    }
     if (activeTab === 'private') return ((privateGroupsData?.data as any[]) || []);
     return ((publicGroupsData?.data as any[]) || []);
   };

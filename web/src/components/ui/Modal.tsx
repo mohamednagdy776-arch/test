@@ -1,6 +1,7 @@
 'use client';
 import { cn } from '@/lib/utils';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps { open: boolean; onClose: () => void; title?: string; children: React.ReactNode; size?: 'sm' | 'md' | 'lg' | 'xl'; }
 const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' };
@@ -11,8 +12,16 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
     if (open) { document.addEventListener('keydown', handleEscape); document.body.style.overflow = 'hidden'; }
     return () => { document.removeEventListener('keydown', handleEscape); document.body.style.overflow = ''; };
   }, [open, handleEscape]);
-  if (!open) return null;
-  return (
+  // Rendered via a portal to document.body (#106): an ancestor with a
+  // running/filled opacity or transform animation (e.g. `.animate-fade-in`
+  // on the (main) layout's <main>) creates its own stacking context, which
+  // trapped this modal's z-50 below the sticky Navbar's z-40 regardless of
+  // the modal's own z-index. Mounting at the document root sidesteps any
+  // ancestor's stacking context entirely.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!open || !mounted) return null;
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
       <div className="fixed inset-0 bg-[var(--primary)]/80 backdrop-blur-glass-sm" onClick={onClose} />
       <div className={cn('relative z-50 w-full rounded-2xl bg-[var(--card)] shadow-glow-lg border border-[var(--border)]/60 animate-scale-in', sizes[size])}>
@@ -26,6 +35,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
         )}
         <div className="p-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -5,12 +5,14 @@ import { Video } from '../entities/video.entity';
 import { VideoLike } from '../entities/video-like.entity';
 import { CreateVideoDto } from '../dto/create-video.dto';
 import { User } from '../../auth/entities/user.entity';
+import { CdnService } from './cdn.service';
 
 @Injectable()
 export class VideosService {
   constructor(
     @InjectRepository(Video) private videosRepo: Repository<Video>,
     @InjectRepository(VideoLike) private likesRepo: Repository<VideoLike>,
+    private cdnService: CdnService,
   ) {}
 
   // Normalize a video entity into the shape the web app reads. The raw entity
@@ -27,6 +29,10 @@ export class VideosService {
     return {
       ...v,
       user: u ? { id: u.id, name, username: u.username ?? null } : null,
+      // Cards read `thumbnailUrl` (a resolved CDN URL); the raw entity only
+      // has the stored `thumbnail` key/path, so cards never showed a preview
+      // (#74/#76).
+      thumbnailUrl: v.thumbnail ? this.cdnService.getThumbnailUrl(v.thumbnail) : null,
       viewCount: v.views ?? 0,
       viewsCount: v.views ?? 0,
       likeCount,

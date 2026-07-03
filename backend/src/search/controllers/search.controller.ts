@@ -16,6 +16,7 @@ export class SearchController {
     @Query('category') category: string,
     @Query('minAge') minAge: string,
     @Query('maxAge') maxAge: string,
+    @Query('gender') gender: string,
     @CurrentUser() user: User,
   ) {
     if (!q || q.trim().length === 0) {
@@ -24,7 +25,7 @@ export class SearchController {
       });
     }
     const results = await this.searchService.search(
-      q, user.id, category, this.parseAge(minAge), this.parseAge(maxAge),
+      q, user.id, category, this.parseAge(minAge), this.parseAge(maxAge), gender || undefined,
     );
     return ok(results);
   }

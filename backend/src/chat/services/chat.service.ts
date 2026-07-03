@@ -378,6 +378,10 @@ export class ChatService {
 
     // Relationship gate: a 1:1 conversation needs an accepted match OR an
     // accepted friendship (#805). Friends can DM without being matched.
+    // Exception: the target may explicitly opt OUT of this gate via "who can
+    // message you" = public — that setting otherwise had no effect at all,
+    // since this hard gate ran before assertCanMessage ever got a chance to
+    // allow a stranger through (#102).
     const match = await this.matchesRepo.findOne({
       where: [
         { user1: { id: userId }, user2: { id: targetUserId } },
@@ -385,10 +389,19 @@ export class ChatService {
       ],
     });
     const isMatched = !!match && ['accepted', 'chat'].includes(match.status);
+    let targetAllowsPublicMessages = false;
     if (!isMatched) {
       const friendIds = await this.friendsService.getFriendIds(userId);
       if (!friendIds.includes(targetUserId)) {
-        throw new ForbiddenException('You must be matched or friends before starting a conversation');
+        try {
+          const privacy: any = await this.settingsService.getPrivacySettings(targetUserId);
+          targetAllowsPublicMessages = privacy?.whoCanSendMessages === 'public';
+        } catch {
+          /* fail closed on lookup errors — keep the default relationship gate */
+        }
+        if (!targetAllowsPublicMessages) {
+          throw new ForbiddenException('You must be matched or friends before starting a conversation');
+        }
       }
     }
 

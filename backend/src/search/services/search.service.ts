@@ -19,7 +19,7 @@ export class SearchService {
     @InjectRepository(Event)   private eventRepo: Repository<Event>,
   ) {}
 
-  async search(query: string, userId: string, category?: string, minAge?: number, maxAge?: number) {
+  async search(query: string, userId: string, category?: string, minAge?: number, maxAge?: number, gender?: string) {
     const q = `%${query.trim()}%`;
 
     const userSearch = async () => {
@@ -55,6 +55,9 @@ export class SearchService {
       // #24: age filters (already sanitized in the controller — negatives ignored).
       if (minAge) qb.andWhere('profile.age >= :minAge', { minAge });
       if (maxAge) qb.andWhere('profile.age <= :maxAge', { maxAge });
+      // The gender filter was accepted by the frontend but silently dropped
+      // before reaching this endpoint — see #119, #131.
+      if (gender) qb.andWhere('user.gender = :gender', { gender });
       const users = await qb.take(20).getMany();
 
       return users.map(u => ({

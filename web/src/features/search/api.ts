@@ -84,7 +84,12 @@ export const searchApi = {
     apiClient.get('/users/search', { params }).then((r) => r.data),
 
   searchAll: async (params: SearchParams): Promise<SearchResult> => {
-    const { type = 'all', q, cursor, limit = 12, minAge, maxAge, ...rest } = params;
+    // gender is the only extra filter field GET /search's backend actually
+    // supports today — the rest (country/city/sect/lifestyle/education) were
+    // never wired server-side, so forwarding them would be a no-op; gender
+    // was silently dropped here too, so the Gender filter never took effect
+    // regardless of the query text (#119, #131).
+    const { type = 'all', q, cursor, limit = 12, minAge, maxAge, gender } = params;
     const results: SearchResult = { hasMore: false, nextCursor: undefined };
 
     const categoryMap: Record<string, string> = {
@@ -97,7 +102,7 @@ export const searchApi = {
     const category = type === 'all' ? undefined : categoryMap[type];
 
     try {
-      const res = await apiClient.get('/search', { params: { q, category, limit, cursor, minAge, maxAge } });
+      const res = await apiClient.get('/search', { params: { q, category, limit, cursor, minAge, maxAge, gender } });
       const data = res.data?.data ?? res.data ?? {};
 
       if (data.users) results.users = data.users;
