@@ -34,7 +34,7 @@ export class UsersService {
   ) {}
 
   // A user's own posts (the profile "posts" tab). Accepts a UUID or username.
-  async getUserPosts(idOrUsername: string, page: number, limit: number) {
+  async getUserPosts(idOrUsername: string, page: number, limit: number, viewerId?: string) {
     const userId = await this.resolveUserId(idOrUsername);
     if (!userId) return { data: [] as Post[], total: 0 };
     // resolveUserId's UUID branch returns the id as-is without checking the DB
@@ -42,13 +42,43 @@ export class UsersService {
     // though the deletion flow promises content is gone (#149).
     const author = await this.usersRepo.findOne({ where: { id: userId } });
     if (!author || author.isDeactivated) return { data: [] as Post[], total: 0 };
-    const [data, total] = await this.postsRepo.findAndCount({
-      where: { user: { id: userId } },
-      order: { createdAt: 'DESC' },
-      skip: (page - 1) * limit,
-      take: limit,
-      relations: ['user', 'group'],
-    });
+
+    const qb = this.postsRepo
+      .createQueryBuilder('post')
+      .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('post.group', 'group')
+      .where('post.user_id = :userId', { userId })
+      .orderBy('post.createdAt', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    // The audience of each post is set from the author's "who can see my
+    // posts" privacy setting at creation time (posts.service.ts createPost).
+    // This endpoint never checked it at all — posts stayed visible to every
+    // viewer regardless of the Private setting (#103). Mirror the same
+    // audience+friendship check `PostsService.applyAudienceFilter` uses for
+    // the main feed so the profile "Posts" tab is consistent with it.
+    if (viewerId && viewerId !== userId) {
+      qb.andWhere(`(
+        post.audience = 'public'
+        OR (
+          post.audience IN ('friends', 'friends_of_friends')
+          AND EXISTS (
+            SELECT 1 FROM friendships f
+            WHERE f.status = 'accepted'
+            AND f.deleted_at IS NULL
+            AND (
+              (f.requester_id = post.user_id AND f.addressee_id = :viewerId)
+              OR (f.addressee_id = post.user_id AND f.requester_id = :viewerId)
+            )
+          )
+        )
+      )`, { viewerId });
+    } else if (!viewerId) {
+      qb.andWhere("post.audience = 'public'");
+    }
+
+    const [data, total] = await qb.getManyAndCount();
     return { data, total };
   }
 

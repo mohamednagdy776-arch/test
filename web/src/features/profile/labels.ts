@@ -47,3 +47,11 @@ export const religiousCommitmentLabel = makeLabeler({
   moderate: 'معتدل', non_practicing: 'غير ملتزم', not_practicing: 'غير ملتزم',
   learning: 'في طريق الالتزام',
 });
+
+export const financialLevelLabel = makeLabeler({
+  low: 'منخفض', medium: 'متوسط', high: 'مرتفع', very_high: 'مرتفع جداً',
+});
+
+export const culturalLevelLabel = makeLabeler({
+  low: 'منخفض', medium: 'متوسط', high: 'مرتفع',
+});

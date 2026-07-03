@@ -17,6 +17,7 @@ import { interestsApi } from '@/features/interests/api';
 import {
   socialStatusLabel, educationLabel, lifestyleLabel,
   sectLabel, prayerLevelLabel, religiousCommitmentLabel,
+  financialLevelLabel, culturalLevelLabel,
 } from '../labels';
 
 interface Props {
@@ -175,8 +176,8 @@ export const ProfileView = ({ userId }: Props) => {
         <Grid items={[
           ['المستوى التعليمي', educationLabel(profile.education)],
           ['المسمى الوظيفي', profile.jobTitle || '—'],
-          ['المستوى المادي', profile.financialLevel || '—'],
-          ['المستوى الثقافي', profile.culturalLevel || '—'],
+          ['المستوى المادي', financialLevelLabel(profile.financialLevel)],
+          ['المستوى الثقافي', culturalLevelLabel(profile.culturalLevel)],
           ['نمط الحياة', lifestyleLabel(profile.lifestyle)],
         ]} />
       </ProfileSection>

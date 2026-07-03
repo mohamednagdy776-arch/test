@@ -190,8 +190,8 @@ export class UsersController {
   }
 
   @Get(':id/posts')
-  async getUserPosts(@Param('id') id: string, @Query() query: PaginationDto) {
-    const { data, total } = await this.usersService.getUserPosts(id, query.page!, query.limit!);
+  async getUserPosts(@Param('id') id: string, @Query() query: PaginationDto, @CurrentUser() user: User) {
+    const { data, total } = await this.usersService.getUserPosts(id, query.page!, query.limit!, user.id);
     return paginated(data, total, query.page!, query.limit!);
   }
 

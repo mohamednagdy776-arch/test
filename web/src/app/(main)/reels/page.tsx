@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Heart, ChatCircle, ShareFat, DotsThreeVertical } from '@phosphor-icons/react';
+import { Heart, ChatCircle, ShareFat, DotsThreeVertical, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
 import { resolveMediaUrl } from '@/lib/media';
 
 interface Reel {
@@ -21,6 +21,10 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(reel.likesCount ?? 0);
+  // Start muted (autoplay-without-gesture browser policy) with a toggle to
+  // unmute, same pattern as StoryViewer.tsx — Reels had no way to hear audio
+  // at all (#155).
+  const [isMuted, setIsMuted] = useState(true);
 
   useEffect(() => {
     if (!videoRef.current) return;
@@ -30,6 +34,11 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
       videoRef.current.pause();
     }
   }, [isActive]);
+
+  // React's `muted` prop is unreliable after mount — sync imperatively.
+  useEffect(() => {
+    if (videoRef.current) videoRef.current.muted = isMuted;
+  }, [isMuted]);
 
   const handleLike = () => {
     setLiked((v) => !v);
@@ -52,7 +61,7 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
           poster={resolveMediaUrl(reel.thumbnailUrl) ?? undefined}
           className="w-full h-full object-cover"
           loop
-          muted
+          muted={isMuted}
           playsInline
         />
       ) : (
@@ -95,6 +104,22 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
         <button className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
           <DotsThreeVertical size={24} className="text-white" />
         </button>
+
+        {reel.videoUrl && (
+          <button
+            onClick={() => setIsMuted((v) => !v)}
+            className="flex flex-col items-center gap-1"
+            aria-label={isMuted ? 'تشغيل الصوت' : 'كتم الصوت'}
+          >
+            <div className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              {isMuted ? (
+                <SpeakerSlash size={24} className="text-white" />
+              ) : (
+                <SpeakerHigh size={24} className="text-white" />
+              )}
+            </div>
+          </button>
+        )}
       </div>
 
       <div className="absolute bottom-20 left-4 max-w-[65%]">
