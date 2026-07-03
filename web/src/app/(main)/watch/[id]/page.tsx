@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useVideo, useVideoComments, useAddVideoComment, useLikeVideo, useUnlikeVideo, useRecommendedVideos } from '@/features/videos/hooks';
 import { Avatar } from '@/components/ui/Avatar';
 import { Spinner } from '@/components/ui/Spinner';
@@ -19,6 +19,23 @@ function VideoPlayer({ video }: { video: any }) {
   const [reportLoading, setReportLoading] = useState(false);
   const likeVideo = useLikeVideo();
   const unlikeVideo = useUnlikeVideo();
+
+  // The save button had no way to learn its own state, so refreshing the page
+  // always showed "not saved" regardless of the real DB state (#133).
+  useEffect(() => {
+    if (!video?.id) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { apiClient } = await import('@/lib/api-client');
+        const res = await apiClient.get(`/saved/check/video/${video.id}`);
+        if (!cancelled) setSaved(!!res.data?.data?.isSaved);
+      } catch {
+        // leave as not-saved on error
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [video?.id]);
 
   const handleSave = async () => {
     setSavingVideo(true);

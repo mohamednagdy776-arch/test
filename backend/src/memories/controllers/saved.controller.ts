@@ -29,6 +29,15 @@ export class SavedController {
     return ok(null, 'Item removed from saved');
   }
 
+  // The save button never had a way to learn its own state, so it always
+  // rendered as "not saved" on mount/refresh regardless of the real DB state
+  // (#133).
+  @Get('check/:entityType/:entityId')
+  async checkSaved(@CurrentUser() user: User, @Param('entityType') entityType: string, @Param('entityId') entityId: string) {
+    const isSaved = await this.savedService.isSaved(user.id, entityType, entityId);
+    return ok({ isSaved });
+  }
+
   // Collections
   @Get('collections')
   async getCollections(@CurrentUser() user: User) {

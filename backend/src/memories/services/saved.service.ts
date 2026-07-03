@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { SavedItem } from '../entities/saved-item.entity';
 import { SavedCollection } from '../entities/saved-collection.entity';
 import { Post } from '../../posts/entities/post.entity';
 import { Comment } from '../../comments/entities/comment.entity';
+import { Video } from '../../videos/entities/video.entity';
+import { Story } from '../../posts/entities/story.entity';
 
 @Injectable()
 export class SavedService {
@@ -13,7 +15,41 @@ export class SavedService {
     @InjectRepository(SavedCollection) private collectionRepo: Repository<SavedCollection>,
     @InjectRepository(Post) private postRepo: Repository<Post>,
     @InjectRepository(Comment) private commentRepo: Repository<Comment>,
+    @InjectRepository(Video) private videoRepo: Repository<Video>,
+    @InjectRepository(Story) private storyRepo: Repository<Story>,
   ) {}
+
+  // Hydrate each saved row with its underlying entity. Previously only
+  // `entityType === 'post'` was ever populated — saved videos/stories always
+  // got `entity: null`, which the "المحفوظات" list renders as a blank card
+  // with only the remove icon (#80/#140/#156).
+  private async hydrateEntities(saved: SavedItem[]) {
+    const postIds = saved.filter(s => s.entityType === 'post').map(s => s.entityId);
+    const videoIds = saved.filter(s => s.entityType === 'video').map(s => s.entityId);
+    const storyIds = saved.filter(s => s.entityType === 'story').map(s => s.entityId);
+
+    const [posts, videos, stories] = await Promise.all([
+      postIds.length
+        ? this.postRepo.createQueryBuilder('post')
+            .leftJoinAndSelect('post.user', 'user')
+            .where('post.id IN (:...postIds)', { postIds })
+            .getMany()
+        : Promise.resolve([] as Post[]),
+      videoIds.length
+        ? this.videoRepo.find({ where: { id: In(videoIds) }, relations: ['createdBy'] })
+        : Promise.resolve([] as Video[]),
+      storyIds.length
+        ? this.storyRepo.find({ where: { id: In(storyIds) }, relations: ['user'] })
+        : Promise.resolve([] as Story[]),
+    ]);
+
+    return saved.map(s => {
+      if (s.entityType === 'post') return { ...s, entity: posts.find(p => p.id === s.entityId) ?? null };
+      if (s.entityType === 'video') return { ...s, entity: videos.find(v => v.id === s.entityId) ?? null };
+      if (s.entityType === 'story') return { ...s, entity: stories.find(st => st.id === s.entityId) ?? null };
+      return { ...s, entity: null };
+    });
+  }
 
   async getSaved(userId: string) {
     const saved = await this.savedRepo.find({
@@ -21,25 +57,7 @@ export class SavedService {
       relations: ['collection'],
       order: { savedAt: 'DESC' },
     });
-
-    const postIds = saved.filter(s => s.entityType === 'post').map(s => s.entityId);
-
-    let posts: Post[] = [];
-    if (postIds.length > 0) {
-      posts = await this.postRepo
-        .createQueryBuilder('post')
-        .leftJoinAndSelect('post.user', 'user')
-        .where('post.id IN (:...postIds)', { postIds })
-        .getMany();
-    }
-
-    return saved.map(s => {
-      if (s.entityType === 'post') {
-        const post = posts.find(p => p.id === s.entityId);
-        return { ...s, entity: post };
-      }
-      return { ...s, entity: null };
-    });
+    return this.hydrateEntities(saved);
   }
 
   async save(userId: string, entityType: string, entityId: string, collectionId?: string) {
@@ -132,23 +150,6 @@ export class SavedService {
       relations: ['collection'],
       order: { savedAt: 'DESC' },
     });
-    
-    const postIds = saved.filter(s => s.entityType === 'post').map(s => s.entityId);
-    let posts: Post[] = [];
-    if (postIds.length > 0) {
-      posts = await this.postRepo
-        .createQueryBuilder('post')
-        .leftJoinAndSelect('post.user', 'user')
-        .where('post.id IN (:...postIds)', { postIds })
-        .getMany();
-    }
-
-    return saved.map(s => {
-      if (s.entityType === 'post') {
-        const post = posts.find(p => p.id === s.entityId);
-        return { ...s, entity: post };
-      }
-      return { ...s, entity: null };
-    });
+    return this.hydrateEntities(saved);
   }
 }
