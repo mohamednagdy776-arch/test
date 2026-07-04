@@ -203,11 +203,20 @@ function QuickStats() {
     queryFn: () => apiClient.get('/friends', { params: { page: 1, limit: 1 } }).then((r) => r.data),
     staleTime: 60_000,
   });
-  const { data: chatData, isLoading: cl } = useChatUnread();
+  // "رسائل" here means message/conversation ACTIVITY, not the unread badge —
+  // it read the unread-count endpoint, which correctly drops to 0 the moment
+  // conversations are opened, so anyone with plenty of read conversations
+  // still saw 0 (#69). Count total conversations instead, matching the
+  // total-count pattern already used for matches/friends above.
+  const { data: chatData, isLoading: cl } = useQuery({
+    queryKey: ['dashboard-messages-count'],
+    queryFn: () => apiClient.get('/chat/conversations').then((r) => r.data),
+    staleTime: 60_000,
+  });
 
   const mc = matchesData?.meta?.total ?? matchesData?.data?.meta?.total ?? 0;
   const fc = friendsData?.meta?.total ?? friendsData?.data?.meta?.total ?? 0;
-  const chatCount = chatData?.count ?? chatData?.unread ?? 0;
+  const chatCount = chatData?.data?.length ?? 0;
   const isLoading = ml || fl || cl;
   const isFetching = fm || ff;
 
