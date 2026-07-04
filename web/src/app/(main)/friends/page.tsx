@@ -20,7 +20,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnf
     <div className="rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-3 mb-3">
-        <Avatar src={avatarSrc} name={name} size="md" shape="rounded" />
+        <Avatar src={avatarSrc} name={name} size="md" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{name}</p>
           <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{user.profile?.bio || ''}</p>
@@ -82,7 +82,7 @@ function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept:
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-3 mb-3">
-        <Avatar src={avatarSrc} name={name} size="md" shape="rounded" />
+        <Avatar src={avatarSrc} name={name} size="md" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{name}</p>
           {mutualCount > 0 && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{mutualCount} صديق مشترك</p>}
@@ -113,7 +113,7 @@ function SuggestionCard({ user, onAdd, onFollow }: { user: any; onAdd: () => voi
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-3 mb-3">
-        <Avatar src={avatarSrc} name={name} size="md" shape="rounded" />
+        <Avatar src={avatarSrc} name={name} size="md" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{name}</p>
           {mutual > 0 && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{mutual} صديق مشترك</p>}
@@ -145,7 +145,7 @@ function BirthdayCard({ birthday }: { birthday: any }) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl"
       style={{ background: 'color-mix(in srgb, #f59e0b 8%, var(--card))', border: '1px solid color-mix(in srgb, #f59e0b 20%, transparent)' }}>
-      <Avatar name={name} size="sm" shape="rounded" />
+      <Avatar name={name} size="sm" />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{name}</p>
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{dateText}</p>

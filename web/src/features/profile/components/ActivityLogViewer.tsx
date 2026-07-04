@@ -37,10 +37,10 @@ export const ActivityLogViewer = ({ userId }: Props) => {
 
   const activities = (data as any)?.data?.data || [];
 
-  // Years from the app launch (2024) up to the current year — generated so the
-  // list never goes stale (was a hardcoded [2026,2025,2024,2023]).
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: Math.max(1, currentYear - 2024 + 1) }, (_, i) => currentYear - i);
+  // Years that actually have activity (from the backend, computed off the
+  // real merged activity set) — this used to be a hardcoded 2024-through-now
+  // range regardless of real data, always offering empty years (#117).
+  const years: number[] = (data as any)?.data?.availableYears || [];
 
   const formatDate = (date: string | Date) => {
     if (!date) return '';

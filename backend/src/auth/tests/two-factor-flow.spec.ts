@@ -20,7 +20,7 @@ function makeService(user: any) {
     findOne: async () => user,
     update: async (_id: string, patch: any) => { updates.push(patch); Object.assign(user, patch); },
   } as any;
-  const svc = new AuthService(usersRepo, {} as any, {} as any, {} as any, {} as any);
+  const svc = new AuthService(usersRepo, {} as any, {} as any, {} as any, {} as any, {} as any);
   return { svc, updates };
 }
 

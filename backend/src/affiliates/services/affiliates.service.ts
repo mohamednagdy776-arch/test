@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException, BadRequestException }
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Affiliate } from '../entities/affiliate.entity';
-import { AffiliateReferral } from '../entities/affiliate-referral.entity';
+import { AffiliateReferral, ConversionEvent } from '../entities/affiliate-referral.entity';
 import { CreateAffiliateDto } from '../dto/create-affiliate.dto';
 import * as crypto from 'crypto';
 
@@ -67,6 +67,24 @@ export class AffiliatesService {
 
   async recordReferral(affiliateId: string) {
     await this.affiliateRepo.increment({ id: affiliateId }, 'totalReferred', 1);
+  }
+
+  // Attribute a new registration to whoever shared the referral link. Nothing
+  // ever called this at signup — the referral code was accepted nowhere, so
+  // successful registrations via a referral link were never credited (#107).
+  // Best-effort: an unknown/malformed code should never fail registration.
+  async attributeReferral(referralCode: string, referredUserId: string): Promise<void> {
+    if (!referralCode) return;
+    const affiliate = await this.affiliateRepo.findOne({ where: { referralCode } });
+    if (!affiliate) return;
+    await this.referralRepo.save(this.referralRepo.create({
+      affiliateId: affiliate.id,
+      referredUserId,
+      referralCodeUsed: referralCode,
+      attributionTimestamp: new Date(),
+      conversionEvent: ConversionEvent.REGISTRATION,
+    }));
+    await this.recordReferral(affiliate.id);
   }
 
   async recordMarriage(affiliateId: string) {

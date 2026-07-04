@@ -213,7 +213,7 @@ export default function Home() {
             ))}
           </div>
           <div className="flex items-center gap-2.5">
-            <Link href="/login" className="rounded-2xl px-4 py-2 text-sm font-semibold transition-colors hover:opacity-70" style={{ color: C.forest }}>
+            <Link href="/login" className="flex h-10 items-center rounded-2xl px-4 text-sm font-semibold transition-colors hover:opacity-70" style={{ color: C.forest }}>
               تسجيل الدخول
             </Link>
             {/* shadcn/ui Button */}

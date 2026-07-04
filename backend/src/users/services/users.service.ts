@@ -449,7 +449,10 @@ export class UsersService {
     const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
     if (existing?.coverUrl) await this.deleteUploadedFile(existing.coverUrl);
     await this.profilesRepo.update({ user: { id: userId } }, { coverUrl: null as any });
-    await this.logActivity(userId, 'photo', 'Removed cover photo', {});
+    // Do NOT log this as a 'photo' activity (#90) — getPhotos()/the Images
+    // gallery renders every 'photo'-type row as a tile with no check that it
+    // actually references media, so a removal-with-empty-metadata row showed
+    // up as a blank placeholder tile that never goes away.
     return this.getProfile(userId);
   }
 
@@ -459,7 +462,7 @@ export class UsersService {
     const existing = await this.profilesRepo.findOne({ where: { user: { id: userId } } });
     if (existing?.avatarUrl) await this.deleteUploadedFile(existing.avatarUrl);
     await this.profilesRepo.update({ user: { id: userId } }, { avatarUrl: null as any });
-    await this.logActivity(userId, 'photo', 'Removed profile picture', {});
+    // Same reasoning as removeCover above (#91).
     return this.getProfile(userId);
   }
 
@@ -575,6 +578,13 @@ export class UsersService {
       items.push({ type: a.type as any, description: a.description, createdAt: a.createdAt, metadata: a.metadata });
     }
 
+    // Years that actually have activity, computed before the year filter is
+    // applied — the frontend's year dropdown used to be a hardcoded
+    // 2024-through-now range regardless of real data, so it always offered
+    // years with nothing in them (#117).
+    const availableYears = [...new Set(items.map((i) => new Date(i.createdAt).getFullYear()))]
+      .sort((a, b) => b - a);
+
     // Apply the year filter across the merged set, sort newest-first, paginate.
     const filtered = year
       ? items.filter((i) => new Date(i.createdAt).getFullYear() === parseInt(year))
@@ -583,7 +593,7 @@ export class UsersService {
 
     const total = filtered.length;
     const data = filtered.slice((page - 1) * limit, (page - 1) * limit + limit);
-    return { data, total, page, totalPages: Math.max(1, Math.ceil(total / limit)) };
+    return { data, total, page, totalPages: Math.max(1, Math.ceil(total / limit)), availableYears };
   }
 
   async getFriends(userId: string, page = 1, limit = 20, viewerId?: string) {

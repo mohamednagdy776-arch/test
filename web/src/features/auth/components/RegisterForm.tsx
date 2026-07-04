@@ -1,6 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '../api';
 
@@ -100,6 +100,10 @@ export const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const router = useRouter();
+  // Capture ?ref=<code> from a shared affiliate link so a successful
+  // registration can be credited to the referrer (#107).
+  const searchParams = useSearchParams();
+  const referralCode = searchParams?.get('ref') || undefined;
 
   const set = (k: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -161,7 +165,7 @@ export const RegisterForm = () => {
       const payload: {
         email: string; phone: string; password: string;
         firstName?: string; lastName?: string; username?: string;
-        dateOfBirth: string; gender?: string;
+        dateOfBirth: string; gender?: string; referralCode?: string;
       } = {
         email: form.email.trim(),
         phone: form.phone.trim(),
@@ -172,6 +176,7 @@ export const RegisterForm = () => {
       };
       if (form.username.trim()) payload.username = form.username.trim();
       if (form.gender) payload.gender = form.gender;
+      if (referralCode) payload.referralCode = referralCode;
       // Tokens are set as HttpOnly cookies by the backend — nothing to store
       // client-side (avoids XSS token theft from localStorage).
       await authApi.register(payload);

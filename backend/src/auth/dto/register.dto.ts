@@ -95,4 +95,10 @@ export class RegisterDto {
   @IsEnum(Gender)
   @IsOptional()
   gender?: Gender;
+
+  // Affiliate referral code from a shared referral link (?ref=). Nothing
+  // ever read this on registration, so referrals were never credited (#107).
+  @IsString()
+  @IsOptional()
+  referralCode?: string;
 }

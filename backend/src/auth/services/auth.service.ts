@@ -11,6 +11,7 @@ import { EmailChangeRequest } from '../entities/email-change-request.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { MailService } from './mail.service';
+import { AffiliatesService } from '../../affiliates/services/affiliates.service';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +21,7 @@ export class AuthService {
     @InjectRepository(EmailChangeRequest) private emailChangeRepo: Repository<EmailChangeRequest>,
     private jwtService: JwtService,
     private mailService: MailService,
+    private affiliatesService: AffiliatesService,
   ) {}
 
   // ── Email change (#454) ─────────────────────────────────────────────────
@@ -112,6 +114,14 @@ export class AuthService {
 
     await this.usersRepo.save(user);
     await this.mailService.sendVerificationEmail(dto.email, verificationToken);
+
+    if (dto.referralCode) {
+      try {
+        await this.affiliatesService.attributeReferral(dto.referralCode, user.id);
+      } catch {
+        // Never fail registration over a bad/unknown referral code.
+      }
+    }
 
     return this.signTokens(user);
   }

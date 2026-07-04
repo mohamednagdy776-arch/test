@@ -388,7 +388,11 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
       <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-4 gap-2">
         {photos.map((p: any, i: number) => {
           const photoUrl = p.metadata?.url ?? p.metadata?.coverUrl ?? p.metadata?.avatarUrl ?? p.metadata?.mediaUrl ?? null;
-          return photoUrl ? (
+          // Photo-removal activity rows (and any other legacy row logged with
+          // no media reference) have nothing to show — skip them instead of
+          // rendering a permanent blank placeholder tile (#90, #91).
+          if (!photoUrl) return null;
+          return (
             <button
               key={i}
               onClick={() => setLightboxUrl(photoUrl)}
@@ -397,8 +401,6 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
             >
               <img src={resolveMediaUrl(photoUrl) ?? ''} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
             </button>
-          ) : (
-            <div key={i} className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden" />
           );
         })}
       </div>

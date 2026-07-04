@@ -9,6 +9,7 @@ import { AuthService } from './services/auth.service';
 import { MailService } from './services/mail.service';
 import { AuthController } from './controllers/auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { AffiliatesModule } from '../affiliates/affiliates.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       // still overrides this default.
       signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
     }),
+    AffiliatesModule,
   ],
   providers: [AuthService, MailService, JwtStrategy],
   controllers: [AuthController],

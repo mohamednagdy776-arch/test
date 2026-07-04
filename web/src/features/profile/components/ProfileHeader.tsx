@@ -270,11 +270,16 @@ export const ProfileHeader = ({
                   onChange={(e) => { const f = e.target.files?.[0]; if (f) { e.target.value = ''; setAvatarCropFile(f); } }}
                 />
                 {mediaUrl(profile.avatarUrl) && (
+                  // Grouped with the camera button in the same corner instead of
+                  // the diagonally-opposite top-right corner, where most of its
+                  // hit area fell outside the visible circular avatar (#116).
+                  // Also fixes a malformed `hover:bg-[...]/90/80` class (two
+                  // stacked opacity modifiers) that never compiled to valid CSS.
                   <button
                     onClick={() => setRemoveImageKind('avatar')}
                     disabled={uploading}
                     title="إزالة الصورة"
-                    className="absolute top-0 right-0 h-7 w-7 rounded-full bg-[var(--primary)]/70 hover:bg-[var(--destructive)]/90/80 text-[var(--card)] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
+                    className="absolute bottom-0 left-0 h-7 w-7 rounded-full bg-[var(--foreground)]/45 hover:bg-[var(--destructive)]/90 text-[var(--card)] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
                   >
                     ✕
                   </button>

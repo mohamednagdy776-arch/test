@@ -15,7 +15,7 @@ function makeService(user: any) {
   } as any;
   const sessionsRepo = { delete: async () => undefined } as any;
   const mail = { sendPasswordChangedEmail: async () => undefined } as any;
-  return new AuthService(usersRepo, sessionsRepo, {} as any, {} as any, mail);
+  return new AuthService(usersRepo, sessionsRepo, {} as any, {} as any, mail, {} as any);
 }
 
 describe('[Body_Sadek] AuthService.changePassword (#731)', () => {
