@@ -17,22 +17,6 @@ export function useUpdateProfile() {
   });
 }
 
-export function useUploadAvatar() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (file: File) => profileApi.uploadAvatar(file),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-profile'] }),
-  });
-}
-
-export function useUploadCover() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (file: File) => profileApi.uploadCover(file),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-profile'] }),
-  });
-}
-
 export function useUserProfile(userId: string) {
   return useQuery({
     queryKey: ['user-profile', userId],

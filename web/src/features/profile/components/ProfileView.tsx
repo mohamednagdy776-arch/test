@@ -53,9 +53,17 @@ export const ProfileView = ({ userId }: Props) => {
   // Friendship status is now embedded in the profile response (Issue #429)
   const friendshipStatus = profile?.friendshipStatus ?? { status: 'none' };
 
+  // friendshipStatus is embedded in the profile response (#429), driven by
+  // ['user-profile', userId] / ['my-profile'] — but these mutations only
+  // invalidated a stale, unsubscribed ['friendship-status', profileUserId]
+  // key left over from before that change, so the Add Friend/pending state
+  // never updated after a successful action, letting the user click it
+  // repeatedly (#120). Match acceptRequest/blockUser's invalidation below.
+  const profileQueryKey = userId ? ['user-profile', userId] : ['my-profile'];
+
   const sendRequest = useMutation({
     mutationFn: () => profileApi.sendFriendRequest(profileUserId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['friendship-status', profileUserId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: profileQueryKey }),
   });
 
   const cancelRequest = useMutation({
@@ -63,7 +71,7 @@ export const ProfileView = ({ userId }: Props) => {
       if (!friendshipStatus.id) throw new Error('No friend request id');
       return profileApi.cancelFriendRequest(friendshipStatus.id);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['friendship-status', profileUserId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: profileQueryKey }),
   });
 
   const acceptRequest = useMutation({
@@ -73,13 +81,13 @@ export const ProfileView = ({ userId }: Props) => {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['friendship-status', profileUserId] });
-      qc.invalidateQueries({ queryKey: ['user-profile', userId] });
+      qc.invalidateQueries({ queryKey: profileQueryKey });
     },
   });
 
   const unfriend = useMutation({
     mutationFn: () => profileApi.unfriend(profileUserId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['friendship-status', profileUserId] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: profileQueryKey }),
   });
 
   const blockUser = useMutation({

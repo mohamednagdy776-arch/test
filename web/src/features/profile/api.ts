@@ -7,18 +7,6 @@ export const profileApi = {
   updateProfile: (data: Record<string, any>) =>
     apiClient.patch('/users/me', data).then((r) => r.data),
 
-  uploadAvatar: (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return apiClient.post('/users/me/avatar', formData).then((r) => r.data);
-  },
-
-  uploadCover: (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return apiClient.post('/users/me/cover', formData).then((r) => r.data);
-  },
-
   getUserProfile: (userId: string) =>
     apiClient.get(`/users/${userId}`).then((r) => r.data),
 
