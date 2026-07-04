@@ -49,10 +49,12 @@ export const profileApi = {
   unfriend: (userId: string) =>
     apiClient.delete(`/friends/${userId}`).then((r) => r.data),
 
-  // Block via the real endpoint. This used to POST /users/:id/block, which
-  // doesn't exist (404) — so the profile Block button silently did nothing (#70).
+  // POST /blocks is the single source of truth for blocks — Settings >
+  // Blocked Accounts reads from the same `blocks` table. The profile Block
+  // button used to hit /friends/block, which wrote to a completely
+  // different table, so blocked users never appeared in that list (#88).
   blockUser: (userId: string) =>
-    apiClient.post('/friends/block', { userId }).then((r) => r.data),
+    apiClient.post('/blocks', { blockedUserId: userId }).then((r) => r.data),
 
   // User reporting (#751)
   getReportReasons: () =>

@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PrivacySettings } from '../entities/privacy-settings.entity';
 import { Block } from '../entities/block.entity';
+import { Friendship } from '../../friends/entities/friendship.entity';
 import { UpdatePrivacyDto } from '../dto/update-privacy.dto';
 import { UpdateAppearanceDto } from '../dto/update-appearance.dto';
 import { UpdateNotificationSettingsDto } from '../dto/update-notifications.dto';
@@ -13,6 +14,7 @@ export class SettingsService {
   constructor(
     @InjectRepository(PrivacySettings) private privacyRepo: Repository<PrivacySettings>,
     @InjectRepository(Block) private blockRepo: Repository<Block>,
+    @InjectRepository(Friendship) private friendshipsRepo: Repository<Friendship>,
   ) {}
 
   // ==================== Privacy Settings ====================
@@ -139,6 +141,19 @@ export class SettingsService {
       blocker: { id: blockerId } as any,
       blocked: { id: blockedUserId } as any,
     });
+    // Blocking should end any existing friendship too (mirrors the
+    // now-unused FriendsService.blockUser, which this endpoint is
+    // consolidating onto — see #88: the profile "Block" button used to
+    // write to a completely different table than this one, so blocked
+    // users never showed up in Settings > Blocked Accounts).
+    await this.friendshipsRepo
+      .createQueryBuilder()
+      .delete()
+      .where('(requester_id = :r AND addressee_id = :a) OR (requester_id = :a AND addressee_id = :r)', {
+        r: blockerId,
+        a: blockedUserId,
+      })
+      .execute();
     return this.blockRepo.save(block);
   }
 
