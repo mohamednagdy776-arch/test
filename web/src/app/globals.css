@@ -1601,3 +1601,16 @@ html {
    background-color: var(--primary);
    color: var(--primary-foreground);
  }
+
+/* High Contrast (Settings > Appearance) toggles the `high-contrast` class
+   on <html>, but nothing ever read that class — the setting persisted and
+   the toggle itself worked, it just had zero visual effect (#125). Boost
+   the low-contrast text/border variables (several theme variants pair a
+   washed-out --muted-foreground against --background, e.g. #BFB9AD on
+   #EAE0CF) up to the theme's own high-contrast --foreground/--background,
+   instead of hardcoding one specific palette so this works across every
+   theme variant. */
+html.high-contrast {
+  --muted-foreground: var(--foreground);
+  --border: var(--foreground);
+}
