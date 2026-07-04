@@ -29,7 +29,7 @@ export class ChatController {
 
   @Post('conversations')
   async createConversation(
-    @Body() dto: { targetUserId: string },
+    @Body() dto: { targetUserId: string; context?: 'story_reply' },
     @CurrentUser() user: User,
   ) {
     if (!dto?.targetUserId) {
@@ -38,6 +38,7 @@ export class ChatController {
     const conversation = await this.chatService.getOrCreateDirectConversation(
       user.id,
       dto.targetUserId,
+      dto.context,
     );
     return ok(conversation, 'Conversation ready');
   }

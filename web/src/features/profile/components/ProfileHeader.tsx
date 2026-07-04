@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { relationshipStatusLabel } from '../labels';
-import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight, SealCheck, LinkSimple } from '@phosphor-icons/react';
+import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight, SealCheck, LinkSimple, IdentificationCard } from '@phosphor-icons/react';
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
@@ -142,6 +142,18 @@ export const ProfileHeader = ({
       showToast('تم نسخ رابط الملف الشخصي', 'success');
     } catch {
       showToast('تعذّر نسخ الرابط', 'error');
+    }
+  };
+
+  // The Family feature requires a ward to paste their parent's UUID, but
+  // nothing surfaced a user's own UUID anywhere for them to find/copy (#111).
+  const copyMyUuid = async () => {
+    if (!profile.userId) return;
+    try {
+      await navigator.clipboard.writeText(profile.userId);
+      showToast('تم نسخ المعرف الخاص بك', 'success');
+    } catch {
+      showToast('تعذّر نسخ المعرف', 'error');
     }
   };
 
@@ -306,6 +318,18 @@ export const ProfileHeader = ({
               >
                 <LinkSimple size={16} />
               </button>
+              {/* Copy your own UUID — needed to give a parent/guardian your
+                  id when linking a Family relationship (#111). */}
+              {isSelf && (
+                <button
+                  onClick={copyMyUuid}
+                  aria-label="نسخ معرّفك (UUID)"
+                  title="نسخ معرّفك (UUID)"
+                  className="inline-flex items-center justify-center h-7 w-7 rounded-full text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                >
+                  <IdentificationCard size={16} />
+                </button>
+              )}
             </div>
             {profile.username && (
               <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium">

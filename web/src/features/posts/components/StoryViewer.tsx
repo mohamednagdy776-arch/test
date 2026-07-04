@@ -75,7 +75,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     if (!text || !ownerId || sendingReply) return;
     setSendingReply(true);
     try {
-      const conv = await chatApi.createConversation(ownerId);
+      const conv = await chatApi.createConversation(ownerId, 'story_reply');
       const conversationId = conv?.data?.id ?? conv?.id;
       await chatApi.sendMessage(conversationId, text);
       setReplyText('');

@@ -366,7 +366,7 @@ export class ChatService {
    * Used by POST /chat/conversations so that direct messaging works without
    * pre-existing group membership (fixes "GET messages → 403").
    */
-  async getOrCreateDirectConversation(userId: string, targetUserId: string) {
+  async getOrCreateDirectConversation(userId: string, targetUserId: string, context?: 'story_reply') {
     if (userId === targetUserId) {
       throw new ForbiddenException('Cannot start a conversation with yourself');
     }
@@ -378,10 +378,11 @@ export class ChatService {
 
     // Relationship gate: a 1:1 conversation needs an accepted match OR an
     // accepted friendship (#805). Friends can DM without being matched.
-    // Exception: the target may explicitly opt OUT of this gate via "who can
-    // message you" = public — that setting otherwise had no effect at all,
-    // since this hard gate ran before assertCanMessage ever got a chance to
-    // allow a stranger through (#102).
+    // Exceptions: the target may explicitly opt OUT via "who can message
+    // you" = public (#102); and replying to someone's story never enforced
+    // this at all — the story feed already gated who can even see the story,
+    // so requiring an unrelated match/friend status on top of that just made
+    // "reply to story" fail with a generic error for most viewers (#104).
     const match = await this.matchesRepo.findOne({
       where: [
         { user1: { id: userId }, user2: { id: targetUserId } },
@@ -389,8 +390,8 @@ export class ChatService {
       ],
     });
     const isMatched = !!match && ['accepted', 'chat'].includes(match.status);
-    let targetAllowsPublicMessages = false;
-    if (!isMatched) {
+    let targetAllowsPublicMessages = context === 'story_reply';
+    if (!isMatched && !targetAllowsPublicMessages) {
       const friendIds = await this.friendsService.getFriendIds(userId);
       if (!friendIds.includes(targetUserId)) {
         try {

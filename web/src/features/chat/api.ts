@@ -75,7 +75,9 @@ export const chatApi = {
   setDisappearingMessages: (conversationId: string, duration: '24h' | '7d' | '90d' | null) =>
     apiClient.post(`/chat/groups/${conversationId}/disappearing`, { duration }).then(r => r.data),
 
-  // Create conversation
-  createConversation: (targetUserId: string) =>
-    apiClient.post('/chat/conversations', { targetUserId }).then(r => r.data),
+  // Create conversation. `context: 'story_reply'` bypasses the match/friend
+  // gate server-side — replying to a story you can already see shouldn't
+  // additionally require being matched or friends (#104).
+  createConversation: (targetUserId: string, context?: 'story_reply') =>
+    apiClient.post('/chat/conversations', { targetUserId, context }).then(r => r.data),
 };
