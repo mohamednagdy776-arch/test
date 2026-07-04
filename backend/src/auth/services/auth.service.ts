@@ -30,6 +30,12 @@ export class AuthService {
   async requestEmailChange(userId: string, newEmailRaw: string, currentPassword: string) {
     const user = await this.usersRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
+    // OAuth-only accounts (Google/GitHub) have no passwordHash, so bcrypt.compare
+    // threw here before any mail was ever attempted — the request never got far
+    // enough to send the verification email (#65).
+    if (!user.passwordHash) {
+      throw new ForbiddenException('This account has no password set; sign in with your OAuth provider to manage email settings');
+    }
     const valid = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Current password is incorrect');
 
@@ -647,13 +653,22 @@ export class AuthService {
     const valid = await bcrypt.compare(password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('Incorrect password');
 
+    // login() hard-blocks isDeactivated accounts and neither /auth/delete/cancel
+    // nor /auth/reactivate is wired to any UI, so the 30-day grace period was
+    // never actually reachable by a user — meanwhile the row kept the real
+    // email/phone for those 30 days, permanently blocking re-registration in
+    // practice (#147). Free them immediately, matching the anonymization
+    // UsersService.deleteAccount already does on the other delete route.
+    const deletedEmail = user.email;
     const scheduledDeletion = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-    await this.usersRepo.update(userId, { 
+    await this.usersRepo.update(userId, {
       deletedAt: scheduledDeletion,
       isDeactivated: true,
+      email: `deleted-${userId}@deleted.invalid` as any,
+      phone: `+000${userId.replace(/-/g, '').slice(0, 10)}` as any,
     });
 
-    await this.mailService.sendAccountDeletionEmail(user.email);
+    await this.mailService.sendAccountDeletionEmail(deletedEmail);
     return { message: 'Account scheduled for deletion in 30 days' };
   }
 
