@@ -26,6 +26,20 @@ export class PagesService {
     return saved;
   }
 
+  async search(q: string) {
+    const query = q.trim();
+    if (!query) return [];
+    const rows = await this.pagesRepo
+      .createQueryBuilder('page')
+      .leftJoinAndSelect('page.createdBy', 'createdBy')
+      .where('page.name ILIKE :q', { q: `%${query}%` })
+      .orderBy('page.createdAt', 'DESC')
+      .take(20)
+      .getMany();
+    const withCounts = await this.attachCounts(rows);
+    return withCounts.map((p) => ({ ...p, ownerId: p.createdBy?.id ?? null }));
+  }
+
   async findAll(page: number, limit: number) {
     const [rows, total] = await this.pagesRepo.findAndCount({
       skip: (page - 1) * limit,

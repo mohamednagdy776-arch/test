@@ -1,19 +1,54 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Video } from '../entities/video.entity';
 import { VideoLike } from '../entities/video-like.entity';
+import { VideoComment } from '../entities/video-comment.entity';
 import { CreateVideoDto } from '../dto/create-video.dto';
 import { User } from '../../auth/entities/user.entity';
 import { CdnService } from './cdn.service';
+import { sanitizeUserContent } from '../../common/utils/sanitize';
 
 @Injectable()
 export class VideosService {
   constructor(
     @InjectRepository(Video) private videosRepo: Repository<Video>,
     @InjectRepository(VideoLike) private likesRepo: Repository<VideoLike>,
+    @InjectRepository(VideoComment) private commentsRepo: Repository<VideoComment>,
     private cdnService: CdnService,
   ) {}
+
+  // #130 — POST /videos/:id/comments 404'd; there was no comments table/route
+  // for videos at all (only posts had one).
+  async addComment(videoId: string, content: string, user: User) {
+    const video = await this.videosRepo.findOne({ where: { id: videoId } });
+    if (!video) throw new NotFoundException('Video not found');
+    const clean = sanitizeUserContent(content ?? '');
+    if (!clean.trim()) throw new BadRequestException('Comment cannot be empty');
+
+    const comment = this.commentsRepo.create({ video: { id: videoId } as any, user, content: clean });
+    const saved = await this.commentsRepo.save(comment);
+    return {
+      id: saved.id,
+      content: saved.content,
+      createdAt: saved.createdAt,
+      user: { id: user.id, username: user.username, name: user.fullName || user.username },
+    };
+  }
+
+  async getComments(videoId: string) {
+    const comments = await this.commentsRepo.find({
+      where: { video: { id: videoId } },
+      order: { createdAt: 'ASC' },
+      relations: ['user'],
+    });
+    return comments.map((c) => ({
+      id: c.id,
+      content: c.content,
+      createdAt: c.createdAt,
+      user: c.user ? { id: c.user.id, username: c.user.username, name: c.user.fullName || c.user.username } : null,
+    }));
+  }
 
   // Normalize a video entity into the shape the web app reads. The raw entity
   // exposed `createdBy` + `views`, but the cards read `video.user.name` and

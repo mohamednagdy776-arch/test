@@ -33,7 +33,14 @@ export class PagesController {
   }
 
   // Static segments MUST precede @Get(':id') or they get captured by :id and
-  // rejected as a non-UUID ("Invalid identifier format").
+  // rejected as a non-UUID ("Invalid identifier format"). `search` was
+  // missing entirely, so GET /pages/search fell through to :id with
+  // id="search" and 404'd (#123).
+  @Get('search')
+  async search(@Query('q') q: string) {
+    return ok(await this.pagesService.search(q ?? ''));
+  }
+
   @Get('created')
   async created(@CurrentUser() user: User) {
     return ok(await this.pagesService.getCreated(user.id));

@@ -34,19 +34,27 @@ const HELP_ITEMS = [
   },
 ];
 
-const ContactItem = ({ icon, title, detail, href }: { icon: string; title: string; detail: string; href: string }) => (
-  <Link
-    href={href}
-    className="flex items-center gap-4 p-4 rounded-xl bg-[var(--card)]/50 border border-[var(--border)]/50 hover:border-[var(--border)] hover:shadow-md transition-all duration-300"
-  >
-    <span className="text-2xl">{icon}</span>
-    <div className="flex-1">
-      <h3 className="font-semibold text-[var(--foreground)]">{title}</h3>
-      <p className="text-[var(--primary)]/70 text-sm">{detail}</p>
-    </div>
-    <span className="text-[var(--muted-foreground)]">→</span>
-  </Link>
-);
+const ContactItem = ({ icon, title, detail, href }: { icon: string; title: string; detail: string; href: string }) => {
+  // mailto:/tel: links aren't app routes, so next/link's client-side
+  // navigation swallowed the click instead of opening the mail client (#138).
+  const isExternalProtocol = /^[a-z]+:/i.test(href) && !href.startsWith('/');
+  const content = (
+    <>
+      <span className="text-2xl">{icon}</span>
+      <div className="flex-1">
+        <h3 className="font-semibold text-[var(--foreground)]">{title}</h3>
+        <p className="text-[var(--primary)]/70 text-sm">{detail}</p>
+      </div>
+      <span className="text-[var(--muted-foreground)]">→</span>
+    </>
+  );
+  const className = "flex items-center gap-4 p-4 rounded-xl bg-[var(--card)]/50 border border-[var(--border)]/50 hover:border-[var(--border)] hover:shadow-md transition-all duration-300";
+  return isExternalProtocol ? (
+    <a href={href} className={className}>{content}</a>
+  ) : (
+    <Link href={href} className={className}>{content}</Link>
+  );
+};
 
 const HelpLink = ({ item }: { item: typeof HELP_ITEMS[0] }) => (
   <Link

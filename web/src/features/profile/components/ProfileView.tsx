@@ -141,14 +141,21 @@ export const ProfileView = ({ userId }: Props) => {
 
   if (isSelf && (!hasProfile || editing)) {
     return (
-      <ProfileEditForm
-        initial={profile}
-        onSaved={() => {
-          qc.invalidateQueries({ queryKey: ['my-profile'] });
-          setEditing(false);
-        }}
-        onCancel={hasProfile ? () => setEditing(false) : undefined}
-      />
+      <div className="space-y-6">
+        {/* The cover/avatar camera-icon upload (immediate-upload, not tied to
+            Save) only exists on ProfileHeader — replacing the whole view with
+            just the text form made it unreachable while editing, so a picked
+            banner appeared to do nothing on Save (#81). */}
+        <ProfileHeader profile={profile} isSelf={isSelf} />
+        <ProfileEditForm
+          initial={profile}
+          onSaved={() => {
+            qc.invalidateQueries({ queryKey: ['my-profile'] });
+            setEditing(false);
+          }}
+          onCancel={hasProfile ? () => setEditing(false) : undefined}
+        />
+      </div>
     );
   }
 

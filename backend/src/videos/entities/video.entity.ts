@@ -26,6 +26,11 @@ export class Video {
   @Column({ nullable: true })
   thumbnail: string;
 
+  // Seconds. Read client-side from the HTMLVideoElement at upload time (#74/#76)
+  // — never populated server-side, so nullable until every row is backfilled.
+  @Column({ type: 'int', nullable: true })
+  duration: number | null;
+
   @Column({ default: 0 })
   views: number;
 

@@ -70,6 +70,17 @@ export class VideosController {
     return ok(result, 'Video unliked');
   }
 
+  @Get(':id/comments')
+  async getComments(@Param('id') id: string) {
+    return ok(await this.videosService.getComments(id));
+  }
+
+  @Post(':id/comments')
+  async addComment(@Param('id') id: string, @Body() body: { content: string }, @CurrentUser() user: User) {
+    const comment = await this.videosService.addComment(id, body.content, user);
+    return ok(comment, 'Comment added');
+  }
+
   @Delete(':id')
   async delete(@Param('id') id: string, @CurrentUser() user: User) {
     await this.videosService.delete(id, user.id);

@@ -1,4 +1,5 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateVideoDto {
   @IsString()
@@ -14,4 +15,10 @@ export class CreateVideoDto {
   @IsString()
   @IsOptional()
   thumbnail?: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  duration?: number;
 }
