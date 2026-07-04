@@ -43,6 +43,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       if (!session || !session.isActive) throw new UnauthorizedException();
     }
 
-    return user;
+    // "Revoke all sessions" needs to exclude the caller's own session (#172),
+    // which requires knowing it — but nothing else on req.user carried it.
+    return { ...user, sessionId: payload.sessionId };
   }
 }

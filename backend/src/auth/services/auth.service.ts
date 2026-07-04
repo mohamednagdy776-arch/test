@@ -1,6 +1,6 @@
 import { ConflictException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
@@ -514,15 +514,14 @@ export class AuthService {
   }
 
   async revokeAllSessions(userId: string, exceptCurrent?: string) {
-    const query = this.sessionsRepo.createQueryBuilder()
-      .where('user_id = :userId', { userId })
-      .andWhere('is_active = :isActive', { isActive: true });
-
-    if (exceptCurrent) {
-      query.andWhere('id != :exceptCurrent', { exceptCurrent });
-    }
-
-    await query.update().set({ isActive: false }).execute();
+    // Was a raw query with hand-written column names ('user_id'/'is_active')
+    // that don't match this entity's actual columns (isActive has no explicit
+    // `name:` override, unlike the other Session columns) — every call threw
+    // and the button appeared to do nothing (#172). Repository.update() maps
+    // property names to real columns itself, so it can't drift out of sync.
+    const where: any = { userId, isActive: true };
+    if (exceptCurrent) where.id = Not(exceptCurrent);
+    await this.sessionsRepo.update(where, { isActive: false });
     return { message: 'All sessions revoked' };
   }
 

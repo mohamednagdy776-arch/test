@@ -94,7 +94,15 @@ export class FollowsService {
       .leftJoinAndSelect('u.profile', 'p')
       .where(`${matchProp} = :userId`, { userId })
       .andWhere('u.isDeactivated = false')
-      .andWhere('u.deletedAt IS NULL');
+      .andWhere('u.deletedAt IS NULL')
+      // Blocking never touched the follow relationship, so a blocked user kept
+      // showing up in followers/following (#203). Exclude either direction,
+      // same contract as FriendsService.isBlockedEither.
+      .andWhere(`NOT EXISTS (
+        SELECT 1 FROM blocks b
+        WHERE (b.blocker_id = :userId AND b.blocked_id = u.id)
+           OR (b.blocker_id = u.id AND b.blocked_id = :userId)
+      )`, { userId });
 
     if (search) {
       qb.andWhere('(u.username ILIKE :s OR p.fullName ILIKE :s)', { s: `%${search}%` });

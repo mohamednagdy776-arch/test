@@ -116,15 +116,23 @@ export class SettingsService {
       relations: ['blocked'],
       order: { blockedAt: 'DESC' },
     });
-    return blocks.map(b => ({
-      id: b.id,
-      blockedAt: b.blockedAt,
-      user: {
-        id: b.blocked.id,
-        username: b.blocked.username,
-        fullName: b.blocked.fullName,
-      },
-    }));
+    // The frontend reads `block.blocked.{name,username}` (BlockedUser interface
+    // in settings/privacy/page.tsx) but this returned `user.fullName` — a
+    // completely different key path, so `blocked?.username` was always
+    // undefined and fell back to the literal string 'unknown' (#198). Also
+    // guard b.blocked itself: if that account was since soft-deleted, the
+    // relation resolves to null and the old code crashed reading `.id` off it.
+    return blocks
+      .filter(b => b.blocked != null)
+      .map(b => ({
+        id: b.id,
+        blockedAt: b.blockedAt,
+        blocked: {
+          id: b.blocked.id,
+          username: b.blocked.username,
+          name: b.blocked.fullName,
+        },
+      }));
   }
 
   async blockUser(blockerId: string, blockedUserId: string) {

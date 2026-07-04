@@ -157,6 +157,9 @@ export class ChatService {
     const out = [];
     for (const conv of sorted) {
       const other = conv.isGroup ? null : await this.resolveOtherUser(conv.id, userId);
+      // Blocking never touched the conversation list, so a blocked contact's
+      // thread stayed visible in Messages indefinitely (#168).
+      if (other && await this.friendsService.isBlockedEither(userId, other.id)) continue;
       out.push(this.buildConversationDto(conv, userId, other, unreadByConv.get(conv.id) ?? 0));
     }
 

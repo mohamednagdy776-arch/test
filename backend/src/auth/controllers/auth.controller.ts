@@ -124,7 +124,9 @@ export class AuthController {
   @UseGuards(AuthGuard('jwt'))
   async revokeSession(@Body() body: { sessionId?: string; all?: boolean }, @Req() req: any) {
     if (body.all) {
-      await this.authService.revokeAllSessions(req.user.id);
+      // Exclude the caller's own session — otherwise "Revoke all" logs the
+      // caller out too, with no distinct feedback that that's what happened (#172).
+      await this.authService.revokeAllSessions(req.user.id, req.user.sessionId);
     } else if (body.sessionId) {
       await this.authService.revokeSession(req.user.id, body.sessionId);
     }

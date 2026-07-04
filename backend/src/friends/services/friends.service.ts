@@ -163,7 +163,13 @@ export class FriendsService {
       order: { updatedAt: 'DESC' },
     });
 
-    const friendList = friends.map(f => f.requesterId === userId ? f.addressee : f.requester);
+    // If the other side of the friendship soft-deleted their account, TypeORM's
+    // relation load resolves to null (deletedAt filtering applies to joined
+    // relations too) — that null was passed straight through and crashed the
+    // Friends page reading any property off it (#177).
+    const friendList = friends
+      .map(f => f.requesterId === userId ? f.addressee : f.requester)
+      .filter((u): u is NonNullable<typeof u> => u != null);
     return { data: friendList, total };
   }
 
@@ -222,28 +228,40 @@ export class FriendsService {
     return suggestions;
   }
 
+  // Writes to `user_blocks` (via blocksRepo/UserBlock) — a different table
+  // than the one every enforcement check and the Blocked Accounts list reads
+  // (`blocks`, via userBlockRepo/Block; see isBlockedEither above and #758).
+  // POST /friends/block is the Friends page's Block button, so blocking from
+  // there silently didn't count anywhere else: the conversation stayed in
+  // Messages, the user stayed in Followers, etc. (#168, #203). Switch this
+  // write path onto the same canonical table settings/blocks already uses.
   async blockUser(blockerId: string, blockedId: string) {
     if (blockerId === blockedId) throw new BadRequestException('Cannot block yourself');
 
-    const existing = await this.blocksRepo.findOne({
-      where: { blockerId, blockedId },
+    const existing = await this.userBlockRepo.findOne({
+      where: { blocker: { id: blockerId }, blocked: { id: blockedId } },
     });
     if (existing) return existing;
 
-    const block = this.blocksRepo.create({ blockerId, blockedId });
+    const block = this.userBlockRepo.create({
+      blocker: { id: blockerId } as any,
+      blocked: { id: blockedId } as any,
+    });
     await this.friendshipsRepo
       .createQueryBuilder()
       .delete()
       .where('(requester_id = :r AND addressee_id = :a) OR (requester_id = :a AND addressee_id = :r)', { r: blockerId, a: blockedId })
       .execute();
 
-    return this.blocksRepo.save(block);
+    return this.userBlockRepo.save(block);
   }
 
   async unblockUser(blockerId: string, blockedId: string) {
-    const block = await this.blocksRepo.findOne({ where: { blockerId, blockedId } });
+    const block = await this.userBlockRepo.findOne({
+      where: { blocker: { id: blockerId }, blocked: { id: blockedId } },
+    });
     if (!block) throw new NotFoundException('Block not found');
-    await this.blocksRepo.delete(block.id);
+    await this.userBlockRepo.delete(block.id);
     return { success: true };
   }
 
