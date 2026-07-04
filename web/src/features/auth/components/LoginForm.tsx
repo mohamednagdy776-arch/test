@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '../api';
@@ -11,6 +11,13 @@ const AR_MESSAGES: Record<string, string> = {
   'email must be an email': 'صيغة البريد الإلكتروني غير صحيحة',
 };
 function formatAuthError(err: any): string {
+  // 429 from the login throttle used to surface as the raw, untranslated
+  // "ThrottlerException: Too Many Requests" with no indication of how long
+  // to wait (#139) — retryAfterSeconds (read from the Retry-After header)
+  // drives a real countdown in the UI instead.
+  if (err?.response?.status === 429) {
+    return 'محاولات تسجيل دخول كثيرة، يرجى المحاولة لاحقاً';
+  }
   const m = err?.response?.data?.message;
   if (Array.isArray(m)) return m.map((x: string) => AR_MESSAGES[x] ?? x).join('، ');
   if (typeof m === 'string' && m.trim()) return AR_MESSAGES[m] ?? m;
@@ -28,7 +35,16 @@ export const LoginForm = () => {
   const [requires2FA, setRequires2FA] = useState(false);
   const [preAuthToken, setPreAuthToken] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  // Counts down the Retry-After seconds from a 429 so the user can see
+  // exactly when they can try again, instead of a static error (#139).
+  const [retryAfter, setRetryAfter] = useState(0);
   const router = useRouter();
+
+  useEffect(() => {
+    if (retryAfter <= 0) return;
+    const timer = setInterval(() => setRetryAfter((s) => Math.max(0, s - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [retryAfter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); setError(''); setLoading(true);
@@ -49,6 +65,10 @@ export const LoginForm = () => {
       }
       router.push('/dashboard');
     } catch (err: any) {
+      if (err?.response?.status === 429) {
+        const seconds = parseInt(err.response.headers?.['retry-after'], 10);
+        if (Number.isFinite(seconds) && seconds > 0) setRetryAfter(seconds);
+      }
       setError(formatAuthError(err));
     }
     finally { setLoading(false); }
@@ -59,7 +79,10 @@ export const LoginForm = () => {
       {error && (
         <div className="flex items-center gap-3 rounded-2xl border border-[#EF4444]/30 bg-[#FEF2F2] px-4 py-3">
           <svg className="h-5 w-5 shrink-0 text-[#EF4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>
-          <p className="text-sm font-medium text-[#EF4444]">{error}</p>
+          <p className="text-sm font-medium text-[#EF4444]">
+            {error}
+            {retryAfter > 0 && ` — يمكنك المحاولة بعد ${retryAfter} ثانية`}
+          </p>
         </div>
       )}
       {!requires2FA ? (
@@ -113,10 +136,10 @@ export const LoginForm = () => {
           </div>
         </div>
       )}
-      <button type="submit" disabled={loading}
+      <button type="submit" disabled={loading || retryAfter > 0}
         className="w-full h-12 rounded-2xl text-sm font-semibold text-white shadow-md hover:shadow-lg disabled:opacity-50 transition-all duration-200 active:scale-[0.98]"
         style={{ background: 'linear-gradient(135deg, #10B981, #059669)' }}>
-        {loading ? 'جاري تسجيل الدخول...' : requires2FA ? 'تحقق' : 'تسجيل الدخول'}
+        {retryAfter > 0 ? `حاول بعد ${retryAfter} ثانية` : loading ? 'جاري تسجيل الدخول...' : requires2FA ? 'تحقق' : 'تسجيل الدخول'}
       </button>
       <div className="relative">
         <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-[#E5E7EB]"></span></div>

@@ -39,6 +39,11 @@ async function bootstrap() {
         ? false
         : true,
     credentials: true,
+    // Retry-After (set by ThrottlerGuard on 429s) isn't in the CORS-safelisted
+    // response headers by default, so it was invisible to frontend JS on any
+    // cross-origin setup — expose it so the login form can show a real
+    // "try again in Ns" countdown instead of nothing (#139).
+    exposedHeaders: ['Retry-After'],
   });
 
   const port = process.env.API_PORT || 3000;
