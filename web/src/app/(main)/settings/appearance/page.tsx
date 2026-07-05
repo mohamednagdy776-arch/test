@@ -207,7 +207,11 @@ export default function AppearancePage() {
 
         <div className="flex items-center justify-between">
           <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-            {saved ? '✓ تم الحفظ' : 'التغييرات تُطبَّق فوراً'}
+            {/* The preview applies instantly (theme class/localStorage), but
+                persisting the choice to the account still needs Save — the
+                old copy claimed everything was immediate with a Save button
+                sitting right next to it (#181). */}
+            {saved ? '✓ تم الحفظ' : 'المعاينة تُطبَّق فوراً، اضغط "حفظ التغييرات" لحفظها في حسابك'}
           </p>
           <button
             onClick={handleSave}

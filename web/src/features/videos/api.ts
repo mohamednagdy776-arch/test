@@ -52,6 +52,9 @@ export const videosApi = {
   getTrending: () =>
     apiClient.get('/videos/trending').then((r) => r.data),
 
+  getFollowing: () =>
+    apiClient.get('/videos/following').then((r) => r.data),
+
   getContinueWatching: () =>
     apiClient.get('/videos/continue-watching').then((r) => r.data),
 

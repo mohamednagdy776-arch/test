@@ -59,7 +59,7 @@ export const ActivityLogViewer = ({ userId }: Props) => {
         <select
           value={year}
           onChange={(e) => setYear(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm"
+          className="px-3 py-2 border rounded-lg text-sm bg-[var(--card)] text-[var(--foreground)] border-[var(--border)]"
         >
           <option value="">كل السنوات</option>
           {years.map((y) => (
@@ -69,7 +69,7 @@ export const ActivityLogViewer = ({ userId }: Props) => {
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm"
+          className="px-3 py-2 border rounded-lg text-sm bg-[var(--card)] text-[var(--foreground)] border-[var(--border)]"
         >
           <option value="">كل الأنشطة</option>
           <option value="post">منشورات</option>

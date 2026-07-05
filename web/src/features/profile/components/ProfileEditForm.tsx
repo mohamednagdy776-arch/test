@@ -208,13 +208,13 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
             {tab > 0 && (
               <button type="button" onClick={() => setTab(t => t - 1)}
                 className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm text-[var(--muted-foreground)] hover:bg-[var(--muted)]">
-                ← السابق
+                → السابق
               </button>
             )}
             {tab < tabs.length - 1 && (
               <button type="button" onClick={() => setTab(t => t + 1)}
                 className="rounded-lg bg-[var(--muted)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)]">
-                التالي →
+                ← التالي
               </button>
             )}
           </div>

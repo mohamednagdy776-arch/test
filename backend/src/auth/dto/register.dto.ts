@@ -14,7 +14,12 @@ import {
 } from 'class-validator';
 import { Gender } from '../entities/user.entity';
 
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+// Requires lower/upper/digit/special-char, but the old trailing character
+// class was a strict whitelist that didn't include '.' (or any punctuation
+// outside @$!%*?&) -- rejected otherwise-valid passwords like an email
+// address with a digit/uppercase appended (#160). Match any char for length,
+// just require *some* non-alphanumeric somewhere.
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
 
 // Arabic-first app: names must accept Arabic letters as well as Latin. The
 // ranges cover the core Arabic block, Arabic Supplement, Extended-A and the

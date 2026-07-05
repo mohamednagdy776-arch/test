@@ -8,14 +8,14 @@ const HELP_ITEMS = [
     icon: '❓',
     title: 'الأسئلة الشائعة',
     description: 'ابحث عن إجابات للأسئلة الشائعة',
-    href: '/terms',
+    href: '/faq',
     color: 'bg-[var(--muted)]',
   },
   {
     icon: '📖',
     title: 'كيفية الاستخدام',
     description: 'تعلم كيفية استخدام المنصة',
-    href: '/terms',
+    href: '/guide',
     color: 'bg-blue-100',
   },
   {

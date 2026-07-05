@@ -405,11 +405,14 @@ export class StoriesService {
     }
 
     // One vote per user per poll — reject if they already voted on any option.
-    const alreadyVoted = post.pollOptions.some(
+    const existingVoteIndex = post.pollOptions.findIndex(
       (o) => Array.isArray(o.voterIds) && o.voterIds.includes(userId),
     );
-    if (alreadyVoted) {
-      return { success: false, message: 'Already voted', pollOptions: this.stripVoters(post.pollOptions) };
+    if (existingVoteIndex >= 0) {
+      // Didn't expose which option the client had already picked (#167) —
+      // matters here because the frontend uses this same response shape to
+      // render the poll after a (rejected) repeat vote attempt.
+      return { success: false, message: 'Already voted', pollOptions: this.stripVoters(post.pollOptions), myVote: existingVoteIndex };
     }
 
     const opt = post.pollOptions[optionIndex];
@@ -418,7 +421,7 @@ export class StoriesService {
     await this.postRepo.save(post);
     // Notify the poll owner that someone voted (#446).
     await this.notifications.notifyUser(post.userId, userId, 'vote', 'voted in your poll', 'post', postId);
-    return { success: true, pollOptions: this.stripVoters(post.pollOptions) };
+    return { success: true, pollOptions: this.stripVoters(post.pollOptions), myVote: optionIndex };
   }
 
   // Never expose who voted to clients.

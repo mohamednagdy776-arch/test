@@ -8,6 +8,7 @@ import { CreateVideoDto } from '../dto/create-video.dto';
 import { User } from '../../auth/entities/user.entity';
 import { CdnService } from './cdn.service';
 import { sanitizeUserContent } from '../../common/utils/sanitize';
+import { Follow } from '../../follows/entities/follow.entity';
 
 @Injectable()
 export class VideosService {
@@ -15,6 +16,7 @@ export class VideosService {
     @InjectRepository(Video) private videosRepo: Repository<Video>,
     @InjectRepository(VideoLike) private likesRepo: Repository<VideoLike>,
     @InjectRepository(VideoComment) private commentsRepo: Repository<VideoComment>,
+    @InjectRepository(Follow) private followsRepo: Repository<Follow>,
     private cdnService: CdnService,
   ) {}
 
@@ -114,6 +116,24 @@ export class VideosService {
     const where = isReel !== undefined ? { isReel } : {};
     const [data, total] = await this.videosRepo.findAndCount({
       where,
+      skip: (page - 1) * limit,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      relations: ['createdBy'],
+    });
+    return { data: await this.formatMany(data), total };
+  }
+
+  // The "Following" tab called the generic list with no follow filter at all,
+  // so it showed every video regardless of who (if anyone) the user follows
+  // (#163).
+  async findFollowing(userId: string, page: number, limit: number) {
+    const follows = await this.followsRepo.find({ where: { followerId: userId } });
+    const followedIds = follows.map((f) => f.followingId);
+    if (followedIds.length === 0) return { data: [], total: 0 };
+
+    const [data, total] = await this.videosRepo.findAndCount({
+      where: { createdBy: { id: In(followedIds) }, isReel: false },
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },

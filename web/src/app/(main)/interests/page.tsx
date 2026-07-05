@@ -57,7 +57,11 @@ export default function InterestsPage() {
     <div className="max-w-2xl mx-auto pb-24 lg:pb-8">
       <h1 className="text-2xl font-bold text-[var(--foreground)] mb-4">الاهتمامات</h1>
 
-      <div className="flex gap-2 mb-5">
+      {/* flex-1 divided every tab into equal-width slots regardless of label
+          length, so longer labels (e.g. "كل السمات") got clipped instead of
+          just taking the width they need (#171) -- min-w-fit + overflow-x-auto
+          matches the pattern already used in ProfileTabs. */}
+      <div className="flex gap-2 mb-5 overflow-x-auto whitespace-nowrap">
         {tabs.map((t) => {
           const Icon = t.icon;
           const on = tab === t.id;
@@ -65,7 +69,7 @@ export default function InterestsPage() {
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className="flex-1 rounded-xl px-3 py-2.5 text-sm font-semibold flex items-center justify-center gap-1.5 transition-all"
+              className="flex-1 min-w-fit rounded-xl px-3 py-2.5 text-sm font-semibold flex items-center justify-center gap-1.5 transition-all"
               style={on
                 ? { background: 'color-mix(in srgb, var(--primary) 12%, var(--muted))', color: 'var(--primary)', border: '1px solid color-mix(in srgb, var(--primary) 25%, var(--border))' }
                 : { background: 'var(--card)', color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}

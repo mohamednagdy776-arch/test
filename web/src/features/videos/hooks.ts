@@ -34,6 +34,14 @@ export function useTrendingVideos(enabled = true) {
   });
 }
 
+export function useFollowingVideos(enabled = true) {
+  return useQuery({
+    queryKey: ['videos-following'],
+    queryFn: () => videosApi.getFollowing(),
+    enabled,
+  });
+}
+
 export function useContinueWatching() {
   return useQuery({
     queryKey: ['videos-continue-watching'],

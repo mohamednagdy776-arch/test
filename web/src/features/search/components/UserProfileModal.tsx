@@ -109,7 +109,11 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
+      {/* 90vh is computed off the layout viewport, which on mobile Safari/Chrome
+          can be taller than what's actually visible (browser chrome not
+          subtracted) -- pushed content past this app's own fixed header/bottom
+          nav (#174). dvh tracks the real visible height. */}
+      <div className="relative z-10 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl max-h-[min(90vh,90dvh)] flex flex-col"
         style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
 
         {/* ── Luxury header ─────────────────────────────────────── */}

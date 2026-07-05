@@ -345,7 +345,10 @@ const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
   if (isError) return feedShell('تعذّر تحميل الأصدقاء');
   if (friends.length === 0) return feedShell('لا توجد أصدقاء');
   return (
-    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-3 gap-4">
+    // Fixed 3-column grid with no mobile breakpoint squeezed avatars/tiles on
+    // narrow phones (#166) -- the newer [username] route already uses a
+    // mobile-first 2-col base for this same list.
+    <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
       {friends.map((f: any, i: number) => (
         <Link key={f.id ?? i} href={f.username ? `/${f.username}` : f.id ? `/profile/${f.id}` : '#'} className="rounded-lg bg-[var(--muted)] p-3 text-center hover:bg-[var(--muted)]/40 transition-colors">
           <div className="h-16 w-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
@@ -392,7 +395,9 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
           />
         </div>
       )}
-      <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-4 gap-2">
+      {/* Fixed 4-column grid with no mobile breakpoint (#166) — matches the
+          [username] route's mobile-first 3-col base for this same list. */}
+      <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-3 sm:grid-cols-4 gap-2">
         {photos.map((p: any, i: number) => {
           const photoUrl = p.metadata?.url ?? p.metadata?.coverUrl ?? p.metadata?.avatarUrl ?? p.metadata?.mediaUrl ?? null;
           // Photo-removal activity rows (and any other legacy row logged with

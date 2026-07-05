@@ -192,8 +192,12 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-[420px] h-full flex items-center mx-auto">
-        <div className="relative w-full aspect-[9/16] max-h-screen overflow-hidden sm:rounded-2xl bg-black">
+        <div className="relative w-full aspect-[9/16] max-h-screen sm:rounded-2xl bg-black">
 
+          {/* Media only, not the header/dropdown below -- the whole frame used
+              to have overflow-hidden (for rounded corners), which also clipped
+              the 3-dot options dropdown against the viewport/frame edge (#97). */}
+          <div className="absolute inset-0 overflow-hidden sm:rounded-2xl">
           {/* ── Story content ── */}
           {currentStory?.bgColor ? (
             <div className="absolute inset-0 flex items-center justify-center p-10" style={{ backgroundColor: currentStory.bgColor }}>
@@ -258,6 +262,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
               <p className="text-xl font-bold text-white text-center drop-shadow-lg">{currentStory?.text}</p>
             </div>
           )}
+          </div>
 
           {/* Top gradient */}
           <div className="absolute inset-x-0 top-0 h-36 bg-gradient-to-b from-black/70 to-transparent pointer-events-none" />

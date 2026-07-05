@@ -42,6 +42,12 @@ export class VideosController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  @Get('following')
+  async following(@Query() query: PaginationDto, @CurrentUser() user: User) {
+    const { data, total } = await this.videosService.findFollowing(user.id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
   @Get('continue-watching')
   async continueWatching(@Query() query: PaginationDto) {
     const { data, total } = await this.videosService.findContinueWatching(query.page!, query.limit!);

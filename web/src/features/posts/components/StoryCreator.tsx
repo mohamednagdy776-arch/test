@@ -73,7 +73,10 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
     <div className="fixed inset-0 z-[200] flex items-center justify-center" dir="rtl">
       <div className="absolute inset-0 bg-[var(--primary)]/80 backdrop-blur-md" onClick={onClose} />
 
-      <div className="relative w-full max-w-sm mx-4 bg-[var(--card)] rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      {/* 90vh vs 90dvh: see UserProfileModal's #174 comment -- same mobile
+          viewport-height mismatch pushed the submit button under the bottom
+          nav (#178). */}
+      <div className="relative w-full max-w-sm mx-4 bg-[var(--card)] rounded-2xl shadow-2xl flex flex-col max-h-[min(90vh,90dvh)]">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)]/50 flex-shrink-0">
           <h3 className="text-base font-bold text-[var(--foreground)]">إنشاء قصة</h3>
@@ -218,7 +221,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
         </div>
 
         {/* Submit */}
-        <div className="px-4 pb-4 pt-2 flex-shrink-0">
+        <div className="px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] flex-shrink-0">
           <button
             onClick={handleSubmit}
             disabled={isUploading || createStory.isPending || (mediaType === 'text' && !text) || (mediaType !== 'text' && !mediaFile)}

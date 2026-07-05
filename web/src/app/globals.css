@@ -1614,3 +1614,17 @@ html.high-contrast {
   --muted-foreground: var(--foreground);
   --border: var(--foreground);
 }
+
+/* Reduce Motion (Settings > Appearance) toggles the `motion-reduce` class on
+   <html>, same as High Contrast above, but nothing consumed it either — the
+   toggle persisted and did nothing visible (#179). Force every
+   transition/animation to be effectively instant regardless of which
+   Tailwind transition-*/duration-*/animate-* utility a component used. */
+html.motion-reduce *,
+html.motion-reduce *::before,
+html.motion-reduce *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}

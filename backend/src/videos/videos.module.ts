@@ -5,13 +5,14 @@ import { VideoLike } from './entities/video-like.entity';
 import { VideoJob } from './entities/video-job.entity';
 import { VideoModerationLog } from './entities/moderation-log.entity';
 import { VideoComment } from './entities/video-comment.entity';
+import { Follow } from '../follows/entities/follow.entity';
 import { VideosService } from './services/videos.service';
 import { TranscodingService } from './services/transcoding.service';
 import { CdnService } from './services/cdn.service';
 import { VideosController, ReelsController } from './controllers/videos.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Video, VideoLike, VideoJob, VideoModerationLog, VideoComment])],
+  imports: [TypeOrmModule.forFeature([Video, VideoLike, VideoJob, VideoModerationLog, VideoComment, Follow])],
   providers: [VideosService, TranscodingService, CdnService],
   controllers: [VideosController, ReelsController],
   exports: [VideosService, TranscodingService, CdnService],

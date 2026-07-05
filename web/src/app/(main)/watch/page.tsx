@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useRecommendedVideos, useTrendingVideos, useVideos, useContinueWatching } from '@/features/videos/hooks';
+import { useRecommendedVideos, useTrendingVideos, useFollowingVideos, useContinueWatching } from '@/features/videos/hooks';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { PlayCircle, Fire, Users, Clock, Plus } from '@phosphor-icons/react';
@@ -203,7 +203,7 @@ export default function WatchPage() {
 
   const { data: recommendedData, isLoading: rLoading } = useRecommendedVideos(activeTab === 'recommended');
   const { data: trendingData,   isLoading: tLoading } = useTrendingVideos(activeTab === 'trending');
-  const { data: followingData,  isLoading: fLoading } = useVideos(1, 20, activeTab === 'following');
+  const { data: followingData,  isLoading: fLoading } = useFollowingVideos(activeTab === 'following');
 
   const getCurrentVideos = () => {
     if (activeTab === 'recommended') return recommendedData?.data;

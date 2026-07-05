@@ -132,7 +132,7 @@ export class PostsService {
     const hasMore = data.length > limit;
     const results = hasMore ? data.slice(0, limit) : data;
     const nextCursor = hasMore ? results[results.length - 1]?.createdAt?.toISOString() : undefined;
-    return { data: results, nextCursor, hasMore };
+    return { data: this.sanitizePolls(results, viewerId), nextCursor, hasMore };
   }
 
   async getRecentFeedByCursor(cursor: string | undefined, limit: number, viewerId?: string) {
@@ -154,7 +154,29 @@ export class PostsService {
     const hasMore = data.length > limit;
     const results = hasMore ? data.slice(0, limit) : data;
     const nextCursor = hasMore ? results[results.length - 1]?.createdAt?.toISOString() : undefined;
-    return { data: results, nextCursor, hasMore };
+    return { data: this.sanitizePolls(results, viewerId), nextCursor, hasMore };
+  }
+
+  // The feed returned pollOptions straight off the entity, `voterIds` and all —
+  // every viewer could see who voted for what, and the client had no way to
+  // know which option (if any) THEY picked, so the poll always rendered
+  // unselected on a fresh page load (#167). Strip voterIds for privacy, but
+  // surface the viewer's own pick as `myVote`.
+  private sanitizePolls<T extends { pollOptions?: { text: string; votes: number; voterIds?: string[] }[] }>(
+    posts: T[],
+    viewerId?: string,
+  ): T[] {
+    return posts.map((post) => {
+      if (!post.pollOptions) return post;
+      const myVote = viewerId
+        ? post.pollOptions.findIndex((o) => Array.isArray(o.voterIds) && o.voterIds.includes(viewerId))
+        : -1;
+      return {
+        ...post,
+        pollOptions: post.pollOptions.map(({ text, votes }) => ({ text, votes })),
+        myVote: myVote >= 0 ? myVote : null,
+      } as T;
+    });
   }
 
   // Exclude posts the viewer hid ("not interested") or snoozed (until the snooze

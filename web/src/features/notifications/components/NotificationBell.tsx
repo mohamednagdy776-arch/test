@@ -40,7 +40,10 @@ export function NotificationBell() {
 
       {isOpen && (
         <div
-          className="absolute left-0 top-full mt-2 w-96 max-h-[80vh] flex flex-col bg-[var(--card)] rounded-2xl shadow-[0_8px_40px_rgba(19,31,46,0.16)] border border-[var(--border)]/60 z-50 overflow-hidden animate-scale-in"
+          // Fixed w-96 (384px) anchored only to the left edge overflowed off
+          // the right side of narrow mobile viewports (#170) -- clamp to the
+          // viewport width instead of assuming there's always 384px of room.
+          className="absolute left-0 top-full mt-2 w-[min(24rem,calc(100vw-1.5rem))] max-h-[80vh] flex flex-col bg-[var(--card)] rounded-2xl shadow-[0_8px_40px_rgba(19,31,46,0.16)] border border-[var(--border)]/60 z-50 overflow-hidden animate-scale-in"
           style={{ transformOrigin: 'top left' }}
         >
           <div className="flex-1 overflow-y-auto overscroll-contain">

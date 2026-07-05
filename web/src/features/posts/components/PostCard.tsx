@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api-client';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
+import { Modal } from '@/components/ui/Modal';
 import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 
 const REACTIONS = [
@@ -176,46 +177,42 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
   const sharePost = useSharePost();
   const { showToast } = useToast() as any;
 
-  if (!isOpen) return null;
-
+  // Was a hand-rolled `fixed inset-0` div nested inside the post <article>,
+  // whose `hover:-translate-y-1` gives it a live transform while the cursor
+  // (still over the card, since the Share button is inside it) is on it --
+  // that transform makes the article the containing block for this modal's
+  // `position: fixed`, so it rendered squeezed into the card instead of
+  // centered on the viewport (#95). The shared Modal component already
+  // solves this via a document.body portal (see its own comment re #106).
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in">
-      <div className="absolute inset-0 bg-[var(--primary)]/80 backdrop-blur-glass-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md mx-4 bg-[var(--card)] rounded-2xl p-6 animate-scale-in shadow-glow-lg border border-[var(--border)]/60">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-[var(--foreground)]">مشاركة المنشور</h3>
-          <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:scale-110 transition-transform">
-            <X size={24} />
-          </button>
-        </div>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="ما الذي يدور في ذهنك؟"
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] mb-4 transition-all duration-300"
-          rows={3}
-        />
-        <div className="bg-[var(--muted)]/40 rounded-xl p-3 mb-4 shadow-inner-soft">
-          <p className="text-xs text-[var(--muted-foreground)] line-clamp-2">{postContent}</p>
-        </div>
-        <button
-          onClick={async () => {
-            try {
-              await sharePost.mutateAsync({ postId, content });
-              showToast('تمت المشاركة بنجاح', 'success');
-              onClose();
-            } catch {
-              showToast('فشلت المشاركة، حاول مجدداً', 'error');
-            }
-          }}
-          disabled={sharePost.isPending}
-          className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all hover:-translate-y-0.5 duration-300"
-          style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
-        >
-          {sharePost.isPending ? 'جاري النشر...' : 'مشاركة'}
-        </button>
+    <Modal open={isOpen} onClose={onClose} title="مشاركة المنشور">
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        placeholder="ما الذي يدور في ذهنك؟"
+        className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] mb-4 transition-all duration-300"
+        rows={3}
+      />
+      <div className="bg-[var(--muted)]/40 rounded-xl p-3 mb-4 shadow-inner-soft">
+        <p className="text-xs text-[var(--muted-foreground)] line-clamp-2">{postContent}</p>
       </div>
-    </div>
+      <button
+        onClick={async () => {
+          try {
+            await sharePost.mutateAsync({ postId, content });
+            showToast('تمت المشاركة بنجاح', 'success');
+            onClose();
+          } catch {
+            showToast('فشلت المشاركة، حاول مجدداً', 'error');
+          }
+        }}
+        disabled={sharePost.isPending}
+        className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all hover:-translate-y-0.5 duration-300"
+        style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
+      >
+        {sharePost.isPending ? 'جاري النشر...' : 'مشاركة'}
+      </button>
+    </Modal>
   );
 }
 
@@ -320,8 +317,11 @@ function LinkPreview({ url, title, description, image }: { url: string; title?: 
   );
 }
 
-function PollDisplay({ postId, options }: { postId: string; options: { text: string; votes: number }[] }) {
-  const [voted, setVoted] = useState<number | null>(null);
+function PollDisplay({ postId, options, myVote }: { postId: string; options: { text: string; votes: number }[]; myVote?: number | null }) {
+  // Previously always started at null, so a vote "disappeared" on refresh —
+  // the backend now tells us which option (if any) this viewer already
+  // picked (#167).
+  const [voted, setVoted] = useState<number | null>(myVote ?? null);
   const [updatedOptions, setUpdatedOptions] = useState(options);
 
   const totalVotes = updatedOptions.reduce((sum, opt) => sum + opt.votes, 0);
@@ -476,7 +476,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
         </div>
       )}
       {post.linkUrl && <div className="px-4"><LinkPreview url={post.linkUrl} title={post.linkTitle} description={post.linkDescription} image={post.linkImage} /></div>}
-      {post.pollOptions && <div className="px-4"><PollDisplay postId={post.id} options={post.pollOptions} /></div>}
+      {post.pollOptions && <div className="px-4"><PollDisplay postId={post.id} options={post.pollOptions} myVote={post.myVote} /></div>}
       {mediaUrl && (
         <div className="mt-3">
           {post.mediaType === 'video' ? (

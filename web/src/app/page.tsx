@@ -280,7 +280,7 @@ export default function Home() {
                     <Link href="/register">ابدأ رحلتك مجاناً</Link>
                   </Button>
                   <Button asChild variant="ghostLight" size="lg" className="w-full sm:w-auto">
-                    <Link href="/login">شاهد كيف يعمل</Link>
+                    <Link href="#how">شاهد كيف يعمل</Link>
                   </Button>
                 </motion.div>
 

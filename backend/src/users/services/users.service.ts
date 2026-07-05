@@ -429,7 +429,10 @@ export class UsersService {
       await this.deleteUploadedFile(existing.coverUrl);
     }
     await this.profilesRepo.update({ user: { id: userId } }, { coverUrl });
-    await this.logActivity(userId, 'photo', 'Updated cover photo', { coverUrl });
+    // Hardcoded English, and always said "Updated" even on a first-ever
+    // upload -- `existing` (fetched before the update) already tells us
+    // which case this is (#204/#206).
+    await this.logActivity(userId, 'photo', existing.coverUrl ? 'حدّث صورة الغلاف' : 'أضاف صورة الغلاف', { coverUrl });
     return this.getProfile(userId);
   }
 
@@ -439,7 +442,9 @@ export class UsersService {
       await this.deleteUploadedFile(existing.avatarUrl);
     }
     await this.profilesRepo.update({ user: { id: userId } }, { avatarUrl });
-    await this.logActivity(userId, 'photo', 'Updated profile picture', { avatarUrl });
+    // Hardcoded English, and always said "Updated" even on a first-ever
+    // upload (#204/#205).
+    await this.logActivity(userId, 'photo', existing.avatarUrl ? 'حدّث صورته الشخصية' : 'أضاف صورة شخصية', { avatarUrl });
     return this.getProfile(userId);
   }
 
