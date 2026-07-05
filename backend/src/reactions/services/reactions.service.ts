@@ -62,7 +62,7 @@ export class ReactionsService {
     return { reacted: true, type: saved.type };
   }
 
-  async findByPost(postId: string) {
+  async findByPost(postId: string, viewerId?: string) {
     const reactions = await this.reactionsRepo.find({
       where: { post: { id: postId } },
       relations: ['user'],
@@ -75,7 +75,13 @@ export class ReactionsService {
       counts[r.type] = (counts[r.type] || 0) + 1;
     }
 
-    return { reactions, counts, total: reactions.length };
+    // Never returned which reaction (if any) the viewer picked, so the
+    // summary button always fell back to the generic "Like" state instead of
+    // showing Love/Haha/etc (#191) -- a working GET .../reactions/me existed,
+    // the frontend just never called it.
+    const userReaction = viewerId ? reactions.find((r) => r.user?.id === viewerId)?.type ?? null : null;
+
+    return { reactions, counts, total: reactions.length, userReaction };
   }
 
   async getUserReaction(postId: string, userId: string) {

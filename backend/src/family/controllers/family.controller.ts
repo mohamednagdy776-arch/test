@@ -45,4 +45,9 @@ export class FamilyController {
   getGuardians(@Request() req: any) {
     return this.service.getMyGuardians(req.user.id);
   }
+
+  @Get('my-wards')
+  getWards(@Request() req: any) {
+    return this.service.getMyWards(req.user.id);
+  }
 }

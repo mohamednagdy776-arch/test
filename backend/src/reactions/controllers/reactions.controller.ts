@@ -30,8 +30,8 @@ export class ReactionsController {
   }
 
   @Get()
-  async findAll(@Param('postId') postId: string) {
-    const result = await this.reactionsService.findByPost(postId);
+  async findAll(@Param('postId') postId: string, @CurrentUser() user: User) {
+    const result = await this.reactionsService.findByPost(postId, user?.id);
     return ok(result);
   }
 

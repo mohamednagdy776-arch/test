@@ -140,6 +140,21 @@ export default function FamilyPage() {
     staleTime: 60_000,
   });
 
+  // Invitations sent TO the current user (as a guardian) — previously there
+  // was no way to even discover these; this page only ever showed invites
+  // the current user had SENT via my-guardians (#200).
+  const { data: wardsData } = useQuery({
+    queryKey: ['my-wards'],
+    queryFn: () => apiClient.get('/family/my-wards').then((r) => r.data),
+    staleTime: 60_000,
+  });
+  const wardInvites: Relationship[] = (wardsData?.data ?? []).filter((r: Relationship) => r.status === 'pending');
+
+  const acceptInvite = useMutation({
+    mutationFn: (id: string) => apiClient.patch(`/family/invitation/${id}/accept`).then((r) => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-wards'] }),
+  });
+
   const relationships: Relationship[] = data?.data ?? data?.relationships ?? data ?? [];
 
   const revoke = useMutation({
@@ -171,6 +186,33 @@ export default function FamilyPage() {
             </button>
           }
         />
+
+        {wardInvites.length > 0 && (
+          <section>
+            <h2 className="text-sm font-bold text-[var(--accent)] mb-3">📨 دعوات موجهة إليك ({wardInvites.length})</h2>
+            <div className="space-y-3">
+              {wardInvites.map((r) => (
+                <div key={r.id} className="rounded-2xl bg-[var(--card)] border border-[var(--border)]/50 p-4 flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-[var(--muted)] flex items-center justify-center text-2xl shrink-0">🛡️</div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-[var(--foreground)] text-sm">
+                      دعوة لتكون {TYPE_LABELS[r.relationshipType] ?? r.relationshipType}
+                    </p>
+                    <p className="text-xs text-[var(--primary)]/60 mt-0.5 truncate">من: {r.wardUserId}</p>
+                  </div>
+                  <button
+                    onClick={() => acceptInvite.mutate(r.id)}
+                    disabled={acceptInvite.isPending}
+                    className="rounded-xl px-4 py-2 text-xs font-bold text-white transition-all disabled:opacity-50"
+                    style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
+                  >
+                    {acceptInvite.isPending ? '...' : 'قبول'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {isLoading ? (
           <div className="space-y-3">

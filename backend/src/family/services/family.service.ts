@@ -11,12 +11,14 @@ import {
   RelationshipStatus,
   RelationshipType,
 } from '../entities/family-relationship.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class FamilyService {
   constructor(
     @InjectRepository(FamilyRelationship)
     private relRepo: Repository<FamilyRelationship>,
+    private notifications: NotificationsService,
   ) {}
 
   async inviteGuardian(
@@ -32,7 +34,12 @@ export class FamilyService {
       guardianUserId,
       relationshipType: type,
     });
-    return this.relRepo.save(rel);
+    const saved = await this.relRepo.save(rel);
+    // The invited party had no notification and no endpoint to even discover
+    // invitations addressed to them (getMyGuardians only returns invites the
+    // CALLER sent) -- invitations were invisible to the invitee (#200).
+    await this.notifications.notifyUser(guardianUserId, wardUserId, 'family_invite', 'invited you as a guardian', 'family_relationship', saved.id);
+    return saved;
   }
 
   async acceptInvitation(
@@ -84,5 +91,11 @@ export class FamilyService {
 
   async getMyGuardians(wardUserId: string): Promise<FamilyRelationship[]> {
     return this.relRepo.find({ where: { wardUserId } });
+  }
+
+  // The invited party (guardian) had no way to list invitations addressed to
+  // them at all -- mirror of getMyGuardians from the other side (#200).
+  async getMyWards(guardianUserId: string): Promise<FamilyRelationship[]> {
+    return this.relRepo.find({ where: { guardianUserId } });
   }
 }
