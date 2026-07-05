@@ -79,6 +79,12 @@ def _describe_child(p1_b64: str, p2_b64: str) -> str:
                 ),
                 "images": [p1_b64, p2_b64],
                 "stream": False,
+                # Default keep_alive unloads the 3.3GB model after 5 idle
+                # minutes; a cold reload made this call take well over a
+                # minute instead of the ~6s it takes once resident. Keep it
+                # loaded for 30 minutes so only a request after a long idle
+                # gap pays that cost (#141).
+                "keep_alive": "30m",
             },
             timeout=300.0,
         )
@@ -111,13 +117,18 @@ def predict_child(p1_b64: str, p2_b64: str) -> str:
     generator = torch.Generator(device="cpu").manual_seed(seed)
 
     pipe = _load_pipe()
+    # 8 steps / guidance 1.0 only ever cost ~45s total (diffusion is cheap here
+    # -- the real time sink was Ollama, see keep_alive above) but produced the
+    # soft, low-detail "painting" look reported in #141. More steps + a bit
+    # more prompt adherence for real detail; still modest since LCM schedulers
+    # are tuned for few steps and don't keep improving indefinitely.
     image = pipe(
         prompt=child_prompt,
         image=init_image,
         strength=0.55,
-        negative_prompt="blurry, distorted, ugly, deformed, cartoon, anime, painting",
-        num_inference_steps=8,
-        guidance_scale=1.0,
+        negative_prompt="blurry, distorted, ugly, deformed, cartoon, anime, painting, illustration, airbrushed, soft focus",
+        num_inference_steps=16,
+        guidance_scale=1.8,
         generator=generator,
     ).images[0]
 
