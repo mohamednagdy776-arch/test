@@ -174,28 +174,36 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   /**
-   * Broadcast an already-persisted message to the OTHER participants.
-   * The REST endpoint (POST /chat/messages) is the single source of truth for
-   * persistence; this only relays in real time and uses `client.to` so the
-   * sender never receives a duplicate of their own message.
+   * Broadcast an already-persisted message to every socket except the exact
+   * one that sent it. The REST endpoint (POST /chat/messages) is the single
+   * source of truth for persistence; this only relays in real time.
    */
   @SubscribeMessage('relayMessage')
   async handleRelay(
     @MessageBody() payload: { conversationId: string; message: any },
     @ConnectedSocket() client: Socket,
   ) {
-    const senderId: string = client.data.userId;
     const message = { ...payload.message, conversationId: payload.conversationId };
 
-    // Deliver to every OTHER participant's own sockets (not just the conversation
-    // room) so messages arrive in real time even when the recipient is not on the
-    // chat screen / hasn't joined the room (#6). `newMessage` updates an open
-    // ChatWindow; `newMessageNotification` drives the app-wide unread/badge.
+    // Deliver to every participant's own sockets (not just the conversation
+    // room) so messages arrive in real time even when the recipient is not on
+    // the chat screen / hasn't joined the room (#6). `newMessage` updates an
+    // open ChatWindow; `newMessageNotification` drives the app-wide unread/
+    // badge. Used to exclude the whole senderId (all of that user's sockets),
+    // not just the one that actually sent the message — so a second open tab
+    // of the SENDER's own account never got the message at all and only
+    // showed it after leaving and reopening the conversation (#197). Exclude
+    // only the originating socket id; the sender's other sockets still need
+    // this exactly like everyone else's do.
     const participantIds = await this.chatService.getParticipantIds(payload.conversationId);
     for (const uid of participantIds) {
-      if (uid === senderId) continue;
-      this.emitToUser(uid, 'newMessage', message);
-      this.emitToUser(uid, 'newMessageNotification', message);
+      const sockets = this.userSockets.get(uid);
+      if (!sockets) continue;
+      for (const socketId of sockets) {
+        if (socketId === client.id) continue;
+        this.server.to(socketId).emit('newMessage', message);
+        this.server.to(socketId).emit('newMessageNotification', message);
+      }
     }
   }
 

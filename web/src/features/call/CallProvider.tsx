@@ -86,6 +86,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   if (ringtoneRef.current === null && typeof window !== 'undefined') {
     ringtoneRef.current = new Ringtone();
   }
+  // Cross-tab: answering/rejecting/ending a call in one tab never told this
+  // user's OTHER open tabs, so their ringtone kept looping indefinitely after
+  // the call was already handled elsewhere (#196).
+  const callChannelRef = useRef<BroadcastChannel | null>(null);
+  if (callChannelRef.current === null && typeof window !== 'undefined' && typeof BroadcastChannel !== 'undefined') {
+    callChannelRef.current = new BroadcastChannel('calls');
+  }
 
   const setPhaseBoth = useCallback((p: CallPhase) => {
     phaseRef.current = p;
@@ -99,6 +106,12 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   /** Tear everything down and return to idle. Safe to call multiple times. */
   const cleanup = useCallback(() => {
+    // Tell this user's other tabs the call is resolved (answered/rejected/
+    // ended) BEFORE peerRef gets cleared elsewhere, so they can stop ringing
+    // for the same conversation (#196).
+    if (peerRef.current) {
+      callChannelRef.current?.postMessage({ type: 'call-resolved', conversationId: peerRef.current.conversationId });
+    }
     pcRef.current?.getSenders().forEach((s) => s.track?.stop());
     try { pcRef.current?.close(); } catch { /* already closed */ }
     pcRef.current = null;
@@ -326,6 +339,23 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     else rt.stop();
     return () => rt.stop();
   }, [phase]);
+
+  // Another of this user's tabs resolved the same call (answered/rejected/
+  // ended) — stop ringing here too instead of looping forever (#196).
+  useEffect(() => {
+    const channel = callChannelRef.current;
+    if (!channel) return;
+    const onMessage = (e: MessageEvent) => {
+      if (e.data?.type !== 'call-resolved') return;
+      if (peerRef.current?.conversationId !== e.data.conversationId) return;
+      if (phaseRef.current !== 'incoming' && phaseRef.current !== 'outgoing') return;
+      cleanup();
+      setPeerBoth(null);
+      setPhaseBoth('idle');
+    };
+    channel.addEventListener('message', onMessage);
+    return () => channel.removeEventListener('message', onMessage);
+  }, [cleanup, setPeerBoth, setPhaseBoth]);
 
   // ── No-answer timeout: cancel an unanswered outgoing call ──────────────
   useEffect(() => {
