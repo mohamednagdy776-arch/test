@@ -37,6 +37,7 @@ export default function SecurityPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
 
   // Change password state
@@ -180,8 +181,9 @@ export default function SecurityPage() {
   };
 
   const handleDeleteAccount = async () => {
+    setDeleteError('');
     if (!deletePassword.trim()) {
-      setAlerts(prev => [...prev, { id: Date.now().toString(), type: 'error', message: 'يرجى إدخال كلمة المرور للتأكيد' }]);
+      setDeleteError('يرجى إدخال كلمة المرور للتأكيد');
       return;
     }
     setDeleteLoading(true);
@@ -190,7 +192,11 @@ export default function SecurityPage() {
       await authApi.logout().catch(() => {});
       window.location.href = '/login';
     } catch (err: any) {
-      setAlerts(prev => [...prev, { id: Date.now().toString(), type: 'error', message: err?.response?.data?.message || 'فشل حذف الحساب، حاول مرة أخرى' }]);
+      // This modal renders via a full-screen portal, on top of the page-level
+      // `alerts` list -- an error pushed there was invisible while the modal
+      // stayed open, so a wrong password looked like a silent no-op (#286).
+      // Show it inside the modal itself instead.
+      setDeleteError(err?.response?.data?.message || 'فشل حذف الحساب، حاول مرة أخرى');
     } finally {
       setDeleteLoading(false);
     }
@@ -523,7 +529,7 @@ export default function SecurityPage() {
           </div>
         </Modal>
 
-        <Modal open={showDeleteModal} onClose={() => { setShowDeleteModal(false); setDeletePassword(''); }} title="حذف الحساب">
+        <Modal open={showDeleteModal} onClose={() => { setShowDeleteModal(false); setDeletePassword(''); setDeleteError(''); }} title="حذف الحساب">
           <div className="space-y-4">
             <p className="text-sm text-[var(--primary)]">
               هل أنت متأكد من طلب حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه.
@@ -538,8 +544,13 @@ export default function SecurityPage() {
               value={deletePassword}
               onChange={(e) => setDeletePassword(e.target.value)}
             />
+            {deleteError && (
+              <div className="p-3 rounded-xl bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 text-[var(--destructive)] text-sm">
+                {deleteError}
+              </div>
+            )}
             <div className="flex gap-3">
-              <Button variant="ghost" onClick={() => { setShowDeleteModal(false); setDeletePassword(''); }} className="flex-1 text-[var(--primary)]">
+              <Button variant="ghost" onClick={() => { setShowDeleteModal(false); setDeletePassword(''); setDeleteError(''); }} className="flex-1 text-[var(--primary)]">
                 إلغاء
               </Button>
               <Button
