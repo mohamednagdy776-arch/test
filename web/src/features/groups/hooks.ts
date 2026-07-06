@@ -162,3 +162,22 @@ export function useUnbanMember(groupId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['group-members', groupId] }),
   });
 }
+
+export function useApproveJoinRequest(groupId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => groupsApi.approveJoinRequest(groupId, userId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['group-members', groupId] });
+      qc.invalidateQueries({ queryKey: ['group', groupId] });
+    },
+  });
+}
+
+export function useRejectJoinRequest(groupId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => groupsApi.rejectJoinRequest(groupId, userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['group-members', groupId] }),
+  });
+}

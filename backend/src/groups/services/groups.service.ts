@@ -116,6 +116,14 @@ export class GroupsService {
     if (!group) throw new NotFoundException('Group not found');
 
     const isMember = await this.isMember(groupId, userId);
+    // Secret groups are invite-only and not even meant to be discoverable --
+    // a non-member hitting the URL directly used to get the full group back
+    // (name/description/cover) with only isMember:false as a hint. Give a
+    // non-member the same 404 a nonexistent group would (#300).
+    if (group.privacy === 'secret' && !isMember) {
+      throw new NotFoundException('Group not found');
+    }
+
     const memberCount = await this.getMemberCount(groupId);
     // Never returned, so the frontend had no way to gate management UI on it
     // even once the creator's role was fixed to actually be 'admin' (#192).
@@ -207,6 +215,7 @@ export class GroupsService {
         joinedAt: m.joinedAt,
         role: m.role,
         isBanned: m.isBanned,
+        status: m.status,
       })),
       total,
     };
@@ -252,6 +261,43 @@ export class GroupsService {
     member.isBanned = false;
     await this.memberRepo.save(member);
     return member;
+  }
+
+  // Pending join requests (private groups) showed up in the member list with
+  // no way to accept/reject them -- Block was the only available action
+  // (#302).
+  async approveJoinRequest(groupId: string, requesterUserId: string, adminUserId: string) {
+    const adminMembership = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: adminUserId } },
+    });
+    if (!adminMembership || adminMembership.role !== 'admin') {
+      throw new ConflictException('Only admins can approve join requests');
+    }
+
+    const member = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: requesterUserId }, status: 'pending' },
+    });
+    if (!member) throw new NotFoundException('Join request not found');
+
+    member.status = 'active';
+    await this.memberRepo.save(member);
+    return member;
+  }
+
+  async rejectJoinRequest(groupId: string, requesterUserId: string, adminUserId: string) {
+    const adminMembership = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: adminUserId } },
+    });
+    if (!adminMembership || adminMembership.role !== 'admin') {
+      throw new ConflictException('Only admins can reject join requests');
+    }
+
+    const member = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: requesterUserId }, status: 'pending' },
+    });
+    if (!member) throw new NotFoundException('Join request not found');
+
+    await this.memberRepo.delete(member.id);
   }
 
   async getMemberRole(groupId: string, userId: string): Promise<string> {

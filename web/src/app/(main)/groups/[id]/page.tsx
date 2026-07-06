@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import { resolveMediaUrl } from '@/lib/media';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup, useUpdateGroup, useGroupMembers, useBanMember, useUnbanMember } from '@/features/groups/hooks';
+import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup, useUpdateGroup, useGroupMembers, useBanMember, useUnbanMember, useApproveJoinRequest, useRejectJoinRequest } from '@/features/groups/hooks';
 import { useGroupPosts, useCreatePostWithMedia, useCreatePost } from '@/features/posts/hooks';
 import { PostCard } from '@/features/posts/components/PostCard';
 import { Modal } from '@/components/ui/Modal';
@@ -31,6 +31,8 @@ export default function GroupDetailPage() {
   const updateGroup = useUpdateGroup();
   const banMember   = useBanMember(id);
   const unbanMember = useUnbanMember(id);
+  const approveJoinRequest = useApproveJoinRequest(id);
+  const rejectJoinRequest  = useRejectJoinRequest(id);
   const { data: membersData } = useGroupMembers(id);
   const createPost            = useCreatePost();
   const createPostWithMedia   = useCreatePostWithMedia();
@@ -421,8 +423,24 @@ export default function GroupDetailPage() {
                     {m.isBanned && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--destructive) 12%, var(--muted))', color: 'var(--destructive)' }}>محظور</span>
                     )}
+                    {m.status === 'pending' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--muted))', color: 'var(--accent)' }}>بانتظار الموافقة</span>
+                    )}
                   </div>
-                  {m.role !== 'admin' && (
+                  {/* Pending join requests only had a Block action available --
+                      no way to actually accept or reject them (#302). */}
+                  {m.status === 'pending' ? (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => rejectJoinRequest.mutate(m.id)} disabled={rejectJoinRequest.isPending}
+                        className="text-xs font-medium" style={{ color: 'var(--destructive)' }}>
+                        رفض
+                      </button>
+                      <button onClick={() => approveJoinRequest.mutate(m.id)} disabled={approveJoinRequest.isPending}
+                        className="text-xs font-medium" style={{ color: 'var(--primary)' }}>
+                        قبول
+                      </button>
+                    </div>
+                  ) : m.role !== 'admin' && (
                     m.isBanned ? (
                       <button onClick={() => unbanMember.mutate(m.id)} disabled={unbanMember.isPending}
                         className="text-xs font-medium shrink-0" style={{ color: 'var(--primary)' }}>

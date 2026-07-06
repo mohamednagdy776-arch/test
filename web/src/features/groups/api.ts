@@ -63,4 +63,10 @@ export const groupsApi = {
 
   unbanMember: (id: string, userId: string) =>
     apiClient.post(`/groups/${id}/members/${userId}/unban`).then((r) => r.data),
+
+  approveJoinRequest: (id: string, userId: string) =>
+    apiClient.post(`/groups/${id}/members/${userId}/approve`).then((r) => r.data),
+
+  rejectJoinRequest: (id: string, userId: string) =>
+    apiClient.post(`/groups/${id}/members/${userId}/reject`).then((r) => r.data),
 };

@@ -190,6 +190,18 @@ export class GroupsController {
     return ok(member, 'Member unbanned');
   }
 
+  @Post(':id/members/:userId/approve')
+  async approveJoinRequest(@Param('id') id: string, @Param('userId') userId: string, @CurrentUser() user: User) {
+    const member = await this.groupsService.approveJoinRequest(id, userId, user.id);
+    return ok(member, 'Join request approved');
+  }
+
+  @Post(':id/members/:userId/reject')
+  async rejectJoinRequest(@Param('id') id: string, @Param('userId') userId: string, @CurrentUser() user: User) {
+    await this.groupsService.rejectJoinRequest(id, userId, user.id);
+    return ok(null, 'Join request rejected');
+  }
+
   @Post(':id/join')
   async join(@Param('id') id: string, @CurrentUser() user: User) {
     const group = await this.groupsService.join(id, user);
@@ -203,15 +215,28 @@ export class GroupsController {
   }
 
   @Get(':id/members')
-  async getMembers(@Param('id') id: string, @Query() query: PaginationDto) {
+  async getMembers(@Param('id') id: string, @Query() query: PaginationDto, @CurrentUser() user: User) {
+    await this.assertCanViewContent(id, user.id);
     const members = await this.groupsService.getMembers(id, query.page!, query.limit!);
     return ok(members);
+  }
+
+  // Non-members could load any private/secret group's posts or member list by
+  // UUID alone -- neither route checked membership at all (#300, #301). Secret
+  // groups 404 via findOne() itself (not even meant to be discoverable);
+  // private groups exist but deny content to non-members.
+  private async assertCanViewContent(groupId: string, userId: string): Promise<void> {
+    const group = await this.groupsService.findOne(groupId, userId);
+    if (group.privacy === 'private' && !group.isMember) {
+      throw new ForbiddenException('Join this group to view its content');
+    }
   }
 
   // ── Group posts (H-09) ────────────────────────────────────────
 
   @Get(':id/posts')
-  async getGroupPosts(@Param('id') id: string, @Query() query: PaginationDto) {
+  async getGroupPosts(@Param('id') id: string, @Query() query: PaginationDto, @CurrentUser() user: User) {
+    await this.assertCanViewContent(id, user.id);
     const { data, total } = await this.postsService.findByGroup(
       id,
       query.page || 1,
