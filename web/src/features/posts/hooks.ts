@@ -46,6 +46,7 @@ export function useCreatePost() {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['feed-recent'] });
       qc.invalidateQueries({ queryKey: ['group-posts'] });
+      qc.invalidateQueries({ queryKey: ['profile-posts'] });
     },
   });
 }
@@ -59,6 +60,7 @@ export function useCreatePostWithMedia() {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['feed-recent'] });
       qc.invalidateQueries({ queryKey: ['group-posts'] });
+      qc.invalidateQueries({ queryKey: ['profile-posts'] });
     },
   });
 }
@@ -70,10 +72,15 @@ export function useUpdatePost() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['feed-recent'] });
+      qc.invalidateQueries({ queryKey: ['profile-posts'] });
     },
   });
 }
 
+// Every mutation above only ever invalidated the main-feed query keys -- the
+// profile Posts tab (ProfileView.tsx, queryKey ['profile-posts', userId, page])
+// never refetched after a delete/edit/share/hide/report, so a successfully
+// deleted post stayed visible there until a full page reload (#244).
 export function useDeletePost() {
   const qc = useQueryClient();
   return useMutation({
@@ -81,6 +88,7 @@ export function useDeletePost() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['feed-recent'] });
+      qc.invalidateQueries({ queryKey: ['profile-posts'] });
     },
   });
 }
@@ -92,6 +100,7 @@ export function useSharePost() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['feed-recent'] });
+      qc.invalidateQueries({ queryKey: ['profile-posts'] });
     },
   });
 }
