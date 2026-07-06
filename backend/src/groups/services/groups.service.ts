@@ -193,7 +193,23 @@ export class GroupsService {
     });
     // Stripped role/isBanned, so there was no way for a management UI to know
     // who's already an admin or to show a ban action per member (#192).
-    return { data: data.map(m => ({ ...m.user, joinedAt: m.joinedAt, role: m.role, isBanned: m.isBanned })), total };
+    //
+    // `...m.user` previously spread the FULL User entity into a plain object —
+    // that strips the class prototype, so class-transformer's @Exclude on
+    // passwordHash/totpSecret/resetToken/verificationToken never applies and
+    // every field leaked verbatim to any group member (same class of bug as
+    // #745). Project only the fields the members UI actually needs instead.
+    return {
+      data: data.map(m => ({
+        id: m.user.id,
+        username: m.user.username,
+        fullName: m.user.fullName,
+        joinedAt: m.joinedAt,
+        role: m.role,
+        isBanned: m.isBanned,
+      })),
+      total,
+    };
   }
 
   async delete(groupId: string) {
