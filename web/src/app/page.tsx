@@ -230,20 +230,7 @@ export default function Home() {
           {/* Background layer — clips the video + decoration. The OUTER panel is
               overflow-visible so the floating visual can hang below the video. */}
           <div aria-hidden className="absolute inset-0 overflow-hidden rounded-[2rem] sm:rounded-[2.75rem]" style={{ background: `linear-gradient(160deg, ${C.forestDeep} 0%, ${C.forest} 55%, ${C.emerald} 130%)` }}>
-            {/* YouTube background video — heavily overscanned + center-cropped so
-                ALL YouTube chrome (title, logo, controls on every edge) is off
-                screen. Muted autoplay loop; mounted client-side only. */}
-            {mounted && (
-              <iframe
-                title="فيديو الخلفية"
-                tabIndex={-1}
-                allow="autoplay; encrypted-media; picture-in-picture"
-                referrerPolicy="strict-origin-when-cross-origin"
-                src="https://www.youtube-nocookie.com/embed/r6EQdFFbMx0?autoplay=1&mute=1&loop=1&playlist=r6EQdFFbMx0&controls=0&modestbranding=1&showinfo=0&rel=0&disablekb=1&fs=0&playsinline=1&iv_load_policy=3"
-                className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[340%] w-[340%] sm:h-[185%] sm:w-[185%] lg:h-[155%] lg:w-[155%]"
-              />
-            )}
-            {/* Dark tint over the video for text legibility */}
+            {/* Dark tint for text legibility over the gradient background */}
             <div aria-hidden className="absolute inset-0" style={{ background: `linear-gradient(105deg, ${C.forestDeep}f2 0%, ${C.forestDeep}c2 45%, ${C.forest}82 100%)` }} />
             {/* Aurora glows — always in the DOM (identical on server + first client
                 render); animation starts only after mount. */}
