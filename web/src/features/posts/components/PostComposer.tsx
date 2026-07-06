@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useCreatePost, useCreatePostWithMedia, useUploadMedia } from '../hooks';
+import { usePrivacySettings } from '@/features/settings/hooks';
 import { cn } from '@/lib/utils';
 import { extractFirstUrl } from '@/lib/linkify';
 import { useLinkPreview } from '@/lib/useLinkPreview';
@@ -33,7 +34,18 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
   const [bgColor, setBgColor] = useState<string | null>(null);
   const [feeling, setFeeling] = useState<{ icon: any; label: string } | null>(null);
   const [location, setLocation] = useState('');
+  // Settings > Privacy > "من يمكنه رؤية منشوراتك" is explicitly documented as
+  // applying to new posts, but the composer always hardcoded 'friends' and
+  // never read it -- the setting had no effect on anything (#103).
+  const { data: privacySettings } = usePrivacySettings();
   const [audience, setAudience] = useState('friends');
+  const [audienceTouched, setAudienceTouched] = useState(false);
+
+  useEffect(() => {
+    if (!audienceTouched && privacySettings?.data?.whoCanSeePosts) {
+      setAudience(privacySettings.data.whoCanSeePosts);
+    }
+  }, [privacySettings, audienceTouched]);
   const [showBgPicker, setShowBgPicker] = useState(false);
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
   const [showAudiencePicker, setShowAudiencePicker] = useState(false);
@@ -147,7 +159,8 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
     setFeeling(null);
     setLocation('');
     setShowLocation(false);
-    setAudience('friends');
+    setAudience(privacySettings?.data?.whoCanSeePosts || 'friends');
+    setAudienceTouched(false);
     setMediaPreviews([]);
     setMediaFiles([]);
     setScheduleDate('');
@@ -319,7 +332,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                 <button
                   key={a.value}
                   type="button"
-                  onClick={() => { setAudience(a.value); setShowAudiencePicker(false); }}
+                  onClick={() => { setAudience(a.value); setAudienceTouched(true); setShowAudiencePicker(false); }}
                   className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1', audience === a.value ? 'bg-[var(--muted-foreground)] text-[var(--card)]' : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]')}
                 >
                   <Icon size={16} />
