@@ -171,7 +171,11 @@ export default function PrivacyPage() {
     if (!selectedBlock) return;
     setPrivacyError(null);
     try {
-      await unblockUser.mutateAsync(selectedBlock.id);
+      // DELETE /blocks/:id looks up the block by the BLOCKED USER's id, not
+      // the block relation's own id -- passing selectedBlock.id here always
+      // 404'd ("Block not found"), so Confirm silently never unblocked
+      // anyone (#247).
+      await unblockUser.mutateAsync(selectedBlock.blocked.id);
       setShowBlockModal(false);
       setSelectedBlock(null);
     } catch (err: any) {
