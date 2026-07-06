@@ -8,6 +8,7 @@ import { useFriends, usePendingRequests, useSuggestions, useAcceptFriendRequest,
 import { cn, displayName } from '@/lib/utils';
 import { DotsThreeVertical, ChatCircle, UserMinus, Prohibit, UsersThree } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useToast } from '@/components/ui/Toast';
 
 import { resolveMediaUrl } from '@/lib/media';
 
@@ -104,10 +105,13 @@ function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept:
   );
 }
 
-function SuggestionCard({ user, onAdd, onFollow }: { user: any; onAdd: () => void; onFollow: () => void }) {
+function SuggestionCard({ user, onAdd, onFollow, adding, added, following, followed }: {
+  user: any; onAdd: () => void; onFollow: () => void;
+  adding: boolean; added: boolean; following: boolean; followed: boolean;
+}) {
   const name = displayName(user);
   const mutual = user.mutual || 0;
-  const avatarSrc = resolveMediaUrl(user.userId?.avatar);
+  const avatarSrc = resolveMediaUrl(user.userId?.profile?.avatarUrl);
 
   return (
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
@@ -120,15 +124,15 @@ function SuggestionCard({ user, onAdd, onFollow }: { user: any; onAdd: () => voi
         </div>
       </div>
       <div className="flex gap-2">
-        <button onClick={onAdd}
-          className="flex-1 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90"
+        <button onClick={onAdd} disabled={adding || added}
+          className="flex-1 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: 'var(--primary-foreground)' }}>
-          إضافة صديق
+          {added ? 'تم إرسال الطلب' : adding ? '...' : 'إضافة صديق'}
         </button>
-        <button onClick={onFollow}
-          className="flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors"
+        <button onClick={onFollow} disabled={following || followed}
+          className="flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}>
-          متابعة
+          {followed ? 'تتم المتابعة' : following ? '...' : 'متابعة'}
         </button>
       </div>
     </div>
@@ -203,6 +207,12 @@ export default function FriendsPage() {
   const [editListName, setEditListName] = useState('');
   const [editListMemberIds, setEditListMemberIds] = useState<string[]>([]);
   const [confirmAction, setConfirmAction] = useState<{ type: 'unfriend' | 'block' | 'deleteList'; id: string; label: string } | null>(null);
+  // Add-friend/Follow in Suggestions gave zero feedback on click (no toast, no
+  // disabled/label change) -- a successful request looked indistinguishable
+  // from a dead button (#259). Track per-suggestion state locally.
+  const [sentRequestIds, setSentRequestIds] = useState<Set<string>>(new Set());
+  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set());
+  const { showToast } = useToast();
 
   const { data: friendsData, isLoading: friendsLoading, isError: friendsError } = useFriends();
   const { data: requestsData, isLoading: requestsLoading, isError: requestsError } = usePendingRequests();
@@ -212,9 +222,9 @@ export default function FriendsPage() {
 
   const { mutate: accept } = useAcceptFriendRequest();
   const { mutate: decline } = useDeclineFriendRequest();
-  const { mutate: sendRequest } = useSendFriendRequest();
+  const { mutate: sendRequest, isPending: sendingRequest, variables: sendingRequestId } = useSendFriendRequest();
   const { mutate: unfriend } = useUnfriend();
-  const { mutate: follow } = useFollowUser();
+  const { mutate: follow, isPending: followingPending, variables: followingId } = useFollowUser();
   const { mutate: block } = useBlockUser();
   const { mutate: createList } = useCreateFriendList();
   const { mutate: updateList } = useUpdateFriendList();
@@ -266,7 +276,27 @@ export default function FriendsPage() {
   };
 
   const handleFollow = (userId: string) => {
-    follow(userId);
+    follow(userId, {
+      onSuccess: () => {
+        setFollowedIds((prev) => new Set(prev).add(userId));
+        showToast?.('تمت المتابعة', 'success');
+      },
+      onError: (err: any) => {
+        showToast?.(err?.response?.data?.message || 'تعذّرت المتابعة', 'error');
+      },
+    });
+  };
+
+  const handleAddFriend = (userId: string) => {
+    sendRequest(userId, {
+      onSuccess: () => {
+        setSentRequestIds((prev) => new Set(prev).add(userId));
+        showToast?.('تم إرسال طلب الصداقة', 'success');
+      },
+      onError: (err: any) => {
+        showToast?.(err?.response?.data?.message || 'تعذّر إرسال الطلب', 'error');
+      },
+    });
   };
 
   const handleCreateList = () => {
@@ -486,14 +516,21 @@ export default function FriendsPage() {
               </div>
             ) : suggestions.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {suggestions.map((s: any) => (
-                  <SuggestionCard
-                    key={s.userId?.id || s.userId}
-                    user={s}
-                    onAdd={() => sendRequest(s.userId?.id || s.userId)}
-                    onFollow={() => handleFollow(s.userId?.id || s.userId)}
-                  />
-                ))}
+                {suggestions.map((s: any) => {
+                  const suggestedId = s.userId?.id || s.userId;
+                  return (
+                    <SuggestionCard
+                      key={suggestedId}
+                      user={s}
+                      onAdd={() => handleAddFriend(suggestedId)}
+                      onFollow={() => handleFollow(suggestedId)}
+                      adding={sendingRequest && sendingRequestId === suggestedId}
+                      added={sentRequestIds.has(suggestedId)}
+                      following={followingPending && followingId === suggestedId}
+                      followed={followedIds.has(suggestedId)}
+                    />
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-12">

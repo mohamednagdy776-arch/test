@@ -204,8 +204,16 @@ export class FriendsService {
   }
 
   async getSuggestions(userId: string, limit = 10) {
-    const friends = await this.getFriends(userId, 1, 500);
-    const friendIds = friends.data.map(f => f.id);
+    // `limit` comes from `@Query('limit')`; when the param is absent Nest's
+    // global transform pipe still coerces it via the reflected `number` type,
+    // producing `Number(undefined) = NaN` rather than `undefined` — so the
+    // service's own `limit = 10` default parameter never actually applied
+    // (defaults only substitute for a literal `undefined`) and `.limit(NaN)`
+    // crashed the query with a 500 on every plain `GET /friends/suggestions`
+    // call with no explicit `?limit=`. Also rejects non-positive values (#259).
+    const take = Number.isFinite(limit) && (limit as number) > 0 ? Math.floor(limit as number) : 10;
+
+    const friendIds = await this.getFriendIds(userId);
 
     // No friends yet → cannot compute mutual-friend suggestions.
     // Empty arrays would produce invalid SQL `IN ()`, so guard explicitly.
@@ -213,19 +221,52 @@ export class FriendsService {
       return [];
     }
 
-    const suggestions = await this.friendshipsRepo
+    // Previously only matched rows where the friend was the REQUESTER
+    // (`f.requesterId IN friendIds`), silently missing every friend-of-friend
+    // reachable through a friendship the friend had only *accepted* rather
+    // than sent — i.e. half of all real candidates, depending on which side
+    // of that row happened to be the requester (#259).
+    const rows = await this.friendshipsRepo
       .createQueryBuilder('f')
-      .select('f.addresseeId', 'userId')
-      .addSelect('COUNT(f.requesterId)', 'mutual')
-      .where('f.requesterId IN (:...friendIds)', { friendIds })
-      .andWhere('f.status = :status', { status: FriendshipStatus.ACCEPTED })
-      .andWhere('f.addresseeId NOT IN (:...excludeIds)', { excludeIds: [userId, ...friendIds] })
-      .groupBy('f.addresseeId')
-      .orderBy('mutual', 'DESC')
-      .limit(limit)
-      .getRawMany();
+      .select('f.requesterId', 'requesterId')
+      .addSelect('f.addresseeId', 'addresseeId')
+      .where('f.status = :status', { status: FriendshipStatus.ACCEPTED })
+      .andWhere('(f.requesterId IN (:...friendIds) OR f.addresseeId IN (:...friendIds))', { friendIds })
+      .getRawMany<{ requesterId: string; addresseeId: string }>();
 
-    return suggestions;
+    const friendIdSet = new Set(friendIds);
+    const excludeIds = new Set([userId, ...friendIds]);
+    const mutualCounts = new Map<string, number>();
+    for (const row of rows) {
+      const { requesterId, addresseeId } = row;
+      if (friendIdSet.has(requesterId) && !excludeIds.has(addresseeId)) {
+        mutualCounts.set(addresseeId, (mutualCounts.get(addresseeId) ?? 0) + 1);
+      }
+      if (friendIdSet.has(addresseeId) && !excludeIds.has(requesterId)) {
+        mutualCounts.set(requesterId, (mutualCounts.get(requesterId) ?? 0) + 1);
+      }
+    }
+
+    const topCandidateIds = [...mutualCounts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, take)
+      .map(([id]) => id);
+
+    if (topCandidateIds.length === 0) return [];
+
+    // The frontend renders each suggestion's name/avatar off `s.userId` as a
+    // hydrated user object (`displayName(user)`, `user.userId?.avatar`) —
+    // the previous version returned a bare id string, so every card fell
+    // back to a placeholder name with no avatar.
+    const users = await this.friendshipsRepo.manager.getRepository(User).find({
+      where: topCandidateIds.map((id) => ({ id })),
+      relations: ['profile'],
+    });
+    const usersById = new Map(users.map((u) => [u.id, u]));
+
+    return topCandidateIds
+      .filter((id) => usersById.has(id))
+      .map((id) => ({ userId: usersById.get(id), mutual: mutualCounts.get(id) ?? 0 }));
   }
 
   // Writes to `user_blocks` (via blocksRepo/UserBlock) — a different table
