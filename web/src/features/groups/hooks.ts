@@ -127,3 +127,38 @@ export function useDeleteGroup() {
     },
   });
 }
+
+export function useUpdateGroup() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name?: string; description?: string; category?: string; location?: string; rules?: string } }) =>
+      groupsApi.updateGroup(id, data),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: ['group', id] });
+    },
+  });
+}
+
+export function useGroupMembers(id: string, page = 1, limit = 50) {
+  return useQuery({
+    queryKey: ['group-members', id, page],
+    queryFn: () => groupsApi.getMembers(id, page, limit),
+    enabled: !!id,
+  });
+}
+
+export function useBanMember(groupId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => groupsApi.banMember(groupId, userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['group-members', groupId] }),
+  });
+}
+
+export function useUnbanMember(groupId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => groupsApi.unbanMember(groupId, userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['group-members', groupId] }),
+  });
+}

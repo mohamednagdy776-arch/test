@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, UseInterceptors, UploadedFile, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, UseInterceptors, UploadedFile, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { memoryStorage } from 'multer';
@@ -9,6 +9,7 @@ import { signMediaPath } from '../../common/utils/media-token';
 import { GroupsService } from '../services/groups.service';
 import { PostsService } from '../../posts/services/posts.service';
 import { CreateGroupDto } from '../dto/create-group.dto';
+import { UpdateGroupDto } from '../dto/update-group.dto';
 import { CreatePostDto } from '../../posts/dto/create-post.dto';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -130,6 +131,63 @@ export class GroupsController {
   async findOne(@Param('id') id: string, @CurrentUser() user: User) {
     const group = await this.groupsService.findOne(id, user.id);
     return ok(group);
+  }
+
+  // Group admins had no way to update the group at all -- no endpoint existed
+  // (#192). Reuses the same cover-photo validation/persist pattern as create().
+  @Patch(':id')
+  @UseInterceptors(FileInterceptor('coverPhoto', {
+    storage: memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const okExt = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.originalname);
+      const okMime = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.mimetype);
+      if (!okExt || !okMime) {
+        return cb(new BadRequestException('Only image files are allowed'), false);
+      }
+      cb(null, true);
+    },
+  }))
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateGroupDto,
+    @UploadedFile() file: Express.Multer.File | undefined,
+    @CurrentUser() user: User,
+  ) {
+    if (file) {
+      const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
+      const destDir = join(process.cwd(), 'uploads', 'covers');
+      mkdirSync(destDir, { recursive: true });
+      let processed: Buffer;
+      try {
+        processed = await sharp(file.buffer)
+          .resize(1200, 375, { fit: 'cover', position: 'centre' })
+          .jpeg({ quality: 85 })
+          .toBuffer();
+      } catch {
+        throw new BadRequestException('File is not a valid image');
+      }
+      writeFileSync(join(destDir, filename), processed);
+      const mediaPath = `covers/${filename}`;
+      const token = signMediaPath(mediaPath);
+      dto.coverPhoto = `/api/v1/media/${mediaPath}?t=${token}`;
+    }
+    const group = await this.groupsService.update(id, user.id, dto);
+    return ok(group, 'Group updated');
+  }
+
+  // Ban/unban existed in the service (with proper admin-role checks) but were
+  // never wired to any route -- dead, unreachable code (#192).
+  @Post(':id/members/:userId/ban')
+  async banMember(@Param('id') id: string, @Param('userId') userId: string, @CurrentUser() user: User) {
+    const member = await this.groupsService.banMember(id, userId, user.id);
+    return ok(member, 'Member banned');
+  }
+
+  @Post(':id/members/:userId/unban')
+  async unbanMember(@Param('id') id: string, @Param('userId') userId: string, @CurrentUser() user: User) {
+    const member = await this.groupsService.unbanMember(id, userId, user.id);
+    return ok(member, 'Member unbanned');
   }
 
   @Post(':id/join')

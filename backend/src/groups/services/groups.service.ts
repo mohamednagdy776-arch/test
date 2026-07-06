@@ -8,6 +8,7 @@ const MAX_SEARCH_LEN = 100;
 import { Group, GroupPrivacy } from '../entities/group.entity';
 import { GroupMember } from '../entities/group-member.entity';
 import { CreateGroupDto } from '../dto/create-group.dto';
+import { UpdateGroupDto } from '../dto/update-group.dto';
 import { User } from '../../auth/entities/user.entity';
 
 @Injectable()
@@ -20,12 +21,22 @@ export class GroupsService {
   async create(dto: CreateGroupDto, user: User) {
     const group = this.groupsRepo.create({ ...dto, createdBy: user });
     const saved = await this.groupsRepo.save(group);
-    // Auto-join creator
+    // Auto-join creator as admin -- this defaulted to the 'member' role like
+    // anyone else, so the creator never actually had management rights and
+    // no admin-gated UI/endpoint could ever apply to them (#192).
     await this.memberRepo.save(this.memberRepo.create({
       group: { id: saved.id } as any,
       user,
+      role: 'admin',
     }));
     return saved;
+  }
+
+  async update(groupId: string, userId: string, dto: UpdateGroupDto) {
+    const role = await this.getMemberRole(groupId, userId);
+    if (role !== 'admin') throw new ForbiddenException('Only admins can edit this group');
+    await this.groupsRepo.update(groupId, dto);
+    return this.groupsRepo.findOne({ where: { id: groupId } });
   }
 
   // Attach the real member count to a list of groups in ONE grouped query.
@@ -106,8 +117,11 @@ export class GroupsService {
 
     const isMember = await this.isMember(groupId, userId);
     const memberCount = await this.getMemberCount(groupId);
+    // Never returned, so the frontend had no way to gate management UI on it
+    // even once the creator's role was fixed to actually be 'admin' (#192).
+    const role = await this.getMemberRole(groupId, userId);
 
-    return { ...group, isMember, memberCount };
+    return { ...group, isMember, memberCount, role, isAdmin: role === 'admin' };
   }
 
   async join(groupId: string, user: User) {
@@ -177,7 +191,9 @@ export class GroupsService {
       take: limit,
       order: { joinedAt: 'DESC' },
     });
-    return { data: data.map(m => ({ ...m.user, joinedAt: m.joinedAt })), total };
+    // Stripped role/isBanned, so there was no way for a management UI to know
+    // who's already an admin or to show a ban action per member (#192).
+    return { data: data.map(m => ({ ...m.user, joinedAt: m.joinedAt, role: m.role, isBanned: m.isBanned })), total };
   }
 
   async delete(groupId: string) {

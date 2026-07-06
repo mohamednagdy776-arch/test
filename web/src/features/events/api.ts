@@ -52,4 +52,10 @@ export const eventsApi = {
 
   deleteEvent: (id: string) =>
     apiClient.delete(`/events/${id}`).then((r) => r.data),
+
+  updateEvent: (id: string, data: { title?: string; description?: string; location?: string; startDate?: string; endDate?: string }) =>
+    apiClient.patch(`/events/${id}`, data).then((r) => r.data.data),
+
+  getAttendees: (id: string, status: 'going' | 'interested' | 'not_going' = 'going') =>
+    apiClient.get(`/events/${id}/attendees`, { params: { status } }).then((r) => r.data.data),
 };

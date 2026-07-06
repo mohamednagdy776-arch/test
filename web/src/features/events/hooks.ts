@@ -105,3 +105,22 @@ export function useCreateEvent() {
     },
   });
 }
+
+export function useUpdateEvent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { title?: string; description?: string; location?: string; startDate?: string; endDate?: string } }) =>
+      eventsApi.updateEvent(id, data),
+    onSuccess: (_data, { id }) => {
+      qc.invalidateQueries({ queryKey: ['event', id] });
+    },
+  });
+}
+
+export function useEventAttendees(id: string, status: 'going' | 'interested' | 'not_going', enabled: boolean) {
+  return useQuery({
+    queryKey: ['event-attendees', id, status],
+    queryFn: () => eventsApi.getAttendees(id, status),
+    enabled,
+  });
+}

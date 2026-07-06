@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { EventsService } from '../services/events.service';
 import { CreateEventDto, UpdateRsvpDto } from '../dto/create-event.dto';
@@ -51,6 +51,21 @@ export class EventsController {
   async findOne(@Param('id') id: string, @CurrentUser() user?: User) {
     const event = await this.eventsService.findOne(id, user?.id);
     return ok(event);
+  }
+
+  // No edit endpoint existed at all -- event creators had no way to update
+  // details after creation (#194).
+  @Patch(':id')
+  async update(@Param('id') id: string, @Body() dto: Partial<CreateEventDto>, @CurrentUser() user: User) {
+    const event = await this.eventsService.update(id, user.id, dto);
+    return ok(event, 'Event updated');
+  }
+
+  // Attendee counts were shown as plain non-interactive numbers -- no
+  // endpoint returned the actual list of people who RSVP'd (#194).
+  @Get(':id/attendees')
+  async attendees(@Param('id') id: string, @Query('status') status?: 'going' | 'interested' | 'not_going') {
+    return ok(await this.eventsService.getAttendees(id, status ?? 'going'));
   }
 
   @Post(':id/rsvp')

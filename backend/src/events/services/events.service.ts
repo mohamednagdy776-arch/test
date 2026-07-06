@@ -111,7 +111,10 @@ export class EventsService {
   }
 
   async findOne(eventId: string, userId?: string) {
-    const event = await this.eventsRepo.findOne({ where: { id: eventId } });
+    // createdBy wasn't loaded here (no `relations`), so the frontend could
+    // never actually tell the creator apart from anyone else -- there was no
+    // isOwner to gate an edit button on (#194).
+    const event = await this.eventsRepo.findOne({ where: { id: eventId }, relations: ['createdBy'] });
     if (!event) throw new NotFoundException('Event not found');
     const rsvpCounts = await this.getRsvpCounts(eventId);
     let userRsvp = null;
@@ -121,7 +124,46 @@ export class EventsService {
       });
       if (rsvp) userRsvp = rsvp.status;
     }
-    return { ...event, ...rsvpCounts, userRsvp };
+    const isOwner = !!userId && event.createdBy?.id === userId;
+    return { ...event, ...rsvpCounts, userRsvp, isOwner };
+  }
+
+  async update(eventId: string, userId: string, dto: Partial<CreateEventDto>) {
+    const event = await this.eventsRepo.findOne({ where: { id: eventId }, relations: ['createdBy'] });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.createdBy?.id !== userId) throw new ConflictException('Only the event creator can edit this event');
+    const { title, description, location, coverPhoto, privacy } = dto as any;
+    const startDate = dto.startDate ? new Date(dto.startDate) : undefined;
+    const endDate = dto.endDate ? new Date(dto.endDate) : undefined;
+    if (startDate && endDate && endDate < startDate) {
+      throw new BadRequestException('endDate must be after startDate');
+    }
+    await this.eventsRepo.update(eventId, {
+      ...(title !== undefined && { title }),
+      ...(description !== undefined && { description }),
+      ...(location !== undefined && { location }),
+      ...(coverPhoto !== undefined && { coverPhoto }),
+      ...(privacy !== undefined && { privacy }),
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
+    });
+    return this.eventsRepo.findOne({ where: { id: eventId } });
+  }
+
+  // The attendee count chips had nothing to link to -- there was no endpoint
+  // returning the actual people who RSVP'd, only aggregate counts (#194).
+  async getAttendees(eventId: string, status: 'going' | 'interested' | 'not_going' = 'going') {
+    const rsvps = await this.rsvpRepo.find({
+      where: { event: { id: eventId }, status },
+      relations: ['user'],
+      order: { rsvpedAt: 'DESC' },
+    });
+    return rsvps.map((r) => ({
+      id: r.user.id,
+      username: r.user.username,
+      fullName: r.user.fullName,
+      rsvpedAt: r.rsvpedAt,
+    }));
   }
 
   async rsvp(eventId: string, user: User, status: 'going' | 'interested' | 'not_going') {

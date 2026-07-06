@@ -51,4 +51,16 @@ export const groupsApi = {
 
   deleteGroup: (id: string) =>
     apiClient.delete(`/groups/${id}`).then((r) => r.data),
+
+  updateGroup: (id: string, data: { name?: string; description?: string; category?: string; location?: string; rules?: string }) =>
+    apiClient.patch(`/groups/${id}`, data).then((r) => r.data),
+
+  getMembers: (id: string, page = 1, limit = 50) =>
+    apiClient.get(`/groups/${id}/members`, { params: { page, limit } }).then((r) => r.data),
+
+  banMember: (id: string, userId: string) =>
+    apiClient.post(`/groups/${id}/members/${userId}/ban`).then((r) => r.data),
+
+  unbanMember: (id: string, userId: string) =>
+    apiClient.post(`/groups/${id}/members/${userId}/unban`).then((r) => r.data),
 };

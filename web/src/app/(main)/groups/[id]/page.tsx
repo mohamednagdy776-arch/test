@@ -3,7 +3,7 @@ import { useState, useRef } from 'react';
 import { resolveMediaUrl } from '@/lib/media';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup } from '@/features/groups/hooks';
+import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup, useUpdateGroup, useGroupMembers, useBanMember, useUnbanMember } from '@/features/groups/hooks';
 import { useGroupPosts, useCreatePostWithMedia, useCreatePost } from '@/features/posts/hooks';
 import { PostCard } from '@/features/posts/components/PostCard';
 import { Modal } from '@/components/ui/Modal';
@@ -28,10 +28,17 @@ export default function GroupDetailPage() {
   const joinGroup   = useJoinGroup();
   const leaveGroup  = useLeaveGroup();
   const deleteGroup = useDeleteGroup();
+  const updateGroup = useUpdateGroup();
+  const banMember   = useBanMember(id);
+  const unbanMember = useUnbanMember(id);
+  const { data: membersData } = useGroupMembers(id);
   const createPost            = useCreatePost();
   const createPostWithMedia   = useCreatePostWithMedia();
   const { showToast }         = useToast() as any;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
   const [content, setContent]     = useState('');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
@@ -178,6 +185,15 @@ export default function GroupDetailPage() {
 
             {/* Action buttons */}
             <div className="shrink-0 flex items-center gap-2">
+              {(group.isOwner || group.isAdmin) && (
+                <button onClick={() => { setEditName(group.name || ''); setEditDescription(group.description || ''); setShowManageModal(true); }}
+                  aria-label="إدارة المجتمع"
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-105 active:scale-95"
+                  style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                  <PencilLine size={13} />
+                  إدارة
+                </button>
+              )}
               {(group.isOwner || group.isAdmin) && (
                 <button onClick={() => setShowDeleteModal(true)} disabled={deleteGroup.isPending}
                   aria-label="حذف المجتمع"
@@ -356,6 +372,72 @@ export default function GroupDetailPage() {
               <Trash size={13} />
               {deleteGroup.isPending ? 'جاري...' : 'تأكيد الحذف'}
             </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={showManageModal} onClose={() => setShowManageModal(false)} title="إدارة المجتمع" size="lg">
+        <div className="space-y-6">
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>تعديل التفاصيل</h3>
+            <div>
+              <label className="mb-1 block text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>الاسم</label>
+              <input value={editName} onChange={(e) => setEditName(e.target.value)}
+                className="w-full rounded-xl border px-3 py-2 text-sm"
+                style={{ borderColor: 'var(--border)', color: 'var(--foreground)', background: 'var(--card)' }} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>الوصف</label>
+              <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3}
+                className="w-full rounded-xl border px-3 py-2 text-sm resize-none"
+                style={{ borderColor: 'var(--border)', color: 'var(--foreground)', background: 'var(--card)' }} />
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  await updateGroup.mutateAsync({ id, data: { name: editName, description: editDescription } });
+                  showToast('تم تحديث المجتمع', 'success');
+                } catch (err: any) {
+                  showToast(err?.response?.data?.message || 'فشل تحديث المجتمع', 'error');
+                }
+              }}
+              disabled={updateGroup.isPending || !editName.trim()}
+              className="rounded-xl px-4 py-2 text-sm font-bold text-white transition-all disabled:opacity-50"
+              style={{ background: 'var(--primary)' }}>
+              {updateGroup.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+            </button>
+          </div>
+
+          <div className="space-y-3 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>الأعضاء ({membersData?.data?.total ?? membersData?.total ?? 0})</h3>
+            <div className="max-h-72 overflow-y-auto space-y-2">
+              {(membersData?.data?.data ?? membersData?.data ?? []).map((m: any) => (
+                <div key={m.id} className="flex items-center justify-between rounded-xl border p-2.5" style={{ borderColor: 'var(--border)' }}>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{m.fullName || m.username || 'مستخدم'}</span>
+                    {m.role === 'admin' && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--primary) 12%, var(--muted))', color: 'var(--primary)' }}>مشرف</span>
+                    )}
+                    {m.isBanned && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--destructive) 12%, var(--muted))', color: 'var(--destructive)' }}>محظور</span>
+                    )}
+                  </div>
+                  {m.role !== 'admin' && (
+                    m.isBanned ? (
+                      <button onClick={() => unbanMember.mutate(m.id)} disabled={unbanMember.isPending}
+                        className="text-xs font-medium shrink-0" style={{ color: 'var(--primary)' }}>
+                        إلغاء الحظر
+                      </button>
+                    ) : (
+                      <button onClick={() => banMember.mutate(m.id)} disabled={banMember.isPending}
+                        className="text-xs font-medium shrink-0" style={{ color: 'var(--destructive)' }}>
+                        حظر
+                      </button>
+                    )
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </Modal>
