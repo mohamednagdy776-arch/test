@@ -1,5 +1,6 @@
 'use client';
 import { useState, useMemo } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
@@ -21,11 +22,14 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnf
     <div className="rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-3 mb-3">
-        <Avatar src={avatarSrc} name={name} size="md" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{name}</p>
+        {/* Name/avatar were plain, unlinked elements -- clicking did nothing (#261) */}
+        <Link href={user.username ? `/${user.username}` : `/profile/${user.id}`} className="shrink-0">
+          <Avatar src={avatarSrc} name={name} size="md" />
+        </Link>
+        <Link href={user.username ? `/${user.username}` : `/profile/${user.id}`} className="flex-1 min-w-0">
+          <p className="text-sm font-bold truncate hover:underline" style={{ color: 'var(--foreground)' }}>{name}</p>
           <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{user.profile?.bio || ''}</p>
-        </div>
+        </Link>
         <div className="relative">
           <button
             onClick={() => setShowMenu(!showMenu)}
@@ -78,16 +82,20 @@ function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept:
   const name = displayName(request.requester);
   const mutualCount = request.mutualFriends || 0;
   const avatarSrc = resolveMediaUrl(request.requester?.avatar);
+  const profileHref = request.requester?.username ? `/${request.requester.username}` : `/profile/${request.requester?.id}`;
 
   return (
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-3 mb-3">
-        <Avatar src={avatarSrc} name={name} size="md" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{name}</p>
+        {/* Name/avatar were plain, unlinked elements -- clicking did nothing (#261) */}
+        <Link href={profileHref} className="shrink-0">
+          <Avatar src={avatarSrc} name={name} size="md" />
+        </Link>
+        <Link href={profileHref} className="flex-1 min-w-0">
+          <p className="text-sm font-bold truncate hover:underline" style={{ color: 'var(--foreground)' }}>{name}</p>
           {mutualCount > 0 && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{mutualCount} صديق مشترك</p>}
-        </div>
+        </Link>
       </div>
       <div className="flex gap-2">
         <button onClick={onAccept}
@@ -112,16 +120,20 @@ function SuggestionCard({ user, onAdd, onFollow, adding, added, following, follo
   const name = displayName(user);
   const mutual = user.mutual || 0;
   const avatarSrc = resolveMediaUrl(user.userId?.profile?.avatarUrl);
+  const profileHref = user.userId?.username ? `/${user.userId.username}` : `/profile/${user.userId?.id || user.userId}`;
 
   return (
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-3 mb-3">
-        <Avatar src={avatarSrc} name={name} size="md" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{name}</p>
+        {/* Name/avatar were plain, unlinked elements -- clicking did nothing (#261) */}
+        <Link href={profileHref} className="shrink-0">
+          <Avatar src={avatarSrc} name={name} size="md" />
+        </Link>
+        <Link href={profileHref} className="flex-1 min-w-0">
+          <p className="text-sm font-bold truncate hover:underline" style={{ color: 'var(--foreground)' }}>{name}</p>
           {mutual > 0 && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{mutual} صديق مشترك</p>}
-        </div>
+        </Link>
       </div>
       <div className="flex gap-2">
         <button onClick={onAdd} disabled={adding || added}
