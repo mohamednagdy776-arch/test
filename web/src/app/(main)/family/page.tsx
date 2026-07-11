@@ -159,10 +159,16 @@ export default function FamilyPage() {
 
   // Called PATCH /family/:id/revoke -- the actual route is
   // DELETE /family/relationship/:id (FamilyController.revoke). Wrong method
-  // AND wrong path, so every cancel/revoke attempt 404'd (#225).
+  // AND wrong path, so every cancel/revoke attempt 404'd (#225). Also reused
+  // below as Reject for a received invitation -- the backend already allows
+  // either party (ward or guardian) to revoke a pending relationship, but the
+  // recipient's invite card had no reject action at all (#304).
   const revoke = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/family/relationship/${id}`).then((r) => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['my-guardians'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['my-guardians'] });
+      qc.invalidateQueries({ queryKey: ['my-wards'] });
+    },
   });
 
   const active = relationships.filter((r) => r.status === 'active');
@@ -203,14 +209,24 @@ export default function FamilyPage() {
                     </p>
                     <p className="text-xs text-[var(--primary)]/60 mt-0.5 truncate">من: {r.wardUserId}</p>
                   </div>
-                  <button
-                    onClick={() => acceptInvite.mutate(r.id)}
-                    disabled={acceptInvite.isPending}
-                    className="rounded-xl px-4 py-2 text-xs font-bold text-white transition-all disabled:opacity-50"
-                    style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
-                  >
-                    {acceptInvite.isPending ? '...' : 'قبول'}
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => revoke.mutate(r.id)}
+                      disabled={revoke.isPending}
+                      className="rounded-xl px-4 py-2 text-xs font-bold transition-all disabled:opacity-50 border"
+                      style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}
+                    >
+                      {revoke.isPending ? '...' : 'رفض'}
+                    </button>
+                    <button
+                      onClick={() => acceptInvite.mutate(r.id)}
+                      disabled={acceptInvite.isPending}
+                      className="rounded-xl px-4 py-2 text-xs font-bold text-white transition-all disabled:opacity-50"
+                      style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
+                    >
+                      {acceptInvite.isPending ? '...' : 'قبول'}
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
