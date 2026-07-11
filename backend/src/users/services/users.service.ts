@@ -559,6 +559,18 @@ export class UsersService {
       }
     }
 
+    // Publishing a video never wrote an activity_logs row at all, so it never
+    // showed up in the timeline (#227) -- same aggregation shape as posts.
+    if (want('video')) {
+      const videos = await this.dataSource.getRepository(Video).find({
+        where: { createdBy: { id: userId } },
+        order: { createdAt: 'DESC' }, take: PER_SOURCE,
+      });
+      for (const v of videos) {
+        items.push({ type: 'video', description: v.title ? `نشر فيديو: ${v.title}` : 'نشر فيديو', createdAt: v.createdAt, metadata: { videoId: v.id } });
+      }
+    }
+
     if (want('friend_add')) {
       const friendships = await this.dataSource.getRepository(Friendship).find({
         where: [
@@ -578,7 +590,7 @@ export class UsersService {
       order: { createdAt: 'DESC' }, take: PER_SOURCE,
     });
     // Avoid double-counting types we already aggregated from source tables.
-    const aggregatedTypes = new Set(['post', 'comment', 'like', 'friend_add']);
+    const aggregatedTypes = new Set(['post', 'comment', 'like', 'friend_add', 'video']);
     for (const a of logged) {
       if (aggregatedTypes.has(a.type as any)) continue;
       items.push({ type: a.type as any, description: a.description, createdAt: a.createdAt, metadata: a.metadata });
