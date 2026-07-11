@@ -61,6 +61,9 @@ export const ProfileHeader = ({
   // anyone, and for the owner the whole avatar acted as the upload trigger
   // with no way to just look at the current picture (#332, #333, #334).
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  // Clicking the active "أصدقاء" status button called onUnfriend directly --
+  // an instant, irreversible unfriend with no confirmation prompt at all (#331).
+  const [showUnfriendConfirm, setShowUnfriendConfirm] = useState(false);
 
   useEffect(() => {
     if (!lightboxImage) return;
@@ -440,7 +443,7 @@ export const ProfileHeader = ({
               {/* Already friends → Unfriend */}
               {friendshipStatus?.status === 'accepted' && (
                 <button
-                  onClick={onUnfriend}
+                  onClick={() => setShowUnfriendConfirm(true)}
                   disabled={friendActionPending}
                   className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)]/30 hover:text-[var(--destructive)] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -519,6 +522,22 @@ export const ProfileHeader = ({
           onCancel={() => setCoverCropFile(null)}
         />
       )}
+
+      <Modal open={showUnfriendConfirm} onClose={() => setShowUnfriendConfirm(false)} title="إلغاء الصداقة">
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--primary)]">هل تريد إلغاء الصداقة مع {profile.fullName}؟</p>
+          <div className="flex gap-3">
+            <button onClick={() => setShowUnfriendConfirm(false)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
+            <button
+              onClick={() => { setShowUnfriendConfirm(false); onUnfriend?.(); }}
+              disabled={friendActionPending}
+              className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors"
+            >
+              إلغاء الصداقة
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={!!removeImageKind} onClose={() => setRemoveImageKind(null)} title="إزالة الصورة">
         <div className="space-y-4">
