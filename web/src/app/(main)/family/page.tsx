@@ -157,8 +157,11 @@ export default function FamilyPage() {
 
   const relationships: Relationship[] = data?.data ?? data?.relationships ?? data ?? [];
 
+  // Called PATCH /family/:id/revoke -- the actual route is
+  // DELETE /family/relationship/:id (FamilyController.revoke). Wrong method
+  // AND wrong path, so every cancel/revoke attempt 404'd (#225).
   const revoke = useMutation({
-    mutationFn: (id: string) => apiClient.patch(`/family/${id}/revoke`).then((r) => r.data),
+    mutationFn: (id: string) => apiClient.delete(`/family/relationship/${id}`).then((r) => r.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['my-guardians'] }),
   });
 
