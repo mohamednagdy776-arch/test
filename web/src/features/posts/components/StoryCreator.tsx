@@ -4,6 +4,28 @@ import { useCreateStory } from '../hooks';
 import { postsApi } from '../api';
 import { cn } from '@/lib/utils';
 
+// The Story entity's `duration` defaults to 5s and this never sent a real
+// value for video stories, while StoryViewer's auto-advance timer was itself
+// hardcoded to 5s regardless of `duration` -- together, every video story
+// (any length) got cut off at exactly 5 seconds (#255). Read the real
+// duration off the file client-side before publishing.
+function getVideoDuration(file: File): Promise<number | undefined> {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.muted = true;
+    video.src = URL.createObjectURL(file);
+    const finish = (duration?: number) => {
+      URL.revokeObjectURL(video.src);
+      resolve(duration);
+    };
+    video.onloadedmetadata = () => {
+      finish(Number.isFinite(video.duration) ? Math.min(60, Math.max(1, Math.round(video.duration))) : undefined);
+    };
+    video.onerror = () => finish(undefined);
+  });
+}
+
 const COLORS = [
   '#0A3D2B', '#1A6B4A', '#B8892A', '#D4A853',
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
@@ -48,6 +70,10 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
         if (!url) throw new Error('Upload failed: no URL returned');
         data.mediaUrl = url;
         data.mediaType = mediaType;
+        if (mediaType === 'video') {
+          const duration = await getVideoDuration(mediaFile);
+          if (duration) data.duration = duration;
+        }
       } finally {
         setIsUploading(false);
       }

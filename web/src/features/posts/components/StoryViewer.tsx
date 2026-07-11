@@ -24,6 +24,7 @@ interface StoryItem {
   bgColor?: string;
   createdAt: string;
   viewCount?: number;
+  duration?: number;
 }
 
 interface StoryGroup {
@@ -146,14 +147,19 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
 
   useEffect(() => {
     if (isPaused) return;
+    // Was hardcoded to always reach 100% after exactly 5s (100/50 per 100ms
+    // tick), completely ignoring the story's own `duration` -- every video
+    // story got cut off at 5s regardless of its real length (#255).
+    const durationSeconds = currentStory?.duration || 5;
+    const increment = 10 / durationSeconds;
     const timer = setInterval(() => {
       setProgress(p => {
         if (p >= 100) { goNext(); return 0; }
-        return p + 100 / 50;
+        return p + increment;
       });
     }, 100);
     return () => clearInterval(timer);
-  }, [goNext, isPaused]);
+  }, [goNext, isPaused, currentStory?.id, currentStory?.duration]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
