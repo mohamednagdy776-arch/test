@@ -84,12 +84,12 @@ export const searchApi = {
     apiClient.get('/users/search', { params }).then((r) => r.data),
 
   searchAll: async (params: SearchParams): Promise<SearchResult> => {
-    // gender is the only extra filter field GET /search's backend actually
-    // supports today — the rest (country/city/sect/lifestyle/education) were
-    // never wired server-side, so forwarding them would be a no-op; gender
-    // was silently dropped here too, so the Gender filter never took effect
-    // regardless of the query text (#119, #131).
-    const { type = 'all', q, cursor, limit = 12, minAge, maxAge, gender } = params;
+    // country/city/education are now real structured filters server-side
+    // (#245) -- sect/lifestyle still aren't, only usable as free-text terms
+    // via `q`. gender was silently dropped here too until #119/#131. An empty
+    // `q` combined with only filters used to short-circuit to zero results
+    // regardless (#245).
+    const { type = 'all', q, cursor, limit = 12, minAge, maxAge, gender, country, city, education } = params;
     const results: SearchResult = { hasMore: false, nextCursor: undefined };
 
     const categoryMap: Record<string, string> = {
@@ -102,7 +102,7 @@ export const searchApi = {
     const category = type === 'all' ? undefined : categoryMap[type];
 
     try {
-      const res = await apiClient.get('/search', { params: { q, category, limit, cursor, minAge, maxAge, gender } });
+      const res = await apiClient.get('/search', { params: { q, category, limit, cursor, minAge, maxAge, gender, country, city, education } });
       const data = res.data?.data ?? res.data ?? {};
 
       if (data.users) results.users = data.users;

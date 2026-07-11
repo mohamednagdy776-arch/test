@@ -19,8 +19,8 @@ export class SearchService {
     @InjectRepository(Event)   private eventRepo: Repository<Event>,
   ) {}
 
-  async search(query: string, userId: string, category?: string, minAge?: number, maxAge?: number, gender?: string) {
-    const q = `%${query.trim()}%`;
+  async search(query: string, userId: string, category?: string, minAge?: number, maxAge?: number, gender?: string, country?: string, city?: string, education?: string) {
+    const q = `%${(query || '').trim()}%`;
 
     const userSearch = async () => {
       // The free-text match is itself a big OR group; every filter below
@@ -69,6 +69,14 @@ export class SearchService {
       // The gender filter was accepted by the frontend but silently dropped
       // before reaching this endpoint — see #119, #131.
       if (gender) qb.andWhere('user.gender = :gender', { gender });
+      // Country/city/education were accepted by the Advanced Search UI but
+      // never forwarded past the frontend at all (only usable as free-text
+      // terms inside the OR bracket above, not as precise filters) — and an
+      // empty free-text query short-circuited to zero results before any of
+      // this ever ran regardless (#245).
+      if (country) qb.andWhere('profile.country ILIKE :country', { country: `%${country}%` });
+      if (city) qb.andWhere('profile.city ILIKE :city', { city: `%${city}%` });
+      if (education) qb.andWhere('profile.education = :education', { education });
       const users = await qb.take(20).getMany();
 
       return users.map(u => ({
