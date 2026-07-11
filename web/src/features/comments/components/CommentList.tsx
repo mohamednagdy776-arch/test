@@ -200,14 +200,17 @@ function CommentItem({
               {showMenu && (
                 <div className="absolute left-0 top-full mt-1 bg-[var(--card)] rounded-lg shadow-lg border border-[var(--border)]/60 py-1 z-10 min-w-[120px]">
                   {isOwnComment && (
-                    <>
-                      <button onClick={() => { setIsEditing(true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[var(--muted)]/50 flex items-center gap-2">
-                        <Pencil size={14} /> تعديل
-                      </button>
-                      <button onClick={() => { onDelete(comment.id); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm text-[var(--destructive)] hover:bg-[var(--muted)]/50 flex items-center gap-2">
-                        <Trash size={14} /> حذف
-                      </button>
-                    </>
+                    <button onClick={() => { setIsEditing(true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[var(--muted)]/50 flex items-center gap-2">
+                      <Pencil size={14} /> تعديل
+                    </button>
+                  )}
+                  {/* Only the comment author could delete their own comment --
+                      the post owner had no moderation rights over comments on
+                      their own post at all (#327). Editing stays author-only. */}
+                  {(isOwnComment || isAuthor) && (
+                    <button onClick={() => { onDelete(comment.id); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm text-[var(--destructive)] hover:bg-[var(--muted)]/50 flex items-center gap-2">
+                      <Trash size={14} /> حذف
+                    </button>
                   )}
                   {isAuthor && !comment.isPinned && (
                     <button onClick={() => { onPin(comment.id, true); setShowMenu(false); }} className="w-full text-right px-3 py-1.5 text-sm hover:bg-[var(--muted)]/50 flex items-center gap-2">

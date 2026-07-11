@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
+import { useDeleteComment } from '@/features/comments/hooks';
 import { useMyProfile } from '@/features/profile/hooks';
 import { apiClient } from '@/lib/api-client';
 import { cn, displayName } from '@/lib/utils';
@@ -114,11 +115,22 @@ function ReactionDisplay({ postId }: { postId: string }) {
   );
 }
 
-function CommentSection({ postId }: { postId: string }) {
+function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUserId?: string; isOwnPost?: boolean }) {
   const [text, setText] = useState('');
   const { data, isLoading } = useComments(postId);
   const addComment = useAddComment();
+  const deleteComment = useDeleteComment();
+  const { showToast } = useToast();
   const comments: any[] = data?.data ?? [];
+
+  // Only the comment's own author could ever delete it here -- the post
+  // owner had no way to moderate/remove other people's comments on their
+  // own post at all (#327).
+  const handleDeleteComment = (commentId: string) => {
+    deleteComment.mutate({ postId, commentId }, {
+      onError: (err: any) => showToast(err?.response?.data?.message || 'تعذّر حذف التعليق', 'error'),
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,6 +158,16 @@ function CommentSection({ postId }: { postId: string }) {
                     <p className="text-xs font-bold text-[var(--foreground)]">{displayName(c.user)}</p>
                   )}
                   <span className="text-[10px] text-[var(--muted-foreground)]">{timeAgo(c.createdAt)}</span>
+                  {(isOwnPost || (!!myUserId && c.user?.id === myUserId)) && (
+                    <button
+                      onClick={() => handleDeleteComment(c.id)}
+                      disabled={deleteComment.isPending}
+                      aria-label="حذف التعليق"
+                      className="mr-auto opacity-0 group-hover:opacity-100 transition-opacity text-[var(--muted-foreground)] hover:text-[var(--destructive)] disabled:opacity-40"
+                    >
+                      <Trash size={13} />
+                    </button>
+                  )}
                 </div>
                 <p className="text-sm text-[var(--foreground)] mt-0.5 leading-relaxed">{c.content}</p>
               </div>
@@ -512,7 +534,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
           )}
         </div>
       </div>
-      {showComments && <div className="px-4 pb-4"><CommentSection postId={post.id} /></div>}
+      {showComments && <div className="px-4 pb-4"><CommentSection postId={post.id} myUserId={myUserId} isOwnPost={isOwnPost} /></div>}
       
       <ShareModal isOpen={showShareModal} onClose={() => setShowShareModal(false)} postId={post.id} postContent={post.content} />
       <EditPostModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} post={post} />

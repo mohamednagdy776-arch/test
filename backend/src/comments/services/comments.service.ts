@@ -117,9 +117,13 @@ export class CommentsService {
   }
 
   async delete(commentId: string, userId: string) {
-    const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user'] });
+    // Only the comment's own author could ever delete it -- the post owner
+    // had no moderation rights over comments on their own post at all (#327).
+    const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user', 'post'] });
     if (!comment) throw new NotFoundException('Comment not found');
-    if (comment.user.id !== userId) throw new ForbiddenException('Not authorized');
+    const isCommentAuthor = comment.user.id === userId;
+    const isPostOwner = comment.post?.userId === userId;
+    if (!isCommentAuthor && !isPostOwner) throw new ForbiddenException('Not authorized');
 
     await this.commentsRepo.delete(commentId);
     return { success: true };
