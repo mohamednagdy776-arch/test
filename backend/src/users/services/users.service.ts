@@ -12,6 +12,7 @@ import { Post } from '../../posts/entities/post.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Reaction } from '../../reactions/entities/reaction.entity';
 import { Friendship, FriendshipStatus } from '../../friends/entities/friendship.entity';
+import { Video } from '../../videos/entities/video.entity';
 import { UpdateProfileWithEntriesDto } from '../dto/update-profile.dto';
 import { SearchUsersDto } from '../dto/search-users.dto';
 import { ActivityLogQueryDto } from '../dto/activity-log.dto';
@@ -635,14 +636,19 @@ export class UsersService {
     return { data: activities, total, page, totalPages: Math.ceil(total / limit) };
   }
 
+  // Was querying activity_logs for type='video' rows -- an entirely different
+  // table that publishing a video never even writes to (#227), so the tab
+  // showed "No videos found" regardless of how many videos the user actually
+  // uploaded. Query the real videos table instead (#226).
   async getVideos(userId: string, page = 1, limit = 20) {
-    const [activities, total] = await this.activityRepo.findAndCount({
-      where: { userId, type: 'video' as any },
+    const videosRepo = this.dataSource.getRepository(Video);
+    const [videos, total] = await videosRepo.findAndCount({
+      where: { createdBy: { id: userId } },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
     });
-    return { data: activities, total, page, totalPages: Math.ceil(total / limit) };
+    return { data: videos, total, page, totalPages: Math.ceil(total / limit) };
   }
 
   async logActivity(userId: string, type: string, description: string, metadata?: Record<string, any>) {
