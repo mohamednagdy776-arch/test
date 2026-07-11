@@ -117,6 +117,7 @@ export class UsersService {
         username: user.username ?? null,
         fullName: name,
         gender: user.gender ?? null,
+        twoFactorEnabled: user.twoFactorEnabled ?? false,
       } as any;
     }
     return this.formatProfile(profile, userId);
@@ -336,6 +337,12 @@ export class UsersService {
       photoVisibility: profile.photoVisibility ?? 'public',
       incognito: profile.incognito ?? false,
       createdAt: profile.createdAt,
+      // Never returned, so the Security page's post-activation check (which
+      // reads this on every fresh load to decide whether to show "Enable
+      // 2FA" vs "already enabled") always saw undefined -> false, letting a
+      // user "enable" 2FA again after a page reload despite it already
+      // being on (#64).
+      twoFactorEnabled: u?.twoFactorEnabled ?? false,
     };
   }
 
