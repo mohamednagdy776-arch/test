@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Friendship, FriendList, UserBlock, UserRestriction, FriendshipStatus, FriendListType } from '../entities/friendship.entity';
 import { User } from '../../auth/entities/user.entity';
 import { Follow } from '../../follows/entities/follow.entity';
@@ -340,8 +340,22 @@ export class FriendsService {
     return this.friendListsRepo.save(list);
   }
 
+  // The management UI reads `list.members` (hydrated user objects, for the
+  // avatar-stack preview + member count) but this only ever returned the raw
+  // `memberIds` string array with no `members` field at all -- every list
+  // showed "0 أعضاء" regardless of how many ids were actually saved (#260).
   async getFriendLists(userId: string) {
-    return this.friendListsRepo.find({ where: { userId }, order: { createdAt: 'DESC' } });
+    const lists = await this.friendListsRepo.find({ where: { userId }, order: { createdAt: 'DESC' } });
+    const allMemberIds = [...new Set(lists.flatMap((l) => l.memberIds || []))];
+    if (allMemberIds.length === 0) {
+      return lists.map((l) => ({ ...l, members: [] }));
+    }
+    const users = await this.friendshipsRepo.manager.getRepository(User).find({ where: { id: In(allMemberIds) } });
+    const usersById = new Map(users.map((u) => [u.id, u]));
+    return lists.map((l) => ({
+      ...l,
+      members: (l.memberIds || []).map((id) => usersById.get(id)).filter((u): u is User => !!u),
+    }));
   }
 
   async updateFriendList(userId: string, listId: string, data: { name?: string; memberIds?: string[] }) {
