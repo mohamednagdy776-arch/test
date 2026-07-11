@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { House, Heart, ChatCircle, MagnifyingGlass, User } from '@phosphor-icons/react';
 import { useT } from '@/i18n/I18nProvider';
+import { useUnreadCount as useChatUnread } from '@/features/chat/hooks';
 
 const tabs = [
   { href: '/dashboard',  labelKey: 'nav.home',         icon: House },
@@ -15,6 +16,9 @@ const tabs = [
 export const BottomNav = () => {
   const pathname = usePathname();
   const { t } = useT();
+  // Mobile Chat tab had no unread indicator either (#307/#308).
+  const { data: chatUnreadData } = useChatUnread();
+  const chatUnreadCount = chatUnreadData?.count ?? 0;
 
   return (
     <nav
@@ -41,7 +45,14 @@ export const BottomNav = () => {
                   style={{ background: '#B8892A', boxShadow: '0 0 8px rgba(184,137,42,0.7)' }}
                 />
               )}
-              <Icon size={22} weight={isActive ? 'fill' : 'regular'} />
+              <span className="relative">
+                <Icon size={22} weight={isActive ? 'fill' : 'regular'} />
+                {href === '/chat' && chatUnreadCount > 0 && (
+                  <span className="absolute -top-1 -right-2 h-[15px] min-w-[15px] px-1 rounded-full bg-[var(--destructive)] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                    {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                  </span>
+                )}
+              </span>
               <span className="text-[10px] font-semibold leading-none">{t(labelKey)}</span>
             </Link>
           );

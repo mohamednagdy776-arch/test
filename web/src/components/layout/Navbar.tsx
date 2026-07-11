@@ -5,6 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { NotificationBell } from '@/features/notifications/components/NotificationBell';
+import { useUnreadCount as useChatUnread } from '@/features/chat/hooks';
 import { authApi } from '@/features/auth/api';
 import { useMyProfile } from '@/features/profile/hooks';
 import {
@@ -50,6 +51,11 @@ export const Navbar = () => {
   const user = (profileData as any)?.data;
   const avatarUrl = resolveMediaUrl(user?.avatarUrl ?? user?.avatar);
   const displayName = user?.fullName || user?.name || user?.username || t('nav.account');
+  // The Chat nav icon had no unread indicator anywhere -- the unread-count
+  // query/invalidation infra already existed (ChatRealtime.tsx), nothing in
+  // the nav actually read it (#307/#308).
+  const { data: chatUnreadData } = useChatUnread();
+  const chatUnreadCount = chatUnreadData?.count ?? 0;
 
   const logout = async () => {
     try { await authApi.logout(); } catch {}
@@ -123,7 +129,14 @@ export const Navbar = () => {
                     }
                   }}
                 >
-                  <Icon size={22} weight={isActive ? 'fill' : 'regular'} className="transition-transform duration-200 group-hover:scale-110" />
+                  <span className="relative">
+                    <Icon size={22} weight={isActive ? 'fill' : 'regular'} className="transition-transform duration-200 group-hover:scale-110" />
+                    {href === '/chat' && chatUnreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1.5 h-[16px] min-w-[16px] px-1 rounded-full bg-[var(--destructive)] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                        {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                      </span>
+                    )}
+                  </span>
                   {t(labelKey)}
                   {isActive && (
                     <span

@@ -13,6 +13,7 @@ import {
 import { authApi } from '@/features/auth/api';
 import { resolveMediaUrl } from '@/lib/media';
 import { useT } from '@/i18n/I18nProvider';
+import { useUnreadCount as useChatUnread } from '@/features/chat/hooks';
 
 const navGroups = [
   {
@@ -71,6 +72,10 @@ export const Sidebar = () => {
   const avatarUrl = resolveMediaUrl(user?.avatarUrl ?? user?.avatar);
   const displayName = user?.fullName || user?.name || user?.username || t('nav.user');
   const username = user?.username ? `@${user.username}` : '';
+  // The Chat nav icon had no unread indicator anywhere in the sidebar either
+  // (#307/#308).
+  const { data: chatUnreadData } = useChatUnread();
+  const chatUnreadCount = chatUnreadData?.count ?? 0;
 
   const logout = async () => {
     try { await authApi.logout(); } catch {}
@@ -180,11 +185,18 @@ export const Sidebar = () => {
                       style={{ background: '#B8892A', boxShadow: '0 0 8px rgba(184,137,42,0.6)' }}
                     />
                   )}
-                  <Icon
-                    size={17}
-                    weight={isActive ? 'fill' : 'regular'}
-                    className="shrink-0 transition-transform duration-200 group-hover:scale-110"
-                  />
+                  <span className="relative shrink-0">
+                    <Icon
+                      size={17}
+                      weight={isActive ? 'fill' : 'regular'}
+                      className="transition-transform duration-200 group-hover:scale-110"
+                    />
+                    {href === '/chat' && chatUnreadCount > 0 && (
+                      <span className="absolute -top-1.5 -right-1.5 h-[15px] min-w-[15px] px-1 rounded-full bg-[var(--destructive)] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                        {chatUnreadCount > 99 ? '99+' : chatUnreadCount}
+                      </span>
+                    )}
+                  </span>
                   <span className="truncate">{t(labelKey)}</span>
                 </Link>
               );
