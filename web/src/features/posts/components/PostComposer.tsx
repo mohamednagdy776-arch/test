@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCreatePost, useCreatePostWithMedia, useUploadMedia } from '../hooks';
 import { usePrivacySettings } from '@/features/settings/hooks';
+import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/utils';
 import { extractFirstUrl } from '@/lib/linkify';
 import { useLinkPreview } from '@/lib/useLinkPreview';
@@ -64,6 +65,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
   const createPost = useCreatePost();
   const createPostWithMedia = useCreatePostWithMedia();
   const uploadMedia = useUploadMedia();
+  const { showToast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
@@ -93,64 +95,74 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
     e.preventDefault();
     if (!content.trim() && mediaFiles.length === 0 && !pollQuestion.trim()) return;
 
-    let mediaUrl: string | undefined;
-    let mediaType: string | undefined;
-    let mediaUrls: string[] | undefined;
-    if (mediaFiles.length > 0) {
-      const results = await Promise.all(mediaFiles.map((f) => uploadMedia.mutateAsync(f)));
-      const urls = results.map((r) => r.data?.url).filter(Boolean) as string[];
-      mediaType = results[0]?.data?.type;
-      mediaUrl = urls[0];
-      if (urls.length > 1) mediaUrls = urls;
+    // No try/catch existed at all -- an upload or post-creation failure (bad
+    // format, oversized file, a network blip) just silently swallowed the
+    // rejected promise with zero feedback, and even a successful publish
+    // never showed a confirmation, leaving the user unsure whether it
+    // actually worked (#338, #340).
+    try {
+      let mediaUrl: string | undefined;
+      let mediaType: string | undefined;
+      let mediaUrls: string[] | undefined;
+      if (mediaFiles.length > 0) {
+        const results = await Promise.all(mediaFiles.map((f) => uploadMedia.mutateAsync(f)));
+        const urls = results.map((r) => r.data?.url).filter(Boolean) as string[];
+        mediaType = results[0]?.data?.type;
+        mediaUrl = urls[0];
+        if (urls.length > 1) mediaUrls = urls;
+      }
+
+      const scheduledAt = scheduleDate && scheduleTime
+        ? new Date(`${scheduleDate}T${scheduleTime}`).toISOString()
+        : undefined;
+
+      let pollOpts: { text: string; votes: number }[] | undefined;
+      if (pollQuestion.trim() && pollOptions.filter(o => o.trim()).length >= 2) {
+        pollOpts = pollOptions.filter(o => o.trim()).map(o => ({ text: o, votes: 0 }));
+      }
+
+      // The poll question was previously dropped entirely, so an image+poll (or any
+      // poll) submitted with an empty caption sent content:'' and the backend
+      // rejected it with "Post content cannot be empty" — the post never published
+      // (#20). Fall back to the poll question as the post body so it both passes
+      // validation and is shown above the poll.
+      const finalContent = content.trim() || (pollOpts ? pollQuestion.trim() : '');
+
+      // Carry the previewed link through so the server persists it without a
+      // refetch; if the author dismissed it, tell the server to skip enrichment.
+      const linkFields = hasPreview && activeUrl
+        ? {
+            linkUrl: linkPreview!.url,
+            linkTitle: linkPreview!.title,
+            linkDescription: linkPreview!.description,
+            linkImage: linkPreview!.image,
+          }
+        : detectedUrl && dismissedUrls.includes(detectedUrl)
+          ? { noLinkPreview: true }
+          : {};
+
+      await createPost.mutateAsync({
+        groupId: groupId || '',
+        content: finalContent,
+        mediaUrl,
+        mediaType,
+        mediaUrls,
+        bgColor: bgColor || undefined,
+        feeling: feeling?.label || undefined,
+        location: location || undefined,
+        audience: audience as any,
+        scheduledAt,
+        pollOptions: pollOpts,
+        postType: pollOpts ? 'poll' : (hasPreview ? 'link' : undefined),
+        ...linkFields,
+      });
+
+      showToast(scheduledAt ? 'تمت جدولة المنشور' : 'تم نشر المنشور بنجاح', 'success');
+      resetForm();
+      onSuccess?.();
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'تعذّر نشر المنشور، حاول مرة أخرى', 'error');
     }
-
-    const scheduledAt = scheduleDate && scheduleTime 
-      ? new Date(`${scheduleDate}T${scheduleTime}`).toISOString() 
-      : undefined;
-
-    let pollOpts: { text: string; votes: number }[] | undefined;
-    if (pollQuestion.trim() && pollOptions.filter(o => o.trim()).length >= 2) {
-      pollOpts = pollOptions.filter(o => o.trim()).map(o => ({ text: o, votes: 0 }));
-    }
-
-    // The poll question was previously dropped entirely, so an image+poll (or any
-    // poll) submitted with an empty caption sent content:'' and the backend
-    // rejected it with "Post content cannot be empty" — the post never published
-    // (#20). Fall back to the poll question as the post body so it both passes
-    // validation and is shown above the poll.
-    const finalContent = content.trim() || (pollOpts ? pollQuestion.trim() : '');
-
-    // Carry the previewed link through so the server persists it without a
-    // refetch; if the author dismissed it, tell the server to skip enrichment.
-    const linkFields = hasPreview && activeUrl
-      ? {
-          linkUrl: linkPreview!.url,
-          linkTitle: linkPreview!.title,
-          linkDescription: linkPreview!.description,
-          linkImage: linkPreview!.image,
-        }
-      : detectedUrl && dismissedUrls.includes(detectedUrl)
-        ? { noLinkPreview: true }
-        : {};
-
-    await createPost.mutateAsync({
-      groupId: groupId || '',
-      content: finalContent,
-      mediaUrl,
-      mediaType,
-      mediaUrls,
-      bgColor: bgColor || undefined,
-      feeling: feeling?.label || undefined,
-      location: location || undefined,
-      audience: audience as any,
-      scheduledAt,
-      pollOptions: pollOpts,
-      postType: pollOpts ? 'poll' : (hasPreview ? 'link' : undefined),
-      ...linkFields,
-    });
-    
-    resetForm();
-    onSuccess?.();
   };
 
   const resetForm = () => {
