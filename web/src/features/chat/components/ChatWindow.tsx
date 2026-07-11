@@ -293,6 +293,11 @@ export const ChatWindow = ({ match, onBack }: Props) => {
     setBlocking(true);
     try {
       await apiClient.post('/blocks', { blockedUserId: match.user2Id });
+      // getConversations already filters blocked pairs server-side, but this
+      // called the API directly and never invalidated the conversation list
+      // -- the blocked contact's card stayed visible until a manual reload
+      // (#279, a regression of the already-fixed #168).
+      qc.invalidateQueries({ queryKey: ['conversations'] });
       showToast?.('تم حظر المستخدم', 'success');
       onBack();
     } catch {
