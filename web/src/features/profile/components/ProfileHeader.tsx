@@ -1,10 +1,10 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { relationshipStatusLabel } from '../labels';
-import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight, SealCheck, LinkSimple, IdentificationCard } from '@phosphor-icons/react';
+import { Camera, PencilSimple, Briefcase, Heart, UserPlus, ChatCircle, Clock, CheckCircle, Users, Flag, HeartStraight, SealCheck, LinkSimple, IdentificationCard, X } from '@phosphor-icons/react';
 import { FollowSection } from '@/features/follows/components/FollowSection';
 import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
@@ -57,6 +57,17 @@ export const ProfileHeader = ({
   const [avatarCropFile, setAvatarCropFile] = useState<File | null>(null);
   const [coverCropFile, setCoverCropFile] = useState<File | null>(null);
   const [removeImageKind, setRemoveImageKind] = useState<'avatar' | 'cover' | null>(null);
+  // Avatar/cover were static -- clicking never opened a full-screen viewer for
+  // anyone, and for the owner the whole avatar acted as the upload trigger
+  // with no way to just look at the current picture (#332, #333, #334).
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!lightboxImage) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightboxImage(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [lightboxImage]);
 
   const uploadBlob = async (blob: Blob, endpoint: string, filename: string, successMsg: string) => {
     if (uploading) return;
@@ -174,7 +185,12 @@ export const ProfileHeader = ({
           // Plain <img>, not next/image: next/image mis-cached freshly-uploaded
           // signed-token media and rendered a stale/blank green-pad cover.
           // mediaUrl() already rejects non-http(s)/relative URLs (#167).
-          <img src={mediaUrl(profile.coverUrl)!} alt="cover" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <img
+            src={mediaUrl(profile.coverUrl)!}
+            alt="cover"
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 cursor-pointer"
+            onClick={() => setLightboxImage(mediaUrl(profile.coverUrl))}
+          />
         ) : (
           <div
             className={`w-full h-full flex items-center justify-center ${isSelf ? 'cursor-pointer' : ''}`}
@@ -242,8 +258,11 @@ export const ProfileHeader = ({
           {/* Avatar with enhanced styling */}
           <div className="relative shrink-0 group">
             <div
-              className={`relative h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center ring-4 ring-[var(--card)] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${isSelf ? 'cursor-pointer' : ''}`}
-              onClick={() => { if (isSelf) avatarRef.current?.click(); }}
+              className={`relative h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center ring-4 ring-[var(--card)] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${mediaUrl(profile.avatarUrl) || isSelf ? 'cursor-pointer' : ''}`}
+              onClick={() => {
+                if (mediaUrl(profile.avatarUrl)) setLightboxImage(mediaUrl(profile.avatarUrl));
+                else if (isSelf) avatarRef.current?.click();
+              }}
             >
               {mediaUrl(profile.avatarUrl) ? (
                 <img src={mediaUrl(profile.avatarUrl)!} alt="avatar" className="absolute inset-0 w-full h-full object-cover" />
@@ -512,6 +531,28 @@ export const ProfileHeader = ({
           </div>
         </div>
       </Modal>
+
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            onClick={() => setLightboxImage(null)}
+            aria-label="إغلاق"
+            className="absolute top-4 left-4 h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+          >
+            <X size={20} />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightboxImage}
+            alt=""
+            className="max-h-[90vh] max-w-[92vw] object-contain rounded-lg"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };
