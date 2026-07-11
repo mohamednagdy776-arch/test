@@ -225,6 +225,20 @@ export class PostsService {
     } else {
       qb.andWhere("post.audience = 'public'");
     }
+    // The audience check above only looks at the post's own author-privacy
+    // setting -- it never considered which GROUP the post belongs to, so a
+    // private/secret group's posts leaked into the main feed to anyone whose
+    // friendship/audience check happened to pass (#359). A post with no
+    // group is unaffected; a public group's posts are unaffected; anything
+    // else requires active membership in that specific group.
+    qb.andWhere(`(
+      post.group_id IS NULL
+      OR group.privacy = 'public'
+      ${viewerId ? `OR EXISTS (
+        SELECT 1 FROM group_members gm
+        WHERE gm.group_id = post.group_id AND gm.user_id = :viewerId AND gm.status = 'active'
+      )` : ''}
+    )`, { viewerId });
   }
 
   // Admin-only hard delete (route is guarded by @Roles('admin')). User-facing

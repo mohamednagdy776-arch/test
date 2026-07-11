@@ -86,6 +86,20 @@ export class UsersService {
       qb.andWhere("post.audience = 'public'");
     }
 
+    // Same group-privacy gap as the main feed (#359): a post the profile
+    // owner made inside a private/secret group leaked onto their public
+    // profile Posts tab to non-members. Skip for the owner's own view.
+    if (viewerId !== userId) {
+      qb.andWhere(`(
+        post.group_id IS NULL
+        OR group.privacy = 'public'
+        ${viewerId ? `OR EXISTS (
+          SELECT 1 FROM group_members gm
+          WHERE gm.group_id = post.group_id AND gm.user_id = :viewerId AND gm.status = 'active'
+        )` : ''}
+      )`, { viewerId });
+    }
+
     const [data, total] = await qb.getManyAndCount();
     return { data, total };
   }
