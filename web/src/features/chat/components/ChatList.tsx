@@ -130,7 +130,11 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
         const src     = getAvatar(item);
         const initial = getInitial(item);
         const name    = getOtherUserName(item);
-        const preview = item.lastMessage?.content?.slice(0, 40) || 'لا توجد رسائل بعد';
+        // Image messages persist with an empty content string -- fell back
+        // to the "no messages" placeholder even with a real photo sent (#381).
+        const preview = item.lastMessage?.type === 'image'
+          ? '📷 صورة'
+          : (item.lastMessage?.content?.slice(0, 40) || 'لا توجد رسائل بعد');
         const timeStr = timeLabel(item.lastMessage?.createdAt || item.createdAt);
 
         return (

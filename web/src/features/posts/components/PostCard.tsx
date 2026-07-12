@@ -314,42 +314,35 @@ function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: ()
   const updatePost = useUpdatePost();
   const { showToast } = useToast() as any;
 
-  if (!isOpen) return null;
-
+  // Same hand-rolled `fixed inset-0` bug as ShareModal above (#243) -- this
+  // one was never migrated when ShareModal got fixed for #95/#106. A hover
+  // transform on the ancestor <article> made this dialog's position depend
+  // on whether the cursor happened to be over the card when it opened.
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center animate-fade-in">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md mx-4 bg-[var(--card)] rounded-2xl p-6 animate-scale-in shadow-glow-lg border border-[var(--border)]/60">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-[var(--foreground)]">تعديل المنشور</h3>
-          <button onClick={onClose} className="text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:scale-110 transition-transform">
-            <X size={24} />
-          </button>
-        </div>
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] mb-4 transition-all duration-300 min-h-[100px]"
-          rows={4}
-        />
-        <button
-          onClick={async () => {
-            try {
-              await updatePost.mutateAsync({ postId: post.id, data: { content } });
-              showToast('تم تعديل المنشور', 'success');
-              onClose();
-            } catch {
-              showToast('فشل تعديل المنشور', 'error');
-            }
-          }}
-          disabled={updatePost.isPending || !content.trim()}
-          className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all duration-300"
-          style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
-        >
-          {updatePost.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
-        </button>
-      </div>
-    </div>
+    <Modal open={isOpen} onClose={onClose} title="تعديل المنشور">
+      <textarea
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+        className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] mb-4 transition-all duration-300 min-h-[100px]"
+        rows={4}
+      />
+      <button
+        onClick={async () => {
+          try {
+            await updatePost.mutateAsync({ postId: post.id, data: { content } });
+            showToast('تم تعديل المنشور', 'success');
+            onClose();
+          } catch {
+            showToast('فشل تعديل المنشور', 'error');
+          }
+        }}
+        disabled={updatePost.isPending || !content.trim()}
+        className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all duration-300"
+        style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
+      >
+        {updatePost.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+      </button>
+    </Modal>
   );
 }
 
@@ -419,8 +412,11 @@ function PollDisplay({ postId, options, myVote }: { postId: string; options: { t
 
   const totalVotes = updatedOptions.reduce((sum, opt) => sum + opt.votes, 0);
 
+  // Backend now supports changing an existing vote to a different option
+  // (#219) -- only the option the viewer already picked stays disabled, not
+  // every option in the poll.
   const handleVote = async (index: number) => {
-    if (voted !== null) return;
+    if (voted === index) return;
     try {
       const res = await apiClient.post(`/posts/${postId}/poll/${index}/vote`);
       if (res.data?.data?.pollOptions) {
@@ -440,12 +436,11 @@ function PollDisplay({ postId, options, myVote }: { postId: string; options: { t
           <button
             key={i}
             onClick={() => handleVote(i)}
-            disabled={voted !== null}
+            disabled={voted === i}
             className={cn(
               'w-full relative overflow-hidden rounded-lg text-sm text-right transition-all duration-300',
               'hover:-translate-y-0.5 hover:shadow-soft',
-              voted === i ? 'ring-2 ring-[var(--muted-foreground)] shadow-glow' : '',
-              voted !== null ? 'cursor-default' : 'hover:ring-1 hover:ring-[var(--muted-foreground)]'
+              voted === i ? 'ring-2 ring-[var(--muted-foreground)] shadow-glow cursor-default' : 'hover:ring-1 hover:ring-[var(--muted-foreground)]'
             )}
           >
             {/* bg-[var(--x)]/NN never compiled (Tailwind can't decompose a
@@ -472,10 +467,25 @@ function PollDisplay({ postId, options, myVote }: { postId: string; options: { t
   );
 }
 
+// Each PostCard tracked its own `showMenu` state with zero coordination
+// between cards, so opening a second post's menu never closed the first
+// one -- multiple menus stayed open simultaneously (#221). A single shared
+// event lets every card close itself when a DIFFERENT card's menu opens.
+const POST_MENU_OPENED_EVENT = 'post-menu-opened';
+
 export function PostCard({ post, showGroupLink = true }: { post: any; showGroupLink?: boolean }) {
   const [showComments, setShowComments] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const menuInstanceId = useRef(Math.random()).current;
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      if ((e as CustomEvent).detail !== menuInstanceId) setShowMenu(false);
+    };
+    window.addEventListener(POST_MENU_OPENED_EVENT, handler);
+    return () => window.removeEventListener(POST_MENU_OPENED_EVENT, handler);
+  }, [menuInstanceId]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [hidden, setHidden] = useState(false);
   const { data: myProfileData } = useMyProfile();
@@ -531,7 +541,10 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
           </p>
         </div>
         <div className="relative">
-          <button onClick={() => setShowMenu(!showMenu)} className="rounded-lg p-1.5 text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:shadow-soft transition-all duration-200 hover:scale-110">
+          <button onClick={() => {
+            if (!showMenu) window.dispatchEvent(new CustomEvent(POST_MENU_OPENED_EVENT, { detail: menuInstanceId }));
+            setShowMenu(!showMenu);
+          }} className="rounded-lg p-1.5 text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:shadow-soft transition-all duration-200 hover:scale-110">
             <DotsThreeVertical size={20} />
           </button>
           {showMenu && <PostMenu postId={post.id} post={post} isOwnPost={!!isOwnPost} savePost={savePost} onClose={() => setShowMenu(false)} onEdit={() => { setShowMenu(false); setShowEditModal(true); }} onHide={() => { setShowMenu(false); setHidden(true); }} />}

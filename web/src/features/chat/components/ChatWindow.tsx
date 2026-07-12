@@ -17,7 +17,7 @@ import type { Match } from '@/types';
 import {
   ArrowLeft, Phone, VideoCamera, DotsThreeVertical,
   PaperPlaneTilt, Image as ImageIcon, Smiley, Trash, ArrowBendUpLeft,
-  Translate, Check, Prohibit, UserCircle,
+  Translate, Check, Prohibit, UserCircle, X,
 } from '@phosphor-icons/react';
 
 const CHAT_EMOJIS = [
@@ -74,6 +74,8 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   // onto OS-level shortcuts to insert emojis at all (#361).
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  // No way to zoom a sent image at all (#380).
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const deleteMessage = useDeleteMessage();
   const [isOnline, setIsOnline] = useState(false);
   const [otherSeenAt, setOtherSeenAt] = useState<string | null>(null);
@@ -119,6 +121,13 @@ export const ChatWindow = ({ match, onBack }: Props) => {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
+
+  useEffect(() => {
+    if (!lightboxImage) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setLightboxImage(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [lightboxImage]);
 
   const qc = useQueryClient();
 
@@ -377,6 +386,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       : null;
 
   return (
+    <>
     <div className="flex flex-col h-full rounded-2xl overflow-hidden"
       style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 4px 20px rgba(0,0,0,0.06)' }}>
 
@@ -674,9 +684,14 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                   تم حذف الرسالة
                 </span>
               ) : msg.type === 'image' && msg.mediaUrl ? (
-                <div className="rounded-xl overflow-hidden max-w-[200px]">
+                // Was a static thumbnail with no way to zoom/enlarge (#380).
+                <button
+                  type="button"
+                  onClick={() => setLightboxImage(resolveMediaUrl(msg.mediaUrl) ?? '')}
+                  className="rounded-xl overflow-hidden max-w-[200px] block cursor-zoom-in"
+                >
                   <Image src={resolveMediaUrl(msg.mediaUrl) ?? ''} alt="صورة" width={200} height={200} className="w-full h-auto object-cover" />
-                </div>
+                </button>
               ) : (
                 <TranslatedMessageBody
                   content={msg.content}
@@ -859,5 +874,28 @@ export const ChatWindow = ({ match, onBack }: Props) => {
         </p>
       </div>
     </div>
+
+    {lightboxImage && (
+      <div
+        className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
+        onClick={() => setLightboxImage(null)}
+      >
+        <button
+          onClick={() => setLightboxImage(null)}
+          aria-label="إغلاق"
+          className="absolute top-4 left-4 h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
+        >
+          <X size={20} />
+        </button>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={lightboxImage}
+          alt=""
+          className="max-h-[90vh] max-w-[92vw] object-contain rounded-lg"
+          onClick={(e) => e.stopPropagation()}
+        />
+      </div>
+    )}
+    </>
   );
 };

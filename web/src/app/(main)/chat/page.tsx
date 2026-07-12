@@ -56,10 +56,15 @@ export default function ChatPage() {
 
   return (
     <div className="flex gap-4 h-[calc(100dvh-8rem)]">
-      {/* Conversation list sidebar */}
-      <div className={`${activeMatch ? 'hidden lg:block' : 'block'} w-full lg:w-80 shrink-0 flex flex-col gap-3`}>
-        <h1 className="text-xl font-extrabold" style={{ color: 'var(--foreground)' }}>المحادثات</h1>
-        <ChatList activeMatchId={activeMatch?.id} onSelect={setActiveMatch as any} />
+      {/* Conversation list sidebar -- had no overflow/min-h-0 of its own, so
+          a long list grew past its box and forced the whole page to scroll
+          (#382), and on mobile the last cards ended up under the fixed
+          bottom nav with no reserved clearance (#277). */}
+      <div className={`${activeMatch ? 'hidden lg:block' : 'block'} w-full lg:w-80 shrink-0 flex flex-col gap-3 min-h-0`}>
+        <h1 className="text-xl font-extrabold shrink-0" style={{ color: 'var(--foreground)' }}>المحادثات</h1>
+        <div className="flex-1 min-h-0 overflow-y-auto pb-20 lg:pb-0">
+          <ChatList activeMatchId={activeMatch?.id} onSelect={setActiveMatch as any} />
+        </div>
       </div>
 
       {/* Chat window / placeholder */}

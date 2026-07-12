@@ -88,6 +88,10 @@ export class ChatService {
       otherUsername: other?.username ?? null,
       lastMessage: lastMessage ? {
         content: lastMessage.contentEncrypted,
+        // Image messages are saved with an empty content string, so the
+        // conversation list had nothing to show and always fell back to
+        // "No messages yet" even right after sending a photo (#381).
+        type: lastMessage.type,
         createdAt: lastMessage.createdAt,
       } : null,
       unreadCount,

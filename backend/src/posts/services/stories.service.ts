@@ -413,15 +413,20 @@ export class StoriesService {
       return { success: false, message: 'Invalid option' };
     }
 
-    // One vote per user per poll — reject if they already voted on any option.
+    // One vote per user per poll at a time -- but changing which option is
+    // allowed (#219), unlike before where any repeat vote was flatly
+    // rejected with no way to ever pick a different option.
     const existingVoteIndex = post.pollOptions.findIndex(
       (o) => Array.isArray(o.voterIds) && o.voterIds.includes(userId),
     );
+    if (existingVoteIndex === optionIndex) {
+      // Re-picking the same option they already chose is a harmless no-op.
+      return { success: true, pollOptions: this.stripVoters(post.pollOptions), myVote: optionIndex };
+    }
     if (existingVoteIndex >= 0) {
-      // Didn't expose which option the client had already picked (#167) —
-      // matters here because the frontend uses this same response shape to
-      // render the poll after a (rejected) repeat vote attempt.
-      return { success: false, message: 'Already voted', pollOptions: this.stripVoters(post.pollOptions), myVote: existingVoteIndex };
+      const oldOpt = post.pollOptions[existingVoteIndex];
+      oldOpt.voterIds = (oldOpt.voterIds || []).filter((id) => id !== userId);
+      oldOpt.votes = Math.max(0, oldOpt.votes - 1);
     }
 
     const opt = post.pollOptions[optionIndex];
