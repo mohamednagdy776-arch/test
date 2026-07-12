@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
 import { useDeleteComment } from '@/features/comments/hooks';
@@ -346,8 +347,27 @@ function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: ()
   );
 }
 
-function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide }: { postId: string; post: any; isOwnPost?: boolean; savePost: ReturnType<typeof useSavePost>; onClose: () => void; onEdit?: () => void; onHide?: () => void }) {
+function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide, anchorRef }: { postId: string; post: any; isOwnPost?: boolean; savePost: ReturnType<typeof useSavePost>; onClose: () => void; onEdit?: () => void; onHide?: () => void; anchorRef: React.RefObject<HTMLButtonElement> }) {
   const { showToast } = useToast() as any;
+  // The dropdown used to be a plain absolutely-positioned div nested inside
+  // the post <article>, which has overflow-hidden -- any menu near a
+  // viewport/container edge (very common on the narrower Profile -> Posts
+  // tab layout) got clipped (#241). Render it through a portal at fixed
+  // coordinates computed from the trigger button instead.
+  const [coords, setCoords] = useState<{ top: number; right: number } | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const rect = anchorRef.current?.getBoundingClientRect();
+    if (rect) setCoords({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    const handler = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (anchorRef.current?.contains(target) || menuRef.current?.contains(target)) return;
+      onClose();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const hidePost = useHidePost();
   const deletePost = useDeletePost();
   const pinPost = useUpdatePost();
@@ -371,22 +391,29 @@ function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide }
     ]),
   ];
 
-  return (
-    <div className="absolute right-0 top-full mt-2 w-56 bg-[var(--card)] rounded-xl shadow-glow-lg border border-[var(--border)]/60 py-2 animate-scale-in z-30">
+  if (!coords) return null;
+
+  return createPortal(
+    <div
+      ref={menuRef}
+      className="fixed w-56 bg-[var(--card)] rounded-xl shadow-glow-lg border border-[var(--border)]/60 py-2 animate-scale-in z-[60]"
+      style={{ top: coords.top, right: coords.right }}
+    >
       {menuItems.map((item, i) => {
         const Icon = item.icon;
         return (
           <button
             key={i}
             onClick={() => { item.action(); onClose(); }}
-            className={cn('w-full px-4 py-2.5 text-right text-sm hover:bg-[var(--muted)]/50 flex items-center gap-3 hover:shadow-soft transition-all duration-200', item.danger ? 'text-[var(--destructive)]' : 'text-[var(--foreground)]')}
+            className={cn('w-full px-4 py-2.5 text-right text-sm hover:bg-[var(--muted)] flex items-center gap-3 hover:shadow-soft transition-all duration-200', item.danger ? 'text-[var(--destructive)]' : 'text-[var(--foreground)]')}
           >
             <Icon size={18} weight={item.danger ? 'fill' : 'regular'} />
             {item.label}
           </button>
         );
       })}
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -478,6 +505,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const menuInstanceId = useRef(Math.random()).current;
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -541,13 +569,13 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
           </p>
         </div>
         <div className="relative">
-          <button onClick={() => {
+          <button ref={menuButtonRef} onClick={() => {
             if (!showMenu) window.dispatchEvent(new CustomEvent(POST_MENU_OPENED_EVENT, { detail: menuInstanceId }));
             setShowMenu(!showMenu);
           }} className="rounded-lg p-1.5 text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:shadow-soft transition-all duration-200 hover:scale-110">
             <DotsThreeVertical size={20} />
           </button>
-          {showMenu && <PostMenu postId={post.id} post={post} isOwnPost={!!isOwnPost} savePost={savePost} onClose={() => setShowMenu(false)} onEdit={() => { setShowMenu(false); setShowEditModal(true); }} onHide={() => { setShowMenu(false); setHidden(true); }} />}
+          {showMenu && <PostMenu postId={post.id} post={post} isOwnPost={!!isOwnPost} savePost={savePost} onClose={() => setShowMenu(false)} onEdit={() => { setShowMenu(false); setShowEditModal(true); }} onHide={() => { setShowMenu(false); setHidden(true); }} anchorRef={menuButtonRef} />}
         </div>
       </div>
 
