@@ -1,5 +1,6 @@
 import { Column, CreateDateColumn, DeleteDateColumn, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { Group } from '../../groups/entities/group.entity';
+import { Page } from '../../pages/entities/page.entity';
 import { User } from '../../auth/entities/user.entity';
 import { Reaction } from '../../reactions/entities/reaction.entity';
 import { Comment } from '../../comments/entities/comment.entity';
@@ -32,6 +33,10 @@ export class Post {
   @ManyToOne(() => Group, { nullable: true })
   @JoinColumn({ name: 'group_id' })
   group: Group;
+
+  @ManyToOne(() => Page, { nullable: true })
+  @JoinColumn({ name: 'page_id' })
+  page: Page;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })

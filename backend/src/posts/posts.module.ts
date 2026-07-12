@@ -18,6 +18,6 @@ import { LinkPreviewModule } from '../link-preview/link-preview.module';
   imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, StoryReaction, SavedPost, PostReport, HiddenPost]), NotificationsModule, SettingsModule, LinkPreviewModule],
   providers: [PostsService, FeedService, StoriesService],
   controllers: [PostsController, AdminPostsController, FeedController, StoriesController, UploadController],
-  exports: [PostsService],
+  exports: [PostsService, StoriesService],
 })
 export class PostsModule {}

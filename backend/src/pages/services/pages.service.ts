@@ -1,10 +1,13 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Page } from '../entities/page.entity';
 import { PageFollower } from '../entities/page-follower.entity';
 import { PageLike } from '../entities/page-like.entity';
+import { Post } from '../../posts/entities/post.entity';
+import { StoriesService } from '../../posts/services/stories.service';
 import { CreatePageDto } from '../dto/create-page.dto';
+import { UpdatePageDto } from '../dto/update-page.dto';
 import { User } from '../../auth/entities/user.entity';
 
 @Injectable()
@@ -13,6 +16,8 @@ export class PagesService {
     @InjectRepository(Page) private pagesRepo: Repository<Page>,
     @InjectRepository(PageFollower) private followerRepo: Repository<PageFollower>,
     @InjectRepository(PageLike) private likeRepo: Repository<PageLike>,
+    @InjectRepository(Post) private postsRepo: Repository<Post>,
+    private storiesService: StoriesService,
   ) {}
 
   async create(dto: CreatePageDto, user: User) {
@@ -24,6 +29,17 @@ export class PagesService {
       user,
     }));
     return saved;
+  }
+
+  // No update path existed at all -- the create-only API meant a page's cover
+  // photo, avatar, and other details could never be changed after creation,
+  // and the frontend's already-wired edit modal (PATCH /pages/:id) 404'd (#372).
+  async update(pageId: string, userId: string, dto: UpdatePageDto) {
+    const page = await this.pagesRepo.findOne({ where: { id: pageId }, relations: ['createdBy'] });
+    if (!page) throw new NotFoundException('Page not found');
+    if (page.createdBy?.id !== userId) throw new ForbiddenException('Only the page owner can edit this page');
+    Object.assign(page, dto);
+    return this.pagesRepo.save(page);
   }
 
   async search(q: string) {
@@ -90,17 +106,23 @@ export class PagesService {
   }
 
   async findOne(pageId: string, userId?: string) {
-    const page = await this.pagesRepo.findOne({ where: { id: pageId } });
+    // `createdBy` wasn't loaded and `isOwner` was never computed at all -- the
+    // frontend's owner-only post composer, edit button, and delete button are
+    // all gated on `isOwner`, so none of them ever rendered for anyone,
+    // including the actual creator (#372, #373).
+    const page = await this.pagesRepo.findOne({ where: { id: pageId }, relations: ['createdBy'] });
     if (!page) throw new NotFoundException('Page not found');
     const followerCount = await this.getFollowerCount(pageId);
     const likeCount = await this.getLikeCount(pageId);
     let isFollowing = false;
     let isLiked = false;
+    let isOwner = false;
     if (userId) {
       isFollowing = await this.isFollowing(pageId, userId);
       isLiked = await this.isLiked(pageId, userId);
+      isOwner = page.createdBy?.id === userId;
     }
-    return { ...page, followerCount, likeCount, isFollowing, isLiked };
+    return { ...page, followerCount, likeCount, isFollowing, isLiked, isOwner };
   }
 
   async findByUsername(username: string, userId?: string) {
@@ -201,13 +223,29 @@ export class PagesService {
     return this.attachCounts(suggested);
   }
 
-  // Posts are not associated to pages in the current schema (posts belong to a
-  // user/group only). Return an empty page rather than a 404 so the client
-  // renders an empty feed. Validates the page exists first.
-  async getPosts(pageId: string, _page: number, _limit: number) {
+  // Posts were never actually associated to pages (posts only had a user/group
+  // relation) -- the composer had no backend endpoint to save to and this
+  // always returned an empty stub regardless of what existed (#373). Now
+  // backed by the real page_id column added in migration 027.
+  async getPosts(pageId: string, page: number, limit: number) {
     const exists = await this.pagesRepo.count({ where: { id: pageId } });
     if (!exists) throw new NotFoundException('Page not found');
-    return { data: [] as unknown[], total: 0 };
+    const [data, total] = await this.postsRepo.findAndCount({
+      where: { page: { id: pageId } },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['user', 'user.profile', 'page'],
+    });
+    return { data, total };
+  }
+
+  // Only the page's creator/owner can post as the page (#373).
+  async createPost(pageId: string, userId: string, content: string) {
+    const page = await this.pagesRepo.findOne({ where: { id: pageId }, relations: ['createdBy'] });
+    if (!page) throw new NotFoundException('Page not found');
+    if (page.createdBy?.id !== userId) throw new ForbiddenException('Only the page owner can post');
+    return this.storiesService.createPost(userId, { content, pageId });
   }
 
   async getFollowerCount(pageId: string): Promise<number> {

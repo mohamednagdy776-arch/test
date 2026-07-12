@@ -102,6 +102,10 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   groupId?: string;
+
+  @IsOptional()
+  @IsString()
+  pageId?: string;
 }
 
 // Editing a post: every field optional, but only the whitelisted CreatePostDto

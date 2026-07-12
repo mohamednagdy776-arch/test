@@ -54,8 +54,24 @@ export const pagesApi = {
   createPagePost: (pageId: string, content: string) =>
     apiClient.post(`/pages/${pageId}/posts`, { content }).then((r) => r.data),
 
-  updatePage: (id: string, data: { name?: string; description?: string; category?: string }) =>
-    apiClient.patch(`/pages/${id}`, data).then((r) => r.data),
+  // No update endpoint existed at all until now, so a created page's cover
+  // photo/avatar could never be set or changed (#372).
+  updatePage: (
+    id: string,
+    data: { name?: string; description?: string; category?: string; profilePhoto?: File; coverPhoto?: File },
+  ) => {
+    const { profilePhoto, coverPhoto, ...rest } = data;
+    if (!profilePhoto && !coverPhoto) {
+      return apiClient.patch(`/pages/${id}`, rest).then((r) => r.data);
+    }
+    const formData = new FormData();
+    Object.entries(rest).forEach(([k, v]) => { if (v !== undefined) formData.append(k, v as string); });
+    if (profilePhoto) formData.append('profilePhoto', profilePhoto);
+    if (coverPhoto) formData.append('coverPhoto', coverPhoto);
+    return apiClient.patch(`/pages/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data);
+  },
 
   deletePage: (id: string) =>
     apiClient.delete(`/pages/${id}`).then((r) => r.data),

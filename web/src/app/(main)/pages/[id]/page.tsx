@@ -51,6 +51,8 @@ export default function PageDetailPage() {
   const [editDescription, setEditDescription] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [editError, setEditError] = useState('');
+  const [editProfilePhoto, setEditProfilePhoto] = useState<File | null>(null);
+  const [editCoverPhoto, setEditCoverPhoto] = useState<File | null>(null);
 
   const page = pageData?.data;
   const posts = allPosts;
@@ -75,6 +77,8 @@ export default function PageDetailPage() {
     setEditName(page?.name || '');
     setEditDescription(page?.description || '');
     setEditCategory(page?.category || '');
+    setEditProfilePhoto(null);
+    setEditCoverPhoto(null);
     setEditError('');
     setShowEditModal(true);
   };
@@ -84,7 +88,16 @@ export default function PageDetailPage() {
     if (!editName.trim()) return;
     setEditError('');
     try {
-      await updatePage.mutateAsync({ id, data: { name: editName.trim(), description: editDescription.trim(), category: editCategory } });
+      await updatePage.mutateAsync({
+        id,
+        data: {
+          name: editName.trim(),
+          description: editDescription.trim(),
+          category: editCategory,
+          ...(editProfilePhoto ? { profilePhoto: editProfilePhoto } : {}),
+          ...(editCoverPhoto ? { coverPhoto: editCoverPhoto } : {}),
+        },
+      });
       setShowEditModal(false);
     } catch (err: any) {
       setEditError(err?.response?.data?.message || 'فشل تعديل الصفحة');
@@ -166,6 +179,26 @@ export default function PageDetailPage() {
                 rows={3}
                 className="w-full rounded-xl border border-[var(--border)]/50 px-4 py-3 text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/50 focus:border-[var(--ring)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 bg-[var(--card)] resize-none"
               />
+              {/* No control existed anywhere to set/change a page's avatar or
+                  cover photo after creation (#372). */}
+              <div>
+                <label className="block text-xs font-semibold text-[var(--muted-foreground)] mb-1.5">صورة الملف الشخصي للصفحة</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditProfilePhoto(e.target.files?.[0] || null)}
+                  className="w-full text-xs text-[var(--foreground)] file:ml-2 file:rounded-lg file:border-0 file:bg-[var(--muted)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--foreground)]"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-[var(--muted-foreground)] mb-1.5">صورة الغلاف</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditCoverPhoto(e.target.files?.[0] || null)}
+                  className="w-full text-xs text-[var(--foreground)] file:ml-2 file:rounded-lg file:border-0 file:bg-[var(--muted)] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[var(--foreground)]"
+                />
+              </div>
               {editError && (
                 <p className="text-xs text-[var(--destructive)] bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 rounded-lg px-3 py-2">{editError}</p>
               )}
@@ -209,11 +242,22 @@ export default function PageDetailPage() {
           <div className="w-full h-full bg-gradient-to-br from-[var(--muted)] via-[var(--card)] to-[var(--accent)]/10" />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--primary)]/70 via-[var(--primary)]/20 to-transparent" />
-        <div className="absolute bottom-5 right-5">
-          <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">{page.name}</h1>
-          {page.category && (
-            <span className="text-sm text-white/80 font-medium">{page.category}</span>
+        <div className="absolute bottom-5 right-5 flex items-center gap-3">
+          {/* profilePhoto had an upload path (createPageWithCover) but was never
+              actually rendered anywhere on the page (#372). */}
+          {page.profilePhoto ? (
+            <img src={page.profilePhoto} alt={`صورة ${page.name}`} className="w-14 h-14 md:w-16 md:h-16 rounded-2xl object-cover border-2 border-white/80 shadow-lg shrink-0" />
+          ) : (
+            <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-[var(--card)]/90 backdrop-blur-sm border-2 border-white/80 shadow-lg shrink-0 flex items-center justify-center text-xl font-bold text-[var(--primary)]">
+              {page.name?.[0]}
+            </div>
           )}
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-white drop-shadow-lg">{page.name}</h1>
+            {page.category && (
+              <span className="text-sm text-white/80 font-medium">{page.category}</span>
+            )}
+          </div>
         </div>
         {isOwner && (
           <div className="absolute top-4 left-4 flex gap-2">

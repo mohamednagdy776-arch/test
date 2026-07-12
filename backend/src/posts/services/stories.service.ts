@@ -395,6 +395,14 @@ export class StoriesService {
       }
     }
     if (data.groupId) post.group = { id: data.groupId } as any;
+    // Page posts are public by definition (anyone can follow/view a page) --
+    // override whatever the author's personal "who can see my posts" default
+    // resolved to above, same reasoning as the groupId path implicitly relies
+    // on group membership instead (#373).
+    if (data.pageId) {
+      post.page = { id: data.pageId } as any;
+      post.audience = 'public' as any;
+    }
     if (data.pollOptions) post.pollOptions = data.pollOptions;
     if (data.scheduledAt) {
       post.scheduledAt = new Date(data.scheduledAt);
