@@ -63,8 +63,14 @@ export class NotificationsService {
   }
 
   async findByUser(userId: string, page: number, limit: number, type?: string) {
+    // The "Likes" tab filters by type=like, but reacting to a STORY creates a
+    // separate 'story_reaction' type -- those never matched, so story likes
+    // never appeared under Likes even though they're the same kind of
+    // interaction to a user (#357).
+    const typeFilter =
+      type === 'like' ? In(['like', 'story_reaction']) : type ? (type as any) : undefined;
     const [data, total] = await this.notificationRepo.findAndCount({
-      where: { user: { id: userId }, ...(type ? { type: type as any } : {}) },
+      where: { user: { id: userId }, ...(typeFilter ? { type: typeFilter } : {}) },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
