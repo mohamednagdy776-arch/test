@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PrivacySettings } from '../entities/privacy-settings.entity';
+import { NotificationSettings } from '../entities/notification-settings.entity';
 import { Block } from '../entities/block.entity';
 import { Friendship } from '../../friends/entities/friendship.entity';
 import { UpdatePrivacyDto } from '../dto/update-privacy.dto';
@@ -13,6 +14,7 @@ import { UpdateNewsletterDto } from '../dto/update-newsletter.dto';
 export class SettingsService {
   constructor(
     @InjectRepository(PrivacySettings) private privacyRepo: Repository<PrivacySettings>,
+    @InjectRepository(NotificationSettings) private notificationRepo: Repository<NotificationSettings>,
     @InjectRepository(Block) private blockRepo: Repository<Block>,
     @InjectRepository(Friendship) private friendshipsRepo: Repository<Friendship>,
   ) {}
@@ -66,26 +68,22 @@ export class SettingsService {
 
   // ==================== Notification Settings ====================
   async getNotificationSettings(userId: string) {
-    // For now, return defaults since we don't have a dedicated notification settings entity
-    // In production, this would come from a user_notification_settings table
-    return {
-      notificationsEnabled: true,
-      likesNotifications: true,
-      commentsNotifications: true,
-      friendRequestsNotifications: true,
-      messagesNotifications: true,
-      mentionsNotifications: true,
-      emailNotifications: true,
-      pushNotifications: true,
-      smsNotifications: false,
-    };
+    let settings = await this.notificationRepo.findOne({ where: { user: { id: userId } } });
+    if (!settings) {
+      settings = await this.notificationRepo.save(this.notificationRepo.create({ user: { id: userId } as any }));
+    }
+    return settings;
   }
 
   async updateNotificationSettings(userId: string, dto: UpdateNotificationSettingsDto) {
-    // In production, persist to user_notification_settings table
-    // For now, return the updated settings
-    const current = await this.getNotificationSettings(userId);
-    return { ...current, ...dto };
+    // Never actually persisted anywhere -- every change silently reverted to
+    // the hardcoded defaults on the next page load/refresh (#217).
+    let settings = await this.notificationRepo.findOne({ where: { user: { id: userId } } });
+    if (!settings) {
+      settings = this.notificationRepo.create({ user: { id: userId } as any });
+    }
+    Object.assign(settings, dto);
+    return this.notificationRepo.save(settings);
   }
 
   // ==================== Newsletter Settings ====================
