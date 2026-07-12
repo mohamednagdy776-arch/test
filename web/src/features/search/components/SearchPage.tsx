@@ -248,6 +248,19 @@ export const SearchPage = () => {
 
   useEffect(() => { setRecentSearches(getRecentSearches()); }, []);
 
+  // The dropdown always showed every suggestion type (people/groups/pages/
+  // events) mixed together no matter which category tab was active -- e.g.
+  // switching to "Events" still surfaced person suggestions first (#353).
+  // Posts have no suggestion type of their own, so that tab shows none.
+  const suggestionTypeForTab: Record<TabType, SuggestionItem['type'] | null> = {
+    people: 'user',
+    groups: 'group',
+    pages: 'page',
+    events: 'event',
+    posts: null,
+  };
+  const tabFilteredSuggestions = suggestions.filter((s) => s.type === suggestionTypeForTab[activeTab]);
+
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     if (!query.trim()) { setSuggestions([]); return; }
@@ -400,10 +413,10 @@ export const SearchPage = () => {
         </div>
 
         {/* Autocomplete dropdown */}
-        {showSuggestions && suggestions.length > 0 && (
+        {showSuggestions && tabFilteredSuggestions.length > 0 && (
           <div className="absolute top-full left-0 right-0 mt-1.5 rounded-2xl shadow-xl overflow-hidden z-50"
             style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            {suggestions.map((s, i) => (
+            {tabFilteredSuggestions.map((s, i) => (
               <button key={`${s.type}-${s.id}-${i}`}
                 onClick={() => { setQuery(s.name); setShowSuggestions(false); handleSearch(s.name); }}
                 className="w-full flex items-center gap-3 px-4 py-3 text-right transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_5%,var(--muted))]">
