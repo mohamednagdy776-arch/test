@@ -288,11 +288,12 @@ export const SearchPage = () => {
         type: tab === 'people' ? 'people' : tab,
         limit: 20,
       };
-      if (tab === 'people') {
-        Object.entries(appliedFilters).forEach(([k, v]) => {
-          if (v) params[k as keyof SearchParams] = v as any;
-        });
-      }
+      // Every tab now has its own dedicated filter fields (#352) -- applying
+      // was previously hardcoded to the People tab only, so switching to
+      // Events/Communities/Pages/Posts always searched unfiltered.
+      Object.entries(appliedFilters).forEach(([k, v]) => {
+        if (v) params[k as keyof SearchParams] = v as any;
+      });
       const data = await searchApi.searchAll(params);
       const items =
         tab === 'people'  ? (data.users  ?? []) :
@@ -396,6 +397,7 @@ export const SearchPage = () => {
               onChange={setFilters}
               onReset={() => { setFilters(emptyFilters); setApplied(emptyFilters); }}
               onSearch={() => { setApplied({ ...filters }); runSearch(query, activeTab, filters); }}
+              activeTab={activeTab}
             />
           )}
 

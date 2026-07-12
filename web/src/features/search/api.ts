@@ -16,6 +16,17 @@ export interface SearchParams {
   cursor?: string;
   type?: 'all' | 'people' | 'groups' | 'pages' | 'events' | 'posts';
   q?: string;
+  // Dedicated per-tab filters (#352) -- People filters used to be the only
+  // ones that ever reached the API.
+  groupCategory?: string;
+  groupLocation?: string;
+  pageCategory?: string;
+  eventLocation?: string;
+  eventDateFrom?: string;
+  eventDateTo?: string;
+  postType?: string;
+  postDateFrom?: string;
+  postDateTo?: string;
 }
 
 export interface SearchResult {
@@ -92,7 +103,10 @@ export const searchApi = {
     // filter UI but dropped right here before ever reaching the API (#358,
     // #346) -- the Advanced Search panel applied them client-side but they
     // had zero effect on the actual query.
-    const { type = 'all', q, cursor, limit = 12, minAge, maxAge, gender, country, city, education, sect, lifestyle, prayerLevel } = params;
+    const {
+      type = 'all', q, cursor, limit = 12, minAge, maxAge, gender, country, city, education, sect, lifestyle, prayerLevel,
+      groupCategory, groupLocation, pageCategory, eventLocation, eventDateFrom, eventDateTo, postType, postDateFrom, postDateTo,
+    } = params;
     const results: SearchResult = { hasMore: false, nextCursor: undefined };
 
     const categoryMap: Record<string, string> = {
@@ -105,7 +119,12 @@ export const searchApi = {
     const category = type === 'all' ? undefined : categoryMap[type];
 
     try {
-      const res = await apiClient.get('/search', { params: { q, category, limit, cursor, minAge, maxAge, gender, country, city, education, sect, lifestyle, prayerLevel } });
+      const res = await apiClient.get('/search', {
+        params: {
+          q, category, limit, cursor, minAge, maxAge, gender, country, city, education, sect, lifestyle, prayerLevel,
+          groupCategory, groupLocation, pageCategory, eventLocation, eventDateFrom, eventDateTo, postType, postDateFrom, postDateTo,
+        },
+      });
       const data = res.data?.data ?? res.data ?? {};
 
       if (data.users) results.users = data.users;

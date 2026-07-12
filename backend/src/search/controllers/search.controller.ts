@@ -23,13 +23,26 @@ export class SearchController {
     @Query('sect') sect: string,
     @Query('lifestyle') lifestyle: string,
     @Query('prayerLevel') prayerLevel: string,
+    @Query('groupCategory') groupCategory: string,
+    @Query('groupLocation') groupLocation: string,
+    @Query('pageCategory') pageCategory: string,
+    @Query('eventLocation') eventLocation: string,
+    @Query('eventDateFrom') eventDateFrom: string,
+    @Query('eventDateTo') eventDateTo: string,
+    @Query('postType') postType: string,
+    @Query('postDateFrom') postDateFrom: string,
+    @Query('postDateTo') postDateTo: string,
     @CurrentUser() user: User,
   ) {
     // Advanced Search lets a user apply gender/age/location/education filters
     // without typing anything in the free-text box -- this used to hard-block
     // on an empty q regardless of any filter being set, always returning zero
     // results (#245). Only short-circuit when there's truly nothing to search on.
-    const hasFilters = !!(gender || minAge || maxAge || country || city || education || sect || lifestyle || prayerLevel);
+    const hasFilters = !!(
+      gender || minAge || maxAge || country || city || education || sect || lifestyle || prayerLevel ||
+      groupCategory || groupLocation || pageCategory || eventLocation || eventDateFrom || eventDateTo ||
+      postType || postDateFrom || postDateTo
+    );
     if ((!q || q.trim().length === 0) && !hasFilters) {
       return ok({
         users: [], posts: [], groups: [], pages: [], events: [], photos: [], videos: []
@@ -39,6 +52,9 @@ export class SearchController {
       q, user.id, category, this.parseAge(minAge), this.parseAge(maxAge), gender || undefined,
       country || undefined, city || undefined, education || undefined,
       sect || undefined, lifestyle || undefined, prayerLevel || undefined,
+      groupCategory || undefined, groupLocation || undefined, pageCategory || undefined,
+      eventLocation || undefined, eventDateFrom || undefined, eventDateTo || undefined,
+      postType || undefined, postDateFrom || undefined, postDateTo || undefined,
     );
     return ok(results);
   }

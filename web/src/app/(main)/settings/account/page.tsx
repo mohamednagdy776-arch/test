@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { Avatar } from '@/components/ui/Avatar';
 
 const ACCOUNT_SECTIONS = [
   {
@@ -47,6 +48,7 @@ export default function AccountPage() {
   const me = (data as any)?.data ?? data;
   const email: string = me?.email ?? '';
   const name: string = me?.fullName ?? me?.firstName ?? '';
+  const avatarUrl: string | undefined = me?.avatarUrl;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
@@ -63,9 +65,9 @@ export default function AccountPage() {
         {/* Account summary card */}
         {(name || email) && (
           <div className="rounded-2xl bg-[var(--card)] backdrop-blur-sm border border-[var(--border)]/50 p-5 flex items-center gap-4">
-            <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center text-2xl font-bold text-white shadow-lg shadow-black/10">
-              {name?.charAt(0) || '؟'}
-            </div>
+            {/* Was a hardcoded initial-letter div, never checked for a real
+                uploaded avatar at all (#356). */}
+            <Avatar src={avatarUrl} name={name} size="lg" shape="rounded" />
             <div>
               {name && <p className="font-bold text-[var(--foreground)]">{name}</p>}
               {email && <p className="text-sm text-[var(--primary)]/70">{email}</p>}

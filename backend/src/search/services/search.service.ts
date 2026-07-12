@@ -19,7 +19,15 @@ export class SearchService {
     @InjectRepository(Event)   private eventRepo: Repository<Event>,
   ) {}
 
-  async search(query: string, userId: string, category?: string, minAge?: number, maxAge?: number, gender?: string, country?: string, city?: string, education?: string, sect?: string, lifestyle?: string, prayerLevel?: string) {
+  async search(
+    query: string, userId: string, category?: string, minAge?: number, maxAge?: number, gender?: string,
+    country?: string, city?: string, education?: string, sect?: string, lifestyle?: string, prayerLevel?: string,
+    // Per-tab filters (#352): groups/pages/events/posts each had no dedicated
+    // filters of their own and only ever reused the People fields above.
+    groupCategory?: string, groupLocation?: string, pageCategory?: string,
+    eventLocation?: string, eventDateFrom?: string, eventDateTo?: string,
+    postType?: string, postDateFrom?: string, postDateTo?: string,
+  ) {
     const q = `%${(query || '').trim()}%`;
 
     const userSearch = async () => {
@@ -107,11 +115,15 @@ export class SearchService {
     };
 
     const postSearch = async () => {
-      const posts = await this.postRepo
+      const qb = this.postRepo
         .createQueryBuilder('post')
         .leftJoinAndSelect('post.user', 'user')
         .where('post.content ILIKE :q', { q })
-        .andWhere('post.audience = :aud', { aud: 'public' })
+        .andWhere('post.audience = :aud', { aud: 'public' });
+      if (postType) qb.andWhere('post.postType = :postType', { postType });
+      if (postDateFrom) qb.andWhere('post.createdAt >= :postDateFrom', { postDateFrom });
+      if (postDateTo) qb.andWhere('post.createdAt <= :postDateTo', { postDateTo });
+      const posts = await qb
         .orderBy('post.createdAt', 'DESC')
         .take(10)
         .getMany();
@@ -130,29 +142,35 @@ export class SearchService {
       }));
     };
 
-    const groupSearch = () =>
-      this.groupRepo
+    const groupSearch = () => {
+      const qb = this.groupRepo
         .createQueryBuilder('group')
-        .select(['group.id', 'group.name', 'group.description', 'group.privacy'])
-        .where('group.name ILIKE :q OR group.description ILIKE :q', { q })
-        .take(10)
-        .getMany();
+        .select(['group.id', 'group.name', 'group.description', 'group.privacy', 'group.category', 'group.location'])
+        .where('group.name ILIKE :q OR group.description ILIKE :q', { q });
+      if (groupCategory) qb.andWhere('group.category ILIKE :groupCategory', { groupCategory: `%${groupCategory}%` });
+      if (groupLocation) qb.andWhere('group.location ILIKE :groupLocation', { groupLocation: `%${groupLocation}%` });
+      return qb.take(10).getMany();
+    };
 
-    const pageSearch = () =>
-      this.pageRepo
+    const pageSearch = () => {
+      const qb = this.pageRepo
         .createQueryBuilder('page')
         .select(['page.id', 'page.name', 'page.description', 'page.category'])
-        .where('page.name ILIKE :q OR page.description ILIKE :q', { q })
-        .take(10)
-        .getMany();
+        .where('page.name ILIKE :q OR page.description ILIKE :q', { q });
+      if (pageCategory) qb.andWhere('page.category ILIKE :pageCategory', { pageCategory: `%${pageCategory}%` });
+      return qb.take(10).getMany();
+    };
 
-    const eventSearch = () =>
-      this.eventRepo
+    const eventSearch = () => {
+      const qb = this.eventRepo
         .createQueryBuilder('event')
         .select(['event.id', 'event.title', 'event.description', 'event.startDate', 'event.location'])
-        .where('event.title ILIKE :q OR event.description ILIKE :q OR event.location ILIKE :q', { q })
-        .take(10)
-        .getMany();
+        .where('event.title ILIKE :q OR event.description ILIKE :q OR event.location ILIKE :q', { q });
+      if (eventLocation) qb.andWhere('event.location ILIKE :eventLocation', { eventLocation: `%${eventLocation}%` });
+      if (eventDateFrom) qb.andWhere('event.startDate >= :eventDateFrom', { eventDateFrom });
+      if (eventDateTo) qb.andWhere('event.startDate <= :eventDateTo', { eventDateTo });
+      return qb.take(10).getMany();
+    };
 
     // Category-filtered search
     if (category && category !== 'All') {
