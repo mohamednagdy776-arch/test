@@ -1,16 +1,17 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { resolveMediaUrl } from '@/lib/media';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup, useUpdateGroup, useGroupMembers, useBanMember, useUnbanMember, useApproveJoinRequest, useRejectJoinRequest } from '@/features/groups/hooks';
-import { useGroupPosts, useCreatePostWithMedia, useCreatePost } from '@/features/posts/hooks';
+import { useGroupPosts } from '@/features/posts/hooks';
 import { PostCard } from '@/features/posts/components/PostCard';
+import { PostComposer } from '@/features/posts/components/PostComposer';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import {
   ArrowLeft, Users, Trash, SignOut, Lock, Globe, EyeSlash,
-  PencilLine, Image as ImageIcon, VideoCamera, X, Check,
+  PencilLine,
 } from '@phosphor-icons/react';
 
 
@@ -34,56 +35,11 @@ export default function GroupDetailPage() {
   const approveJoinRequest = useApproveJoinRequest(id);
   const rejectJoinRequest  = useRejectJoinRequest(id);
   const { data: membersData } = useGroupMembers(id);
-  const createPost            = useCreatePost();
-  const createPostWithMedia   = useCreatePostWithMedia();
   const { showToast }         = useToast() as any;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
-  const [content, setContent]     = useState('');
-  const [mediaFile, setMediaFile] = useState<File | null>(null);
-  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-  const [showForm, setShowForm]   = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
-      showToast('الملف غير مدعوم. يرجى اختيار صورة أو فيديو', 'error');
-      return;
-    }
-    if (file.size > 50 * 1024 * 1024) {
-      showToast('حجم الملف كبير جداً. الحد الأقصى 50 ميغا', 'error');
-      return;
-    }
-    setMediaFile(file);
-    setMediaPreview(URL.createObjectURL(file));
-  };
-
-  const removeMedia = () => {
-    setMediaFile(null);
-    setMediaPreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!content.trim() && !mediaFile) return;
-    try {
-      if (mediaFile) {
-        await createPostWithMedia.mutateAsync({ groupId: id, content: content.trim() || '', file: mediaFile });
-      } else {
-        await createPost.mutateAsync({ groupId: id, content: content.trim() });
-      }
-      setContent(''); removeMedia(); setShowForm(false);
-      showToast('تم نشر المنشور بنجاح', 'success');
-    } catch (err: any) {
-      showToast(err?.response?.data?.message || 'فشل نشر المنشور، يرجى المحاولة مجدداً', 'error');
-    }
-  };
-
   // ── Loading state ──────────────────────────────────────────────
   if (isLoading) {
     return (
@@ -121,7 +77,6 @@ export default function GroupDetailPage() {
     : null;
   const privacy   = privacyInfo(group.privacy);
   const PrivacyIcon = privacy.icon;
-  const isPosting = createPost.isPending || createPostWithMedia.isPending;
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 pb-24 lg:pb-8">
@@ -251,76 +206,11 @@ export default function GroupDetailPage() {
       </div>
 
       {/* ── Post composer ─────────────────────────────────────── */}
+      {/* Was a hand-rolled form limited to text/image/video, missing every
+          other option the public composer has (poll, feelings, background
+          color, tagging, location, audience...) (#360). */}
       {group.isMember && (
-        <div>
-          {!showForm ? (
-            <button onClick={() => setShowForm(true)}
-              className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl text-sm font-medium text-right transition-all hover:scale-[1.01]"
-              style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--muted-foreground)', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))' }}>
-                <PencilLine size={15} style={{ color: 'var(--primary)' }} />
-              </div>
-              <span>شارك شيئاً في هذا المجتمع...</span>
-            </button>
-          ) : (
-            <form onSubmit={handleSubmit} className="rounded-2xl overflow-hidden"
-              style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
-              <div className="p-4">
-                <textarea value={content} onChange={(e) => setContent(e.target.value)}
-                  placeholder="ماذا تفكر؟ شارك مجتمعك..." rows={3}
-                  className="w-full resize-none rounded-xl px-4 py-3 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                  style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-
-                {mediaPreview && (
-                  <div className="relative mt-3 inline-block">
-                    {mediaFile?.type.startsWith('video/') ? (
-                      <video src={mediaPreview} controls className="rounded-xl max-h-48 max-w-full" />
-                    ) : (
-                      <Image src={mediaPreview} alt="" width={200} height={200}
-                        className="rounded-xl max-h-48 w-auto object-cover" />
-                    )}
-                    <button type="button" onClick={removeMedia} aria-label="إزالة الوسائط"
-                      className="absolute -top-2 -left-2 w-6 h-6 rounded-full flex items-center justify-center text-white transition-all hover:scale-110"
-                      style={{ background: 'var(--destructive)' }}>
-                      <X size={11} weight="bold" />
-                    </button>
-                  </div>
-                )}
-
-                <div className="mt-4 flex items-center justify-between gap-3">
-                  <div className="flex gap-2">
-                    <button type="button" onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
-                      style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
-                      <ImageIcon size={13} /> صورة
-                    </button>
-                    <button type="button" onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
-                      style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
-                      <VideoCamera size={13} /> فيديو
-                    </button>
-                    <input ref={fileInputRef} type="file" accept="image/*,video/*" onChange={handleFileChange} className="hidden" />
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="button"
-                      onClick={() => { setShowForm(false); setContent(''); removeMedia(); }}
-                      className="px-3 py-2 rounded-xl text-xs font-medium transition-all hover:scale-105"
-                      style={{ color: 'var(--muted-foreground)' }}>
-                      إلغاء
-                    </button>
-                    <button type="submit" disabled={(!content.trim() && !mediaFile) || isPosting}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
-                      style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
-                      <Check size={12} weight="bold" />
-                      {isPosting ? 'جاري النشر...' : 'نشر'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-          )}
-        </div>
+        <PostComposer groupId={id} onSuccess={() => showToast('تم نشر المنشور بنجاح', 'success')} />
       )}
 
       {/* ── Posts feed ────────────────────────────────────────── */}
