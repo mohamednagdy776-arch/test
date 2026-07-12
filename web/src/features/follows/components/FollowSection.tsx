@@ -41,7 +41,7 @@ function FollowListModal({ userId, kind, onClose }: { userId: string; kind: 'fol
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="بحث بالاسم أو اسم المستخدم..."
-          className="w-full mb-3 rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--ring)]"
+          className="w-full mb-3 rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--ring)]"
         />
         {query.isLoading ? (
           <p className="text-center text-sm text-[var(--muted-foreground)] py-6">جاري التحميل...</p>

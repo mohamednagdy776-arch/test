@@ -143,10 +143,17 @@ export class SearchService {
     };
 
     const groupSearch = () => {
+      // Same class of bug as userSearch's #119/#131 fix above: a raw
+      // multi-clause OR string passed straight to .where() isn't reliably
+      // isolated in its own parens, so any subsequent .andWhere() (the new
+      // groupCategory/groupLocation filters) had no effect at all. Wrap the
+      // OR group in an explicit Brackets().
       const qb = this.groupRepo
         .createQueryBuilder('group')
         .select(['group.id', 'group.name', 'group.description', 'group.privacy', 'group.category', 'group.location'])
-        .where('group.name ILIKE :q OR group.description ILIKE :q', { q });
+        .where(new Brackets((qb2) => {
+          qb2.where('group.name ILIKE :q', { q }).orWhere('group.description ILIKE :q', { q });
+        }));
       if (groupCategory) qb.andWhere('group.category ILIKE :groupCategory', { groupCategory: `%${groupCategory}%` });
       if (groupLocation) qb.andWhere('group.location ILIKE :groupLocation', { groupLocation: `%${groupLocation}%` });
       return qb.take(10).getMany();
@@ -156,7 +163,9 @@ export class SearchService {
       const qb = this.pageRepo
         .createQueryBuilder('page')
         .select(['page.id', 'page.name', 'page.description', 'page.category'])
-        .where('page.name ILIKE :q OR page.description ILIKE :q', { q });
+        .where(new Brackets((qb2) => {
+          qb2.where('page.name ILIKE :q', { q }).orWhere('page.description ILIKE :q', { q });
+        }));
       if (pageCategory) qb.andWhere('page.category ILIKE :pageCategory', { pageCategory: `%${pageCategory}%` });
       return qb.take(10).getMany();
     };
@@ -165,7 +174,12 @@ export class SearchService {
       const qb = this.eventRepo
         .createQueryBuilder('event')
         .select(['event.id', 'event.title', 'event.description', 'event.startDate', 'event.location'])
-        .where('event.title ILIKE :q OR event.description ILIKE :q OR event.location ILIKE :q', { q });
+        .where(new Brackets((qb2) => {
+          qb2
+            .where('event.title ILIKE :q', { q })
+            .orWhere('event.description ILIKE :q', { q })
+            .orWhere('event.location ILIKE :q', { q });
+        }));
       if (eventLocation) qb.andWhere('event.location ILIKE :eventLocation', { eventLocation: `%${eventLocation}%` });
       if (eventDateFrom) qb.andWhere('event.startDate >= :eventDateFrom', { eventDateFrom });
       if (eventDateTo) qb.andWhere('event.startDate <= :eventDateTo', { eventDateTo });

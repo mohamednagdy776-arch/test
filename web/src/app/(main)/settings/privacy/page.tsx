@@ -203,9 +203,11 @@ export default function PrivacyPage() {
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
+      // Same broken-opacity-on-CSS-var bug as settings/notifications (#208).
       className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
-        enabled ? 'bg-[var(--primary)] shadow-inner' : 'bg-[var(--muted-foreground)]/30'
+        enabled ? 'bg-[var(--primary)] shadow-inner' : ''
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      style={enabled ? undefined : { background: 'color-mix(in srgb, var(--muted-foreground) 30%, var(--muted))' }}
     >
       <span
         className={`absolute top-1 w-5 h-5 rounded-full bg-[var(--card)] shadow-md transition-transform duration-300 ${
@@ -499,7 +501,10 @@ function PhotoVisibilityCard() {
               checked={incognito}
               onChange={(e) => update.mutate({ incognito: e.target.checked })}
               disabled={update.isPending}
-              className="h-5 w-5 accent-[var(--primary)]"
+              // --primary is near-white in Dark Mode, so its own checkmark
+              // glyph became unreadable against itself; --accent (used by
+              // the sibling radio group above) has real contrast (#210).
+              className="h-5 w-5 accent-[var(--accent)]"
             />
           </label>
         </div>

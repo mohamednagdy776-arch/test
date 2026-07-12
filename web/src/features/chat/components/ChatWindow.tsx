@@ -852,7 +852,9 @@ export const ChatWindow = ({ match, onBack }: Props) => {
             )}
           </button>
         </div>
-        <p className="mt-1 text-center text-[10px]" style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}>
+        {/* Shown even on mobile touch keyboards with no physical
+            Enter/Shift key concept at all (#318). */}
+        <p className="hidden sm:block mt-1 text-center text-[10px]" style={{ color: 'var(--muted-foreground)', opacity: 0.6 }}>
           Enter للإرسال · Shift+Enter لسطر جديد
         </p>
       </div>

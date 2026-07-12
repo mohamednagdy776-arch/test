@@ -1,6 +1,5 @@
 'use client';
 import { PostFeed } from '@/features/posts/components/PostFeed';
-import { PostComposer } from '@/features/posts/components/PostComposer';
 
 export default function PostsPage() {
   return (
@@ -16,7 +15,8 @@ export default function PostsPage() {
           </div>
         </div>
       </div>
-      <PostComposer />
+      {/* PostFeed already renders its own PostComposer internally -- this
+          extra one caused the composer to appear twice (#233, #311). */}
       <PostFeed />
     </div>
   );

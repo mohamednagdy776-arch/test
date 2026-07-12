@@ -245,8 +245,13 @@ export const Navbar = () => {
             className="lg:hidden border-t animate-slide-down overflow-hidden"
             style={{ background: 'var(--card)', borderColor: 'color-mix(in srgb, var(--accent) 20%, var(--border))' }}
           >
-            {/* User strip */}
-            <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--muted)' }}>
+            {/* User strip -- was a plain non-interactive div, tapping it did
+                nothing on mobile even though the desktop equivalent links to
+                the profile page (#294). */}
+            <Link
+              href="/profile"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--border)', background: 'var(--muted)' }}>
               {avatarUrl ? (
                 <Image src={avatarUrl} alt={displayName} width={36} height={36} className="w-9 h-9 rounded-xl object-cover" style={{ boxShadow: '0 0 0 2px var(--accent)' }} />
               ) : (
@@ -261,7 +266,7 @@ export const Navbar = () => {
                 <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{displayName}</p>
                 <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{t('nav.welcome')}</p>
               </div>
-            </div>
+            </Link>
 
             {/* Secondary features — not in the bottom nav */}
             <div className="p-3 grid grid-cols-4 gap-1">

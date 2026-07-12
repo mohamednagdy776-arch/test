@@ -76,17 +76,20 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const bool = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLSelectElement>) =>
     setForm((f: typeof form) => ({ ...f, [k]: e.target.value === 'true' }));
 
+  // No background class at all was applied to any of these controls -- they
+  // rendered as native (opaque white) inputs while text-[var(--foreground)]
+  // is light in Dark Mode, making everything unreadable there (#256).
   const inp = (k: keyof typeof form, label: string, type = 'text', ph = '', maxLength?: number, min?: number) => (
     <Field label={label}>
       <input type={type} value={(form as any)[k] ?? ''} onChange={type === 'number' ? num(k) : str(k)} placeholder={ph} maxLength={maxLength} min={min}
-        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]/30" />
+        className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]/30" />
     </Field>
   );
 
   const sel = (k: keyof typeof form, label: string, opts: [string, string][]) => (
     <Field label={label}>
       <select value={(form as any)[k] ?? ''} onChange={str(k)}
-        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none">
+        className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none">
         <option value="">اختر...</option>
         {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
@@ -96,7 +99,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const boolSel = (k: keyof typeof form, label: string) => (
     <Field label={label}>
       <select value={String((form as any)[k])} onChange={bool(k)}
-        className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none">
+        className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none">
         <option value="true">نعم</option>
         <option value="false">لا</option>
       </select>
@@ -125,7 +128,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
       <div className="sm:col-span-2">
         <label className="mb-1 block text-xs font-medium text-[var(--muted-foreground)]">نبذة شخصية</label>
         <textarea value={form.bio} onChange={str('bio')} rows={3} maxLength={500} placeholder="اكتب نبذة مختصرة عن نفسك..."
-          className="w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]/30 resize-none" />
+          className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]/30 resize-none" />
         <p className="text-xs text-[var(--muted-foreground)] mt-1">{form.bio?.length || 0}/500</p>
       </div>
     </div>,

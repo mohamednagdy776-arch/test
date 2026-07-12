@@ -2,12 +2,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useViewStory, useStoryViewers, useAddToHighlight, useReactToStory } from '../hooks';
+import { useViewStory, useStoryViewers, useReactToStory } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
 import { apiClient } from '@/lib/api-client';
 import { chatApi } from '@/features/chat/api';
+import { savedPostsApi } from '@/features/memories/api';
 
 const QUICK_REACTIONS = ['❤️', '😍', '😂', '😮', '😢', '👏', '🔥'];
 
@@ -53,7 +54,6 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   const currentStory = currentUser?.stories[storyIndex];
   const viewStory = useViewStory();
   const { data: viewersData } = useStoryViewers(currentStory?.id || '');
-  const addToHighlight = useAddToHighlight();
   const reactToStory = useReactToStory();
   const { showToast } = useToast() as any;
   const viewers = viewersData?.data || [];
@@ -324,29 +324,31 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
               </button>
               {showMenu && (
                 <div className="absolute right-0 top-9 w-44 bg-[#1a2a3a] rounded-xl shadow-2xl border border-white/10 py-1 z-30">
-                  <button
-                    onClick={() => { setShowViewers(true); setShowMenu(false); }}
-                    className="w-full px-4 py-2.5 text-right text-sm text-white/90 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
-                  >
-                    <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                    المشاهدون
-                  </button>
+                  {/* Only the story owner may see who viewed it -- this was
+                      rendered unconditionally for anyone (#266). */}
+                  {isOwnStory && (
+                    <button
+                      onClick={() => { setShowViewers(true); setShowMenu(false); }}
+                      className="w-full px-4 py-2.5 text-right text-sm text-white/90 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                    >
+                      <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      المشاهدون
+                    </button>
+                  )}
                   <button
                     onClick={() => {
-                      // Save the story to the user's "الأهم" (Highlights/Favorites)
-                      // via the existing POST /stories/:id/highlights endpoint, with
-                      // toast feedback so the action isn't silent (#22).
+                      // "Add to Important" wrote to the orphaned StoryHighlight
+                      // system, which has no UI anywhere to ever see the result
+                      // again (#22, #296, #378) -- use the real Saved feature
+                      // instead, which already has a dedicated page and already
+                      // knows how to hydrate/display saved stories.
                       if (currentStory?.id) {
-                        addToHighlight.mutate(
-                          { storyId: currentStory.id, name: 'الأهم' },
-                          {
-                            onSuccess: () => showToast('تمت الإضافة إلى الأهم', 'success'),
-                            onError: () => showToast('تعذّرت الإضافة إلى الأهم', 'error'),
-                          },
-                        );
+                        savedPostsApi.saveItem('story', currentStory.id)
+                          .then(() => showToast('تمت الإضافة إلى المحفوظات', 'success'))
+                          .catch(() => showToast('تعذّرت الإضافة إلى المحفوظات', 'error'));
                       }
                       setShowMenu(false);
                     }}
@@ -355,7 +357,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                     <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
-                    إضافة للأهم
+                    إضافة للمحفوظات
                   </button>
                 </div>
               )}

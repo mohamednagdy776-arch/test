@@ -217,9 +217,14 @@ export default function NotificationsPage() {
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
+      // bg-[var(--muted-foreground)]/30 never compiled (Tailwind can't
+      // apply an opacity modifier to a CSS custom property), so the OFF
+      // track had no background at all and the thumb (bg-[var(--card)])
+      // disappeared into the surrounding card background (#208).
       className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
-        enabled ? 'bg-[var(--primary)] shadow-inner' : 'bg-[var(--muted-foreground)]/30'
+        enabled ? 'bg-[var(--primary)] shadow-inner' : ''
       } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      style={enabled ? undefined : { background: 'color-mix(in srgb, var(--muted-foreground) 30%, var(--muted))' }}
     >
       <span
         className={`absolute top-1 w-5 h-5 rounded-full bg-[var(--card)] shadow-md transition-transform duration-300 ${

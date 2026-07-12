@@ -17,7 +17,10 @@ interface Props {
 // fall back to the original silently if translation isn't possible.
 export function TranslatedMessageBody({ content, isOwn, isEdited, targetLang }: Props) {
   const { translated, status } = useTranslatedText(content, targetLang);
-  const [showOriginal, setShowOriginal] = useState(false);
+  // Messages were auto-translated by default, forcing a manual "Show
+  // Original" tap every time -- expected behavior is the reverse: show the
+  // original by default, translate on request (#305).
+  const [showOriginal, setShowOriginal] = useState(true);
 
   const hasTranslation = !!translated && translated !== content;
   const displayText = hasTranslation && !showOriginal ? translated! : content;

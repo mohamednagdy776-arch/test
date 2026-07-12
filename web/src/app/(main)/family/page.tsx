@@ -97,7 +97,7 @@ function InviteGuardianModal({ onClose }: { onClose: () => void }) {
               value={guardianUserId}
               onChange={(e) => setGuardianUserId(e.target.value)}
               placeholder="أدخل UUID الخاص بولي الأمر"
-              className="w-full rounded-2xl border border-[var(--border)] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
             />
           </div>
 
@@ -106,7 +106,7 @@ function InviteGuardianModal({ onClose }: { onClose: () => void }) {
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
-              className="w-full rounded-2xl border border-[var(--border)] px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+              className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
             >
               {Object.entries(TYPE_LABELS).map(([v, l]) => (
                 <option key={v} value={v}>{l}</option>

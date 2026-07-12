@@ -89,6 +89,9 @@ export function useDeletePost() {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['feed-recent'] });
       qc.invalidateQueries({ queryKey: ['profile-posts'] });
+      // Also missing here (unlike create), so a deleted GROUP post stayed
+      // visible in the group's post list until a full page reload (#189).
+      qc.invalidateQueries({ queryKey: ['group-posts'] });
     },
   });
 }
@@ -101,6 +104,7 @@ export function useSharePost() {
       qc.invalidateQueries({ queryKey: ['feed'] });
       qc.invalidateQueries({ queryKey: ['feed-recent'] });
       qc.invalidateQueries({ queryKey: ['profile-posts'] });
+      qc.invalidateQueries({ queryKey: ['group-posts'] });
     },
   });
 }

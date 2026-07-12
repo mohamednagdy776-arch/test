@@ -254,7 +254,7 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[var(--foreground)] text-xs font-bold shadow-soft" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}>أ</div>
         <input type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب تعليقاً..."
-          className="flex-1 rounded-full border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:bg-[var(--card)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] transition-all duration-300 hover:border-[var(--ring)]" />
+          className="flex-1 rounded-full border border-[var(--border)] bg-[var(--muted)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:bg-[var(--card)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] transition-all duration-300 hover:border-[var(--ring)]" />
         <button type="submit" disabled={!text.trim() || addComment.isPending}
           className="h-9 w-9 rounded-full text-[var(--card)] flex items-center justify-center hover:shadow-glow-lg disabled:opacity-40 transition-all duration-300 active:scale-95 hover:-translate-y-0.5"
           style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}>
@@ -283,10 +283,10 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
         value={content}
         onChange={(e) => setContent(e.target.value)}
         placeholder="ما الذي يدور في ذهنك؟"
-        className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] mb-4 transition-all duration-300"
+        className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] mb-4 transition-all duration-300"
         rows={3}
       />
-      <div className="bg-[var(--muted)]/40 rounded-xl p-3 mb-4 shadow-inner-soft">
+      <div className="bg-[var(--muted)] rounded-xl p-3 mb-4 shadow-inner-soft">
         <p className="text-xs text-[var(--muted-foreground)] line-clamp-2">{postContent}</p>
       </div>
       <button
@@ -329,7 +329,7 @@ function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: ()
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)]/40 px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] mb-4 transition-all duration-300 min-h-[100px]"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] mb-4 transition-all duration-300 min-h-[100px]"
           rows={4}
         />
         <button
@@ -401,7 +401,7 @@ function LinkPreview({ url, title, description, image }: { url: string; title?: 
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" className="block mt-3 rounded-xl overflow-hidden border border-[var(--border)]/60 hover:border-[var(--ring)] hover:shadow-glow transition-all duration-300 hover:-translate-y-0.5">
       {image && <div className="aspect-video bg-[var(--muted)]"><img src={image} alt={title} className="w-full h-full object-cover" /></div>}
-      <div className="p-3 bg-[var(--muted)]/40">
+      <div className="p-3 bg-[var(--muted)]">
         <p className="text-xs text-[var(--muted-foreground)] truncate">{url}</p>
         {title && <p className="text-sm font-semibold text-[var(--foreground)] mt-1 line-clamp-1">{title}</p>}
         {description && <p className="text-xs text-[var(--muted-foreground)] mt-1 line-clamp-2">{description}</p>}
@@ -448,12 +448,17 @@ function PollDisplay({ postId, options, myVote }: { postId: string; options: { t
               voted !== null ? 'cursor-default' : 'hover:ring-1 hover:ring-[var(--muted-foreground)]'
             )}
           >
+            {/* bg-[var(--x)]/NN never compiled (Tailwind can't decompose a
+                CSS custom property for an opacity modifier) -- the voted-fill
+                bar had literally no background at all (#229). */}
             <div
-              className={cn(
-                'absolute inset-0 transition-all duration-500',
-                voted === i ? 'bg-[var(--muted-foreground)]/20' : 'bg-[var(--muted)]'
-              )}
-              style={{ width: `${percentage}%` }}
+              className="absolute inset-0 transition-all duration-500"
+              style={{
+                width: `${percentage}%`,
+                background: voted === i
+                  ? 'color-mix(in srgb, var(--primary) 35%, var(--muted))'
+                  : 'var(--muted)',
+              }}
             />
             <div className="relative flex items-center justify-between px-3 py-2.5">
               <span className="text-[var(--foreground)]">{opt.text}</span>
@@ -550,7 +555,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
       )}
       {isShared && post.originalPost && (
         <div className="px-4 pt-1 pb-2">
-          <div className="p-3 rounded-xl bg-[var(--muted)]/40 border border-[var(--border)]/40 shadow-card-hover transition-all duration-300 hover:shadow-glow">
+          <div className="p-3 rounded-xl bg-[var(--muted)] border border-[var(--border)]/40 shadow-card-hover transition-all duration-300 hover:shadow-glow">
             <div className="flex items-center gap-2 mb-2">
               <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-[var(--card)] text-xs flex items-center justify-center shadow-soft">
                 {displayName(post.originalPost.user).charAt(0)}

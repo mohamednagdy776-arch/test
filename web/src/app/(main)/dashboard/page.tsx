@@ -172,7 +172,7 @@ function ProfileCompleteness() {
             <p key={s} className="text-xs" style={{ color: 'var(--muted-foreground)' }}>· {s}</p>
           ))}
           <button
-            onClick={() => router.push('/settings')}
+            onClick={() => router.push('/profile')}
             className="mt-1.5 text-xs font-semibold transition-colors hover:opacity-80"
             style={{ color: 'var(--primary)' }}>
             أكمل الملف الآن ←
@@ -180,7 +180,7 @@ function ProfileCompleteness() {
         </div>
       ) : (
         <button
-          onClick={() => router.push('/settings')}
+          onClick={() => router.push('/profile')}
           className="text-xs font-semibold transition-colors hover:opacity-80"
           style={{ color: 'var(--primary)' }}>
           تعديل الملف الشخصي →

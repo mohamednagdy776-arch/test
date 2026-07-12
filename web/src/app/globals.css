@@ -9,6 +9,14 @@
 
 @layer base {
   :root {
+    /* No color-scheme was ever declared, so native form controls (select
+       popups/option lists, scrollbars, date pickers) always rendered with
+       the browser/OS light chrome regardless of the app's own dark theme --
+       a closed <select> could be correctly themed via CSS vars while its
+       OPEN option list still showed light-on-light or dark-on-dark text
+       (#202, #298, and related "selected option invisible" reports). */
+    color-scheme: light;
+
     /* ── Core Palette (from COLOR_SYSTEM.md) ── */
     --color-navy:        #213448;
     --color-slate:       #547792;
@@ -59,6 +67,7 @@
   }
 
   .dark {
+    color-scheme: dark;
     --background:        #131F2E;
     --foreground:        #FDFAF5;
     --card:              #213448;
@@ -621,7 +630,11 @@
   }
 
   .text-gradient {
-    background: linear-gradient(to left, #213448, #547792);
+    /* Was hardcoded to #213448/#547792 -- in Dark Mode --card is also
+       #213448, so the gradient's own start color matched the card behind
+       it and profile name/avatar-initial/completion-% text using this
+       class started invisible (#252). Use theme-aware vars instead. */
+    background: linear-gradient(to left, var(--primary), var(--secondary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

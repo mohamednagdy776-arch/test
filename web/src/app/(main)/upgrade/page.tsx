@@ -177,17 +177,20 @@ export default function UpgradePage() {
         </div>
         <h1 className="text-3xl font-bold text-[var(--primary)] mb-2">اختر الخطة المناسبة</h1>
         <p className="text-[var(--primary)]">احصل على ميزات حصرية للتوافق المتقدم والبحث الذكي</p>
-        {/* Billing period toggle */}
+        {/* Billing period toggle -- selected state only differed by
+            bg-[var(--card)] vs. the track's bg-[var(--muted)], and those two
+            variables are identical in Dark Mode, making the active option
+            visually indistinguishable (#228). */}
         <div className="inline-flex mt-5 rounded-xl bg-[var(--muted)] p-1 gap-1">
           <button
             onClick={() => setBillingPeriod('monthly')}
-            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all', billingPeriod === 'monthly' ? 'bg-[var(--card)] text-[var(--primary)] shadow-sm' : 'text-[var(--primary)] hover:text-[var(--primary)]')}
+            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all', billingPeriod === 'monthly' ? 'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]')}
           >
             شهري
           </button>
           <button
             onClick={() => setBillingPeriod('annual')}
-            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5', billingPeriod === 'annual' ? 'bg-[var(--card)] text-[var(--primary)] shadow-sm' : 'text-[var(--primary)] hover:text-[var(--primary)]')}
+            className={cn('rounded-lg px-5 py-1.5 text-sm font-semibold transition-all flex items-center gap-1.5', billingPeriod === 'annual' ? 'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]')}
           >
             سنوي
             <span className="rounded-full bg-[var(--primary)] text-white text-[10px] font-bold px-1.5 py-0.5">وفّر 17%</span>
