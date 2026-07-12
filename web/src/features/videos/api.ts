@@ -62,7 +62,7 @@ export const videosApi = {
   // 1) upload the raw file to the shared media endpoint to obtain a signed URL,
   // 2) create the video record referencing that URL. (The backend exposes
   // POST /upload/media and POST /videos — there is no single /videos/upload.)
-  uploadVideo: async (file: File, title: string, description?: string) => {
+  uploadVideo: async (file: File, title: string, description?: string, isReel?: boolean) => {
     const formData = new FormData();
     formData.append('file', file);
     const [uploaded, captured] = await Promise.all([
@@ -87,7 +87,7 @@ export const videosApi = {
     }
 
     return apiClient
-      .post('/videos', { title, description, url, thumbnail, duration: captured.duration })
+      .post('/videos', { title, description, url, thumbnail, duration: captured.duration, isReel })
       .then((r) => r.data);
   },
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { PlayCircle, UploadSimple, X, FilmSlate } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
@@ -9,6 +9,10 @@ import { useUploadVideo } from '@/features/videos/hooks';
 
 export default function VideoUploadPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Reels had no upload entry point at all -- linked here with ?reel=1 from
+  // the Reels empty state / floating button (#367).
+  const isReel = searchParams.get('reel') === '1';
   const uploadVideo = useUploadVideo();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -59,8 +63,9 @@ export default function VideoUploadPage() {
         file,
         title: title.trim(),
         description: description.trim() || undefined,
+        isReel,
       });
-      router.push('/watch');
+      router.push(isReel ? '/reels' : '/watch');
     } catch (err: any) {
       setError(
         err?.response?.data?.message ||
@@ -74,9 +79,9 @@ export default function VideoUploadPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         icon={PlayCircle}
-        eyebrow="المشاهدة"
-        title="رفع فيديو"
-        subtitle="شارك فيديو جديدًا مع مجتمعك"
+        eyebrow={isReel ? 'ريلز' : 'المشاهدة'}
+        title={isReel ? 'رفع ريل' : 'رفع فيديو'}
+        subtitle={isReel ? 'شارك مقطعاً قصيراً مع مجتمعك' : 'شارك فيديو جديدًا مع مجتمعك'}
       />
 
       <form
@@ -162,11 +167,11 @@ export default function VideoUploadPage() {
         )}
 
         <div className="flex items-center gap-3 justify-end">
-          <Button type="button" variant="ghost" onClick={() => router.push('/watch')} disabled={uploadVideo.isPending}>
+          <Button type="button" variant="ghost" onClick={() => router.push(isReel ? '/reels' : '/watch')} disabled={uploadVideo.isPending}>
             إلغاء
           </Button>
           <Button type="submit" variant="primary" loading={uploadVideo.isPending} disabled={!file || !title.trim()}>
-            <FilmSlate size={16} weight="bold" /> نشر الفيديو
+            <FilmSlate size={16} weight="bold" /> {isReel ? 'نشر الريل' : 'نشر الفيديو'}
           </Button>
         </div>
       </form>

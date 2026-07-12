@@ -52,12 +52,13 @@ export function useContinueWatching() {
 export function useUploadVideo() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ file, title, description }: { file: File; title: string; description?: string }) =>
-      videosApi.uploadVideo(file, title, description),
+    mutationFn: ({ file, title, description, isReel }: { file: File; title: string; description?: string; isReel?: boolean }) =>
+      videosApi.uploadVideo(file, title, description, isReel),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['videos'] });
       qc.invalidateQueries({ queryKey: ['videos-recommended'] });
       qc.invalidateQueries({ queryKey: ['videos-trending'] });
+      qc.invalidateQueries({ queryKey: ['reels-feed'] });
     },
   });
 }

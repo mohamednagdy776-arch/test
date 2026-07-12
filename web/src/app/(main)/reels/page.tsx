@@ -1,9 +1,10 @@
 'use client';
 
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Heart, ChatCircle, ShareFat, DotsThreeVertical, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
+import { Heart, ChatCircle, ShareFat, DotsThreeVertical, SpeakerHigh, SpeakerSlash, Plus } from '@phosphor-icons/react';
 import { resolveMediaUrl } from '@/lib/media';
 
 interface Reel {
@@ -133,6 +134,7 @@ function ReelCard({ reel, isActive }: { reel: Reel; isActive: boolean }) {
 }
 
 export default function ReelsPage() {
+  const router = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -175,7 +177,14 @@ export default function ReelsPage() {
         <div className="text-center text-white px-8">
           <div className="text-7xl mb-4">🎬</div>
           <h2 className="text-2xl font-bold mb-2">لا توجد ريلز حالياً</h2>
-          <p className="text-white/70 text-sm">كن أول من ينشر مقطعاً قصيراً!</p>
+          <p className="text-white/70 text-sm mb-6">كن أول من ينشر مقطعاً قصيراً!</p>
+          {/* No button anywhere let a user actually upload a reel (#367). */}
+          <button
+            onClick={() => router.push('/videos/upload?reel=1')}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm bg-white text-[var(--foreground)] hover:opacity-90 transition-opacity"
+          >
+            <Plus size={18} weight="bold" /> نشئ ريلز
+          </button>
         </div>
       </div>
     );
@@ -187,6 +196,13 @@ export default function ReelsPage() {
       className="fixed inset-0 overflow-y-scroll snap-y snap-mandatory"
       style={{ scrollbarWidth: 'none' }}
     >
+      <button
+        onClick={() => router.push('/videos/upload?reel=1')}
+        aria-label="إنشاء ريل"
+        className="fixed top-4 left-4 z-30 w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm text-white flex items-center justify-center hover:bg-black/60 transition-colors"
+      >
+        <Plus size={22} weight="bold" />
+      </button>
       {reels.map((reel, i) => (
         <ReelCard key={reel.id ?? i} reel={reel} isActive={i === activeIndex} />
       ))}
