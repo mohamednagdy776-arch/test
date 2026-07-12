@@ -100,11 +100,25 @@ export const videosApi = {
   unlikeVideo: (videoId: string) =>
     apiClient.delete(`/videos/${videoId}/like`).then((r) => r.data),
 
+  // The video player only ever supported a boolean Like (#151).
+  reactToVideo: (videoId: string, type: string) =>
+    apiClient.post(`/videos/${videoId}/reactions`, { type }).then((r) => r.data),
+
+  getVideoReactions: (videoId: string) =>
+    apiClient.get(`/videos/${videoId}/reactions`).then((r) => r.data),
+
   getVideoComments: (videoId: string) =>
     apiClient.get(`/videos/${videoId}/comments`).then((r) => r.data),
 
   addVideoComment: (videoId: string, content: string) =>
     apiClient.post(`/videos/${videoId}/comments`, { content }).then((r) => r.data),
+
+  // No edit/delete path existed for video comments at all (#303).
+  updateVideoComment: (videoId: string, commentId: string, content: string) =>
+    apiClient.patch(`/videos/${videoId}/comments/${commentId}`, { content }).then((r) => r.data),
+
+  deleteVideoComment: (videoId: string, commentId: string) =>
+    apiClient.delete(`/videos/${videoId}/comments/${commentId}`).then((r) => r.data),
 
   shareVideo: (videoId: string, content?: string) =>
     apiClient.post(`/videos/${videoId}/share`, { content }).then((r) => r.data),

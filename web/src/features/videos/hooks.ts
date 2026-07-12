@@ -103,6 +103,26 @@ export function useUnlikeVideo() {
   });
 }
 
+// The video player only ever supported a boolean Like (#151).
+export function useVideoReactions(videoId: string) {
+  return useQuery({
+    queryKey: ['video-reactions', videoId],
+    queryFn: () => videosApi.getVideoReactions(videoId),
+    enabled: !!videoId,
+  });
+}
+
+export function useReactToVideo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ videoId, type }: { videoId: string; type: string }) => videosApi.reactToVideo(videoId, type),
+    onSuccess: (data, variables) => {
+      qc.invalidateQueries({ queryKey: ['video-reactions', variables.videoId] });
+      patchVideoLikeCache(qc, variables.videoId, data?.data);
+    },
+  });
+}
+
 export function useVideoComments(videoId: string) {
   return useQuery({
     queryKey: ['video-comments', videoId],
@@ -116,6 +136,29 @@ export function useAddVideoComment() {
   return useMutation({
     mutationFn: ({ videoId, content }: { videoId: string; content: string }) =>
       videosApi.addVideoComment(videoId, content),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['video-comments', variables.videoId] });
+    },
+  });
+}
+
+// No edit/delete path existed for video comments at all (#303).
+export function useUpdateVideoComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ videoId, commentId, content }: { videoId: string; commentId: string; content: string }) =>
+      videosApi.updateVideoComment(videoId, commentId, content),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['video-comments', variables.videoId] });
+    },
+  });
+}
+
+export function useDeleteVideoComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ videoId, commentId }: { videoId: string; commentId: string }) =>
+      videosApi.deleteVideoComment(videoId, commentId),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['video-comments', variables.videoId] });
     },

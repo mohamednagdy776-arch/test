@@ -1,15 +1,17 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { useVideo, useVideoComments, useAddVideoComment, useLikeVideo, useUnlikeVideo, useRecommendedVideos } from '@/features/videos/hooks';
+import { useEffect, useRef, useState } from 'react';
+import { useVideo, useVideoComments, useAddVideoComment, useUpdateVideoComment, useDeleteVideoComment, useVideoReactions, useReactToVideo, useRecommendedVideos } from '@/features/videos/hooks';
 import { Avatar } from '@/components/ui/Avatar';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
 import { resolveMediaUrl } from '@/lib/media';
+import { getCurrentUserId } from '@/lib/socket-client';
+import { PencilSimple, Trash, Check, X } from '@phosphor-icons/react';
+import { REACTIONS, ReactionPicker } from '@/features/reactions/ReactionPicker';
 
 function VideoPlayer({ video }: { video: any }) {
-  const [liked, setLiked] = useState<boolean>(() => !!video?.isLiked);
   const [shared, setShared] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savingVideo, setSavingVideo] = useState(false);
@@ -18,8 +20,22 @@ function VideoPlayer({ video }: { video: any }) {
   const [reportDetails, setReportDetails] = useState('');
   const [reportSent, setReportSent] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
-  const likeVideo = useLikeVideo();
-  const unlikeVideo = useUnlikeVideo();
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const reactionPickerRef = useRef<HTMLDivElement>(null);
+  const { data: reactionsData } = useVideoReactions(video?.id);
+  const reactToVideo = useReactToVideo();
+  const userReaction: string | null = reactionsData?.data?.userReaction ?? null;
+  const reactionCounts: Record<string, number> = reactionsData?.data?.counts ?? {};
+  const reactionTotal = Object.values(reactionCounts).reduce((s, n) => s + n, 0);
+  const activeReaction = REACTIONS.find((r) => r.type === userReaction);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (reactionPickerRef.current && !reactionPickerRef.current.contains(e.target as Node)) setShowReactionPicker(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   // The save button had no way to learn its own state, so refreshing the page
   // always showed "not saved" regardless of the real DB state (#133).
@@ -83,14 +99,8 @@ function VideoPlayer({ video }: { video: any }) {
     }
   };
 
-  const handleLike = () => {
-    if (liked) {
-      unlikeVideo.mutate(video.id);
-      setLiked(false);
-    } else {
-      likeVideo.mutate(video.id);
-      setLiked(true);
-    }
+  const handleReact = (type: string) => {
+    reactToVideo.mutate({ videoId: video.id, type });
   };
 
   const formatViews = (count: number) => {
@@ -128,16 +138,25 @@ function VideoPlayer({ video }: { video: any }) {
             {video.createdAt ? ` · ${new Date(video.createdAt).toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' })}` : ''}
           </p>
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={handleLike}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
-                liked
-                  ? 'bg-[var(--destructive)]/10 text-[var(--destructive)] border border-[var(--destructive)]/30'
-                  : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border border-[var(--border)]'
-              }`}
-            >
-              {liked ? '❤️' : '🤍'} {liked ? 'أعجبني' : 'إعجاب'}
-            </button>
+            {/* Only supported a single boolean Like -- now a full reaction
+                picker like posts have (#151). Long-press/click opens the
+                picker; clicking the button itself toggles the current (or
+                default 'like') reaction. */}
+            <div className="relative" ref={reactionPickerRef}>
+              {showReactionPicker && (
+                <ReactionPicker onSelect={handleReact} onClose={() => setShowReactionPicker(false)} />
+              )}
+              <button
+                onClick={() => (activeReaction ? handleReact(activeReaction.type) : setShowReactionPicker(!showReactionPicker))}
+                className={`flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all border ${
+                  activeReaction
+                    ? `${activeReaction.activeBg} ${activeReaction.activeText} border-transparent`
+                    : 'bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border-[var(--border)]'
+                }`}
+              >
+                {activeReaction?.emoji ?? '🤍'} {activeReaction?.label ?? 'إعجاب'}{reactionTotal > 0 ? ` (${reactionTotal})` : ''}
+              </button>
+            </div>
             <button
               onClick={handleShare}
               className="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold bg-[var(--muted)] text-[var(--primary)] hover:bg-[var(--muted)] border border-[var(--border)] transition-all"
@@ -239,9 +258,21 @@ function VideoPlayer({ video }: { video: any }) {
 function CommentsSection({ videoId }: { videoId: string }) {
   const { data, isLoading } = useVideoComments(videoId);
   const addComment = useAddVideoComment();
+  const updateComment = useUpdateVideoComment();
+  const deleteComment = useDeleteVideoComment();
   const [text, setText] = useState('');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState('');
+  const myUserId = getCurrentUserId();
 
   const comments: any[] = data?.data ?? [];
+
+  const startEdit = (c: any) => { setEditingId(c.id); setEditText(c.content); };
+  const saveEdit = (commentId: string) => {
+    if (!editText.trim()) return;
+    updateComment.mutate({ videoId, commentId, content: editText.trim() });
+    setEditingId(null);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -277,11 +308,37 @@ function CommentsSection({ videoId }: { videoId: string }) {
       ) : (
         <div className="space-y-3">
           {comments.map((c: any) => (
-            <div key={c.id} className="flex gap-3">
+            <div key={c.id} className="flex gap-3 group">
               <Avatar src={c.user?.avatarUrl} name={c.user?.name} size="sm" />
               <div className="flex-1 rounded-2xl bg-[var(--muted)] border border-[var(--border)] px-4 py-3">
-                <p className="text-xs font-semibold text-[var(--foreground)] mb-1">{c.user?.name ?? 'مستخدم'}</p>
-                <p className="text-sm text-[var(--primary)]">{c.content}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-xs font-semibold text-[var(--foreground)] mb-1">{c.user?.name ?? 'مستخدم'}</p>
+                  {/* No edit/delete existed for video comments at all (#303). */}
+                  {c.user?.id === myUserId && editingId !== c.id && (
+                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      <button onClick={() => startEdit(c)} aria-label="تعديل التعليق" className="text-[var(--muted-foreground)] hover:text-[var(--primary)]">
+                        <PencilSimple size={13} />
+                      </button>
+                      <button onClick={() => deleteComment.mutate({ videoId, commentId: c.id })} aria-label="حذف التعليق" className="text-[var(--muted-foreground)] hover:text-[var(--destructive)]">
+                        <Trash size={13} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+                {editingId === c.id ? (
+                  <div className="flex items-center gap-2 mt-1">
+                    <input
+                      value={editText}
+                      onChange={(e) => setEditText(e.target.value)}
+                      className="flex-1 rounded-lg border border-[var(--border)] px-2 py-1 text-sm text-[var(--foreground)] bg-[var(--card)] focus:outline-none focus:border-[var(--ring)]"
+                      autoFocus
+                    />
+                    <button onClick={() => saveEdit(c.id)} aria-label="حفظ" className="text-[var(--primary)]"><Check size={16} /></button>
+                    <button onClick={() => setEditingId(null)} aria-label="إلغاء" className="text-[var(--muted-foreground)]"><X size={16} /></button>
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--primary)]">{c.content}</p>
+                )}
               </div>
             </div>
           ))}

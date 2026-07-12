@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Video } from '../entities/video.entity';
@@ -36,6 +36,29 @@ export class VideosService {
       createdAt: saved.createdAt,
       user: { id: user.id, username: user.username, name: user.fullName || user.username },
     };
+  }
+
+  // Video comments had create/read but no edit/delete at all -- unlike post
+  // comments, which already support both (#303).
+  async updateComment(commentId: string, content: string, userId: string) {
+    const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user'] });
+    if (!comment) throw new NotFoundException('Comment not found');
+    if (comment.user.id !== userId) throw new ForbiddenException('Not authorized');
+    const clean = sanitizeUserContent(content ?? '');
+    if (!clean.trim()) throw new BadRequestException('Comment cannot be empty');
+    comment.content = clean;
+    const saved = await this.commentsRepo.save(comment);
+    return { id: saved.id, content: saved.content, createdAt: saved.createdAt };
+  }
+
+  async deleteComment(commentId: string, userId: string) {
+    const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user', 'video', 'video.createdBy'] });
+    if (!comment) throw new NotFoundException('Comment not found');
+    const isCommentAuthor = comment.user.id === userId;
+    const isVideoOwner = comment.video?.createdBy?.id === userId;
+    if (!isCommentAuthor && !isVideoOwner) throw new ForbiddenException('Not authorized');
+    await this.commentsRepo.delete(commentId);
+    return { success: true };
   }
 
   async getComments(videoId: string) {
@@ -228,6 +251,47 @@ export class VideosService {
     await this.likesRepo.delete(like.id);
     const likeCount = await this.likesRepo.count({ where: { video: { id: videoId } } });
     return { id: videoId, isLiked: false, likeCount, likesCount: likeCount };
+  }
+
+  // Multi-type reaction toggle, mirroring ReactionsService.react() for posts
+  // -- the video player only ever supported a single boolean Like (#151).
+  // Reuses the video_likes table (now with a `type` column) so isLiked/
+  // likeCount elsewhere (video cards, etc) keep working unchanged: any row
+  // still counts as "liked" regardless of which reaction type it holds.
+  async react(videoId: string, type: string, user: User) {
+    const video = await this.videosRepo.findOne({ where: { id: videoId } });
+    if (!video) throw new NotFoundException('Video not found');
+    const reactionType = type || 'like';
+
+    const existing = await this.likesRepo.findOne({
+      where: { video: { id: videoId }, user: { id: user.id } },
+    });
+
+    if (existing) {
+      if (existing.type === reactionType) {
+        await this.likesRepo.delete(existing.id);
+        return { reacted: false, type: null, ...(await this.getReactionCounts(videoId)) };
+      }
+      existing.type = reactionType;
+      await this.likesRepo.save(existing);
+      return { reacted: true, type: reactionType, ...(await this.getReactionCounts(videoId)) };
+    }
+
+    await this.likesRepo.save(this.likesRepo.create({ video: { id: videoId } as any, user, type: reactionType }));
+    return { reacted: true, type: reactionType, ...(await this.getReactionCounts(videoId)) };
+  }
+
+  async getReactions(videoId: string, viewerId?: string) {
+    const reactions = await this.likesRepo.find({ where: { video: { id: videoId } }, relations: ['user'] });
+    const counts: Record<string, number> = {};
+    for (const r of reactions) counts[r.type] = (counts[r.type] || 0) + 1;
+    const userReaction = viewerId ? reactions.find((r) => r.user?.id === viewerId)?.type ?? null : null;
+    return { counts, total: reactions.length, userReaction };
+  }
+
+  private async getReactionCounts(videoId: string) {
+    const { counts, total } = await this.getReactions(videoId);
+    return { counts, likeCount: total, likesCount: total };
   }
 
   async delete(videoId: string, userId: string) {

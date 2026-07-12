@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Query, UseGuards, HttpException, HttpStatus, ParseBoolPipe, Optional } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards, HttpException, HttpStatus, ParseBoolPipe, Optional } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { VideosService } from '../services/videos.service';
 import { CdnService } from '../services/cdn.service';
@@ -76,6 +76,19 @@ export class VideosController {
     return ok(result, 'Video unliked');
   }
 
+  // The video player only ever supported a single boolean Like, unlike posts
+  // which have multiple reaction types (#151).
+  @Post(':id/reactions')
+  async react(@Param('id') id: string, @Body() body: { type?: string }, @CurrentUser() user: User) {
+    const result = await this.videosService.react(id, body?.type || 'like', user);
+    return ok(result, result.reacted ? 'Reaction added' : 'Reaction removed');
+  }
+
+  @Get(':id/reactions')
+  async getReactions(@Param('id') id: string, @CurrentUser() user: User) {
+    return ok(await this.videosService.getReactions(id, user?.id));
+  }
+
   @Get(':id/comments')
   async getComments(@Param('id') id: string) {
     return ok(await this.videosService.getComments(id));
@@ -85,6 +98,19 @@ export class VideosController {
   async addComment(@Param('id') id: string, @Body() body: { content: string }, @CurrentUser() user: User) {
     const comment = await this.videosService.addComment(id, body.content, user);
     return ok(comment, 'Comment added');
+  }
+
+  // Video comments had no edit/delete at all -- unlike post comments (#303).
+  @Patch(':id/comments/:commentId')
+  async updateComment(@Param('commentId') commentId: string, @Body() body: { content: string }, @CurrentUser() user: User) {
+    const comment = await this.videosService.updateComment(commentId, body.content, user.id);
+    return ok(comment, 'Comment updated');
+  }
+
+  @Delete(':id/comments/:commentId')
+  async deleteComment(@Param('commentId') commentId: string, @CurrentUser() user: User) {
+    await this.videosService.deleteComment(commentId, user.id);
+    return ok(null, 'Comment deleted');
   }
 
   @Delete(':id')
