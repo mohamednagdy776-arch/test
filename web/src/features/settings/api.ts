@@ -79,4 +79,12 @@ export const settingsApi = {
 
   unblockUser: (blockId: string) =>
     apiClient.delete(`/blocks/${blockId}`).then((r) => r.data),
+
+  // Incoming photo-access requests (#354) -- the endpoints already existed
+  // server-side but nothing in the UI ever called them.
+  getPhotoAccessRequests: () =>
+    apiClient.get('/photo-requests').then((r) => r.data),
+
+  respondToPhotoAccessRequest: (requestId: string, approve: boolean) =>
+    apiClient.patch(`/photo-requests/${requestId}`, { approve }).then((r) => r.data),
 };

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { PhotoAccessRequest } from './entities/photo-access-request.entity';
 import { Friendship, FriendshipStatus } from '../friends/entities/friendship.entity';
 import { Interest } from '../interests/entities/interest.entity';
+import { NotificationsService } from '../notifications/services/notifications.service';
 
 export type PhotoVisibility = 'public' | 'matches_only' | 'on_request' | 'private';
 
@@ -13,6 +14,7 @@ export class PhotoPrivacyService {
     @InjectRepository(PhotoAccessRequest) private accessRepo: Repository<PhotoAccessRequest>,
     @InjectRepository(Friendship) private friendshipsRepo: Repository<Friendship>,
     @InjectRepository(Interest) private interestsRepo: Repository<Interest>,
+    private notifications: NotificationsService,
   ) {}
 
   // Decide whether `viewerId` may see `ownerId`'s photos under `visibility`.
@@ -67,6 +69,17 @@ export class PhotoPrivacyService {
       req.status = 'pending';
     }
     await this.accessRepo.save(req);
+    // The request was silently recorded with no way for the owner to ever
+    // learn about it -- no notification, and no UI anywhere read the pending
+    // list this wrote to (#354).
+    await this.notifications.notifyUser(
+      ownerId,
+      requesterId,
+      'photo_access_request',
+      'requested access to view your photos',
+      'user',
+      requesterId,
+    );
     return { status: req.status };
   }
 

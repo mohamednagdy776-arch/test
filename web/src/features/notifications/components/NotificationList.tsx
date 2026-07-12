@@ -118,6 +118,9 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
   const handleClick = (n: Notification) => {
     if (!n.readStatus) onMarkAsRead(n.id);
     if (n.entityType === 'post' && n.entityId) router.push(`/posts/${n.entityId}`);
+    // Story-reaction notifications always fell through to the reactor's
+    // profile instead of opening the reacted-to story (#363).
+    else if (n.entityType === 'story' && n.entityId) router.push(`/stories/${n.entityId}`);
     else if (n.entityType === 'user' && n.entityId) router.push(`/profile/${n.entityId}`);
     else if (n.fromUser?.id) router.push(`/profile/${n.fromUser.id}`);
   };

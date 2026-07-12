@@ -60,6 +60,14 @@ export class StoriesController {
     return ok(result, 'View recorded');
   }
 
+  @Get('stories/:id')
+  async getStory(@CurrentUser() user: User, @Param('id') storyId: string) {
+    // Story-reaction notifications link here directly -- there was previously
+    // no way to open a single story by id at all (#363).
+    const story = await this.storiesService.getStoryById(storyId);
+    return ok(story, 'Story retrieved');
+  }
+
   @Get('stories/:id/viewers')
   async getStoryViewers(@CurrentUser() user: User, @Param('id') storyId: string) {
     // Only the story owner may see who viewed it (#145).

@@ -80,6 +80,15 @@ export class StoriesService {
     }));
   }
 
+  async getStoryById(storyId: string) {
+    const story = await this.storyRepo.findOne({
+      where: { id: storyId },
+      relations: ['user', 'user.profile'],
+    });
+    if (!story) throw new NotFoundException('Story not found');
+    return story;
+  }
+
   async deleteStory(storyId: string, userId: string) {
     const story = await this.storyRepo.findOne({ where: { id: storyId, userId } });
     if (!story) return null;

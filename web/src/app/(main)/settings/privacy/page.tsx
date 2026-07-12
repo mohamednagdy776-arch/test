@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { usePrivacySettings, useUpdatePrivacySettings, useBlocks, useUnblockUser } from '@/features/settings/hooks';
+import { usePrivacySettings, useUpdatePrivacySettings, useBlocks, useUnblockUser, usePhotoAccessRequests, useRespondToPhotoAccessRequest } from '@/features/settings/hooks';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
@@ -139,6 +139,8 @@ export default function PrivacyPage() {
   const { showToast } = useToast();
   const { data: privacyData, isLoading: privacyLoading } = usePrivacySettings();
   const { data: blocksData, isLoading: blocksLoading } = useBlocks();
+  const { data: photoRequestsData, isLoading: photoRequestsLoading } = usePhotoAccessRequests();
+  const respondToPhotoRequest = useRespondToPhotoAccessRequest();
   const updatePrivacy = useUpdatePrivacySettings();
   const unblockUser = useUnblockUser();
 
@@ -164,6 +166,15 @@ export default function PrivacyPage() {
       showToast('تم حفظ الإعداد', 'success');
     } catch (err: any) {
       setPrivacyError(err?.response?.data?.message || 'فشل حفظ الإعداد');
+    }
+  };
+
+  const handlePhotoRequestResponse = async (requestId: string, approve: boolean) => {
+    try {
+      await respondToPhotoRequest.mutateAsync({ requestId, approve });
+      showToast(approve ? 'تم قبول الطلب' : 'تم رفض الطلب', 'success');
+    } catch {
+      showToast('تعذّر معالجة الطلب', 'error');
     }
   };
 
@@ -285,6 +296,61 @@ export default function PrivacyPage() {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
+          <CardHeader>
+            <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
+              <span>🖼️</span> طلبات رؤية الصور
+            </CardTitle>
+            <CardDescription>أشخاص طلبوا رؤية صورك الخاصة</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {photoRequestsLoading ? (
+              <Spinner />
+            ) : (photoRequestsData?.data?.length ?? 0) === 0 ? (
+              <p className="text-center text-[var(--primary)]/70 py-4">لا توجد طلبات معلقة</p>
+            ) : (
+              <div className="space-y-3">
+                {photoRequestsData?.data?.map((req: any) => (
+                  <div
+                    key={req.id}
+                    className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--muted)] to-[var(--border)] flex items-center justify-center text-[var(--primary)] font-semibold">
+                        {req.user?.fullName?.charAt(0) || '?'}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[var(--foreground)]">{req.user?.fullName || 'مستخدم'}</p>
+                        {req.user?.username && <p className="text-[var(--primary)]/70 text-sm">@{req.user.username}</p>}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePhotoRequestResponse(req.id, true)}
+                        disabled={respondToPhotoRequest.isPending}
+                        className="text-[var(--primary)] border-[var(--border)] hover:bg-[var(--muted)]"
+                      >
+                        قبول
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handlePhotoRequestResponse(req.id, false)}
+                        disabled={respondToPhotoRequest.isPending}
+                        className="text-[var(--destructive)] border-[var(--border)] hover:bg-[var(--destructive)]/10"
+                      >
+                        رفض
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

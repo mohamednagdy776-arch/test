@@ -6,7 +6,8 @@ function makeService(opts: { approved?: boolean; friends?: boolean; mutual?: boo
   const accessRepo = { findOne: async () => (opts.approved ? { status: 'approved' } : null) } as any;
   const friendshipsRepo = { count: async () => (opts.friends ? 1 : 0) } as any;
   const interestsRepo = { count: async () => (opts.mutual ? 1 : 0) } as any;
-  return new PhotoPrivacyService(accessRepo, friendshipsRepo, interestsRepo);
+  const notifications = { notifyUser: async () => undefined } as any;
+  return new PhotoPrivacyService(accessRepo, friendshipsRepo, interestsRepo, notifications);
 }
 
 describe('[Body_Sadek] PhotoPrivacyService.canViewPhoto (#752)', () => {

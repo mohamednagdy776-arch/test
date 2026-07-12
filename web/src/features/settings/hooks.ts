@@ -96,3 +96,21 @@ export function useUnblockUser() {
     },
   });
 }
+
+export function usePhotoAccessRequests() {
+  return useQuery({
+    queryKey: ['photo-access-requests'],
+    queryFn: () => settingsApi.getPhotoAccessRequests(),
+  });
+}
+
+export function useRespondToPhotoAccessRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ requestId, approve }: { requestId: string; approve: boolean }) =>
+      settingsApi.respondToPhotoAccessRequest(requestId, approve),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['photo-access-requests'] });
+    },
+  });
+}
