@@ -15,6 +15,7 @@ function VideoPlayer({ video }: { video: any }) {
   const [savingVideo, setSavingVideo] = useState(false);
   const [showReport, setShowReport] = useState(false);
   const [reportReason, setReportReason] = useState('');
+  const [reportDetails, setReportDetails] = useState('');
   const [reportSent, setReportSent] = useState(false);
   const [reportLoading, setReportLoading] = useState(false);
   const likeVideo = useLikeVideo();
@@ -56,9 +57,14 @@ function VideoPlayer({ video }: { video: any }) {
     setReportLoading(true);
     try {
       const { apiClient } = await import('@/lib/api-client');
-      await apiClient.post('/reports', { entityType: 'video', entityId: video.id, reason: reportReason });
+      await apiClient.post('/reports', {
+        entityType: 'video',
+        entityId: video.id,
+        reason: reportReason,
+        details: reportDetails.trim() || undefined,
+      });
       setReportSent(true);
-      setTimeout(() => { setShowReport(false); setReportSent(false); setReportReason(''); }, 2000);
+      setTimeout(() => { setShowReport(false); setReportSent(false); setReportReason(''); setReportDetails(''); }, 2000);
     } catch {
       setShowReport(false);
     } finally {
@@ -174,6 +180,19 @@ function VideoPlayer({ video }: { video: any }) {
                   </button>
                 ))}
               </div>
+              {/* Selecting "سبب آخر" did nothing -- no way to add custom
+                  detail, forcing a bare generic submission (#369). */}
+              {reportReason === 'other' && (
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder="اكتب التفاصيل هنا (اختياري)"
+                  rows={3}
+                  maxLength={500}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm outline-none resize-none"
+                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                />
+              )}
               <div className="flex gap-3 pt-1">
                 <button onClick={() => setShowReport(false)} className="flex-1 px-4 py-2.5 rounded-xl text-sm border border-[var(--border)] text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
                 <button onClick={handleReport} disabled={!reportReason || reportLoading}
