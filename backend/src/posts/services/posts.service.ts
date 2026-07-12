@@ -1,11 +1,12 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, SelectQueryBuilder, LessThan, LessThanOrEqual, IsNull, MoreThan } from 'typeorm';
+import { Repository, LessThan, LessThanOrEqual, IsNull, MoreThan } from 'typeorm';
 import { Post, PostType } from '../entities/post.entity';
 import { CreatePostDto } from '../dto/create-post.dto';
 import { User } from '../../auth/entities/user.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { LinkPreviewService } from '../../link-preview/link-preview.service';
+import { applyAudienceFilter, applyHiddenFilter } from '../utils/post-visibility.util';
 
 @Injectable()
 export class PostsService {
@@ -80,7 +81,7 @@ export class PostsService {
       .addOrderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
-    this.applyAudienceFilter(qb, viewerId);
+    applyAudienceFilter(qb, viewerId);
     const [data, total] = await qb.getManyAndCount();
     return { data, total };
   }
@@ -95,7 +96,7 @@ export class PostsService {
       .orderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
-    this.applyAudienceFilter(qb, viewerId);
+    applyAudienceFilter(qb, viewerId);
     const [data, total] = await qb.getManyAndCount();
     return { data, total };
   }
@@ -130,8 +131,8 @@ export class PostsService {
     if (cursor) {
       qb.andWhere('post.created_at < :cursor', { cursor: new Date(cursor) });
     }
-    this.applyHiddenFilter(qb, viewerId);
-    this.applyAudienceFilter(qb, viewerId);
+    applyHiddenFilter(qb, viewerId);
+    applyAudienceFilter(qb, viewerId);
     const data = await qb.getMany();
     const hasMore = data.length > limit;
     const results = hasMore ? data.slice(0, limit) : data;
@@ -154,8 +155,8 @@ export class PostsService {
     if (cursor) {
       qb.andWhere('post.createdAt < :cursor', { cursor: new Date(cursor) });
     }
-    this.applyHiddenFilter(qb, viewerId);
-    this.applyAudienceFilter(qb, viewerId);
+    applyHiddenFilter(qb, viewerId);
+    applyAudienceFilter(qb, viewerId);
     const data = await qb.getMany();
     const hasMore = data.length > limit;
     const results = hasMore ? data.slice(0, limit) : data;
@@ -189,63 +190,9 @@ export class PostsService {
   // window lapses). hidden_posts is written by StoriesService.hidePost, but the
   // user-facing feed runs through this service, so it must honour those rows too
   // — otherwise hidden posts reappear on the next refetch (#15).
-  private applyHiddenFilter(qb: SelectQueryBuilder<Post>, viewerId?: string) {
-    if (!viewerId) return;
-    qb.andWhere(
-      `NOT EXISTS (
-        SELECT 1 FROM hidden_posts hp
-        WHERE hp.post_id = post.id
-          AND hp.user_id = :hiddenViewerId
-          AND (
-            hp.hide_type = 'not_interested'
-            OR (hp.hide_type = 'snooze' AND hp.snooze_until > NOW())
-          )
-      )`,
-      { hiddenViewerId: viewerId },
-    );
-  }
-
-  private applyAudienceFilter(qb: SelectQueryBuilder<Post>, viewerId?: string) {
-    // Deleting an account promises the user's content is gone too ("سيتم حذف
-    // جميع منشوراتك... نهائياً"), but nothing ever hid it — deleteAccount only
-    // flags the user row, and no post query checked that flag, so a deleted
-    // account's posts stayed fully visible to everyone (#149).
-    qb.andWhere('user.isDeactivated = false');
-    if (viewerId) {
-      qb.andWhere(`(
-        post.user_id = :viewerId
-        OR post.audience = 'public'
-        OR (
-          post.audience IN ('friends', 'friends_of_friends')
-          AND EXISTS (
-            SELECT 1 FROM friendships f
-            WHERE f.status = 'accepted'
-            AND f.deleted_at IS NULL
-            AND (
-              (f.requester_id = post.user_id AND f.addressee_id = :viewerId)
-              OR (f.addressee_id = post.user_id AND f.requester_id = :viewerId)
-            )
-          )
-        )
-      )`, { viewerId });
-    } else {
-      qb.andWhere("post.audience = 'public'");
-    }
-    // The audience check above only looks at the post's own author-privacy
-    // setting -- it never considered which GROUP the post belongs to, so a
-    // private/secret group's posts leaked into the main feed to anyone whose
-    // friendship/audience check happened to pass (#359). A post with no
-    // group is unaffected; a public group's posts are unaffected; anything
-    // else requires active membership in that specific group.
-    qb.andWhere(`(
-      post.group_id IS NULL
-      OR group.privacy = 'public'
-      ${viewerId ? `OR EXISTS (
-        SELECT 1 FROM group_members gm
-        WHERE gm.group_id = post.group_id AND gm.user_id = :viewerId AND gm.status = 'active'
-      )` : ''}
-    )`, { viewerId });
-  }
+  // (moved to ../utils/post-visibility.util.ts so FeedService's separate
+  // Trending Posts query can share it instead of drifting out of sync — see
+  // that file's header comment re #288.)
 
   // Admin-only hard delete (route is guarded by @Roles('admin')). User-facing
   // deletion goes through softDelete(), which enforces ownership.
