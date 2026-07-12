@@ -16,7 +16,10 @@ import { resolveMediaUrl } from '@/lib/media';
 function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnfriend?: () => void; onMessage?: () => void; onBlock?: () => void }) {
   const name = displayName(user);
   const [showMenu, setShowMenu] = useState(false);
-  const avatarSrc = resolveMediaUrl(user.avatar);
+  // getFriends() returns raw User entities with a nested `profile` relation,
+  // never a flattened `.avatar` field -- this always resolved to undefined,
+  // so every friend card fell back to its placeholder initial (#262).
+  const avatarSrc = resolveMediaUrl(user.avatar ?? user.profile?.avatarUrl);
 
   return (
     <div className="rounded-2xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
@@ -81,7 +84,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnf
 function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept: () => void; onDecline: () => void }) {
   const name = displayName(request.requester);
   const mutualCount = request.mutualFriends || 0;
-  const avatarSrc = resolveMediaUrl(request.requester?.avatar);
+  const avatarSrc = resolveMediaUrl(request.requester?.avatar ?? request.requester?.profile?.avatarUrl);
   const profileHref = request.requester?.username ? `/${request.requester.username}` : `/profile/${request.requester?.id}`;
 
   return (

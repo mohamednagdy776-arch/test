@@ -380,7 +380,10 @@ function SuggestedConnections() {
             const age = u?.profile?.age;
             const initial = nm.charAt(0).toUpperCase();
             const mutual = s.mutual ?? 0;
-            const avatarUrl = resolveMediaUrl(u?.avatar);
+            // Same field-name mismatch as the Friends page (#262): the
+            // suggestions API nests the avatar under `.profile.avatarUrl`,
+            // never a flat `.avatar`.
+            const avatarUrl = resolveMediaUrl(u?.avatar ?? u?.profile?.avatarUrl);
             return (
               <button key={u?.id ?? nm}
                 onClick={() => u?.username && router.push(`/${u.username}`)}

@@ -27,7 +27,7 @@ export class PostsService {
     const saved = await this.postsRepo.save(post);
     return this.postsRepo.findOne({
       where: { id: (saved as any).id },
-      relations: ['user', 'group'],
+      relations: ['user', 'user.profile', 'group'],
     });
   }
 
@@ -54,7 +54,7 @@ export class PostsService {
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
-      relations: ['user', 'group'],
+      relations: ['user', 'user.profile', 'group'],
     });
     return { data, total };
   }
@@ -64,7 +64,7 @@ export class PostsService {
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
-      relations: ['group', 'user'],
+      relations: ['group', 'user', 'user.profile'],
     });
     return { data, total };
   }
@@ -73,6 +73,7 @@ export class PostsService {
     const now = new Date();
     const qb = this.postsRepo.createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('user.profile', 'userProfile')
       .leftJoinAndSelect('post.group', 'group')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
       .orderBy('post.isPinned', 'DESC')
@@ -88,6 +89,7 @@ export class PostsService {
     const now = new Date();
     const qb = this.postsRepo.createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('user.profile', 'userProfile')
       .leftJoinAndSelect('post.group', 'group')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
       .orderBy('post.createdAt', 'DESC')
@@ -102,11 +104,13 @@ export class PostsService {
     const now = new Date();
     const qb = this.postsRepo.createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('user.profile', 'userProfile')
       .leftJoinAndSelect('post.group', 'group')
       // Embed the original on shared/reposted posts so PostCard can render the
       // source author + content/media instead of just the added text (#21).
       .leftJoinAndSelect('post.originalPost', 'originalPost')
       .leftJoinAndSelect('originalPost.user', 'originalPostUser')
+      .leftJoinAndSelect('originalPostUser.profile', 'originalPostUserProfile')
       // Engagement (reactions + live comments) as a selected alias we can ORDER
       // BY. A raw subquery passed straight to orderBy with .take() made TypeORM's
       // distinct-pagination misparse it as an alias and 500 the feed; ordering by
@@ -139,9 +143,11 @@ export class PostsService {
     const now = new Date();
     const qb = this.postsRepo.createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
+      .leftJoinAndSelect('user.profile', 'userProfile')
       .leftJoinAndSelect('post.group', 'group')
       .leftJoinAndSelect('post.originalPost', 'originalPost')
       .leftJoinAndSelect('originalPost.user', 'originalPostUser')
+      .leftJoinAndSelect('originalPostUser.profile', 'originalPostUserProfile')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
       .orderBy('post.createdAt', 'DESC')
       .take(limit + 1);
@@ -250,7 +256,7 @@ export class PostsService {
   async findById(postId: string, viewerId?: string) {
     const post = await this.postsRepo.findOne({
       where: { id: postId },
-      relations: ['user', 'group', 'originalPost', 'originalPost.user'],
+      relations: ['user', 'user.profile', 'group', 'originalPost', 'originalPost.user', 'originalPost.user.profile'],
     });
     if (!post) throw new NotFoundException('Post not found');
     // A deactivated/deleted author is excluded from the relation join (comes
@@ -363,7 +369,7 @@ export class PostsService {
       order: { scheduledAt: 'ASC' },
       skip: (page - 1) * limit,
       take: limit,
-      relations: ['user', 'group'],
+      relations: ['user', 'user.profile', 'group'],
     });
     return { data, total };
   }

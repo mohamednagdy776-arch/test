@@ -5,6 +5,7 @@ import { PostCard } from './PostCard';
 import { PostComposer } from './PostComposer';
 import { StoryViewer } from './StoryViewer';
 import { StoryCreator } from './StoryCreator';
+import { Avatar } from '@/components/ui/Avatar';
 import { cn, displayName } from '@/lib/utils';
 
 function StoriesBar() {
@@ -53,8 +54,10 @@ function StoriesBar() {
                   className="absolute inset-0 rounded-full p-[2.5px] transition-transform duration-200 group-hover:scale-105 group-active:scale-95"
                   style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary), var(--muted))' }}
                 >
-                  <div className="h-full w-full rounded-full bg-[var(--card)] flex items-center justify-center">
-                    <span className="text-xl font-bold text-[var(--foreground)]">{displayName(group.user).charAt(0)}</span>
+                  <div className="h-full w-full rounded-full bg-[var(--card)] flex items-center justify-center overflow-hidden">
+                    {/* Always rendered a hardcoded initial letter, never the
+                        actual uploaded profile picture (#278). */}
+                    <Avatar src={group.user?.profile?.avatarUrl} name={displayName(group.user)} size="lg" />
                   </div>
                 </div>
                 {group.stories?.length > 1 && (

@@ -2,7 +2,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCreatePost, useCreatePostWithMedia, useUploadMedia } from '../hooks';
 import { usePrivacySettings } from '@/features/settings/hooks';
+import { useMyProfile } from '@/features/profile/hooks';
 import { useToast } from '@/components/ui/Toast';
+import { Avatar } from '@/components/ui/Avatar';
 import { cn } from '@/lib/utils';
 import { extractFirstUrl } from '@/lib/linkify';
 import { useLinkPreview } from '@/lib/useLinkPreview';
@@ -39,6 +41,8 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
   // applying to new posts, but the composer always hardcoded 'friends' and
   // never read it -- the setting had no effect on anything (#103).
   const { data: privacySettings } = usePrivacySettings();
+  const { data: myProfileData } = useMyProfile();
+  const myProfile = (myProfileData as any)?.data;
   const [audience, setAudience] = useState('friends');
   const [audienceTouched, setAudienceTouched] = useState(false);
 
@@ -223,7 +227,9 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
     <div className="rounded-2xl bg-[var(--card)] shadow-card border border-[var(--border)]/60 p-4">
       <form onSubmit={handleSubmit}>
         <div className="flex gap-3">
-          <div className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center text-[var(--card)] font-bold" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>أ</div>
+          {/* Was a hardcoded static "أ" placeholder regardless of the signed-in
+              user's actual uploaded avatar (#335). */}
+          <Avatar src={myProfile?.avatarUrl} name={myProfile?.fullName} size="md" />
           <div className="flex-1">
             <textarea
               value={content}
