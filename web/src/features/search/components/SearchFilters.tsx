@@ -1,6 +1,7 @@
 'use client';
 import { X } from '@phosphor-icons/react';
 import type { SearchFiltersState, TabType } from '../types';
+import { COUNTRIES } from '@/lib/countries';
 
 interface Props {
   filters: SearchFiltersState;
@@ -74,7 +75,11 @@ export const SearchFilters = ({ filters, onChange, onReset, onSearch, activeTab 
   const peopleFields = (
     <>
       {sel('gender', 'الجنس', [['male', 'ذكر'], ['female', 'أنثى']])}
-      {inp('country', 'الدولة', 'مصر، السعودية...')}
+      {/* Was free text -- matched profile.country only when both happened to
+          be typed the same way (e.g. "مصر" vs "Egypt" never matched) (#345).
+          A fixed list, shared with the profile-edit country field, keeps
+          this searchable going forward. */}
+      {sel('country', 'الدولة', COUNTRIES)}
       {inp('city', 'المدينة', 'القاهرة، الرياض...')}
 
       <Field label="الفئة العمرية">

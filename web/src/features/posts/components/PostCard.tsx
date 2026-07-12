@@ -10,6 +10,7 @@ import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
 import { Modal } from '@/components/ui/Modal';
+import { Avatar } from '@/components/ui/Avatar';
 import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 
 const REACTIONS = [
@@ -194,6 +195,8 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
   const deleteComment = useDeleteComment();
   const { showToast } = useToast();
   const comments: any[] = data?.data ?? [];
+  const { data: myProfileData } = useMyProfile();
+  const myProfile = (myProfileData as any)?.data;
 
   // Only the comment's own author could ever delete it here -- the post
   // owner had no way to moderate/remove other people's comments on their
@@ -219,9 +222,9 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
         <div className="space-y-3 mb-4 max-h-72 overflow-y-auto scrollbar-thin">
           {comments.map((c: any) => (
             <div key={c.id} className="flex gap-3 group">
-              <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[var(--foreground)] text-xs font-bold ring-2 ring-[var(--card)] shadow-soft" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}>
-                {(c.user?.profile?.fullName || c.user?.email || '?').charAt(0).toUpperCase()}
-              </div>
+              {/* Was always an initials-only div, never a real avatar even
+                  when the commenter had one uploaded (#265). */}
+              <Avatar src={c.user?.profile?.avatarUrl} name={displayName(c.user)} size="sm" className="ring-2 ring-[var(--card)] shadow-soft" />
               <div className="flex-1 rounded-2xl px-4 py-2.5 shadow-card-hover group-hover:shadow-glow transition-all duration-300" style={{ backgroundColor: 'var(--muted)' }}>
                 <div className="flex items-center gap-2">
                   {c.user?.id ? (
@@ -253,7 +256,9 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
         </div>
       )}
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-        <div className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[var(--foreground)] text-xs font-bold shadow-soft" style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}>أ</div>
+        {/* Was a hardcoded static "أ" placeholder, never the signed-in
+            user's real avatar (#265). */}
+        <Avatar src={myProfile?.avatarUrl} name={myProfile?.fullName} size="sm" className="shadow-soft" />
         <input type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب تعليقاً..."
           className="flex-1 rounded-full border border-[var(--border)] bg-[var(--muted)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:bg-[var(--card)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] transition-all duration-300 hover:border-[var(--ring)]" />
         <button type="submit" disabled={!text.trim() || addComment.isPending}

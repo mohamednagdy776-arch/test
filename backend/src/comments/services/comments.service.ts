@@ -77,7 +77,9 @@ export class CommentsService {
     const comments = await this.commentsRepo.find({
       where: { post: { id: postId } },
       order: { isPinned: 'DESC', createdAt: 'ASC' },
-      relations: ['user', 'parent', 'reactions'],
+      // Missing 'user.profile' -- commenter avatars always fell back to a
+      // "?" placeholder regardless of a real uploaded avatar (#265).
+      relations: ['user', 'user.profile', 'parent', 'reactions'],
     });
 
     const nested = this.buildNestedComments(comments);

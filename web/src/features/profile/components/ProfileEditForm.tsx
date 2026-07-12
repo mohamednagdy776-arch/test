@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { COUNTRIES } from '@/lib/countries';
 
 interface Props {
   initial: any;
@@ -112,7 +113,11 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
       {inp('fullName', 'الاسم الكامل', 'text', 'أحمد محمد', 100)}
       {inp('age', 'العمر', 'number', '25')}
       {sel('gender', 'الجنس', [['male', 'ذكر'], ['female', 'أنثى']])}
-      {inp('country', 'الدولة', 'text', 'مصر')}
+      {/* Was free text -- the same country could be stored as "مصر" in one
+          profile and "Egypt" in another, so search could never reliably
+          match across profiles (#345). A fixed list keeps new data
+          consistent and searchable. */}
+      {sel('country', 'الدولة', COUNTRIES)}
       {inp('city', 'المدينة', 'text', 'القاهرة')}
       {inp('location', 'الموقع (مدينة/دولة)', 'text', 'القاهرة، مصر')}
       {sel('socialStatus', 'الحالة الاجتماعية', [['single', 'أعزب'], ['divorced', 'مطلق'], ['widowed', 'أرمل']])}
