@@ -251,6 +251,11 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       });
       const saved = data.data;
       setMessages((prev) => prev.map(m => m.id === tempId ? { ...m, id: saved.id } : m));
+      // Sending only ever touched local component state, never the
+      // ['messages', match.id] query cache -- navigating away and back
+      // within the 60s default staleTime served the pre-send cached list,
+      // making the just-sent message vanish until a full page reload (#348).
+      qc.invalidateQueries({ queryKey: ['messages', match.id] });
 
       const socket = getSocket();
       socket.emit('relayMessage', {
@@ -343,6 +348,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       const saved = data.data;
       URL.revokeObjectURL(previewUrl);
       setMessages(prev => prev.map(m => m.id === tempId ? { ...m, id: saved.id, mediaUrl } : m));
+      qc.invalidateQueries({ queryKey: ['messages', match.id] });
       const socket = getSocket();
       socket.emit('relayMessage', { conversationId: match.id, message: { id: saved.id, content: '', senderId: myUserId, type: 'image', mediaUrl, createdAt: saved.createdAt ?? new Date().toISOString() } });
     } catch {
