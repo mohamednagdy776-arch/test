@@ -120,12 +120,21 @@ export class FollowsService {
 
   // Follower/following counts excluding deactivated/deleted accounts (#444).
   async getCounts(userId: string) {
+    // This count query didn't exclude blocked relationships the way
+    // listRelations() above does, so a blocked user was still counted here
+    // even though they'd correctly disappeared from the followers/following
+    // lists themselves (#281). Same NOT EXISTS contract as listRelations.
     const followers = await this.followsRepo
       .createQueryBuilder('f')
       .innerJoin('f.follower', 'u')
       .where('f.followingId = :userId', { userId })
       .andWhere('u.isDeactivated = false')
       .andWhere('u.deletedAt IS NULL')
+      .andWhere(`NOT EXISTS (
+        SELECT 1 FROM blocks b
+        WHERE (b.blocker_id = :userId AND b.blocked_id = u.id)
+           OR (b.blocker_id = u.id AND b.blocked_id = :userId)
+      )`, { userId })
       .getCount();
 
     const following = await this.followsRepo
@@ -134,6 +143,11 @@ export class FollowsService {
       .where('f.followerId = :userId', { userId })
       .andWhere('u.isDeactivated = false')
       .andWhere('u.deletedAt IS NULL')
+      .andWhere(`NOT EXISTS (
+        SELECT 1 FROM blocks b
+        WHERE (b.blocker_id = :userId AND b.blocked_id = u.id)
+           OR (b.blocker_id = u.id AND b.blocked_id = :userId)
+      )`, { userId })
       .getCount();
 
     return { followers, following };

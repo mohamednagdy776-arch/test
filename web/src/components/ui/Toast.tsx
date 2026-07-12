@@ -26,8 +26,11 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       {/* bottom-20 on mobile clears the fixed BottomNav (lg:hidden, ~4rem
-          tall) -- toasts previously rendered behind/under it (#313). */}
-      <div className="fixed bottom-20 lg:bottom-4 left-4 z-[100] flex flex-col gap-2">
+          tall) -- toasts previously rendered behind/under it (#313).
+          z-[100] used to sit BELOW StoryViewer's opaque full-screen z-[200]
+          backdrop, so a toast fired while a story was open (e.g. reaction
+          confirmation) rendered fully hidden behind it (#365). */}
+      <div className="fixed bottom-20 lg:bottom-4 left-4 z-[300] flex flex-col gap-2">
         {toasts.map((t) => (
           <div key={t.id} className={cn('flex items-center gap-3 rounded-xl border px-4 py-3 shadow-elevated text-sm font-medium animate-slide-up min-w-[280px]', styles[t.type])}>
             <span className="flex-1">{t.message}</span>

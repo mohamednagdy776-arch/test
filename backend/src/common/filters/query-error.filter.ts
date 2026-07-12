@@ -26,21 +26,24 @@ export class QueryErrorFilter implements ExceptionFilter {
     const code = exception.code;
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let clientMessage = 'Internal server error';
+    // The rest of the app surfaces Arabic-language errors throughout; these
+    // DB-level fallbacks were the one place still hardcoded to English,
+    // e.g. creating a page with a duplicate name (#237).
+    let clientMessage = 'حدث خطأ في الخادم';
 
     if (/invalid input syntax for type uuid/i.test(message)) {
       status = HttpStatus.BAD_REQUEST;
-      clientMessage = 'Invalid identifier format';
+      clientMessage = 'صيغة المعرّف غير صحيحة';
     } else if (code === '23503' || /foreign key constraint/i.test(message)) {
       // FK violation — the referenced record does not exist
       status = HttpStatus.BAD_REQUEST;
-      clientMessage = 'Referenced record does not exist';
+      clientMessage = 'العنصر المرتبط غير موجود';
     } else if (code === '23505' || /duplicate key|unique constraint/i.test(message)) {
       status = HttpStatus.CONFLICT;
-      clientMessage = 'Resource already exists';
+      clientMessage = 'هذا العنصر موجود بالفعل';
     } else if (code === '23502' || /not-null constraint/i.test(message)) {
       status = HttpStatus.BAD_REQUEST;
-      clientMessage = 'Missing required field';
+      clientMessage = 'حقل مطلوب غير موجود';
     } else {
       // Genuine unexpected DB error — log it for diagnosis
       this.logger.error(`Unhandled query error: ${message}`);

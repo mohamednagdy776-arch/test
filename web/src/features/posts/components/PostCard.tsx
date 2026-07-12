@@ -244,7 +244,7 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
                     </button>
                   )}
                 </div>
-                <p className="text-sm text-[var(--foreground)] mt-0.5 leading-relaxed">{c.content}</p>
+                <p className="text-sm text-[var(--foreground)] mt-0.5 leading-relaxed break-words">{c.content}</p>
               </div>
             </div>
           ))}

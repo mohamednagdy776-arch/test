@@ -164,7 +164,7 @@ function CommentItem({
                 <span className="text-[10px] text-[var(--muted-foreground)]">{timeAgo(comment.createdAt)}</span>
                 {comment.editedAt && <span className="text-[10px] text-[var(--muted-foreground)]">(معدل)</span>}
               </div>
-              <p className="text-sm text-[var(--foreground)] mt-0.5 leading-relaxed">{comment.content}</p>
+              <p className="text-sm text-[var(--foreground)] mt-0.5 leading-relaxed break-words">{comment.content}</p>
             </>
           )}
         </div>

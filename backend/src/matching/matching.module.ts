@@ -5,6 +5,7 @@ import { Match } from './entities/match.entity';
 import { CompatibilityScore } from './entities/compatibility-score.entity';
 import { Profile } from '../users/entities/profile.entity';
 import { User } from '../auth/entities/user.entity';
+import { FriendsModule } from '../friends/friends.module';
 import { MatchingService } from './services/matching.service';
 import { ColdStartService } from './services/cold-start.service';
 import { CompatibilityService } from './services/compatibility.service';
@@ -21,6 +22,7 @@ import { MatchingAdminController } from './controllers/matching-admin.controller
       timeout: 30000,
       maxRedirects: 5,
     }),
+    FriendsModule,
   ],
   providers: [
     MatchingService,

@@ -65,6 +65,7 @@ export const ProfileHeader = ({
   // Clicking the active "أصدقاء" status button called onUnfriend directly --
   // an instant, irreversible unfriend with no confirmation prompt at all (#331).
   const [showUnfriendConfirm, setShowUnfriendConfirm] = useState(false);
+  const [showBlockConfirm, setShowBlockConfirm] = useState(false);
 
   useEffect(() => {
     if (!lightboxImage) return;
@@ -480,10 +481,12 @@ export const ProfileHeader = ({
                 رسالة
               </button>
 
-              {/* Block user */}
+              {/* Block user — used to fire immediately on click with no
+                  confirmation (#276); now goes through the same confirm-modal
+                  pattern as Unfriend above. */}
               {onBlock && friendshipStatus?.status !== 'blocked' && (
                 <button
-                  onClick={onBlock}
+                  onClick={() => setShowBlockConfirm(true)}
                   className="rounded-xl border border-[var(--destructive)]/30 px-4 py-2 text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 transition-all duration-300"
                 >
                   حظر
@@ -540,6 +543,21 @@ export const ProfileHeader = ({
               className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors"
             >
               إلغاء الصداقة
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal open={showBlockConfirm} onClose={() => setShowBlockConfirm(false)} title="حظر المستخدم">
+        <div className="space-y-4">
+          <p className="text-sm text-[var(--primary)]">هل تريد حظر {profile.fullName}؟ لن تتمكنا من رؤية بعضكما أو التواصل بعد الحظر.</p>
+          <div className="flex gap-3">
+            <button onClick={() => setShowBlockConfirm(false)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
+            <button
+              onClick={() => { setShowBlockConfirm(false); onBlock?.(); }}
+              className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 transition-colors"
+            >
+              حظر
             </button>
           </div>
         </div>

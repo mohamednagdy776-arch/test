@@ -97,7 +97,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     reactToStory.mutate(
       { storyId: currentStory.id, emoji },
       {
-        onSuccess: () => showToast(`تم إرسال ${emoji}`, 'success'),
+        onSuccess: () => { setMyReaction(emoji); showToast(`تم إرسال ${emoji}`, 'success'); },
         onError: () => showToast('تعذّر إرسال التفاعل', 'error'),
       },
     );
@@ -144,6 +144,13 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
 
   // Clear any half-typed reply when moving to a different person's stories.
   useEffect(() => { setReplyText(''); }, [userIndex]);
+
+  // The reaction request succeeded every time (backend upserts by story+user),
+  // but nothing ever showed which emoji was picked -- combined with the toast
+  // being hidden behind this component's own z-[200] backdrop, clicking past
+  // the first emoji looked like it silently did nothing (#365).
+  const [myReaction, setMyReaction] = useState<string | null>(null);
+  useEffect(() => { setMyReaction(null); }, [currentStory?.id]);
 
   useEffect(() => {
     if (isPaused) return;
@@ -390,7 +397,10 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                   <button
                     key={emoji}
                     onClick={() => handleReact(emoji)}
-                    className="h-9 w-9 rounded-full flex items-center justify-center text-xl leading-none hover:scale-125 active:scale-110 transition-transform"
+                    className={cn(
+                      'h-9 w-9 rounded-full flex items-center justify-center text-xl leading-none hover:scale-125 active:scale-110 transition-transform',
+                      myReaction === emoji && 'scale-125 bg-white/20 ring-2 ring-white',
+                    )}
                     aria-label={`تفاعل ${emoji}`}
                   >
                     {emoji}

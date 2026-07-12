@@ -19,6 +19,12 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}
       >
         <OfflineBanner />
+        {/* Establishes the global Socket.IO connection + newMessageNotification
+            listener for every logged-in user -- the import existed but this
+            element was never mounted, so no socket ever connected until a user
+            opened /chat, meaning no toast/badge fired for messages received
+            anywhere else on the site (#307). */}
+        <ChatRealtime />
         <Navbar />
 
         {/* Content area — max-w-screen-2xl fills wide monitors; pb-20 clears the mobile bottom nav */}

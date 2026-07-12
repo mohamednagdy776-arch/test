@@ -6,6 +6,7 @@ import { Match } from '../entities/match.entity';
 import { ProfileWithMatchDto } from '../dto/profile-with-match.dto';
 import { Profile } from '../../users/entities/profile.entity';
 import { User } from '../../auth/entities/user.entity';
+import { FriendsService } from '../../friends/services/friends.service';
 
 @Injectable()
 export class MatchingService {
@@ -16,6 +17,7 @@ export class MatchingService {
     @InjectRepository(Profile) private profilesRepo: Repository<Profile>,
     @InjectRepository(User) private usersRepo: Repository<User>,
     private httpService: HttpService,
+    private friendsService: FriendsService,
   ) {}
 
   async getMatches(userId: string, page: number, limit: number, status?: string, minAge?: number, maxAge?: number, location?: string, religiousCommitment?: string) {
@@ -42,6 +44,13 @@ export class MatchingService {
 
         // Filter out same-gender matches when gender is known
         if (oppositeGender && otherUser?.gender && otherUser.gender !== oppositeGender) {
+          return null;
+        }
+
+        // Blocking was never checked here, so a blocked user stayed visible
+        // in the Approved Matches list (#275) even though chat/follow already
+        // hide blocked users via this same helper.
+        if (await this.friendsService.isBlockedEither(userId, otherUserId)) {
           return null;
         }
 

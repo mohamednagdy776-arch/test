@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 import { profileApi } from '../api';
 import { ProfileHeader } from './ProfileHeader';
@@ -26,6 +27,7 @@ interface Props {
 
 export const ProfileView = ({ userId }: Props) => {
   const qc = useQueryClient();
+  const router = useRouter();
   const { showToast } = useToast();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('posts');
@@ -92,7 +94,15 @@ export const ProfileView = ({ userId }: Props) => {
 
   const blockUser = useMutation({
     mutationFn: () => profileApi.blockUser(profileUserId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: userId ? ['user-profile', userId] : ['my-profile'] }),
+    // Blocking makes this profile immediately inaccessible (getFullProfile
+    // returns null -> the controller 404s), but this used to just invalidate
+    // the same still-mounted ['user-profile', userId] query -- the refetch
+    // then permanently 404'd and the page got stuck showing the generic
+    // "failed to load" error/retry box forever (#276). Navigate away instead.
+    onSuccess: () => {
+      showToast('تم حظر المستخدم', 'success');
+      router.push('/friends');
+    },
   });
 
   // Send Salam — directed marriage-intent interest (#754).
