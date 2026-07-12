@@ -371,12 +371,12 @@ export class ChatService {
    */
   async getOrCreateDirectConversation(userId: string, targetUserId: string, context?: 'story_reply') {
     if (userId === targetUserId) {
-      throw new ForbiddenException('Cannot start a conversation with yourself');
+      throw new ForbiddenException('لا يمكنك بدء محادثة مع نفسك');
     }
 
     // Block enforcement (#28): a blocked pair cannot open/resume a conversation.
     if (await this.friendsService.isBlockedEither(userId, targetUserId)) {
-      throw new ForbiddenException('Cannot start a conversation with this user');
+      throw new ForbiddenException('لا يمكن بدء محادثة مع هذا المستخدم');
     }
 
     // Relationship gate: a 1:1 conversation needs an accepted match OR an
@@ -397,14 +397,25 @@ export class ChatService {
     if (!isMatched && !targetAllowsPublicMessages) {
       const friendIds = await this.friendsService.getFriendIds(userId);
       if (!friendIds.includes(targetUserId)) {
+        // Distinguish "target explicitly restricts to friends only" from the
+        // general "you two aren't connected at all" case so the UI can show
+        // the actual reason instead of one generic message for both (#342).
+        let whoCanSendMessages: string | undefined;
         try {
           const privacy: any = await this.settingsService.getPrivacySettings(targetUserId);
-          targetAllowsPublicMessages = privacy?.whoCanSendMessages === 'public';
+          whoCanSendMessages = privacy?.whoCanSendMessages;
+          targetAllowsPublicMessages = whoCanSendMessages === 'public';
         } catch {
           /* fail closed on lookup errors — keep the default relationship gate */
         }
         if (!targetAllowsPublicMessages) {
-          throw new ForbiddenException('You must be matched or friends before starting a conversation');
+          // Messages were previously raw, unlocalized English strings shown
+          // as-is to Arabic-first users (#297).
+          throw new ForbiddenException(
+            whoCanSendMessages === 'friends'
+              ? 'لا يمكن مراسلة هذا المستخدم إلا إذا كنتما أصدقاء'
+              : 'يجب أن تكونا متطابقين أو أصدقاء لبدء محادثة',
+          );
         }
       }
     }

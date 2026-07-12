@@ -42,13 +42,15 @@ export class VideosService {
     const comments = await this.commentsRepo.find({
       where: { video: { id: videoId } },
       order: { createdAt: 'ASC' },
-      relations: ['user'],
+      relations: ['user', 'user.profile'],
     });
     return comments.map((c) => ({
       id: c.id,
       content: c.content,
       createdAt: c.createdAt,
-      user: c.user ? { id: c.user.id, username: c.user.username, name: c.user.fullName || c.user.username } : null,
+      // Missing avatarUrl -- commenters always fell back to their initial
+      // letter regardless of a real uploaded avatar (#280).
+      user: c.user ? { id: c.user.id, username: c.user.username, name: c.user.fullName || c.user.username, avatarUrl: (c.user as any).profile?.avatarUrl ?? null } : null,
     }));
   }
 
@@ -65,7 +67,9 @@ export class VideosService {
       'مستخدم';
     return {
       ...v,
-      user: u ? { id: u.id, name, username: u.username ?? null } : null,
+      // Missing avatarUrl -- the video poster's avatar always fell back to
+      // an initial letter regardless of a real uploaded avatar (#280).
+      user: u ? { id: u.id, name, username: u.username ?? null, avatarUrl: u.profile?.avatarUrl ?? null } : null,
       // Cards read `thumbnailUrl` (a resolved CDN URL); the raw entity only
       // has the stored `thumbnail` key/path, so cards never showed a preview
       // (#74/#76).
@@ -119,7 +123,7 @@ export class VideosService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
-      relations: ['createdBy'],
+      relations: ['createdBy', 'createdBy.profile'],
     });
     return { data: await this.formatMany(data), total };
   }
@@ -137,7 +141,7 @@ export class VideosService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
-      relations: ['createdBy'],
+      relations: ['createdBy', 'createdBy.profile'],
     });
     return { data: await this.formatMany(data), total };
   }
@@ -148,7 +152,7 @@ export class VideosService {
       skip: (page - 1) * limit,
       take: limit,
       order: { views: 'DESC', createdAt: 'DESC' },
-      relations: ['createdBy'],
+      relations: ['createdBy', 'createdBy.profile'],
     });
     return { data: await this.formatMany(data), total };
   }
@@ -159,7 +163,7 @@ export class VideosService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
-      relations: ['createdBy'],
+      relations: ['createdBy', 'createdBy.profile'],
     });
     return { data: await this.formatMany(data), total };
   }
@@ -170,7 +174,7 @@ export class VideosService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
-      relations: ['createdBy'],
+      relations: ['createdBy', 'createdBy.profile'],
     });
     return { data: await this.formatMany(data), total };
   }
@@ -181,7 +185,7 @@ export class VideosService {
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },
-      relations: ['createdBy'],
+      relations: ['createdBy', 'createdBy.profile'],
     });
     return { data: await this.formatMany(data), total };
   }
@@ -189,7 +193,7 @@ export class VideosService {
   async findOne(videoId: string, userId?: string) {
     const video = await this.videosRepo.findOne({
       where: { id: videoId },
-      relations: ['createdBy'],
+      relations: ['createdBy', 'createdBy.profile'],
     });
     if (!video) throw new NotFoundException('Video not found');
     video.views += 1;

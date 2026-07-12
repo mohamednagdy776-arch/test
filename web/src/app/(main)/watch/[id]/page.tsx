@@ -107,10 +107,14 @@ function VideoPlayer({ video }: { video: any }) {
             src={resolveMediaUrl(video.url) ?? ''}
             controls
             className="w-full h-full"
-            poster={resolveMediaUrl(video.thumbnail) ?? undefined}
+            // .thumbnail is the raw storage key; resolveMediaUrl re-anchors
+            // it onto the API origin, not the CDN the backend actually
+            // serves it from (#274) -- .thumbnailUrl is already a full,
+            // correct CDN URL.
+            poster={video.thumbnailUrl ?? undefined}
           />
-        ) : video.thumbnail ? (
-          <img src={resolveMediaUrl(video.thumbnail) ?? ''} alt={video.title} className="w-full h-full object-cover" />
+        ) : video.thumbnailUrl ? (
+          <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-6xl">🎬</div>
         )}
@@ -206,7 +210,7 @@ function VideoPlayer({ video }: { video: any }) {
       </Modal>
 
       <div className="flex items-center gap-3 py-3 border-y border-[var(--border)]">
-        <Avatar src={video.user?.avatar} name={video.user?.name} size="md" />
+        <Avatar src={video.user?.avatarUrl} name={video.user?.name} size="md" />
         <div>
           <p className="font-semibold text-[var(--foreground)] text-sm">{video.user?.name ?? 'مستخدم'}</p>
           {video.user?.username && (
@@ -274,7 +278,7 @@ function CommentsSection({ videoId }: { videoId: string }) {
         <div className="space-y-3">
           {comments.map((c: any) => (
             <div key={c.id} className="flex gap-3">
-              <Avatar src={c.user?.avatar} name={c.user?.name} size="sm" />
+              <Avatar src={c.user?.avatarUrl} name={c.user?.name} size="sm" />
               <div className="flex-1 rounded-2xl bg-[var(--muted)] border border-[var(--border)] px-4 py-3">
                 <p className="text-xs font-semibold text-[var(--foreground)] mb-1">{c.user?.name ?? 'مستخدم'}</p>
                 <p className="text-sm text-[var(--primary)]">{c.content}</p>
@@ -312,8 +316,9 @@ function RecommendedSidebar({ currentId }: { currentId: string }) {
           className="flex gap-3 cursor-pointer rounded-xl p-2 hover:bg-[var(--muted)] transition-colors"
         >
           <div className="w-28 h-16 shrink-0 rounded-lg bg-[var(--muted)] overflow-hidden">
-            {v.thumbnail ? (
-              <img src={resolveMediaUrl(v.thumbnail) ?? ''} alt={v.title} className="w-full h-full object-cover" />
+            {/* Same wrong-field bug as the main player above (#274). */}
+            {v.thumbnailUrl ? (
+              <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>
             )}

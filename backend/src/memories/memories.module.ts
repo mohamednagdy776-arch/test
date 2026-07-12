@@ -10,9 +10,10 @@ import { MemoryService } from './services/memory.service';
 import { SavedService } from './services/saved.service';
 import { MemoriesController } from './controllers/memories.controller';
 import { SavedController } from './controllers/saved.controller';
+import { VideosModule } from '../videos/videos.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SavedItem, SavedCollection, Post, Comment, Video, Story])],
+  imports: [TypeOrmModule.forFeature([SavedItem, SavedCollection, Post, Comment, Video, Story]), VideosModule],
   providers: [MemoryService, SavedService],
   controllers: [MemoriesController, SavedController],
 })

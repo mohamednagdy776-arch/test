@@ -53,7 +53,10 @@ export default function MatchingPage() {
         page: 1, limit: 20, status: tab,
         minAge: ageMin, maxAge: ageMax,
         location: debouncedLocation || undefined,
-        prayerLevel: prayerLevel || undefined,
+        // Sent as `prayerLevel` but the UI labels/values this field as
+        // "الالتزام الديني" (Religious Commitment), and the backend never
+        // even accepted this param at all -- it had zero effect (#257).
+        religiousCommitment: prayerLevel || undefined,
       },
     }).then((r) => r.data),
   });
@@ -209,12 +212,18 @@ export default function MatchingPage() {
               <label className="block text-xs font-semibold mb-1.5 flex items-center gap-1" style={{ color: 'var(--foreground)' }}>
                 <Scales size={12} /> الالتزام الديني
               </label>
+              {/* Values were 'high'/'medium'/'low', matching neither this
+                  field's real name (religiousCommitment) nor its actual
+                  stored values ('very_committed'/'committed'/'moderate'/
+                  'low', per ProfileEditForm.tsx) -- never matched anything
+                  server-side even once the param itself got wired up (#257). */}
               <select value={prayerLevel} onChange={(e) => setPrayerLevel(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 cursor-pointer appearance-none"
                 style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
                 <option value="">الكل</option>
-                <option value="high">عالي</option>
-                <option value="medium">متوسط</option>
+                <option value="very_committed">ملتزم جداً</option>
+                <option value="committed">ملتزم</option>
+                <option value="moderate">معتدل</option>
                 <option value="low">منخفض</option>
               </select>
             </div>

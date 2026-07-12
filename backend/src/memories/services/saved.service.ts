@@ -7,6 +7,7 @@ import { Post } from '../../posts/entities/post.entity';
 import { Comment } from '../../comments/entities/comment.entity';
 import { Video } from '../../videos/entities/video.entity';
 import { Story } from '../../posts/entities/story.entity';
+import { CdnService } from '../../videos/services/cdn.service';
 
 @Injectable()
 export class SavedService {
@@ -17,6 +18,7 @@ export class SavedService {
     @InjectRepository(Comment) private commentRepo: Repository<Comment>,
     @InjectRepository(Video) private videoRepo: Repository<Video>,
     @InjectRepository(Story) private storyRepo: Repository<Story>,
+    private cdnService: CdnService,
   ) {}
 
   // Hydrate each saved row with its underlying entity. Previously only
@@ -45,7 +47,15 @@ export class SavedService {
 
     return saved.map(s => {
       if (s.entityType === 'post') return { ...s, entity: posts.find(p => p.id === s.entityId) ?? null };
-      if (s.entityType === 'video') return { ...s, entity: videos.find(v => v.id === s.entityId) ?? null };
+      if (s.entityType === 'video') {
+        const video = videos.find(v => v.id === s.entityId);
+        // The raw entity only has the stored `thumbnail` key, not a resolved
+        // URL -- saved video cards rendered no thumbnail at all (#240).
+        return {
+          ...s,
+          entity: video ? { ...video, thumbnailUrl: video.thumbnail ? this.cdnService.getThumbnailUrl(video.thumbnail) : null } : null,
+        };
+      }
       if (s.entityType === 'story') return { ...s, entity: stories.find(st => st.id === s.entityId) ?? null };
       return { ...s, entity: null };
     });

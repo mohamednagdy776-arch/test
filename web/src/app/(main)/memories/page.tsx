@@ -180,7 +180,13 @@ export default function MemoriesPage() {
                           onClick={() => item.entity?.id && router.push(`/watch/${item.entity.id}`)}
                           className="w-full text-right flex gap-4 p-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] hover:border-[var(--border)] hover:shadow-md transition-all"
                         >
-                          <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl">▶️</div>
+                          {/* Was a static ▶️ placeholder that never read the
+                              video's real thumbnail (#240). */}
+                          <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
+                            {item.entity.thumbnailUrl ? (
+                              <img src={item.entity.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                            ) : '▶️'}
+                          </div>
                           <div>
                             <p className="font-semibold text-[var(--foreground)]">{item.entity.title || 'فيديو'}</p>
                             <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.createdAt)}</p>

@@ -380,7 +380,7 @@ export const SearchPage = () => {
               {isLoading ? '...' : 'بحث'}
             </button>
 
-            <button onClick={() => setShowAdvanced((v) => !v)}
+            <button onClick={() => { setShowAdvanced((v) => !v); setShowSuggestions(false); }}
               aria-label="الفلاتر المتقدمة"
               className="shrink-0 flex items-center gap-1.5 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all"
               style={showAdvanced
@@ -396,7 +396,7 @@ export const SearchPage = () => {
               filters={filters}
               onChange={setFilters}
               onReset={() => { setFilters(emptyFilters); setApplied(emptyFilters); }}
-              onSearch={() => { setApplied({ ...filters }); runSearch(query, activeTab, filters); }}
+              onSearch={() => { setApplied({ ...filters }); runSearch(query, activeTab, filters); setShowSuggestions(false); }}
               activeTab={activeTab}
             />
           )}

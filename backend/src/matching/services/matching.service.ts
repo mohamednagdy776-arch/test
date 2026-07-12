@@ -18,7 +18,7 @@ export class MatchingService {
     private httpService: HttpService,
   ) {}
 
-  async getMatches(userId: string, page: number, limit: number, status?: string, minAge?: number, maxAge?: number) {
+  async getMatches(userId: string, page: number, limit: number, status?: string, minAge?: number, maxAge?: number, location?: string, religiousCommitment?: string) {
     // Get current user's gender for opposite-gender filtering
     const currentUser = await this.usersRepo.findOne({ where: { id: userId } });
     const currentGender = currentUser?.gender ?? null;
@@ -57,6 +57,17 @@ export class MatchingService {
         const age = profile?.age ?? null;
         if (minAge && age !== null && age < minAge) return null;
         if (maxAge && age !== null && age > maxAge) return null;
+
+        // location/religiousCommitment were accepted by the Matching page's
+        // filter UI but never forwarded past the controller at all -- they
+        // had zero effect on the displayed results (#257).
+        if (location) {
+          const loc = location.trim().toLowerCase();
+          const matchesLocation =
+            profile?.city?.toLowerCase().includes(loc) || profile?.country?.toLowerCase().includes(loc);
+          if (!matchesLocation) return null;
+        }
+        if (religiousCommitment && profile?.religiousCommitment !== religiousCommitment) return null;
 
         return {
           id: match.id,

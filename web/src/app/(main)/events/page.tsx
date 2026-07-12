@@ -27,6 +27,13 @@ export default function EventsPage() {
       showToast('يرجى إدخال العنوان والتاريخ', 'error');
       return;
     }
+    // Relied entirely on the native `min` attribute for this, which shows an
+    // unlocalized browser validation bubble anchored to the field instead of
+    // the app's own toast pattern (#235).
+    if (endDate && endDate < startDate) {
+      showToast('تاريخ النهاية يجب أن يكون بعد تاريخ البداية', 'error');
+      return;
+    }
     try {
       await createEvent.mutateAsync({
         title: title.trim(),

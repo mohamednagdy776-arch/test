@@ -63,8 +63,11 @@ export const UserProfileModal = ({ user, onClose }: Props) => {
       onClose();
       router.push(`/chat?conversation=${conv.id}&user=${conv.otherUserId || targetId}`);
     },
-    onError: () => {
-      setChatError('تعذّر بدء المحادثة، حاول مرة أخرى.');
+    onError: (e: any) => {
+      // Always showed this same generic message regardless of the real
+      // reason (e.g. a relationship-gate 403) -- surface the actual
+      // backend message when available (#175).
+      setChatError(e?.response?.data?.message || 'تعذّر بدء المحادثة، حاول مرة أخرى.');
     },
   });
 
