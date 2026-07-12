@@ -283,7 +283,11 @@ export class PostsService {
       if (!rows.length) throw new NotFoundException('Post not found');
     }
 
-    return post;
+    // Unlike the feed listings, this single-post fetch skipped sanitizePolls
+    // entirely -- it leaked every voter's identity via raw voterIds AND never
+    // told the viewer which option they'd picked, so a poll always rendered
+    // unselected/un-voted when opened directly (permalink, watch page, etc) (#167).
+    return this.sanitizePolls([post], viewerId)[0];
   }
 
   async update(postId: string, dto: CreatePostDto, userId: string) {
