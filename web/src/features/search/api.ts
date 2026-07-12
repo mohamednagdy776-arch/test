@@ -8,6 +8,7 @@ export interface SearchParams {
   sect?: string;
   lifestyle?: string;
   education?: string;
+  prayerLevel?: string;
   minAge?: number;
   maxAge?: number;
   page?: number;
@@ -85,11 +86,13 @@ export const searchApi = {
 
   searchAll: async (params: SearchParams): Promise<SearchResult> => {
     // country/city/education are now real structured filters server-side
-    // (#245) -- sect/lifestyle still aren't, only usable as free-text terms
-    // via `q`. gender was silently dropped here too until #119/#131. An empty
+    // (#245). gender was silently dropped here too until #119/#131. An empty
     // `q` combined with only filters used to short-circuit to zero results
-    // regardless (#245).
-    const { type = 'all', q, cursor, limit = 12, minAge, maxAge, gender, country, city, education } = params;
+    // regardless (#245). sect/lifestyle/prayerLevel were collected by the
+    // filter UI but dropped right here before ever reaching the API (#358,
+    // #346) -- the Advanced Search panel applied them client-side but they
+    // had zero effect on the actual query.
+    const { type = 'all', q, cursor, limit = 12, minAge, maxAge, gender, country, city, education, sect, lifestyle, prayerLevel } = params;
     const results: SearchResult = { hasMore: false, nextCursor: undefined };
 
     const categoryMap: Record<string, string> = {
@@ -102,7 +105,7 @@ export const searchApi = {
     const category = type === 'all' ? undefined : categoryMap[type];
 
     try {
-      const res = await apiClient.get('/search', { params: { q, category, limit, cursor, minAge, maxAge, gender, country, city, education } });
+      const res = await apiClient.get('/search', { params: { q, category, limit, cursor, minAge, maxAge, gender, country, city, education, sect, lifestyle, prayerLevel } });
       const data = res.data?.data ?? res.data ?? {};
 
       if (data.users) results.users = data.users;

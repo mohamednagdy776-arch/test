@@ -19,7 +19,7 @@ export class SearchService {
     @InjectRepository(Event)   private eventRepo: Repository<Event>,
   ) {}
 
-  async search(query: string, userId: string, category?: string, minAge?: number, maxAge?: number, gender?: string, country?: string, city?: string, education?: string) {
+  async search(query: string, userId: string, category?: string, minAge?: number, maxAge?: number, gender?: string, country?: string, city?: string, education?: string, sect?: string, lifestyle?: string, prayerLevel?: string) {
     const q = `%${(query || '').trim()}%`;
 
     const userSearch = async () => {
@@ -77,6 +77,13 @@ export class SearchService {
       if (country) qb.andWhere('profile.country ILIKE :country', { country: `%${country}%` });
       if (city) qb.andWhere('profile.city ILIKE :city', { city: `%${city}%` });
       if (education) qb.andWhere('profile.education = :education', { education });
+      // sect/lifestyle/prayerLevel were accepted by the Advanced Search UI
+      // and even joined into the free-text OR bracket above, but never
+      // applied as their own precise filters -- selecting a specific value
+      // had zero effect on results (#358, #346).
+      if (sect) qb.andWhere('profile.sect = :sect', { sect });
+      if (lifestyle) qb.andWhere('profile.lifestyle = :lifestyle', { lifestyle });
+      if (prayerLevel) qb.andWhere('profile.prayerLevel = :prayerLevel', { prayerLevel });
       const users = await qb.take(20).getMany();
 
       return users.map(u => ({

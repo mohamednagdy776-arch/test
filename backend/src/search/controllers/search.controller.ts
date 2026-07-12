@@ -20,13 +20,16 @@ export class SearchController {
     @Query('country') country: string,
     @Query('city') city: string,
     @Query('education') education: string,
+    @Query('sect') sect: string,
+    @Query('lifestyle') lifestyle: string,
+    @Query('prayerLevel') prayerLevel: string,
     @CurrentUser() user: User,
   ) {
     // Advanced Search lets a user apply gender/age/location/education filters
     // without typing anything in the free-text box -- this used to hard-block
     // on an empty q regardless of any filter being set, always returning zero
     // results (#245). Only short-circuit when there's truly nothing to search on.
-    const hasFilters = !!(gender || minAge || maxAge || country || city || education);
+    const hasFilters = !!(gender || minAge || maxAge || country || city || education || sect || lifestyle || prayerLevel);
     if ((!q || q.trim().length === 0) && !hasFilters) {
       return ok({
         users: [], posts: [], groups: [], pages: [], events: [], photos: [], videos: []
@@ -35,6 +38,7 @@ export class SearchController {
     const results = await this.searchService.search(
       q, user.id, category, this.parseAge(minAge), this.parseAge(maxAge), gender || undefined,
       country || undefined, city || undefined, education || undefined,
+      sect || undefined, lifestyle || undefined, prayerLevel || undefined,
     );
     return ok(results);
   }
