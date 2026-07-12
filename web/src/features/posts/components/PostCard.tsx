@@ -76,12 +76,14 @@ function ReactionDisplay({ postId }: { postId: string }) {
   const { data } = useReactions(postId);
   const toggle = useToggleReaction();
   const [showPicker, setShowPicker] = useState(false);
+  const [showBreakdown, setShowBreakdown] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
-  
+
   const reactionData = data?.data;
   const counts: Record<string, number> = reactionData?.counts ?? {};
   const userReaction = reactionData?.userReaction as string | undefined;
   const total: number = reactionData?.total ?? 0;
+  const reactionList: any[] = reactionData?.reactions ?? [];
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -91,7 +93,12 @@ function ReactionDisplay({ postId }: { postId: string }) {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const currentReaction = REACTIONS.find(r => r.type === userReaction);
+  // Without the viewer's own reaction, this always fell back to the generic
+  // 👍/"إعجاب" placeholder regardless of what reactions the post actually
+  // received (e.g. an all-Love post still showed a plain Like icon) --
+  // show the most-picked reaction type instead (#328).
+  const topType = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const currentReaction = REACTIONS.find(r => r.type === userReaction) ?? REACTIONS.find(r => r.type === topType);
   const defaultEmoji = '👍';
 
   return (
@@ -108,10 +115,74 @@ function ReactionDisplay({ postId }: { postId: string }) {
           <span className="text-base">{currentReaction?.emoji || defaultEmoji}</span>
           <span>{currentReaction?.label || 'إعجاب'}</span>
         </button>
-        {total > 0 && <span className="text-xs text-[var(--muted-foreground)] font-medium shadow-soft rounded-full px-2 py-0.5">{total}</span>}
+        {/* The count was flat, unresponsive text -- no way to see who reacted
+            or with what, for anyone including the post owner (#329). */}
+        {total > 0 && (
+          <button
+            onClick={() => setShowBreakdown(true)}
+            className="text-xs text-[var(--muted-foreground)] font-medium shadow-soft rounded-full px-2 py-0.5 hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+          >
+            {total}
+          </button>
+        )}
       </div>
       {showPicker && <ReactionPicker onSelect={(type) => toggle.mutate({ postId, type })} onClose={() => setShowPicker(false)} />}
+      {showBreakdown && (
+        <ReactionBreakdownModal
+          reactions={reactionList}
+          counts={counts}
+          onClose={() => setShowBreakdown(false)}
+        />
+      )}
     </div>
+  );
+}
+
+function ReactionBreakdownModal({ reactions, counts, onClose }: { reactions: any[]; counts: Record<string, number>; onClose: () => void }) {
+  const [activeTab, setActiveTab] = useState<'all' | string>('all');
+  const presentTypes = REACTIONS.filter(r => counts[r.type] > 0);
+  const filtered = activeTab === 'all' ? reactions : reactions.filter(r => r.type === activeTab);
+
+  return (
+    <Modal open onClose={onClose} title="التفاعلات">
+      <div className="space-y-3">
+        <div className="flex gap-2 flex-wrap border-b border-[var(--border)] pb-2">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={cn('px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', activeTab === 'all' ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50')}
+          >
+            الكل ({reactions.length})
+          </button>
+          {presentTypes.map(r => (
+            <button
+              key={r.type}
+              onClick={() => setActiveTab(r.type)}
+              className={cn('flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', activeTab === r.type ? `${r.activeBg} ${r.activeText}` : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50')}
+            >
+              <span>{r.emoji}</span> {counts[r.type]}
+            </button>
+          ))}
+        </div>
+        <div className="max-h-80 overflow-y-auto space-y-2">
+          {filtered.length === 0 ? (
+            <p className="text-sm text-[var(--muted-foreground)] text-center py-6">لا يوجد تفاعلات</p>
+          ) : filtered.map((r) => {
+            const meta = REACTIONS.find(x => x.type === r.type);
+            return (
+              <Link
+                key={r.id}
+                href={r.user?.username ? `/${r.user.username}` : `/profile/${r.user?.id}`}
+                onClick={onClose}
+                className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--muted)]/50 transition-colors"
+              >
+                <span className="text-lg shrink-0">{meta?.emoji ?? '👍'}</span>
+                <span className="text-sm font-medium text-[var(--foreground)]">{displayName(r.user)}</span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    </Modal>
   );
 }
 

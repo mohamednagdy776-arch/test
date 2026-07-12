@@ -7,6 +7,10 @@ import { User } from '../../auth/entities/user.entity';
 import { Post } from '../../posts/entities/post.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 
+const REACTION_LABELS: Record<string, string> = {
+  like: 'liked', love: 'loved', haha: 'laughed at', wow: 'was amazed by', sad: 'was saddened by', angry: 'was angered by',
+};
+
 @Injectable()
 export class ReactionsService {
   constructor(
@@ -55,9 +59,13 @@ export class ReactionsService {
       throw err;
     }
 
-    // Notify the post owner that someone reacted to their post (#382).
+    // Notify the post owner that someone reacted to their post (#382). The
+    // message was hardcoded to "reacted" regardless of which reaction type
+    // was actually picked -- combined with the summary UI's own generic
+    // fallback (also fixed, #328), a Love always read as a plain Like.
     const post = await this.postsRepo.findOne({ where: { id: postId } });
-    await this.notifications.notifyUser(post?.userId, user.id, 'like', 'reacted to your post', 'post', postId);
+    const reactionLabel = REACTION_LABELS[reactionType] ?? 'reacted to';
+    await this.notifications.notifyUser(post?.userId, user.id, 'like', `${reactionLabel} your post`, 'post', postId);
 
     return { reacted: true, type: saved.type };
   }
