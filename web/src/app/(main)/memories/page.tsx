@@ -175,7 +175,9 @@ export default function MemoriesPage() {
                       )}
                       {item.entityType === 'video' && item.entity && (
                         <button
-                          onClick={() => item.entity?.id && router.push(`/videos/${item.entity.id}`)}
+                          // Videos play at /watch/:id -- /videos/:id doesn't
+                          // exist and always 404'd (#371).
+                          onClick={() => item.entity?.id && router.push(`/watch/${item.entity.id}`)}
                           className="w-full text-right flex gap-4 p-4 rounded-2xl bg-[var(--card)] border border-[var(--border)] hover:border-[var(--border)] hover:shadow-md transition-all"
                         >
                           <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl">▶️</div>

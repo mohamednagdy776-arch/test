@@ -358,13 +358,17 @@ function PhotosTab({ userId }: { userId: string }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-        {photos.map((photo: any, i: number) => (
-          <div key={i} className="aspect-square bg-[var(--muted)]/40 rounded-xl overflow-hidden border border-[var(--border)]">
-            {photo.metadata?.url && (
-              <img src={resolveMediaUrl(photo.metadata.url) ?? ''} alt="" className="w-full h-full object-cover" />
-            )}
-          </div>
-        ))}
+        {photos.map((photo: any, i: number) => {
+          // Only ever checked metadata.url, but avatar/cover updates store
+          // avatarUrl/coverUrl instead -- every tile rendered blank (#366).
+          const photoUrl = photo.metadata?.url ?? photo.metadata?.coverUrl ?? photo.metadata?.avatarUrl ?? photo.metadata?.mediaUrl ?? null;
+          if (!photoUrl) return null;
+          return (
+            <div key={i} className="aspect-square bg-[var(--muted)]/40 rounded-xl overflow-hidden border border-[var(--border)]">
+              <img src={resolveMediaUrl(photoUrl) ?? ''} alt="" className="w-full h-full object-cover" />
+            </div>
+          );
+        })}
       </div>
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">
