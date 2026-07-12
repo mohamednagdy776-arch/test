@@ -20,6 +20,12 @@ import {
   Translate, Check, Prohibit, UserCircle,
 } from '@phosphor-icons/react';
 
+const CHAT_EMOJIS = [
+  '😀', '😂', '😍', '😘', '😊', '😉',
+  '😢', '😭', '😡', '😱', '🤔', '😴',
+  '👍', '👎', '👏', '🙏', '💪', '✌️',
+  '❤️', '💔', '🔥', '✨', '🎉', '💯',
+];
 
 interface Message {
   id: string;
@@ -64,6 +70,10 @@ export const ChatWindow = ({ match, onBack }: Props) => {
   const [showReactions, setShowReactions] = useState<string | null>(null);
   const [hoveredMsgId, setHoveredMsgId] = useState<string | null>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  // No emoji picker existed anywhere near the message input, forcing users
+  // onto OS-level shortcuts to insert emojis at all (#361).
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const deleteMessage = useDeleteMessage();
   const [isOnline, setIsOnline] = useState(false);
   const [otherSeenAt, setOtherSeenAt] = useState<string | null>(null);
@@ -99,6 +109,16 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       reactions: m.reactions,
     })));
   }, [data, myUserId]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const qc = useQueryClient();
 
@@ -776,6 +796,32 @@ export const ChatWindow = ({ match, onBack }: Props) => {
               <ImageIcon size={18} />
             )}
           </button>
+
+          <div className="relative shrink-0" ref={emojiPickerRef}>
+            <button
+              type="button"
+              title="إدراج إيموجي"
+              onClick={() => setShowEmojiPicker((v) => !v)}
+              className="flex items-center justify-center w-10 h-10 rounded-xl transition-all hover:scale-110"
+              style={{ color: 'var(--primary)', background: 'var(--muted)' }}>
+              <Smiley size={18} />
+            </button>
+            {showEmojiPicker && (
+              <div className="absolute bottom-12 right-0 z-20 grid grid-cols-6 gap-1 p-2 rounded-xl shadow-xl w-56"
+                style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                {CHAT_EMOJIS.map((emoji) => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => setInput((prev) => prev + emoji)}
+                    className="text-xl leading-none p-1.5 rounded-lg hover:bg-[var(--muted)] transition-colors"
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <textarea
             value={input}
