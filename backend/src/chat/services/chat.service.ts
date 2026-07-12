@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, Not } from 'typeorm';
 import { Message } from '../entities/message.entity';
 import { Conversation } from '../entities/conversation.entity';
 import { ConversationParticipant } from '../entities/conversation-participant.entity';
@@ -228,6 +228,14 @@ export class ChatService {
         createdAt: m.createdAt,
       })),
       total,
+      // The frontend only ever learned the other participant's read state from
+      // a live 'messageSeen' socket event and reset it to null on every open,
+      // so re-opening an already-read conversation (read in a past session,
+      // or while this device was offline) showed every message as unread
+      // until a brand-new message triggered a fresh event (#319).
+      otherLastReadAt: (await this.participantRepo.findOne({
+        where: { conversationId, userId: Not(userId) },
+      }))?.lastReadAt ?? null,
     };
   }
 

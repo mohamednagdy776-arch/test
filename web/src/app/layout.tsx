@@ -13,12 +13,24 @@ export const metadata: Metadata = {
   description:
     'طيبت منصة ذكية للتعارف والزواج للمسلمين حول العالم، تعتمد على الذكاء الاصطناعي لإيجاد التوافق الديني والحياتي بطريقة حلال وآمنة. Tayyibt is an AI-powered Muslim matchmaking platform.',
   keywords: ['زواج', 'تعارف', 'مسلمين', 'توافق', 'Muslim matchmaking', 'marriage', 'Tayyibt', 'طيبت'],
+  // No og:image existed anywhere (no logo/banner asset in the repo, and this
+  // object had no `images` field), so social platforms fell back to scraping
+  // a random <img> off the page -- or nothing -- instead of a branded
+  // preview (#283). A dynamic next/og route was tried first but its bundled
+  // font-shaping engine can't handle Arabic text (throws "lookupType: 5 -
+  // substFormat: 3 is not yet supported" and fails the build) -- using a
+  // pre-rendered static PNG instead sidesteps that entirely.
   openGraph: {
     title: 'طيبت — منصة التوافق الذكي والزواج الإسلامي',
     description: 'منصة ذكية للتعارف والزواج للمسلمين تعتمد على الذكاء الاصطناعي.',
     type: 'website',
     locale: 'ar_SA',
     siteName: 'طيبت',
+    images: [{ url: '/opengraph-image.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/opengraph-image.png'],
   },
   robots: { index: true, follow: true },
 };

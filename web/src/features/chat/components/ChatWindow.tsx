@@ -111,6 +111,12 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       isStarred: m.isStarred,
       reactions: m.reactions,
     })));
+    // Seed the other participant's read state from the persisted DB value --
+    // previously this only ever came from a live 'messageSeen' socket event,
+    // so re-opening an already-read conversation showed every message as
+    // unread until a brand-new message triggered a fresh event (#319).
+    const otherLastReadAt = (data as any)?.data?.otherLastReadAt;
+    if (otherLastReadAt) setOtherSeenAt(otherLastReadAt);
   }, [data, myUserId]);
 
   useEffect(() => {
