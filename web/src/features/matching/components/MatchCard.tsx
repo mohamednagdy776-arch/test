@@ -215,7 +215,9 @@ export const MatchCard = ({
               <ArrowCounterClockwise size={13} /> تراجع عن الرفض
             </button>
           )}
-          {(isPending || isAccepted) && (onViewProfile || (isAccepted && onSendMessage)) && (
+          {/* Rejected cards only ever showed "Undo Reject" -- no way to
+              review who was rejected before deciding to undo (#364). */}
+          {(isPending || isAccepted || match.status === 'rejected') && (onViewProfile || (isAccepted && onSendMessage)) && (
             <div className="flex gap-2">
               {onViewProfile && (
                 <button onClick={onViewProfile}
