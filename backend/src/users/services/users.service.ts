@@ -49,12 +49,18 @@ export class UsersService {
     const qb = this.postsRepo
       .createQueryBuilder('post')
       .leftJoinAndSelect('post.user', 'user')
+      // Same missing-join bug as the main feed (#335/#355): without this,
+      // PostCard's post.user.profile.avatarUrl is always undefined, so every
+      // post on the profile's own Posts tab fell back to the initial-letter
+      // placeholder even though the profile header itself has the real avatar.
+      .leftJoinAndSelect('user.profile', 'userProfile')
       .leftJoinAndSelect('post.group', 'group')
       // The feed queries (posts.service.ts) also join originalPost so a
       // shared post can render its source; this query never did, so shared
       // posts rendered broken/empty on the profile Posts tab only (#98).
       .leftJoinAndSelect('post.originalPost', 'originalPost')
       .leftJoinAndSelect('originalPost.user', 'originalPostUser')
+      .leftJoinAndSelect('originalPostUser.profile', 'originalPostUserProfile')
       .where('post.user_id = :userId', { userId })
       .orderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)

@@ -47,7 +47,9 @@ export default function UserProfilePage() {
   const cancelRequest = useMutation({ mutationFn: () => { if (!friendshipStatus.id) throw new Error('no id'); return profileApi.cancelFriendRequest(friendshipStatus.id); }, onSuccess: inval });
   const acceptRequest = useMutation({ mutationFn: () => { if (!friendshipStatus.id) throw new Error('no id'); return profileApi.acceptFriendRequest(friendshipStatus.id); }, onSuccess: inval });
   const unfriend      = useMutation({ mutationFn: () => profileApi.unfriend(profileUserId), onSuccess: inval });
-  const blockUser     = useMutation({ mutationFn: () => profileApi.blockUser(profileUserId), onSuccess: inval });
+  // Blocking left the user parked on the now-inaccessible profile until they
+  // manually navigated away and back (#351) -- redirect immediately instead.
+  const blockUser     = useMutation({ mutationFn: () => profileApi.blockUser(profileUserId), onSuccess: () => { inval(); router.push('/friends'); } });
   const friendActionPending = sendRequest.isPending || cancelRequest.isPending || acceptRequest.isPending || unfriend.isPending;
 
   if (isLoading) {
