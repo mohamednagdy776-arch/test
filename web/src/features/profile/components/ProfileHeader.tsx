@@ -39,13 +39,14 @@ interface Props {
   onReport?: () => void;
   onSendInterest?: () => void;
   sendInterestPending?: boolean;
+  alreadySentInterest?: boolean;
   friendActionPending?: boolean;
 }
 
 export const ProfileHeader = ({
   profile, onEdit, isSelf = false,
   friendshipStatus, onAddFriend, onCancelRequest, onAcceptRequest, onUnfriend, onBlock, onReport,
-  onSendInterest, sendInterestPending = false,
+  onSendInterest, sendInterestPending = false, alreadySentInterest = false,
   friendActionPending = false,
 }: Props) => {
   const router = useRouter();
@@ -452,16 +453,21 @@ export const ProfileHeader = ({
                 </button>
               )}
 
-              {/* Send Salam — directed marriage-intent interest (#754) */}
+              {/* Send Salam — directed marriage-intent interest (#754). The
+                  button gave no persistent indication a Salam had already
+                  been sent -- it just re-enabled itself identically once the
+                  request finished (#314). */}
               {onSendInterest && (
                 <button
-                  onClick={onSendInterest}
-                  disabled={sendInterestPending}
-                  className="rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 active:scale-95"
-                  style={{ background: 'linear-gradient(135deg, var(--accent) 0%, #D4A853 100%)', color: '#0A3D2B' }}
+                  onClick={alreadySentInterest ? undefined : onSendInterest}
+                  disabled={sendInterestPending || alreadySentInterest}
+                  className="rounded-xl px-4 py-2 text-sm font-bold flex items-center gap-1.5 disabled:cursor-not-allowed transition-all duration-300 active:scale-95"
+                  style={alreadySentInterest
+                    ? { background: 'var(--muted)', color: 'var(--muted-foreground)', opacity: 1 }
+                    : { background: 'linear-gradient(135deg, var(--accent) 0%, #D4A853 100%)', color: '#0A3D2B', opacity: sendInterestPending ? 0.5 : 1 }}
                 >
-                  <HeartStraight size={16} weight="fill" />
-                  {sendInterestPending ? '...' : 'أرسل السلام'}
+                  <HeartStraight size={16} weight={alreadySentInterest ? 'regular' : 'fill'} />
+                  {sendInterestPending ? '...' : alreadySentInterest ? 'تم إرسال السلام' : 'أرسل السلام'}
                 </button>
               )}
 

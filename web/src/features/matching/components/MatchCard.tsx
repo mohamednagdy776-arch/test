@@ -84,6 +84,7 @@ interface Props {
   onAccept?: () => void;
   onReject?: () => void;
   onUndoReject?: () => void;
+  onUndoAccept?: () => void;
   onViewProfile?: () => void;
   onSendMessage?: () => void;
   accepting?: boolean;
@@ -91,7 +92,7 @@ interface Props {
 }
 
 export const MatchCard = ({
-  match, onView, onAccept, onReject, onUndoReject, onViewProfile, onSendMessage,
+  match, onView, onAccept, onReject, onUndoReject, onUndoAccept, onViewProfile, onSendMessage,
   accepting, rejecting,
 }: Props) => {
   const displayName = (match as any).otherUserName || (match as any).user?.fullName || 'مستخدم';
@@ -213,6 +214,15 @@ export const MatchCard = ({
               className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] disabled:opacity-50"
               style={{ border: '1px solid var(--border)', color: 'var(--accent)' }}>
               <ArrowCounterClockwise size={13} /> تراجع عن الرفض
+            </button>
+          )}
+          {/* "Undo Reject" existed but there was no equivalent for an
+              accepted match (#362). */}
+          {isAccepted && onUndoAccept && (
+            <button onClick={onUndoAccept} disabled={accepting}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all hover:bg-[color-mix(in_srgb,var(--accent)_8%,transparent)] disabled:opacity-50"
+              style={{ border: '1px solid var(--border)', color: 'var(--accent)' }}>
+              <ArrowCounterClockwise size={13} /> تراجع عن القبول
             </button>
           )}
           {/* Rejected cards only ever showed "Undo Reject" -- no way to

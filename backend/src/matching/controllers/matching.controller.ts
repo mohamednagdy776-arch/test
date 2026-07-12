@@ -68,4 +68,11 @@ export class MatchingController {
     const match = await this.matchingService.undoReject(id, user.id);
     return ok(match, 'Match restored to pending');
   }
+
+  // "Undo Accept" was missing entirely, unlike "Undo Reject" (#362).
+  @Patch(':id/undo-accept')
+  async undoAccept(@Param('id') id: string, @CurrentUser() user: User) {
+    const match = await this.matchingService.undoAccept(id, user.id);
+    return ok(match, 'Match restored to pending');
+  }
 }

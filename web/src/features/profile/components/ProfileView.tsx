@@ -96,9 +96,20 @@ export const ProfileView = ({ userId }: Props) => {
   });
 
   // Send Salam — directed marriage-intent interest (#754).
+  // The button never showed whether a Salam had already been sent -- it just
+  // re-enabled itself identically once the request finished (#314).
+  const { data: sentInterestsData } = useQuery({
+    queryKey: ['sent-interests'],
+    queryFn: () => interestsApi.sent(),
+    enabled: !isSelf,
+  });
+  const alreadySentInterest = (sentInterestsData as any)?.data?.some((r: any) => r.user?.id === profileUserId) ?? false;
   const sendInterest = useMutation({
     mutationFn: () => interestsApi.send(profileUserId),
-    onSuccess: (res: any) => showToast(res?.message || 'تم إرسال اهتمامك', 'success'),
+    onSuccess: (res: any) => {
+      showToast(res?.message || 'تم إرسال اهتمامك', 'success');
+      qc.invalidateQueries({ queryKey: ['sent-interests'] });
+    },
     onError: () => showToast('تعذّر إرسال الاهتمام', 'error'),
   });
 
@@ -255,6 +266,7 @@ export const ProfileView = ({ userId }: Props) => {
         onReport={!isSelf ? () => setReportOpen(true) : undefined}
         onSendInterest={!isSelf ? () => sendInterest.mutate() : undefined}
         sendInterestPending={sendInterest.isPending}
+        alreadySentInterest={alreadySentInterest}
         friendActionPending={!isSelf ? friendActionPending : false}
       />
       {!isSelf && (profile as any)?.photoLocked && (

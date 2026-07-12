@@ -214,6 +214,20 @@ export class MatchingService {
     return this.matchesRepo.save(match);
   }
 
+  // "Undo Reject" existed but there was no equivalent for an accepted match
+  // (#362) -- same pattern, reverts to pending, only valid from 'accepted'.
+  async undoAccept(matchId: string, userId: string) {
+    const match = await this.matchesRepo.findOneOrFail({ where: { id: matchId }, relations: ['user1', 'user2'] });
+    if (match.user1.id !== userId && match.user2.id !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+    if (match.status !== 'accepted') {
+      throw new BadRequestException('Only an accepted match can be undone');
+    }
+    match.status = 'pending';
+    return this.matchesRepo.save(match);
+  }
+
   async getById(id: string, userId: string) {
     const match = await this.matchesRepo.findOneOrFail({ where: { id }, relations: ['user1', 'user2'] });
     if (match.user1.id !== userId && match.user2.id !== userId) {

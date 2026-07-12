@@ -55,7 +55,10 @@ export default function ChatPage() {
   }, [userId]);
 
   return (
-    <div className="flex gap-4 h-[calc(100dvh-8rem)]">
+    // overflow-x-hidden -- the page allowed horizontal scrolling on mobile
+    // in addition to vertical, behaving like a full webpage instead of a
+    // fixed chat layout (#320).
+    <div className="flex gap-4 h-[calc(100dvh-8rem)] overflow-x-hidden">
       {/* Conversation list sidebar -- had no overflow/min-h-0 of its own, so
           a long list grew past its box and forced the whole page to scroll
           (#382), and on mobile the last cards ended up under the fixed

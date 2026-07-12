@@ -1,11 +1,11 @@
 'use client';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Heart, HourglassHigh, CheckCircle, ChartBar, ArrowClockwise } from '@phosphor-icons/react';
+import { Heart, HourglassHigh, CheckCircle, ChartBar } from '@phosphor-icons/react';
 import type { Match } from '@/types';
 
 export const MatchingStats = () => {
-  const { data, isLoading, refetch, isFetching } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['matches-all-counts'],
     queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 100 } }).then((r) => r.data),
     staleTime: 60_000,
@@ -80,12 +80,11 @@ export const MatchingStats = () => {
               style={{ background: s.iconBg }}>
               <s.icon size={18} weight="fill" style={{ color: s.textColor }} />
             </div>
-            {s.border && (
-              <button onClick={() => refetch()} aria-label="تحديث" disabled={isFetching}
-                className="opacity-40 hover:opacity-80 transition-opacity disabled:opacity-20">
-                <ArrowClockwise size={13} className={isFetching ? 'animate-spin' : ''} style={{ color: 'var(--muted-foreground)' }} />
-              </button>
-            )}
+            {/* A manual refresh button only ever appeared on ONE of the four
+                stat cards (whichever had `border: true`), with no refresh
+                affordance on the others -- an inconsistent, unnecessary
+                control on a widget that already refetches on its own
+                staleTime (#321). */}
           </div>
           <p className="text-2xl font-extrabold leading-none tabular-nums" style={{ color: s.textColor }}>{s.value}</p>
           <p className="text-[11px] font-medium mt-1 opacity-80" style={{ color: s.textColor }}>{s.label}</p>

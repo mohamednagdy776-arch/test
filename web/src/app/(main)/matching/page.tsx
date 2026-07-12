@@ -62,7 +62,7 @@ export default function MatchingPage() {
   });
   const matches: Match[] = data?.data ?? [];
 
-  const handleAction = async (matchId: string, action: 'accept' | 'reject' | 'undo-reject') => {
+  const handleAction = async (matchId: string, action: 'accept' | 'reject' | 'undo-reject' | 'undo-accept') => {
     setActionLoading(matchId + action);
     setActionError(null);
     const newStatus = action === 'accept' ? 'accepted' : action === 'reject' ? 'rejected' : 'pending';
@@ -297,6 +297,7 @@ export default function MatchingPage() {
               onAccept={match.status === 'pending' ? () => handleAction(match.id, 'accept') : undefined}
               onReject={match.status === 'pending' ? () => handleAction(match.id, 'reject') : undefined}
               onUndoReject={match.status === 'rejected' ? () => handleAction(match.id, 'undo-reject') : undefined}
+              onUndoAccept={match.status === 'accepted' ? () => handleAction(match.id, 'undo-accept') : undefined}
               onViewProfile={() => {
                 const uid = (match as any).otherUserId;
                 if (uid) router.push(`/profile/${uid}`);
