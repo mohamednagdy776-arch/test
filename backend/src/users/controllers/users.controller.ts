@@ -77,7 +77,10 @@ export class UsersController {
     let processed: Buffer;
     try {
       processed = await sharp(file.buffer)
-        .resize(512, 512, { fit: 'cover', position: 'centre' })
+        // withoutEnlargement -- sharp upscales by default when the source is
+        // smaller than the target box, visibly pixelating small uploads
+        // instead of just cropping to the right ratio (#158 pattern).
+        .resize(512, 512, { fit: 'cover', position: 'centre', withoutEnlargement: true })
         .jpeg({ quality: 88 })
         .toBuffer();
     } catch {
@@ -115,7 +118,7 @@ export class UsersController {
     let processed: Buffer;
     try {
       processed = await sharp(file.buffer)
-        .resize(1200, 375, { fit: 'cover', position: 'centre' })
+        .resize(1200, 375, { fit: 'cover', position: 'centre', withoutEnlargement: true })
         .jpeg({ quality: 85 })
         .toBuffer();
     } catch {

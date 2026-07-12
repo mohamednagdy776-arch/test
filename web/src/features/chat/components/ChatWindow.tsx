@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 import { getSocket, getCurrentUserId } from '@/lib/socket-client';
 import { chatApi } from '@/features/chat/api';
 import { useDeleteMessage } from '@/features/chat/hooks';
@@ -615,7 +616,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
           </div>
         ) : null}
 
-        {messages.map((msg) => (
+        {messages.map((msg, msgIndex) => (
           <div key={msg.id}
             className={`group flex items-end gap-1.5 ${msg.isOwn ? 'justify-end' : 'justify-start'}`}
             onMouseEnter={() => setHoveredMsgId(msg.id)}
@@ -730,7 +731,15 @@ export const ChatWindow = ({ match, onBack }: Props) => {
 
               {showReactions === msg.id && (
                 <div
-                  className={`absolute bottom-full mb-2 z-20 flex gap-1 p-1.5 rounded-full shadow-xl ${msg.isOwn ? 'right-0' : 'left-0'}`}
+                  // bottom-full always opened upward -- for the first couple
+                  // messages in the thread (right under the sticky chat
+                  // header) there's no room above, so the popup rendered
+                  // partly hidden behind the header (#105).
+                  className={cn(
+                    'absolute z-20 flex gap-1 p-1.5 rounded-full shadow-xl',
+                    msgIndex < 2 ? 'top-full mt-2' : 'bottom-full mb-2',
+                    msg.isOwn ? 'right-0' : 'left-0',
+                  )}
                   style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                   {EMOJI_REACTIONS.map(emoji => (
                     <button key={emoji}

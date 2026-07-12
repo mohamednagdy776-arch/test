@@ -271,7 +271,10 @@ export default function PrivacyPage() {
           <CardContent>
             <div className="space-y-6">
               {PRIVACY_FIELDS.map((field) => (
-                <div key={field.key} className="flex items-start justify-between py-3 border-b border-[var(--border)]/50 last:border-0">
+                // items-start pinned the dropdown to the top of the row instead
+                // of centering it against the label+description block, reading
+                // as misaligned whenever the description text wrapped (#249).
+                <div key={field.key} className="flex items-center justify-between py-3 border-b border-[var(--border)]/50 last:border-0">
                   <div className="flex-1">
                     <h3 className="font-semibold text-[var(--foreground)]">{field.label}</h3>
                     {field.description && (

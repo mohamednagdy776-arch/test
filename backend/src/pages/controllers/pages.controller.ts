@@ -52,7 +52,9 @@ export class PagesController {
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
       let processed: Buffer;
       try {
-        processed = await sharp(avatarFile.buffer).resize(400, 400, { fit: 'cover', position: 'centre' }).jpeg({ quality: 85 }).toBuffer();
+        // withoutEnlargement -- sharp upscales a smaller source by default,
+        // visibly pixelating small uploads instead of just cropping (#158).
+        processed = await sharp(avatarFile.buffer).resize(400, 400, { fit: 'cover', position: 'centre', withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
       } catch {
         throw new BadRequestException('Profile photo is not a valid image');
       }
@@ -66,7 +68,7 @@ export class PagesController {
       const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}.jpg`;
       let processed: Buffer;
       try {
-        processed = await sharp(coverFile.buffer).resize(1200, 375, { fit: 'cover', position: 'centre' }).jpeg({ quality: 85 }).toBuffer();
+        processed = await sharp(coverFile.buffer).resize(1200, 375, { fit: 'cover', position: 'centre', withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer();
       } catch {
         throw new BadRequestException('Cover photo is not a valid image');
       }

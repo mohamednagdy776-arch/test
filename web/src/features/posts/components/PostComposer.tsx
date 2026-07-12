@@ -250,9 +250,12 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
             {mediaPreviews.map((src, i) => (
               <div key={src} className="relative">
                 {mediaFiles[i]?.type.startsWith('video/') ? (
-                  <video src={src} controls className="max-h-48 w-full rounded-xl" />
+                  <video src={src} controls className="max-h-64 w-full rounded-xl" />
                 ) : (
-                  <img src={src} alt={`معاينة ${i + 1}`} className="max-h-48 w-full object-cover rounded-xl" />
+                  // object-cover forced every preview into a fixed short box,
+                  // cropping the top/bottom off portrait or square photos
+                  // regardless of their real aspect ratio (#339).
+                  <img src={src} alt={`معاينة ${i + 1}`} className="max-h-64 w-full object-contain bg-[var(--muted)] rounded-xl" />
                 )}
                 <button
                   type="button"

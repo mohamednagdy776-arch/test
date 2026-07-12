@@ -10,7 +10,7 @@ import {
 } from '../hooks';
 import { useRouter } from 'next/navigation';
 import {
-  MagnifyingGlass, X, Users, Clock, ArrowLeft,
+  MagnifyingGlass, X, Users, Clock, ArrowLeft, CaretDown,
 } from '@phosphor-icons/react';
 
 
@@ -295,13 +295,19 @@ export const GroupList = () => {
         {/* Category filter */}
         {!isSearching && activeTab !== 'private' && (
           <div className="mb-4">
-            <select value={category} onChange={(e) => setCategory(e.target.value)}
-              className="rounded-xl px-3 py-2 text-sm cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
-              style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-              {CATEGORIES.map((cat) => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </select>
+            {/* appearance-none removed the native dropdown arrow with nothing
+                added in its place, so the filter gave no visual hint it was
+                expandable (#224). */}
+            <div className="relative inline-block">
+              <select value={category} onChange={(e) => setCategory(e.target.value)}
+                className="rounded-xl pr-3 pl-8 py-2 text-sm cursor-pointer appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--ring)] transition-all"
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
+              </select>
+              <CaretDown size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" />
+            </div>
           </div>
         )}
 

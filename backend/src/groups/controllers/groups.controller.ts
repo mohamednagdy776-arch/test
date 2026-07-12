@@ -61,7 +61,10 @@ export class GroupsController {
       let processed: Buffer;
       try {
         processed = await sharp(file.buffer)
-          .resize(1200, 375, { fit: 'cover', position: 'centre' })
+          // withoutEnlargement -- sharp upscales by default when the source is
+          // smaller than the target box, which visibly pixelates small cover
+          // uploads instead of just cropping them to the right ratio (#158).
+          .resize(1200, 375, { fit: 'cover', position: 'centre', withoutEnlargement: true })
           .jpeg({ quality: 85 })
           .toBuffer();
       } catch {
@@ -161,7 +164,10 @@ export class GroupsController {
       let processed: Buffer;
       try {
         processed = await sharp(file.buffer)
-          .resize(1200, 375, { fit: 'cover', position: 'centre' })
+          // withoutEnlargement -- sharp upscales by default when the source is
+          // smaller than the target box, which visibly pixelates small cover
+          // uploads instead of just cropping them to the right ratio (#158).
+          .resize(1200, 375, { fit: 'cover', position: 'centre', withoutEnlargement: true })
           .jpeg({ quality: 85 })
           .toBuffer();
       } catch {

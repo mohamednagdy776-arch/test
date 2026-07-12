@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { ShieldCheck, Plus, Check, X, Trash } from '@phosphor-icons/react';
+import { ShieldCheck, Plus, Check, X, Trash, Copy } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useMyProfile } from '@/features/profile/hooks';
+import { useToast } from '@/components/ui/Toast';
 
 type RelStatus = 'pending' | 'active' | 'revoked';
 
@@ -132,7 +134,16 @@ function InviteGuardianModal({ onClose }: { onClose: () => void }) {
 
 export default function FamilyPage() {
   const qc = useQueryClient();
+  const { showToast } = useToast();
   const [showInvite, setShowInvite] = useState(false);
+  const { data: myProfileData } = useMyProfile();
+  const myUserId: string = (myProfileData as any)?.data?.userId ?? '';
+
+  const copyMyUuid = async () => {
+    if (!myUserId) return;
+    await navigator.clipboard.writeText(myUserId);
+    showToast('تم نسخ المعرّف', 'success');
+  };
 
   const { data, isLoading } = useQuery({
     queryKey: ['my-guardians'],
@@ -195,6 +206,24 @@ export default function FamilyPage() {
             </button>
           }
         />
+
+        {/* Inviting a guardian requires knowing THEIR UUID, but there was no
+            way for a user to find or copy their OWN UUID to share with
+            whoever needs to invite them (#111). */}
+        <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)]/50 p-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[var(--foreground)]">معرّفك (UUID)</p>
+            <p className="text-xs text-[var(--primary)]/60 mt-0.5 truncate font-mono">{myUserId || '...'}</p>
+          </div>
+          <button
+            onClick={copyMyUuid}
+            disabled={!myUserId}
+            className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold border transition-all disabled:opacity-50"
+            style={{ borderColor: 'var(--border)', color: 'var(--primary)' }}
+          >
+            <Copy size={13} /> نسخ
+          </button>
+        </div>
 
         {wardInvites.length > 0 && (
           <section>
