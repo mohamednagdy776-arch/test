@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, LessThanOrEqual, MoreThan } from 'typeorm';
+import { Cron } from '@nestjs/schedule';
 import { Event } from '../entities/event.entity';
 import { EventRSVP } from '../entities/event-rsvp.entity';
 import { CreateEventDto } from '../dto/create-event.dto';
 import { User } from '../../auth/entities/user.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class EventsService {
@@ -13,7 +15,36 @@ export class EventsService {
   constructor(
     @InjectRepository(Event) private eventsRepo: Repository<Event>,
     @InjectRepository(EventRSVP) private rsvpRepo: Repository<EventRSVP>,
+    private notifications: NotificationsService,
   ) {}
+
+  // No notification was ever sent when an event started (#112). Runs every
+  // 5 minutes; startNotificationSent guards against re-notifying on later
+  // ticks. The 10-minute lower bound only matters if a tick is ever missed
+  // (deploy restart, etc) -- it won't reach back further than that.
+  @Cron('*/5 * * * *')
+  async notifyStartingEvents() {
+    const now = new Date();
+    const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+    const startingEvents = await this.eventsRepo.find({
+      where: { startDate: LessThanOrEqual(now), startNotificationSent: false },
+    });
+    const dueEvents = startingEvents.filter((e) => e.startDate > tenMinutesAgo);
+    for (const event of dueEvents) {
+      const rsvps = await this.rsvpRepo.find({
+        where: { event: { id: event.id }, status: In(['going', 'interested']) },
+        relations: ['user'],
+      });
+      for (const rsvp of rsvps) {
+        await this.notifications.notifyUser(rsvp.user.id, event.createdBy?.id ?? rsvp.user.id, 'event_reminder', `بدأ الحدث "${event.title}" الآن`, 'event', event.id);
+      }
+      event.startNotificationSent = true;
+      await this.eventsRepo.save(event);
+    }
+    if (dueEvents.length > 0) {
+      this.logger.log(`Sent start notifications for ${dueEvents.length} event(s)`);
+    }
+  }
 
   async create(dto: CreateEventDto, user: User) {
     this.logger.log(`Creating event: ${dto.title} by user ${user.id}`);

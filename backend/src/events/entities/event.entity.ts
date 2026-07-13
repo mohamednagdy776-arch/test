@@ -46,4 +46,9 @@ export class Event {
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
+
+  // Tracks whether the start-notification cron already fired for this event,
+  // so it isn't sent again on every subsequent tick (#112).
+  @Column({ name: 'start_notification_sent', default: false })
+  startNotificationSent: boolean;
 }

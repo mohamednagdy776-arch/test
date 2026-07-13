@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { validate } from './config/env.validation';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { CommonModule } from './common/common.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -55,6 +56,9 @@ import { SupportModule } from './support/support.module';
     }),
 
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    // No scheduled-job infrastructure existed at all -- needed for the
+    // event-start notification cron (#112).
+    ScheduleModule.forRoot(),
 
     CommonModule,
     AuthModule,

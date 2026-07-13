@@ -5,7 +5,7 @@ export type NotificationType =
   | 'friend_request' | 'friend_accepted' | 'like' | 'comment' | 'tag'
   | 'share' | 'mention' | 'birthday' | 'group_invite' | 'event_invite'
   | 'memory' | 'story_view' | 'story_reaction' | 'vote' | 'follow' | 'family_invite'
-  | 'photo_access_request';
+  | 'photo_access_request' | 'event_reminder';
 
 @Entity('notifications')
 export class Notification {
