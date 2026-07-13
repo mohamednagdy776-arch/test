@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 OLLAMA_URL  = os.environ.get("OLLAMA_URL", "http://ollama:11434")
 VISION_MODEL = "gemma3:4b"
 HF_CACHE    = os.environ.get("HF_HOME", "/app/model-cache")
+KEEP_ALIVE  = "2h"
 _pipe       = None
 
 
@@ -61,6 +62,28 @@ def _resize_for_ollama(b64: str, max_px: int = 512) -> str:
     return base64.b64encode(buf.getvalue()).decode()
 
 
+def warm_up() -> None:
+    """Force both the Ollama vision model and the diffusers pipeline resident
+    in memory ahead of the first real request. Without this, whichever request
+    lands first after a deploy (ai-service always restarts fresh, resetting
+    `_pipe`) or after a >keep_alive idle gap pays the full cold-load cost on
+    top of normal generation time, which is what was blowing past the 360s
+    nginx/backend timeout budget and producing 504s (#387). Call from FastAPI
+    startup in a background thread — best-effort, never raises."""
+    try:
+        httpx.post(
+            f"{OLLAMA_URL}/api/generate",
+            json={"model": VISION_MODEL, "prompt": "hi", "stream": False, "keep_alive": KEEP_ALIVE},
+            timeout=300.0,
+        )
+    except Exception:
+        log.warning("child-prediction warm-up: Ollama not reachable yet", exc_info=True)
+    try:
+        _load_pipe()
+    except Exception:
+        log.warning("child-prediction warm-up: diffusers pipe load failed", exc_info=True)
+
+
 def _describe_child(p1_b64: str, p2_b64: str) -> str:
     log.info("Sending images to Ollama (sizes: %d / %d chars)", len(p1_b64), len(p2_b64))
     try:
@@ -82,9 +105,9 @@ def _describe_child(p1_b64: str, p2_b64: str) -> str:
                 # Default keep_alive unloads the 3.3GB model after 5 idle
                 # minutes; a cold reload made this call take well over a
                 # minute instead of the ~6s it takes once resident. Keep it
-                # loaded for 30 minutes so only a request after a long idle
-                # gap pays that cost (#141).
-                "keep_alive": "30m",
+                # loaded for 2h so only a request after a long idle
+                # gap pays that cost (#141, extended further for #387).
+                "keep_alive": KEEP_ALIVE,
             },
             timeout=300.0,
         )

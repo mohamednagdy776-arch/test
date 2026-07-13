@@ -18,7 +18,7 @@ export class ChildPredictionService {
       const res = await this.http.axiosRef.post<{ image: string; format: string }>(
         this.aiUrl,
         body,
-        { headers: { 'Content-Type': 'application/json' }, timeout: 360_000 },
+        { headers: { 'Content-Type': 'application/json' }, timeout: 480_000 },
       );
       return res.data.image;
     } catch (err: any) {
