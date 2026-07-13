@@ -29,6 +29,7 @@ def _load_pipe() -> AutoPipelineForImage2Image:
         torch_dtype=torch.float32,
         safety_checker=None,
         requires_safety_checker=False,
+        local_files_only=True,
     )
     _pipe.scheduler = LCMScheduler.from_config(_pipe.scheduler.config)
     _pipe.to("cpu")

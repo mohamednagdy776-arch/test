@@ -19,7 +19,13 @@ WORKDIR /app/ai-service
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+# Model weights are baked into the ai_model_cache volume once; from_pretrained()
+# otherwise tries to reach huggingface.co on every call to check for a newer
+# revision even when the cache is already populated, hanging/erroring after
+# several minutes if that egress is slow or blocked (#387). Force
+# local-cache-only so it never touches the network for this at all.
 ENV HF_HOME=/app/model-cache
+ENV HF_HUB_OFFLINE=1
 
 COPY --from=builder /opt/venv /opt/venv
 COPY ai-service/ .
