@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
 import { useDeleteComment } from '@/features/comments/hooks';
 import { useMyProfile } from '@/features/profile/hooks';
+import { useFriends } from '@/features/friends/hooks';
+import { chatApi } from '@/features/chat/api';
 import { apiClient } from '@/lib/api-client';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
@@ -295,6 +297,7 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
 
 function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean; onClose: () => void; postId: string; postContent: string }) {
   const [content, setContent] = useState('');
+  const [mode, setMode] = useState<'feed' | 'friend'>('feed');
   const sharePost = useSharePost();
   const { showToast } = useToast() as any;
 
@@ -307,33 +310,100 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
   // solves this via a document.body portal (see its own comment re #106).
   return (
     <Modal open={isOpen} onClose={onClose} title="مشاركة المنشور">
-      <textarea
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        placeholder="ما الذي يدور في ذهنك؟"
-        className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] mb-4 transition-all duration-300"
-        rows={3}
-      />
-      <div className="bg-[var(--muted)] rounded-xl p-3 mb-4 shadow-inner-soft">
-        <p className="text-xs text-[var(--muted-foreground)] line-clamp-2">{postContent}</p>
+      {/* Only offered "share to my feed" with no way to send directly to a
+          friend in chat -- the only alternative was external apps (#157). */}
+      <div className="flex gap-2 mb-4 border-b border-[var(--border)] pb-2">
+        <button onClick={() => setMode('feed')} className={cn('px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', mode === 'feed' ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50')}>
+          مشاركة على ملفي
+        </button>
+        <button onClick={() => setMode('friend')} className={cn('px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', mode === 'friend' ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50')}>
+          إرسال لصديق
+        </button>
       </div>
-      <button
-        onClick={async () => {
-          try {
-            await sharePost.mutateAsync({ postId, content });
-            showToast('تمت المشاركة بنجاح', 'success');
-            onClose();
-          } catch {
-            showToast('فشلت المشاركة، حاول مجدداً', 'error');
-          }
-        }}
-        disabled={sharePost.isPending}
-        className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all hover:-translate-y-0.5 duration-300"
-        style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
-      >
-        {sharePost.isPending ? 'جاري النشر...' : 'مشاركة'}
-      </button>
+      {mode === 'feed' ? (
+        <>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="ما الذي يدور في ذهنك؟"
+            className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] mb-4 transition-all duration-300"
+            rows={3}
+          />
+          <div className="bg-[var(--muted)] rounded-xl p-3 mb-4 shadow-inner-soft">
+            <p className="text-xs text-[var(--muted-foreground)] line-clamp-2">{postContent}</p>
+          </div>
+          <button
+            onClick={async () => {
+              try {
+                await sharePost.mutateAsync({ postId, content });
+                showToast('تمت المشاركة بنجاح', 'success');
+                onClose();
+              } catch {
+                showToast('فشلت المشاركة، حاول مجدداً', 'error');
+              }
+            }}
+            disabled={sharePost.isPending}
+            className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all hover:-translate-y-0.5 duration-300"
+            style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
+          >
+            {sharePost.isPending ? 'جاري النشر...' : 'مشاركة'}
+          </button>
+        </>
+      ) : (
+        <SendToFriendPicker postId={postId} onSent={onClose} />
+      )}
     </Modal>
+  );
+}
+
+// "Send to a friend" -- there was no way to share a post directly into a
+// chat with a specific friend, only external apps or reposting to your own
+// feed (#157). Sends a message containing the post's permalink, which
+// already renders as a rich link-preview card in chat.
+function SendToFriendPicker({ postId, onSent }: { postId: string; onSent: () => void }) {
+  const { data: friendsData, isLoading } = useFriends();
+  const { showToast } = useToast() as any;
+  const [sendingTo, setSendingTo] = useState<string | null>(null);
+  const friends: any[] = friendsData?.data ?? [];
+
+  const handleSend = async (friendId: string) => {
+    setSendingTo(friendId);
+    try {
+      const conv = await chatApi.createConversation(friendId);
+      const conversationId = conv?.data?.id ?? conv?.id;
+      const url = `${window.location.origin}/posts/${postId}`;
+      await chatApi.sendMessage(conversationId, url);
+      showToast('تم الإرسال بنجاح', 'success');
+      onSent();
+    } catch {
+      showToast('تعذّر الإرسال، حاول مجدداً', 'error');
+    } finally {
+      setSendingTo(null);
+    }
+  };
+
+  if (isLoading) return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">جاري التحميل...</p>;
+  if (friends.length === 0) return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">لا يوجد أصدقاء</p>;
+
+  return (
+    <div className="space-y-1.5 max-h-72 overflow-y-auto">
+      {friends.map((f: any) => (
+        <div key={f.id} className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-[var(--muted)]/50 transition-colors">
+          <div className="flex items-center gap-3">
+            <Avatar src={f.avatar ?? f.profile?.avatarUrl} name={f.fullName || f.username} size="sm" />
+            <span className="text-sm font-medium text-[var(--foreground)]">{f.fullName || f.username}</span>
+          </div>
+          <button
+            onClick={() => handleSend(f.id)}
+            disabled={sendingTo === f.id}
+            className="rounded-xl px-3 py-1.5 text-xs font-bold text-white transition-all disabled:opacity-50"
+            style={{ background: 'var(--primary)' }}
+          >
+            {sendingTo === f.id ? '...' : 'إرسال'}
+          </button>
+        </div>
+      ))}
+    </div>
   );
 }
 
