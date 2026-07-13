@@ -80,7 +80,11 @@ export class UsersController {
         // withoutEnlargement -- sharp upscales by default when the source is
         // smaller than the target box, visibly pixelating small uploads
         // instead of just cropping to the right ratio (#158 pattern).
-        .resize(512, 512, { fit: 'cover', position: 'centre', withoutEnlargement: true })
+        // 512x512 -> 1024x1024: the avatar lightbox displays up to
+        // max-h-[90vh]/max-w-[92vw] (often 900px+ on desktop), so a 512px
+        // source was always upscaled by the browser and looked pixelated
+        // even for a genuinely high-resolution upload (#258).
+        .resize(1024, 1024, { fit: 'cover', position: 'centre', withoutEnlargement: true })
         .jpeg({ quality: 88 })
         .toBuffer();
     } catch {
@@ -118,7 +122,10 @@ export class UsersController {
     let processed: Buffer;
     try {
       processed = await sharp(file.buffer)
-        .resize(1200, 375, { fit: 'cover', position: 'centre', withoutEnlargement: true })
+        // Same lightbox-oversizing reasoning as the avatar resize above --
+        // 1200px could still be upscaled by the browser at max-w-[92vw] on
+        // wide screens (#258).
+        .resize(1600, 500, { fit: 'cover', position: 'centre', withoutEnlargement: true })
         .jpeg({ quality: 85 })
         .toBuffer();
     } catch {
