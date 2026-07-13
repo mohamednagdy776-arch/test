@@ -94,8 +94,12 @@ export const ActivityLogViewer = ({ userId }: Props) => {
               className="flex items-start gap-3 p-3 rounded-lg bg-[var(--muted)] hover:bg-[var(--muted)] transition-colors"
             >
               <span className="text-xl">{activityIcons[activity.type] || '📌'}</span>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-[var(--foreground)]">{activity.description}</p>
+              {/* flex-1 with no min-w-0 can't shrink below its content's
+                  natural width in a flex row -- a long unbroken string (e.g.
+                  a comment quoted in the activity description) overflowed the
+                  card and broke the layout on mobile (#270). */}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[var(--foreground)] break-words">{activity.description}</p>
                 <p className="text-xs text-[var(--muted-foreground)] mt-1">{formatDate(activity.createdAt)}</p>
               </div>
             </div>
