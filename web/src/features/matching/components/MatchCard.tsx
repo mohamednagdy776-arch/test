@@ -34,7 +34,8 @@ function ScoreGauge({ score }: { score: number }) {
             style={{ transition: 'stroke-dasharray 1s ease-out' }} />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-extrabold tabular-nums" style={{ color }}>{score}%</span>
+          {/* An unrounded decimal score overflowed this small fixed circle (#273). */}
+          <span className="text-xs font-extrabold tabular-nums" style={{ color }}>{Math.round(score)}%</span>
         </div>
       </div>
       <span className="text-[10px] font-semibold mt-0.5" style={{ color: 'var(--muted-foreground)' }}>

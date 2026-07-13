@@ -103,7 +103,10 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
                   strokeLinecap="round" />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black text-white leading-none">{match.score}%</span>
+                {/* An unrounded decimal score (e.g. 87.456) rendered as
+                    "87.456%" -- far too long for this fixed-size circle,
+                    overflowing its bounds (#273). */}
+                <span className="text-2xl font-black text-white leading-none">{Math.round(match.score)}%</span>
                 <span className="text-[10px] text-white/70">{scoreLabel(match.score)}</span>
               </div>
             </div>
