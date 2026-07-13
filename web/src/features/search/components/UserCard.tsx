@@ -3,18 +3,13 @@ import Image from 'next/image';
 import { resolveMediaUrl } from '@/lib/media';
 import { useRouter } from 'next/navigation';
 import { MapPin, GraduationCap, Scales, Briefcase, Eye, ChatCircle } from '@phosphor-icons/react';
+import { educationLabel, lifestyleLabel, prayerLevelLabel } from '@/features/profile/labels';
 
-
-const lifestyleLabel: Record<string, string> = {
-  conservative: 'محافظ', moderate: 'معتدل', open: 'منفتح',
-};
-const educationLabel: Record<string, string> = {
-  high_school: 'ثانوية', diploma: 'دبلوم', bachelor: 'بكالوريوس',
-  master: 'ماجستير', phd: 'دكتوراه',
-};
-const prayerLabel: Record<string, string> = {
-  always: 'دائماً', mostly: 'في الغالب', sometimes: 'أحياناً', rarely: 'نادراً',
-};
+// Had its own separate, less-complete label maps (missing several stored enum
+// spellings like "bachelors"/"masters"/"liberal"/"usually", and no case/
+// punctuation normalization) -- so some search-result badges rendered the
+// raw English value while the same field elsewhere (profile header/About
+// tab) correctly showed Arabic (#162). Now shares profile/labels.ts.
 
 interface Props {
   user: any;
@@ -30,9 +25,9 @@ export const UserCard = ({ user, onView }: Props) => {
   const isMale = user.gender === 'male';
 
   const tags = [
-    user.education && { icon: GraduationCap, label: educationLabel[user.education] ?? user.education },
-    user.lifestyle && { icon: Scales, label: lifestyleLabel[user.lifestyle] ?? user.lifestyle },
-    user.prayerLevel && { icon: Scales, label: prayerLabel[user.prayerLevel] ?? user.prayerLevel },
+    user.education && { icon: GraduationCap, label: educationLabel(user.education) },
+    user.lifestyle && { icon: Scales, label: lifestyleLabel(user.lifestyle) },
+    user.prayerLevel && { icon: Scales, label: prayerLevelLabel(user.prayerLevel) },
     user.jobTitle && { icon: Briefcase, label: user.jobTitle },
   ].filter(Boolean) as { icon: any; label: string }[];
 
