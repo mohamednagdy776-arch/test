@@ -73,8 +73,12 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
         )}
       </div>
 
-      {/* Meta */}
-      <div className="p-3">
+      {/* Meta -- flex-1 so this absorbs the leftover space from the card's
+          h-full stretch instead of leaving it unfilled, since a 1- vs
+          2-line title (line-clamp-2) otherwise varies each card's natural
+          content height and misaligns the bottom edges in this
+          horizontally-scrolling row (#75). */}
+      <div className="p-3 flex-1 flex flex-col">
         <div className="flex gap-3">
           <Avatar src={video.user?.avatar} name={video.user?.name || 'م'} size="md" />
           <div className="flex-1 min-w-0">

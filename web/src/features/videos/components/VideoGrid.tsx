@@ -41,6 +41,14 @@ export function VideoGrid() {
   );
 }
 
+// Duration was rendered as the raw seconds value (e.g. "125" instead of
+// "2:05") -- easy to misread as a view count or missing entirely (#153).
+function formatDuration(seconds: number) {
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
+
 export function VideoCard({ video, onClick }: { video: any; onClick?: () => void }) {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -66,7 +74,7 @@ export function VideoCard({ video, onClick }: { video: any; onClick?: () => void
         )}
         {video.duration && (
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-1.5 py-0.5 rounded">
-            {video.duration}
+            {formatDuration(video.duration)}
           </div>
         )}
         {isHovered && video.previewUrl && (
