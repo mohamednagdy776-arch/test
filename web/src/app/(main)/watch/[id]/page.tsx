@@ -8,10 +8,19 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
 import { resolveMediaUrl } from '@/lib/media';
 import { getCurrentUserId } from '@/lib/socket-client';
-import { PencilSimple, Trash, Check, X } from '@phosphor-icons/react';
+import { PencilSimple, Trash, Check, X, Play, Pause } from '@phosphor-icons/react';
 import { REACTIONS, ReactionPicker } from '@/features/reactions/ReactionPicker';
 
 function VideoPlayer({ video }: { video: any }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  // isPlaying only ever reflects what the <video> element itself reports
+  // via its own play/pause/waiting/ended events -- never set optimistically
+  // from the click handler. Native `controls` used to freeze intermittently
+  // on rapid clicks (#368); reading the DOM's real `.paused` state at click
+  // time (instead of trusting a React state var that can go stale) and
+  // swallowing a rejected play() promise (e.g. AbortError from an
+  // interrupted play/pause race) keeps the UI from ever getting stuck.
+  const [isPlaying, setIsPlaying] = useState(false);
   const [shared, setShared] = useState(false);
   const [saved, setSaved] = useState(false);
   const [savingVideo, setSavingVideo] = useState(false);
@@ -103,6 +112,22 @@ function VideoPlayer({ video }: { video: any }) {
     reactToVideo.mutate({ videoId: video.id, type });
   };
 
+  const handleTogglePlay = () => {
+    const el = videoRef.current;
+    if (!el) return;
+    if (el.paused) {
+      el.play().catch((err) => {
+        // AbortError etc. from a play() interrupted by a competing pause()
+        // -- isPlaying is only ever driven by onPlay/onPause below, so a
+        // rejected promise here can't leave the button stuck showing the
+        // wrong icon.
+        console.error('Video play() failed:', err);
+      });
+    } else {
+      el.pause();
+    }
+  };
+
   const formatViews = (count: number) => {
     if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}م`;
     if (count >= 1_000) return `${(count / 1_000).toFixed(1)}الف`;
@@ -111,18 +136,47 @@ function VideoPlayer({ video }: { video: any }) {
 
   return (
     <div className="space-y-4">
-      <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-xl">
+      <div className="relative aspect-video rounded-2xl overflow-hidden bg-black shadow-xl group">
         {video.url ? (
-          <video
-            src={resolveMediaUrl(video.url) ?? ''}
-            controls
-            className="w-full h-full"
-            // .thumbnail is the raw storage key; resolveMediaUrl re-anchors
-            // it onto the API origin, not the CDN the backend actually
-            // serves it from (#274) -- .thumbnailUrl is already a full,
-            // correct CDN URL.
-            poster={video.thumbnailUrl ?? undefined}
-          />
+          <>
+            <video
+              ref={videoRef}
+              src={resolveMediaUrl(video.url) ?? ''}
+              className="w-full h-full"
+              // .thumbnail is the raw storage key; resolveMediaUrl re-anchors
+              // it onto the API origin, not the CDN the backend actually
+              // serves it from (#274) -- .thumbnailUrl is already a full,
+              // correct CDN URL.
+              poster={video.thumbnailUrl ?? undefined}
+              playsInline
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onWaiting={() => setIsPlaying(false)}
+              onEnded={() => setIsPlaying(false)}
+            />
+            {/* Custom play/pause overlay replaces native `controls`, which
+                could intermittently stop responding to clicks (#368).
+                Always in the DOM (not conditionally rendered) so it's a
+                stable click target; visibility/opacity is what changes. */}
+            <button
+              type="button"
+              onClick={handleTogglePlay}
+              aria-label={isPlaying ? 'إيقاف مؤقت' : 'تشغيل'}
+              className={`absolute inset-0 flex items-center justify-center transition-colors duration-200 ${
+                isPlaying
+                  ? 'bg-transparent opacity-0 group-hover:opacity-100 group-hover:bg-black/10'
+                  : 'bg-black/20 opacity-100'
+              }`}
+            >
+              <span className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center transition-transform duration-150 group-hover:scale-105">
+                {isPlaying ? (
+                  <Pause size={30} weight="fill" className="text-white" />
+                ) : (
+                  <Play size={30} weight="fill" className="text-white ms-0.5" />
+                )}
+              </span>
+            </button>
+          </>
         ) : video.thumbnailUrl ? (
           <img src={video.thumbnailUrl} alt={video.title} className="w-full h-full object-cover" />
         ) : (
