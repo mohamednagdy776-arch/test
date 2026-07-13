@@ -52,7 +52,18 @@ function PaymentModal({ plan, billingPeriod, onClose, onConfirm, isPending }: { 
           </div>
         )}
         {method === 'apple_pay' && (
-          <div className="rounded-xl bg-black text-white py-3 text-center text-sm font-semibold cursor-pointer hover:opacity-90">🍎 الدفع بـ Apple Pay</div>
+          // Was a plain <div> with no onClick at all -- looked exactly like a
+          // button (black pill, hover effect, "Pay with..." label) sitting
+          // right above the real submit button, so clicking it did nothing
+          // and gave zero feedback (#350). Wired to the same confirm flow,
+          // which already has a proper loading state via isPending.
+          <button
+            onClick={onConfirm}
+            disabled={isPending}
+            className="w-full rounded-xl bg-black text-white py-3 text-center text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+          >
+            {isPending ? 'جارٍ المعالجة...' : '🍎 الدفع بـ Apple Pay'}
+          </button>
         )}
         {method === 'bank' && (
           <div className="rounded-xl bg-[var(--muted)] p-4 text-sm text-[var(--muted-foreground)] space-y-1 text-right">
@@ -63,9 +74,13 @@ function PaymentModal({ plan, billingPeriod, onClose, onConfirm, isPending }: { 
           </div>
         )}
 
-        <button onClick={onConfirm} disabled={!canSubmit || isPending} className="w-full rounded-2xl btn-theme-primary py-3 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed">
-          {isPending ? 'جارٍ المعالجة...' : 'تأكيد الدفع'}
-        </button>
+        {/* Apple Pay's own button above is already a complete CTA -- showing
+            this generic one too was redundant/confusing. */}
+        {method !== 'apple_pay' && (
+          <button onClick={onConfirm} disabled={!canSubmit || isPending} className="w-full rounded-2xl btn-theme-primary py-3 font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed">
+            {isPending ? 'جارٍ المعالجة...' : 'تأكيد الدفع'}
+          </button>
+        )}
         <p className="text-center text-[10px] text-[var(--muted-foreground)]">🔒 بياناتك محمية بتشفير SSL 256-bit</p>
       </div>
     </div>
