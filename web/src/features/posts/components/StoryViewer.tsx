@@ -65,7 +65,13 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     queryFn: () => apiClient.get('/users/me').then((r) => r.data),
     staleTime: 60_000,
   });
-  const meId = (meData as any)?.data?.id;
+  // /users/me's top-level `id` is the Profile entity's own id, not the User's
+  // -- `userId` is the separate, correctly-named field for that (PostCard.tsx
+  // uses the same convention). Comparing against .id here meant isOwnStory
+  // was always false for everyone, which hid the "viewers" menu item on your
+  // own story entirely and made the reply/reaction bar show on your own
+  // story too (#379).
+  const meId = (meData as any)?.data?.userId;
   const ownerId = currentUser?.user?.id;
   const ownerUsername = currentUser?.user?.username;
   const profileHref = ownerUsername ? `/${ownerUsername}` : `/profile/${ownerId}`;
