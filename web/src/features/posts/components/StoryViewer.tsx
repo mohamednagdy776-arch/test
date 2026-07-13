@@ -219,7 +219,15 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
               <p
                 className="font-bold text-center drop-shadow-lg leading-snug"
                 style={{
-                  color: currentStory.bgColor === 'var(--card)' || currentStory.bgColor === '#FFEAA7' ? 'var(--foreground)' : 'white',
+                  // Fixed colors, not theme CSS vars -- storing/comparing a
+                  // theme-relative var (old 'var(--card)' swatch) as a
+                  // literal color made the same story render with a
+                  // different background AND text color depending on
+                  // whichever theme happened to be active for the viewer,
+                  // and differently again than what the creator saw while
+                  // publishing it (#289, #290). '#FDFAF3' is the new fixed
+                  // hex the creator's "white" swatch now stores.
+                  color: currentStory.bgColor === '#FDFAF3' || currentStory.bgColor === '#FFEAA7' ? '#131F2E' : 'white',
                   fontSize: `clamp(1.1rem, ${Math.max(1.5, 3 - (currentStory.text?.length || 0) / 40)}rem, 2.25rem)`,
                 }}
               >

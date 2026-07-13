@@ -26,10 +26,17 @@ function getVideoDuration(file: File): Promise<number | undefined> {
   });
 }
 
+// 'var(--card)' used to be a selectable swatch here -- a theme-relative CSS
+// variable persisted as a literal color value re-resolves differently every
+// time it's rendered depending on whichever theme (light/dark) happens to be
+// active at that moment, so the same story looked different in the creator
+// preview vs. after publishing, and differently again to different viewers
+// (#289, #290). Fixed hex value instead -- looks identical regardless of
+// anyone's theme, exactly like every other swatch here already does.
 const COLORS = [
   '#0A3D2B', '#1A6B4A', '#B8892A', '#D4A853',
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4',
-  '#FFEAA7', 'var(--card)',
+  '#FFEAA7', '#FDFAF3',
 ];
 
 interface StoryCreatorProps {
@@ -93,7 +100,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
   const previewTextSize =
     text.length > 80 ? 'text-base' : text.length > 40 ? 'text-lg' : 'text-2xl';
 
-  const isLight = bgColor === 'var(--card)' || bgColor === '#FFEAA7';
+  const isLight = bgColor === '#FDFAF3' || bgColor === '#FFEAA7';
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center" dir="rtl">
@@ -166,7 +173,7 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
                       }}
                     >
                       {bgColor === c && (
-                        <svg className="absolute inset-0 m-auto h-4 w-4" fill="none" viewBox="0 0 24 24" stroke={isLight && c === bgColor ? 'var(--foreground)' : 'white'} strokeWidth={3}>
+                        <svg className="absolute inset-0 m-auto h-4 w-4" fill="none" viewBox="0 0 24 24" stroke={isLight && c === bgColor ? '#131F2E' : 'white'} strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
@@ -182,7 +189,11 @@ export function StoryCreator({ onClose, onSuccess }: StoryCreatorProps) {
               >
                 <p
                   className={cn('font-bold text-center drop-shadow leading-snug transition-all', previewTextSize)}
-                  style={{ color: isLight ? 'var(--foreground)' : 'var(--card)' }}
+                  // Fixed colors, not theme CSS vars -- a story's background/
+                  // text is content the user chose, not app chrome, so it
+                  // must render identically no matter which theme is active
+                  // for the creator or any later viewer (#289, #290).
+                  style={{ color: isLight ? '#131F2E' : 'white' }}
                 >
                   {text || 'مثال على النص'}
                 </p>
