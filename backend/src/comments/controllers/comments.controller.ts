@@ -46,7 +46,7 @@ export class CommentsController {
     // benign comment be edited into a stored-XSS payload.
     if (dto.content) dto.content = sanitizeUserContent(dto.content);
     if (!dto.content?.trim()) throw new (require('@nestjs/common').BadRequestException)('Comment cannot be empty after sanitization');
-    const comment = await this.commentsService.update(commentId, dto, user.id);
+    const comment = await this.commentsService.update(postId, commentId, dto, user.id);
     return ok(comment, 'Comment updated');
   }
 
@@ -56,7 +56,7 @@ export class CommentsController {
     @Param('commentId') commentId: string,
     @CurrentUser() user: User,
   ) {
-    const result = await this.commentsService.delete(commentId, user.id);
+    const result = await this.commentsService.delete(postId, commentId, user.id);
     return ok(result, 'Comment deleted');
   }
 

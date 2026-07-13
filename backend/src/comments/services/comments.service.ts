@@ -106,11 +106,11 @@ export class CommentsService {
     return roots;
   }
 
-  async update(commentId: string, dto: UpdateCommentDto, userId: string) {
+  async update(postId: string, commentId: string, dto: UpdateCommentDto, userId: string) {
     // Load the user relation — without it comment.user is undefined and the
     // ownership check below throws a 500 instead of enforcing authorization.
-    const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user'] });
-    if (!comment) throw new NotFoundException('Comment not found');
+    const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user', 'post'] });
+    if (!comment || comment.post?.id !== postId) throw new NotFoundException('Comment not found');
     if (comment.user.id !== userId) throw new ForbiddenException('Not authorized');
 
     comment.content = dto.content;
@@ -118,11 +118,11 @@ export class CommentsService {
     return this.commentsRepo.save(comment);
   }
 
-  async delete(commentId: string, userId: string) {
+  async delete(postId: string, commentId: string, userId: string) {
     // Only the comment's own author could ever delete it -- the post owner
     // had no moderation rights over comments on their own post at all (#327).
     const comment = await this.commentsRepo.findOne({ where: { id: commentId }, relations: ['user', 'post'] });
-    if (!comment) throw new NotFoundException('Comment not found');
+    if (!comment || comment.post?.id !== postId) throw new NotFoundException('Comment not found');
     const isCommentAuthor = comment.user.id === userId;
     const isPostOwner = comment.post?.userId === userId;
     if (!isCommentAuthor && !isPostOwner) throw new ForbiddenException('Not authorized');
