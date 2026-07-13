@@ -145,6 +145,11 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 /* ── Page ─────────────────────────────────────────────────────── */
 export default function Home() {
   const [scrolled, setScrolled] = useState(false);
+  // Before scrolling the nav is transparent, floating directly over the
+  // hero's dark forest-green gradient -- but its text used the same dark
+  // forest color meant for the light parchment background further down,
+  // so nav and hero visually merged into one dark-on-dark block (#309).
+  const navTextColor = scrolled ? C.forest : C.card;
   const heroRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   // Gate client-only motion + the video embed so the first client render matches
@@ -202,18 +207,18 @@ export default function Home() {
         <div className="mx-auto flex h-[68px] max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2.5">
             <div className="flex h-10 w-10 items-center justify-center rounded-2xl text-base font-bold" style={{ background: `linear-gradient(135deg, ${C.forest}, ${C.emerald})`, color: C.goldLight, boxShadow: `0 6px 18px -6px ${C.forest}` }}>ط</div>
-            <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: serif, color: C.forest }}>طيبت</span>
+            <span className="text-2xl font-bold tracking-tight" style={{ fontFamily: serif, color: navTextColor, transition: 'color .3s ease' }}>طيبت</span>
           </div>
           <div className="hidden items-center gap-9 text-sm font-semibold sm:flex">
             {[['المميزات', '#features'], ['كيف يعمل', '#how'], ['قصص النجاح', '#stories']].map(([label, href]) => (
-              <a key={href} href={href} className="group relative py-1 transition-colors" style={{ color: C.forest }}>
+              <a key={href} href={href} className="group relative py-1 transition-colors" style={{ color: navTextColor }}>
                 {label}
                 <span className="absolute inset-x-0 -bottom-0.5 h-0.5 origin-right scale-x-0 transition-transform duration-300 group-hover:scale-x-100" style={{ background: C.gold }} />
               </a>
             ))}
           </div>
           <div className="flex items-center gap-2.5">
-            <Link href="/login" className="flex h-10 items-center rounded-2xl px-4 text-sm font-semibold transition-colors hover:opacity-70" style={{ color: C.forest }}>
+            <Link href="/login" className="flex h-10 items-center rounded-2xl px-4 text-sm font-semibold transition-colors hover:opacity-70" style={{ color: navTextColor, transition: 'color .3s ease' }}>
               تسجيل الدخول
             </Link>
             {/* shadcn/ui Button */}
