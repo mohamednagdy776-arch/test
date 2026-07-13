@@ -348,7 +348,13 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
               {storyIndex + 1} / {currentUser.stories.length}
             </span>
 
-            {/* 3-dot menu — anchored right-0 to stay on-screen in RTL */}
+            {/* 3-dot menu -- this button is the LAST item in the header's flex
+                row, which in RTL renders it near the LEFT edge of the frame
+                (right after the avatar+name that render on the right), not
+                the right edge. A right-0-anchored w-44 dropdown from a
+                button that close to the left edge overflowed off-screen to
+                the left, clipping its content (#377). Anchor left-0 instead
+                so it opens toward the center of the frame. */}
             <div className="relative flex-shrink-0">
               <button
                 onClick={() => setShowMenu(v => !v)}
@@ -359,7 +365,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                 </svg>
               </button>
               {showMenu && (
-                <div className="absolute right-0 top-9 w-44 bg-[#1a2a3a] rounded-xl shadow-2xl border border-white/10 py-1 z-30">
+                <div className="absolute left-0 top-9 w-44 bg-[#1a2a3a] rounded-xl shadow-2xl border border-white/10 py-1 z-30">
                   {/* Only the story owner may see who viewed it -- this was
                       rendered unconditionally for anyone (#266). */}
                   {isOwnStory && (
