@@ -106,7 +106,7 @@ export default function ForgotPasswordPage() {
                 <div className="space-y-1.5">
                   <label className="block text-sm font-medium text-[#213448]">البريد الإلكتروني</label>
                   <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
-                    className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
+                    className="flex h-11 w-full rounded-xl border border-[#C8D8DF] bg-[#FDFAF5] px-4 text-sm text-right text-[#131F2E] placeholder:text-[#BFB9AD] focus:outline-none focus:ring-2 focus:ring-[#547792]/20 focus:border-[#547792] transition-all duration-200"
                     placeholder="you@example.com" />
                 </div>
                 <button type="submit" disabled={loading}

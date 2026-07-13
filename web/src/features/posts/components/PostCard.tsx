@@ -423,7 +423,10 @@ function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide, 
   return createPortal(
     <div
       ref={menuRef}
-      className="fixed w-56 bg-[var(--card)] rounded-xl shadow-glow-lg border border-[var(--border)]/60 py-2 animate-scale-in z-[60]"
+      // overflow-hidden -- without it, a hovered item's sharp-cornered
+      // background bled past the container's own rounded-xl corners at the
+      // top/bottom, reading as an inconsistent border radius (#222).
+      className="fixed w-56 bg-[var(--card)] rounded-xl shadow-glow-lg border border-[var(--border)]/60 py-2 animate-scale-in z-[60] overflow-hidden"
       style={{ top: coords.top, right: coords.right }}
     >
       {menuItems.map((item, i) => {

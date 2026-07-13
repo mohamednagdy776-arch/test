@@ -27,7 +27,7 @@ export class FamilyService {
     type: RelationshipType,
   ): Promise<FamilyRelationship> {
     if (wardUserId === guardianUserId) {
-      throw new BadRequestException('Cannot set yourself as your own guardian');
+      throw new BadRequestException('لا يمكنك تعيين نفسك ولي أمر لنفسك');
     }
     const rel = this.relRepo.create({
       wardUserId,
@@ -50,22 +50,22 @@ export class FamilyService {
       where: { id: relationshipId, guardianUserId },
     });
     if (!rel || rel.status !== RelationshipStatus.PENDING) {
-      throw new NotFoundException('Invitation not found');
+      throw new NotFoundException('الدعوة غير موجودة');
     }
     await this.relRepo.update(relationshipId, {
       status: RelationshipStatus.ACTIVE,
       acceptedAt: new Date(),
     });
     const updated = await this.relRepo.findOne({ where: { id: relationshipId } });
-    if (!updated) throw new NotFoundException('Relationship not found after update');
+    if (!updated) throw new NotFoundException('تعذّر العثور على العلاقة بعد التحديث');
     return updated;
   }
 
   async revokeRelationship(relationshipId: string, userId: string): Promise<void> {
     const rel = await this.relRepo.findOne({ where: { id: relationshipId } });
-    if (!rel) throw new NotFoundException();
+    if (!rel) throw new NotFoundException('العلاقة غير موجودة');
     if (rel.wardUserId !== userId && rel.guardianUserId !== userId) {
-      throw new ForbiddenException();
+      throw new ForbiddenException('غير مصرح لك بهذا الإجراء');
     }
     await this.relRepo.update(relationshipId, {
       status: RelationshipStatus.REVOKED,
@@ -80,7 +80,7 @@ export class FamilyService {
         status: RelationshipStatus.ACTIVE,
       },
     });
-    if (!rel) throw new ForbiddenException('No active guardian relationship');
+    if (!rel) throw new ForbiddenException('لا توجد علاقة ولاية نشطة');
     return {
       wardUserId,
       guardianUserId,
