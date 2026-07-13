@@ -1,5 +1,7 @@
 'use client';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { resolveMediaUrl } from '@/lib/media';
 import { X, Check, Heart, MapPin, Scales, Info } from '@phosphor-icons/react';
 import type { Match } from '@/types';
@@ -45,7 +47,17 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
   const circumference = 2 * Math.PI * 30;
   const dash = (match.score / 100) * circumference;
 
-  return (
+  // Rendered via a portal to document.body (same fix as #106 in Modal.tsx):
+  // this component is mounted inside the (main) layout's <main
+  // className="animate-fade-in">, whose running opacity animation creates
+  // its own stacking context and traps this modal's z-50 below the sticky
+  // Navbar's z-40, obscuring the header/close button (#272). Mounting at
+  // the document root sidesteps any ancestor's stacking context entirely.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <div className="relative z-10 w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col"
@@ -214,6 +226,7 @@ export const MatchDetailModal = ({ match, onClose, onAccept, onReject, accepting
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
