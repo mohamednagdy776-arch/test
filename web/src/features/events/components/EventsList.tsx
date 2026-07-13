@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { resolveMediaUrl } from '@/lib/media';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Modal } from '@/components/ui/Modal';
@@ -168,10 +168,34 @@ function EventCard({ event, myUserId, onRsvp, onDelete, isRsvpPending }: EventCa
 
 export const EventsList = () => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['events'],
-    queryFn:  () => apiClient.get('/events').then((r) => r.data),
+  // No pagination existed at all -- always fetched the same fixed first page,
+  // so once the event count exceeded that page size, newly created events
+  // pushed older ones out of view with no way to reach them (#223).
+  const [page, setPage] = useState(1);
+  const [allEvents, setAllEvents] = useState<any[]>([]);
+  const { data, isLoading, isFetching, isError, refetch } = useQuery({
+    queryKey: ['events', page],
+    queryFn:  () => apiClient.get('/events', { params: { page, limit: 20 } }).then((r) => r.data),
   });
+
+  useEffect(() => {
+    const incoming: any[] = data?.data ?? [];
+    if (page === 1) {
+      setAllEvents(incoming);
+    } else {
+      // Merge by id (not just append-if-new) so a refetch after an RSVP/delete
+      // on an already-loaded page reflects the fresh status instead of being
+      // silently filtered out as a "duplicate".
+      setAllEvents((prev) => {
+        const merged = new Map(prev.map((e) => [e.id, e]));
+        for (const e of incoming) merged.set(e.id, e);
+        return Array.from(merged.values());
+      });
+    }
+  }, [data, page]);
+
+  const totalPages: number = data?.meta?.totalPages ?? 1;
+  const hasMore = page < totalPages;
   const rsvpEvent  = useRsvpEvent();
   const deleteEvent = useDeleteEvent();
   const { showToast } = useToast() as any;
@@ -200,7 +224,7 @@ export const EventsList = () => {
     }
   };
 
-  if (isLoading) {
+  if (isLoading && page === 1) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -224,7 +248,7 @@ export const EventsList = () => {
     );
   }
 
-  const events: any[] = data?.data || [];
+  const events: any[] = allEvents;
 
   if (events.length === 0) {
     return (
@@ -254,6 +278,19 @@ export const EventsList = () => {
           />
         ))}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={isFetching}
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold transition-all disabled:opacity-50"
+            style={{ border: '1px solid var(--border)', color: 'var(--primary)' }}
+          >
+            {isFetching ? 'جاري التحميل...' : 'عرض المزيد'}
+          </button>
+        </div>
+      )}
 
       <Modal open={!!confirmDeleteId} onClose={() => setConfirmDeleteId(null)} title="حذف الحدث">
         <div className="space-y-4">
