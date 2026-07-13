@@ -53,8 +53,23 @@ export const eventsApi = {
   deleteEvent: (id: string) =>
     apiClient.delete(`/events/${id}`).then((r) => r.data),
 
-  updateEvent: (id: string, data: { title?: string; description?: string; location?: string; startDate?: string; endDate?: string }) =>
-    apiClient.patch(`/events/${id}`, data).then((r) => r.data.data),
+  // No button/input existed anywhere to change an event's cover photo after
+  // creation (#374).
+  updateEvent: (
+    id: string,
+    data: { title?: string; description?: string; location?: string; startDate?: string; endDate?: string; coverPhoto?: File },
+  ) => {
+    const { coverPhoto, ...rest } = data;
+    if (!coverPhoto) {
+      return apiClient.patch(`/events/${id}`, rest).then((r) => r.data.data);
+    }
+    const formData = new FormData();
+    Object.entries(rest).forEach(([k, v]) => { if (v !== undefined) formData.append(k, v as string); });
+    formData.append('coverPhoto', coverPhoto);
+    return apiClient.patch(`/events/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data.data);
+  },
 
   getAttendees: (id: string, status: 'going' | 'interested' | 'not_going' = 'going') =>
     apiClient.get(`/events/${id}/attendees`, { params: { status } }).then((r) => r.data.data),

@@ -12,12 +12,18 @@ export default function EventsPage() {
   const [location,    setLocation]    = useState('');
   const [startDate,   setStartDate]   = useState('');
   const [endDate,     setEndDate]     = useState('');
+  // No button/input existed anywhere to upload a custom event cover photo
+  // (#374) -- the createEventWithCover API call already existed but was
+  // dead code since the backend had no file interceptor to receive it.
+  const [coverPhoto, setCoverPhoto] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const createEvent   = useCreateEvent();
   const { showToast } = useToast() as any;
 
   const resetForm = () => {
     setTitle(''); setDescription(''); setLocation('');
     setStartDate(''); setEndDate('');
+    setCoverPhoto(null); setCoverPreview(null);
     setShowCreate(false);
   };
 
@@ -42,6 +48,7 @@ export default function EventsPage() {
         startDate,
         endDate: endDate || undefined,
         privacy: 'public',
+        ...(coverPhoto ? { coverPhoto } : {}),
       });
       showToast('تم إنشاء الحدث بنجاح', 'success');
       resetForm();
@@ -93,6 +100,33 @@ export default function EventsPage() {
             <input id="event-title" type="text" value={title} onChange={(e) => setTitle(e.target.value)}
               placeholder="أدخل عنوان الحدث" required
               className={inputClass} style={inputStyle} />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>
+              صورة الغلاف
+            </label>
+            {coverPreview ? (
+              <div className="relative h-32 rounded-xl overflow-hidden">
+                <img src={coverPreview} alt="" className="w-full h-full object-cover" />
+                <button type="button" onClick={() => { setCoverPhoto(null); setCoverPreview(null); }}
+                  className="absolute top-2 left-2 w-7 h-7 rounded-full flex items-center justify-center"
+                  style={{ background: 'rgba(0,0,0,0.55)', color: 'white' }}>
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label className="flex items-center justify-center gap-2 h-20 rounded-xl cursor-pointer text-sm"
+                style={{ ...inputStyle, borderStyle: 'dashed' }}>
+                <Plus size={14} />
+                إضافة صورة غلاف
+                <input type="file" accept="image/*" className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) { setCoverPhoto(f); setCoverPreview(URL.createObjectURL(f)); }
+                  }} />
+              </label>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

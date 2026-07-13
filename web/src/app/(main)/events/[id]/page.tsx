@@ -2,11 +2,12 @@
 import Image from 'next/image';
 import { resolveMediaUrl } from '@/lib/media';
 import { useParams, useRouter } from 'next/navigation';
-import { useEvent, useRsvpEvent } from '@/features/events/hooks';
+import { useRef } from 'react';
+import { useEvent, useRsvpEvent, useUpdateEvent } from '@/features/events/hooks';
 import { useToast } from '@/components/ui/Toast';
 import {
   ArrowLeft, CalendarBlank, MapPin, Users, Check, Star,
-  X as XIcon, Globe, Lock, Clock,
+  X as XIcon, Globe, Lock, Clock, Camera,
 } from '@phosphor-icons/react';
 
 
@@ -29,7 +30,9 @@ export default function EventDetailPage() {
   const router  = useRouter();
   const { data, isLoading, isError } = useEvent(id);
   const rsvpEvent  = useRsvpEvent();
+  const updateEvent = useUpdateEvent();
   const { showToast } = useToast() as any;
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const handleRsvp = async (status: 'going' | 'interested' | 'not_going') => {
     try {
@@ -37,6 +40,18 @@ export default function EventDetailPage() {
       showToast('تم تحديث حالة الحضور', 'success');
     } catch (err: any) {
       showToast(err?.response?.data?.message || 'فشل تحديث الحضور', 'error');
+    }
+  };
+
+  // No button/input existed anywhere to upload or change an event's cover
+  // photo after creation -- the banner was a rigid default with no way to
+  // customize it (#374).
+  const handleCoverChange = async (file: File) => {
+    try {
+      await updateEvent.mutateAsync({ id, data: { coverPhoto: file } });
+      showToast('تم تحديث صورة الغلاف', 'success');
+    } catch (err: any) {
+      showToast(err?.response?.data?.message || 'فشل تحديث صورة الغلاف', 'error');
     }
   };
 
@@ -131,6 +146,27 @@ export default function EventDetailPage() {
             style={{ background: 'rgba(255,255,255,0.22)', color: 'white' }}>
             منظم
           </div>
+        )}
+        {event.isOwner && (
+          <>
+            <button
+              onClick={() => coverInputRef.current?.click()}
+              disabled={updateEvent.isPending}
+              aria-label="تغيير صورة الغلاف"
+              className="absolute bottom-4 left-4 flex items-center gap-1.5 px-3 py-2 rounded-xl backdrop-blur-sm text-xs font-bold transition-all hover:scale-105 disabled:opacity-50"
+              style={{ background: 'rgba(0,0,0,0.45)', color: 'white' }}
+            >
+              <Camera size={14} />
+              {updateEvent.isPending ? 'جاري الرفع...' : 'صورة الغلاف'}
+            </button>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) { e.target.value = ''; handleCoverChange(f); } }}
+            />
+          </>
         )}
       </div>
 

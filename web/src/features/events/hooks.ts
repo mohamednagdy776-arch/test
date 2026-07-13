@@ -109,7 +109,7 @@ export function useCreateEvent() {
 export function useUpdateEvent() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { title?: string; description?: string; location?: string; startDate?: string; endDate?: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { title?: string; description?: string; location?: string; startDate?: string; endDate?: string; coverPhoto?: File } }) =>
       eventsApi.updateEvent(id, data),
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: ['event', id] });
