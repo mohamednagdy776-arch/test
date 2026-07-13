@@ -19,16 +19,25 @@ WORKDIR /app/ai-service
 ENV PATH="/opt/venv/bin:$PATH"
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-# Model weights are baked into the ai_model_cache volume once; from_pretrained()
-# otherwise tries to reach huggingface.co on every call to check for a newer
-# revision even when the cache is already populated, hanging/erroring after
-# several minutes if that egress is slow or blocked (#387). Force
-# local-cache-only so it never touches the network for this at all.
 ENV HF_HOME=/app/model-cache
-ENV HF_HUB_OFFLINE=1
 
 COPY --from=builder /opt/venv /opt/venv
 COPY ai-service/ .
+
+# Bake the diffusion weights into the image at build time (network access
+# available here) instead of relying on a runtime-populated named volume --
+# a named volume only seeds from image content the very first time it's
+# created, so once it exists on the host, redeploys with an updated image
+# never actually refresh what's inside it. That mismatch (#387) previously
+# left this model missing at runtime while the app assumed it was cached.
+RUN python -c "from diffusers import AutoPipelineForImage2Image; import torch; AutoPipelineForImage2Image.from_pretrained('SimianLuo/LCM_Dreamshaper_v7', cache_dir='/app/model-cache', torch_dtype=torch.float32, safety_checker=None, requires_safety_checker=False)"
+
+# Model weights are now baked into this image layer; from_pretrained()
+# otherwise tries to reach huggingface.co on every call to check for a newer
+# revision even with a populated cache, hanging/erroring after several
+# minutes if that egress is slow or blocked at runtime (#387). Force
+# local-cache-only so it never touches the network for this at request time.
+ENV HF_HUB_OFFLINE=1
 
 EXPOSE 5000
 
