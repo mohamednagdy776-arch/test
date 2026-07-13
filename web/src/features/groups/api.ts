@@ -58,6 +58,11 @@ export const groupsApi = {
   getMembers: (id: string, page = 1, limit = 50) =>
     apiClient.get(`/groups/${id}/members`, { params: { page, limit } }).then((r) => r.data),
 
+  // No invite mechanism existed at all -- secret groups are invite-only and
+  // aren't discoverable, so there was no way to grow one past its creator (#299).
+  inviteMember: (id: string, userId: string) =>
+    apiClient.post(`/groups/${id}/members/${userId}/invite`).then((r) => r.data),
+
   banMember: (id: string, userId: string) =>
     apiClient.post(`/groups/${id}/members/${userId}/ban`).then((r) => r.data),
 

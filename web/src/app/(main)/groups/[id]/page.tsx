@@ -3,15 +3,17 @@ import { useState } from 'react';
 import { resolveMediaUrl } from '@/lib/media';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup, useUpdateGroup, useGroupMembers, useBanMember, useUnbanMember, useApproveJoinRequest, useRejectJoinRequest } from '@/features/groups/hooks';
+import { useGroup, useJoinGroup, useLeaveGroup, useDeleteGroup, useUpdateGroup, useGroupMembers, useInviteMember, useBanMember, useUnbanMember, useApproveJoinRequest, useRejectJoinRequest } from '@/features/groups/hooks';
+import { useFriends } from '@/features/friends/hooks';
 import { useGroupPosts } from '@/features/posts/hooks';
 import { PostCard } from '@/features/posts/components/PostCard';
 import { PostComposer } from '@/features/posts/components/PostComposer';
 import { Modal } from '@/components/ui/Modal';
+import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/components/ui/Toast';
 import {
   ArrowLeft, Users, Trash, SignOut, Lock, Globe, EyeSlash,
-  PencilLine,
+  PencilLine, UserPlus,
 } from '@phosphor-icons/react';
 
 
@@ -30,14 +32,17 @@ export default function GroupDetailPage() {
   const leaveGroup  = useLeaveGroup();
   const deleteGroup = useDeleteGroup();
   const updateGroup = useUpdateGroup();
+  const inviteMember = useInviteMember(id);
   const banMember   = useBanMember(id);
   const unbanMember = useUnbanMember(id);
   const approveJoinRequest = useApproveJoinRequest(id);
   const rejectJoinRequest  = useRejectJoinRequest(id);
   const { data: membersData } = useGroupMembers(id);
+  const { data: friendsData } = useFriends();
   const { showToast }         = useToast() as any;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showManageModal, setShowManageModal] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDescription, setEditDescription] = useState('');
   // ── Loading state ──────────────────────────────────────────────
@@ -149,6 +154,18 @@ export default function GroupDetailPage() {
                   style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
                   <PencilLine size={13} />
                   إدارة
+                </button>
+              )}
+              {/* No invite mechanism existed at all -- secret groups are
+                  invite-only and aren't discoverable, so there was no way to
+                  grow one past its creator (#299). */}
+              {(group.isOwner || group.isAdmin) && (
+                <button onClick={() => setShowInviteModal(true)}
+                  aria-label="دعوة عضو"
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-105 active:scale-95"
+                  style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                  <UserPlus size={13} />
+                  دعوة عضو
                 </button>
               )}
               {(group.isOwner || group.isAdmin) && (
@@ -265,6 +282,42 @@ export default function GroupDetailPage() {
               {deleteGroup.isPending ? 'جاري...' : 'تأكيد الحذف'}
             </button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="دعوة عضو">
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {(() => {
+            const friends: any[] = friendsData?.data ?? [];
+            const memberIds = new Set((membersData?.data?.data ?? membersData?.data ?? []).map((m: any) => m.user?.id ?? m.id));
+            const invitable = friends.filter((f: any) => !memberIds.has(f.id));
+            if (invitable.length === 0) {
+              return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">لا يوجد أصدقاء يمكن دعوتهم</p>;
+            }
+            return invitable.map((f: any) => (
+              <div key={f.id} className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-[var(--muted)]/50 transition-colors">
+                <div className="flex items-center gap-3">
+                  <Avatar src={f.avatar ?? f.profile?.avatarUrl} name={f.fullName || f.username} size="sm" />
+                  <span className="text-sm font-medium text-[var(--foreground)]">{f.fullName || f.username}</span>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      await inviteMember.mutateAsync(f.id);
+                      showToast('تمت الدعوة بنجاح', 'success');
+                    } catch (err: any) {
+                      showToast(err?.response?.data?.message || 'فشلت الدعوة', 'error');
+                    }
+                  }}
+                  disabled={inviteMember.isPending}
+                  className="rounded-xl px-3 py-1.5 text-xs font-bold text-white transition-all disabled:opacity-50"
+                  style={{ background: 'var(--primary)' }}
+                >
+                  دعوة
+                </button>
+              </div>
+            ));
+          })()}
         </div>
       </Modal>
 

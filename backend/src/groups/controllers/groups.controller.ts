@@ -182,6 +182,14 @@ export class GroupsController {
     return ok(group, 'Group updated');
   }
 
+  // No invite mechanism existed at all -- secret groups are invite-only and
+  // aren't discoverable, so there was no way to grow one past its creator (#299).
+  @Post(':id/members/:userId/invite')
+  async inviteMember(@Param('id') id: string, @Param('userId') userId: string, @CurrentUser() user: User) {
+    const member = await this.groupsService.inviteMember(id, userId, user.id);
+    return ok(member, 'Member invited');
+  }
+
   // Ban/unban existed in the service (with proper admin-role checks) but were
   // never wired to any route -- dead, unreachable code (#192).
   @Post(':id/members/:userId/ban')

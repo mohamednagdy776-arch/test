@@ -10,12 +10,14 @@ import { GroupMember } from '../entities/group-member.entity';
 import { CreateGroupDto } from '../dto/create-group.dto';
 import { UpdateGroupDto } from '../dto/update-group.dto';
 import { User } from '../../auth/entities/user.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 @Injectable()
 export class GroupsService {
   constructor(
     @InjectRepository(Group) private groupsRepo: Repository<Group>,
     @InjectRepository(GroupMember) private memberRepo: Repository<GroupMember>,
+    private notifications: NotificationsService,
   ) {}
 
   async create(dto: CreateGroupDto, user: User) {
@@ -224,6 +226,38 @@ export class GroupsService {
   async delete(groupId: string) {
     await this.memberRepo.delete({ group: { id: groupId } as any });
     await this.groupsRepo.delete(groupId);
+  }
+
+  // Secret groups are invite-only and aren't even discoverable, so with no
+  // invite endpoint at all there was no way to grow one past its creator
+  // (#299). Admin/moderator-only; adds the target directly as an active
+  // member (the admin's own explicit choice, unlike a self-service join
+  // request which needs approval).
+  async inviteMember(groupId: string, targetUserId: string, adminUserId: string) {
+    const group = await this.groupsRepo.findOne({ where: { id: groupId } });
+    if (!group) throw new NotFoundException('Group not found');
+
+    const adminMembership = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: adminUserId } },
+    });
+    if (!adminMembership || (adminMembership.role !== 'admin' && adminMembership.role !== 'moderator')) {
+      throw new ForbiddenException('Only admins or moderators can invite members');
+    }
+
+    const existing = await this.memberRepo.findOne({
+      where: { group: { id: groupId }, user: { id: targetUserId } },
+    });
+    if (existing) throw new ConflictException('User is already a member or has a pending request');
+
+    const member = this.memberRepo.create({
+      group: { id: groupId } as any,
+      user: { id: targetUserId } as any,
+      role: 'member',
+      status: 'active',
+    });
+    const saved = await this.memberRepo.save(member);
+    await this.notifications.notifyUser(targetUserId, adminUserId, 'group_invite', `أضافك إلى مجموعة "${group.name}"`, 'group', groupId);
+    return saved;
   }
 
   async banMember(groupId: string, memberUserId: string, adminUserId: string) {

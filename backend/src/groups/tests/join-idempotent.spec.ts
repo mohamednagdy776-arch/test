@@ -16,7 +16,8 @@ function makeService(existingMember: any) {
     create: (x: any) => x,
     save: async (x: any) => x,
   } as any;
-  return new GroupsService(groupsRepo, memberRepo);
+  const notifications = { notifyUser: async () => {} } as any;
+  return new GroupsService(groupsRepo, memberRepo, notifications);
 }
 
 describe('[Body_Sadek] GroupsService.join idempotency (#734)', () => {

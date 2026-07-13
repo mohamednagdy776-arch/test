@@ -147,6 +147,14 @@ export function useGroupMembers(id: string, page = 1, limit = 50) {
   });
 }
 
+export function useInviteMember(groupId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (userId: string) => groupsApi.inviteMember(groupId, userId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['group-members', groupId] }),
+  });
+}
+
 export function useBanMember(groupId: string) {
   const qc = useQueryClient();
   return useMutation({
