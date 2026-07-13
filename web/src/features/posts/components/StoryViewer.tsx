@@ -207,7 +207,13 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-[420px] h-full flex items-center mx-auto">
-        <div className="relative w-full aspect-[9/16] max-h-screen sm:rounded-2xl bg-black">
+        {/* aspect-[9/16] forced a fixed ratio that's wider than most modern
+            phone screens (e.g. ~9:19.5), so the computed height fell short
+            of the real viewport height, letterboxing with black bars top
+            and bottom on mobile (#376). Fill the full available height on
+            mobile; only apply the fixed phone-frame ratio at sm+, where this
+            renders as a deliberate centered card rather than true full-screen. */}
+        <div className="relative w-full h-full sm:aspect-[9/16] sm:h-auto sm:max-h-screen sm:rounded-2xl bg-black">
 
           {/* Media only, not the header/dropdown below -- the whole frame used
               to have overflow-hidden (for rounded corners), which also clipped
