@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 import { Story, StoryView, StoryHighlight, StoryReaction, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
 import { Post } from '../entities/post.entity';
+import { User } from '../../auth/entities/user.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { SettingsService } from '../../settings/services/settings.service';
 import { LinkPreviewService } from '../../link-preview/link-preview.service';
@@ -449,5 +450,31 @@ export class StoriesService {
   // Never expose who voted to clients.
   private stripVoters(options: { text: string; votes: number; voterIds?: string[] }[]) {
     return options.map(({ text, votes }) => ({ text, votes }));
+  }
+
+  // Poll UI only ever showed a blended percentage with no per-option raw
+  // count and no way for the creator to see who voted for what at all (#326).
+  // Owner-only -- voter identity stays private to everyone else, same as
+  // sanitizePolls()/stripVoters() already enforce for the general feed.
+  async getPollVoters(postId: string, viewerId: string) {
+    const post = await this.postRepo.findOne({ where: { id: postId } });
+    if (!post || !post.pollOptions) throw new NotFoundException('Poll not found');
+    if (post.userId !== viewerId) throw new ForbiddenException('Only the poll creator can view voters');
+
+    const allVoterIds = [...new Set(post.pollOptions.flatMap((o) => o.voterIds ?? []))];
+    const userRepo = this.postRepo.manager.getRepository(User);
+    const users = allVoterIds.length
+      ? await userRepo.find({ where: { id: In(allVoterIds) }, relations: ['profile'] })
+      : [];
+    const usersById = new Map(users.map((u) => [u.id, u]));
+
+    return post.pollOptions.map((o) => ({
+      text: o.text,
+      votes: o.votes,
+      voters: (o.voterIds ?? []).map((id) => {
+        const u = usersById.get(id);
+        return u ? { id: u.id, username: u.username, name: u.fullName || u.username, avatarUrl: u.profile?.avatarUrl ?? null } : null;
+      }).filter(Boolean),
+    }));
   }
 }

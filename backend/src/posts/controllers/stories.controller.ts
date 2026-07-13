@@ -149,4 +149,12 @@ export class StoriesController {
     const result = await this.storiesService.votePoll(postId, user.id, parseInt(optionIndex, 10));
     return ok(result, 'Vote recorded');
   }
+
+  // Owner-only voter breakdown -- the poll UI only ever showed a blended
+  // percentage with no per-option raw count and no way to see who voted (#326).
+  @Get('posts/:id/poll/voters')
+  async getPollVoters(@CurrentUser() user: User, @Param('id') postId: string) {
+    const result = await this.storiesService.getPollVoters(postId, user.id);
+    return ok(result);
+  }
 }

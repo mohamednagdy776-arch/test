@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
 import { useDeleteComment } from '@/features/comments/hooks';
 import { useMyProfile } from '@/features/profile/hooks';
@@ -91,14 +92,22 @@ function ReactionDisplay({ postId }: { postId: string }) {
           <span className="text-base">{currentReaction?.emoji || defaultEmoji}</span>
           <span>{currentReaction?.label || 'إعجاب'}</span>
         </button>
-        {/* The count was flat, unresponsive text -- no way to see who reacted
-            or with what, for anyone including the post owner (#329). */}
+        {/* Was a single blended total with no per-type breakdown at all --
+            users had no way to tell a Like from a Love without opening the
+            modal (#330). Show up to 3 top reaction-type emoji+count pairs
+            inline; still opens the full breakdown modal on click. */}
         {total > 0 && (
           <button
             onClick={() => setShowBreakdown(true)}
-            className="text-xs text-[var(--muted-foreground)] font-medium shadow-soft rounded-full px-2 py-0.5 hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+            className="flex items-center gap-1.5 text-xs text-[var(--muted-foreground)] font-medium shadow-soft rounded-full px-2 py-0.5 hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
           >
-            {total}
+            {Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([type, count]) => (
+              <span key={type} className="flex items-center gap-0.5">
+                <span>{REACTIONS.find(r => r.type === type)?.emoji ?? '👍'}</span>
+                <span>{count}</span>
+              </span>
+            ))}
+            {Object.keys(counts).length > 3 && <span>+{total - Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 3).reduce((s, [, c]) => s + c, 0)}</span>}
           </button>
         )}
       </div>
@@ -158,6 +167,45 @@ function ReactionBreakdownModal({ reactions, counts, onClose }: { reactions: any
           })}
         </div>
       </div>
+    </Modal>
+  );
+}
+
+// Owner-only voter breakdown per poll option -- the poll UI only ever showed
+// a blended percentage with no way to see who voted for what (#326).
+function PollVotersModal({ postId, onClose }: { postId: string; onClose: () => void }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['poll-voters', postId],
+    queryFn: () => apiClient.get(`/posts/${postId}/poll/voters`).then((r) => r.data),
+  });
+  const options: { text: string; votes: number; voters: any[] }[] = data?.data ?? [];
+
+  return (
+    <Modal open onClose={onClose} title="المصوّتون">
+      {isLoading ? (
+        <p className="text-sm text-[var(--muted-foreground)] text-center py-6">جاري التحميل...</p>
+      ) : (
+        <div className="space-y-4 max-h-96 overflow-y-auto">
+          {options.map((opt, i) => (
+            <div key={i}>
+              <p className="text-sm font-bold text-[var(--foreground)] mb-2">{opt.text} ({opt.votes})</p>
+              {opt.voters.length === 0 ? (
+                <p className="text-xs text-[var(--muted-foreground)]">لا يوجد مصوّتون</p>
+              ) : (
+                <div className="space-y-1.5">
+                  {opt.voters.map((v: any) => (
+                    <Link key={v.id} href={v.username ? `/${v.username}` : `/profile/${v.id}`} onClick={onClose}
+                      className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[var(--muted)]/50 transition-colors">
+                      <Avatar src={v.avatarUrl} name={v.name} size="sm" />
+                      <span className="text-sm text-[var(--foreground)]">{v.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </Modal>
   );
 }
@@ -409,7 +457,8 @@ function LinkPreview({ url, title, description, image }: { url: string; title?: 
   );
 }
 
-function PollDisplay({ postId, options, myVote }: { postId: string; options: { text: string; votes: number }[]; myVote?: number | null }) {
+function PollDisplay({ postId, options, myVote, isOwnPost }: { postId: string; options: { text: string; votes: number }[]; myVote?: number | null; isOwnPost?: boolean }) {
+  const [showVoters, setShowVoters] = useState(false);
   // Previously always started at null, so a vote "disappeared" on refresh —
   // the backend now tells us which option (if any) this viewer already
   // picked (#167).
@@ -463,12 +512,22 @@ function PollDisplay({ postId, options, myVote }: { postId: string; options: { t
             />
             <div className="relative flex items-center justify-between px-3 py-2.5">
               <span className="text-[var(--foreground)]">{opt.text}</span>
-              <span className="text-[var(--muted-foreground)] font-medium">{percentage}%</span>
+              {/* Only the blended percentage was ever shown, hiding the exact
+                  vote count per option (#326). */}
+              <span className="text-[var(--muted-foreground)] font-medium">{percentage}% ({opt.votes})</span>
             </div>
           </button>
         );
       })}
-      <p className="text-xs text-[var(--muted-foreground)] text-center pt-1 font-medium">{totalVotes} صوت</p>
+      <div className="flex items-center justify-center gap-2 pt-1">
+        <p className="text-xs text-[var(--muted-foreground)] font-medium">{totalVotes} صوت</p>
+        {isOwnPost && totalVotes > 0 && (
+          <button onClick={() => setShowVoters(true)} className="text-xs text-[var(--primary)] font-semibold hover:underline">
+            عرض المصوتين
+          </button>
+        )}
+      </div>
+      {showVoters && <PollVotersModal postId={postId} onClose={() => setShowVoters(false)} />}
     </div>
   );
 }
@@ -594,7 +653,7 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
         </div>
       )}
       {post.linkUrl && <div className="px-4"><LinkPreview url={post.linkUrl} title={post.linkTitle} description={post.linkDescription} image={post.linkImage} /></div>}
-      {post.pollOptions && <div className="px-4"><PollDisplay postId={post.id} options={post.pollOptions} myVote={post.myVote} /></div>}
+      {post.pollOptions && <div className="px-4"><PollDisplay postId={post.id} options={post.pollOptions} myVote={post.myVote} isOwnPost={isOwnPost} /></div>}
       {mediaUrl && (
         <div className="mt-3">
           {post.mediaType === 'video' ? (
