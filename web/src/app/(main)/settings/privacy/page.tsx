@@ -218,10 +218,14 @@ export default function PrivacyPage() {
   );
 
   const SelectInput = ({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: typeof VISIBILITY_OPTIONS }) => (
+    // shrink-0 + min-w-fit (#83): sitting in a `flex justify-between` row
+    // next to a `flex-1` label column let the select get squeezed by flex's
+    // default shrink behavior on narrow screens, clipping/truncating longer
+    // selected options like "أصدقاء الأصدقاء" instead of sizing to fit them.
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--muted)] transition-all cursor-pointer"
+      className="shrink-0 w-auto min-w-fit px-4 py-2 rounded-xl border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] text-sm focus:outline-none focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--muted)] transition-all cursor-pointer"
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
