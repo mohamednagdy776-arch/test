@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { useViewStory, useStoryViewers, useReactToStory } from '../hooks';
@@ -201,7 +202,19 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     if (videoRef.current) videoRef.current.muted = isMuted;
   }, [isMuted]);
 
-  return (
+  // Rendered via a portal to document.body (same fix as Modal.tsx #106 and
+  // MatchDetailModal #272): this viewer is mounted inline inside (main)
+  // layout's <main className="animate-fade-in">, whose running opacity
+  // animation creates a containing block for `fixed` descendants -- so
+  // `fixed inset-0` here resolved against that ancestor's box instead of the
+  // real viewport, leaving the frame short of full-screen and everything
+  // inside it (3-dot menu, viewers sheet) mispositioned relative to the true
+  // viewport (#376, #377, #379).
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center" dir="rtl">
       {/* Backdrop — closes viewer when clicking outside the 9:16 frame */}
       <div className="absolute inset-0" onClick={onClose} />
@@ -487,6 +500,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
           </div>
         </div>
       )}
-    </div>
+    </div>,
+    document.body
   );
 }
