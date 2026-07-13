@@ -36,6 +36,7 @@ interface Message {
   isOwn: boolean;
   type: string;
   mediaUrl?: string;
+  storySnapshotUrl?: string;
   replyToId?: string;
   isEdited?: boolean;
   editedAt?: string;
@@ -104,6 +105,7 @@ export const ChatWindow = ({ match, onBack }: Props) => {
       isOwn: m.senderId === myUserId,
       type: m.type || 'text',
       mediaUrl: m.mediaUrl,
+      storySnapshotUrl: m.storySnapshotUrl,
       replyToId: m.replyToId,
       isEdited: m.isEdited,
       editedAt: m.editedAt,
@@ -682,6 +684,21 @@ export const ChatWindow = ({ match, onBack }: Props) => {
                     const replyContent = replied.content || 'رسالة محذوفة';
                     return replyContent.length > 40 ? replyContent.slice(0, 40) + '...' : replyContent;
                   })()}
+                </div>
+              )}
+
+              {/* Story-reply context -- was sent as a plain text message with
+                  no indication it was replying to a story at all, losing all
+                  context for the recipient (#62). storySnapshotUrl is a
+                  snapshot taken at reply time since the original story may
+                  have already expired (~24h) by the time this is viewed. */}
+              {msg.storySnapshotUrl && (
+                <div className="mb-2 flex items-center gap-2 p-1.5 rounded-lg text-xs"
+                  style={msg.isOwn
+                    ? { background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.85)' }
+                    : { background: 'color-mix(in srgb, var(--primary) 6%, var(--muted))', color: 'var(--muted-foreground)' }}>
+                  <img src={resolveMediaUrl(msg.storySnapshotUrl) ?? ''} alt="" className="w-8 h-10 rounded object-cover shrink-0" />
+                  <span>رد على قصة</span>
                 </div>
               )}
 

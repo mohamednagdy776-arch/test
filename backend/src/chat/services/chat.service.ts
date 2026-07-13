@@ -219,6 +219,7 @@ export class ChatService {
         senderName: m.sender?.profile?.fullName || null,
         type: m.type,
         mediaUrl: m.mediaUrl,
+        storySnapshotUrl: m.storySnapshotUrl,
         replyToId: m.replyToId,
         isEdited: m.isEdited,
         editedAt: m.editedAt,
@@ -245,7 +246,7 @@ export class ChatService {
     return parts.map((p) => p.userId);
   }
 
-  async sendMessage(conversationId: string, senderId: string, content: string, type: string = 'text', replyToId?: string, mediaUrl?: string): Promise<Message> {
+  async sendMessage(conversationId: string, senderId: string, content: string, type: string = 'text', replyToId?: string, mediaUrl?: string, storySnapshotUrl?: string): Promise<Message> {
     // Block enforcement (#28): a blocked pair cannot exchange messages. Reject the
     // send if the sender has blocked — or is blocked by — any other participant.
     const participantIds = await this.getParticipantIds(conversationId);
@@ -261,6 +262,7 @@ export class ChatService {
       type: type as any,
       replyToId,
       mediaUrl,
+      storySnapshotUrl,
     });
     return this.messagesRepo.save(msg);
   }

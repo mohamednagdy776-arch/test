@@ -78,7 +78,9 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
     try {
       const conv = await chatApi.createConversation(ownerId, 'story_reply');
       const conversationId = conv?.data?.id ?? conv?.id;
-      await chatApi.sendMessage(conversationId, text);
+      // Sent as a plain text message with no indication it was a reply to a
+      // story at all, losing all context for the recipient (#62).
+      await chatApi.sendMessage(conversationId, text, 'text', undefined, undefined, mediaUrl || undefined);
       setReplyText('');
       showToast('تم إرسال الرد', 'success');
     } catch {

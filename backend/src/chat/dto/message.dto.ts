@@ -18,6 +18,10 @@ export class SendMessageDto {
   @IsOptional()
   @IsString()
   mediaUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  storySnapshotUrl?: string;
 }
 
 export class EditMessageDto {

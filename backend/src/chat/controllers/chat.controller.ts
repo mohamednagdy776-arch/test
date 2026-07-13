@@ -69,6 +69,7 @@ export class ChatController {
       dto.type,
       dto.replyToId,
       dto.mediaUrl,
+      dto.storySnapshotUrl,
     );
     return ok({
       id: saved.id,
@@ -76,6 +77,7 @@ export class ChatController {
       senderId: user.id,
       content: saved.contentEncrypted,
       type: saved.type,
+      storySnapshotUrl: saved.storySnapshotUrl,
       createdAt: saved.createdAt,
     }, 'Message sent');
   }

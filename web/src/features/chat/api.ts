@@ -19,8 +19,8 @@ export const chatApi = {
     apiClient.post(`/chat/conversations/${conversationId}/read`).then(r => r.data),
 
   // Messages
-  sendMessage: (conversationId: string, content: string, type = 'text', replyToId?: string, mediaUrl?: string) =>
-    apiClient.post('/chat/messages', { conversationId, content, type, replyToId, mediaUrl }).then(r => r.data),
+  sendMessage: (conversationId: string, content: string, type = 'text', replyToId?: string, mediaUrl?: string, storySnapshotUrl?: string) =>
+    apiClient.post('/chat/messages', { conversationId, content, type, replyToId, mediaUrl, storySnapshotUrl }).then(r => r.data),
 
   editMessage: (messageId: string, content: string) =>
     apiClient.put(`/chat/messages/${messageId}`, { content }).then(r => r.data),

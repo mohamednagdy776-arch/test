@@ -36,6 +36,13 @@ export class Message {
   @Column({ nullable: true })
   replyToId: string;
 
+  // Snapshot of the story's media at reply time (not a live FK) -- stories
+  // expire ~24h after posting, so by the time the recipient opens this chat
+  // the original story may already be gone. Plain nullable column, not part
+  // of the `type` enum, so no Postgres enum-type migration risk (#62).
+  @Column({ name: 'story_snapshot_url', nullable: true })
+  storySnapshotUrl: string;
+
   @Column({ default: false })
   isEdited: boolean;
 
