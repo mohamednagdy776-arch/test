@@ -10,7 +10,7 @@ import { authApi } from '@/features/auth/api';
 import { useMyProfile } from '@/features/profile/hooks';
 import {
   House, Heart, MagnifyingGlass, UsersThree, UsersFour, ChatCircle,
-  SignOut, List, X, User, CaretDown, CalendarBlank, Crown,
+  SignOut, List, X, User, CalendarBlank, Crown,
   UsersThree as Friends, ShieldCheck, BookmarkSimple, Clock,
   PlayCircle, FilmStrip, Baby, TestTube, ShareNetwork, Gear,
 } from '@phosphor-icons/react';
@@ -202,7 +202,10 @@ export const Navbar = () => {
               <span className="hidden 2xl:block text-xs font-semibold max-w-[80px] truncate" style={{ color: 'var(--foreground)' }}>
                 {displayName}
               </span>
-              <CaretDown size={11} className="hidden 2xl:block" style={{ color: 'var(--muted-foreground)' }} />
+              {/* This never opened a dropdown -- clicking anywhere on the badge
+                  (including the arrow) always navigated straight to /profile,
+                  a misleading affordance since Logout is already a separate
+                  button next to it (#285). */}
             </Link>
 
             <button

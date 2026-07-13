@@ -49,13 +49,15 @@ export class ChatController {
     @Query() query: PaginationDto,
     @CurrentUser() user: User,
   ) {
-    const { data, total } = await this.chatService.getMessages(
+    // Destructuring only {data, total} silently dropped otherLastReadAt, the
+    // exact field just added to fix #319 -- caught only by live verification.
+    const { data, total, otherLastReadAt } = await this.chatService.getMessages(
       conversationId,
       user.id,
       query.page || 1,
       query.limit || 50,
     );
-    return ok({ data, total });
+    return ok({ data, total, otherLastReadAt });
   }
 
   @Post('messages')

@@ -259,7 +259,12 @@ export const ProfileHeader = ({
       </div>
 
       <div className="px-6 pb-6 relative">
-        <div className="flex items-start gap-5 -mt-14 relative">
+        {/* flex items-start with no responsive variant forced the avatar,
+            info column, and action buttons into a single row even on narrow
+            phones -- with avatar/buttons both shrink:0, the middle info
+            column got squeezed to almost nothing (#312). Stack vertically
+            below sm, row layout from sm up. */}
+        <div className="flex flex-col sm:flex-row sm:items-start gap-5 -mt-14 relative">
           {/* Avatar with enhanced styling */}
           <div className="relative shrink-0 group">
             <div
@@ -312,8 +317,10 @@ export const ProfileHeader = ({
             )}
           </div>
 
-          {/* Info */}
-          <div className="flex-1 min-w-0 pt-16">
+          {/* Info -- pt-16 only needed to clear the avatar horizontally when
+              they're side-by-side (sm+); stacked on mobile it just added an
+              oversized gap below the avatar. */}
+          <div className="flex-1 min-w-0 sm:pt-16">
             <div className="flex items-center gap-2 flex-wrap">
               <h2 className="text-2xl font-bold text-gradient">{profile.fullName}</h2>
               {profile.isHealthVerified && (
@@ -395,7 +402,7 @@ export const ProfileHeader = ({
           {isSelf && onEdit && (
             <button
               onClick={onEdit}
-              className="shrink-0 mt-16 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
+              className="shrink-0 mt-3 sm:mt-16 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
             >
               <PencilSimple size={16} className="inline mr-1" />
               تعديل الملف
@@ -404,7 +411,7 @@ export const ProfileHeader = ({
 
           {/* Viewer: friend action + message */}
           {!isSelf && (
-            <div className="shrink-0 mt-16 flex gap-2 flex-wrap">
+            <div className="shrink-0 mt-3 sm:mt-16 flex gap-2 flex-wrap">
 
               {/* No relationship → Add Friend */}
               {(!friendshipStatus || friendshipStatus.status === 'none') && (

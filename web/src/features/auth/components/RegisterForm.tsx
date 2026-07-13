@@ -56,6 +56,31 @@ const NAME_REGEX = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿a-zA-Z\s'-]+$/;
 // Arabic + Latin + digits + . _ - , no spaces — for username.
 const USERNAME_REGEX = /^[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻿a-zA-Z0-9._-]+$/;
 
+// The phone field had a generic handset icon and a placeholder implying a
+// Saudi number, but no way to actually pick a country/dialing code -- users
+// had to know to type the full "+<code>" prefix themselves (#267).
+const PHONE_COUNTRIES = [
+  { code: '+966', label: 'السعودية' },
+  { code: '+20', label: 'مصر' },
+  { code: '+971', label: 'الإمارات' },
+  { code: '+965', label: 'الكويت' },
+  { code: '+974', label: 'قطر' },
+  { code: '+973', label: 'البحرين' },
+  { code: '+968', label: 'عمان' },
+  { code: '+962', label: 'الأردن' },
+  { code: '+961', label: 'لبنان' },
+  { code: '+963', label: 'سوريا' },
+  { code: '+964', label: 'العراق' },
+  { code: '+970', label: 'فلسطين' },
+  { code: '+218', label: 'ليبيا' },
+  { code: '+216', label: 'تونس' },
+  { code: '+213', label: 'الجزائر' },
+  { code: '+212', label: 'المغرب' },
+  { code: '+249', label: 'السودان' },
+  { code: '+1', label: 'الولايات المتحدة / كندا' },
+  { code: '+44', label: 'المملكة المتحدة' },
+];
+
 // Age (in whole years) from a yyyy-mm-dd date string.
 function ageFrom(dateStr: string): number {
   const dob = new Date(dateStr);
@@ -94,6 +119,7 @@ export const RegisterForm = () => {
     firstName: '', lastName: '', username: '',
     dateOfBirth: '', gender: ''
   });
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+966');
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState('');
@@ -147,7 +173,8 @@ export const RegisterForm = () => {
     // without it too, but block the submit locally with a clear message.
     if (!form.dateOfBirth) { setError('يرجى إدخال تاريخ الميلاد'); return; }
     if (ageFrom(form.dateOfBirth) < 18) { setError('يجب أن يكون عمرك 18 عاماً على الأقل للتسجيل'); return; }
-    if (!/^\+?[1-9]\d{6,14}$/.test(form.phone.trim())) { setError('رقم الهاتف غير صحيح'); return; }
+    const fullPhone = phoneCountryCode + form.phone.trim().replace(/^0+/, '');
+    if (!/^\+?[1-9]\d{6,14}$/.test(fullPhone)) { setError('رقم الهاتف غير صحيح'); return; }
     if (!form.gender) { setError('يرجى اختيار الجنس'); return; }
     if (!agreedToTerms) { setError('يرجى الموافقة على الشروط والأحكام'); return; }
     if (form.password !== form.confirm) { setError('كلمتا المرور غير متطابقتين'); return; }
@@ -168,7 +195,7 @@ export const RegisterForm = () => {
         dateOfBirth: string; gender?: string; referralCode?: string;
       } = {
         email: form.email.trim(),
-        phone: form.phone.trim(),
+        phone: fullPhone,
         password: form.password,
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
@@ -233,13 +260,19 @@ export const RegisterForm = () => {
       </div>
       <div className="space-y-2">
         <label className="block text-sm font-medium text-[#374151]">رقم الهاتف</label>
-        <div className="relative">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2">
-            <svg className="h-5 w-5 text-[#9CA3AF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.151l-4.423-1.106c-.44-.11-.902.275-.902.814v1.26c0 .624.564 1.001 1.158.714l2.756 1.382a20.087 20.087 0 01-4.12 4.121l-2.756-1.382c-.594-.291-1.158.09-1.158.714v1.26c0 .539.451.924.902.814l4.423-1.106c.5-.185.852-.635.852-1.151V18a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6.75z"/></svg>
-          </div>
+        <div className="flex gap-2">
+          <select
+            value={phoneCountryCode}
+            onChange={(e) => setPhoneCountryCode(e.target.value)}
+            className="h-12 rounded-2xl border border-[#D1D5DB] bg-white px-3 text-sm text-[#1F2937] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
+          >
+            {PHONE_COUNTRIES.map((c) => (
+              <option key={c.code} value={c.code}>{c.code} {c.label}</option>
+            ))}
+          </select>
           <input type="tel" required value={form.phone} onChange={set('phone')}
-            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-12 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
-            placeholder="+966 50 000 0000" />
+            className="flex h-12 w-full rounded-2xl border border-[#D1D5DB] bg-white px-4 text-sm text-[#1F2937] placeholder:text-[#9CA3AF] focus:outline-none focus:ring-2 focus:ring-[#10B981]/20 focus:border-[#10B981] transition-all duration-200"
+            placeholder="50 000 0000" />
         </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
