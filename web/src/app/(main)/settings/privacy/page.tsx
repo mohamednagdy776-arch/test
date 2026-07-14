@@ -10,75 +10,76 @@ import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { profileApi } from '@/features/profile/api';
+import { useT } from '@/i18n/I18nProvider';
 
-const VISIBILITY_OPTIONS = [
-  { value: 'public', label: 'العام' },
-  { value: 'friends', label: 'الأصدقاء' },
-  { value: 'friends_of_friends', label: 'أصدقاء الأصدقاء' },
-  { value: 'only_me', label: 'أنا فقط' },
+const VISIBILITY_OPTION_KEYS = [
+  { value: 'public', labelKey: 'privacy.visibility.public' },
+  { value: 'friends', labelKey: 'privacy.visibility.friends' },
+  { value: 'friends_of_friends', labelKey: 'privacy.visibility.friendsOfFriends' },
+  { value: 'only_me', labelKey: 'privacy.visibility.onlyMe' },
 ];
 
 interface PrivacyField {
   key: string;
-  label: string;
-  description: string;
-  options: typeof VISIBILITY_OPTIONS;
+  labelKey: string;
+  descriptionKey: string | null;
+  options: typeof VISIBILITY_OPTION_KEYS;
 }
 
 const PRIVACY_FIELDS: PrivacyField[] = [
   {
     key: 'whoCanSeePosts',
-    label: 'من يمكنه رؤية منشوراتك',
-    description: 'هذه الإعدادات ستطبق على منشوراتك الجديدة',
-    options: VISIBILITY_OPTIONS.filter(o => o.value !== 'only_me'),
+    labelKey: 'privacy.field.whoCanSeePosts.label',
+    descriptionKey: 'privacy.field.whoCanSeePosts.description',
+    options: VISIBILITY_OPTION_KEYS.filter(o => o.value !== 'only_me'),
   },
   {
     key: 'whoCanSeeFriends',
-    label: 'من يمكنه رؤية قائمة أصدقائك',
-    description: 'حدد من يمكنه رؤية أصدقائك',
-    options: VISIBILITY_OPTIONS,
+    labelKey: 'privacy.field.whoCanSeeFriends.label',
+    descriptionKey: 'privacy.field.whoCanSeeFriends.description',
+    options: VISIBILITY_OPTION_KEYS,
   },
   {
     key: 'whoCanSendFriendRequests',
-    label: 'من يمكنه إرسال طلبات صداقة',
-    description: 'حدد من يمكنه إرسال طلبات صداقة',
-    options: VISIBILITY_OPTIONS.filter(o => o.value !== 'only_me'),
+    labelKey: 'privacy.field.whoCanSendFriendRequests.label',
+    descriptionKey: 'privacy.field.whoCanSendFriendRequests.description',
+    options: VISIBILITY_OPTION_KEYS.filter(o => o.value !== 'only_me'),
   },
   {
     key: 'whoCanSeeProfilePicture',
-    label: 'من يمكنه رؤية صورة ملفك الشخصي',
-    description: '',
-    options: VISIBILITY_OPTIONS,
+    labelKey: 'privacy.field.whoCanSeeProfilePicture.label',
+    descriptionKey: null,
+    options: VISIBILITY_OPTION_KEYS,
   },
   {
     key: 'whoCanSeeCoverPhoto',
-    label: 'من يمكنه رؤية صورة الغلاف',
-    description: '',
-    options: VISIBILITY_OPTIONS,
+    labelKey: 'privacy.field.whoCanSeeCoverPhoto.label',
+    descriptionKey: null,
+    options: VISIBILITY_OPTION_KEYS,
   },
   {
     key: 'whoCanSeeBio',
-    label: 'من يمكنه رؤية النبذة عنك',
-    description: '',
-    options: VISIBILITY_OPTIONS,
+    labelKey: 'privacy.field.whoCanSeeBio.label',
+    descriptionKey: null,
+    options: VISIBILITY_OPTION_KEYS,
   },
   {
     key: 'whoCanTagMe',
-    label: 'من يمكنه وسمك',
-    description: 'حدد من يمكنه وسمك في المنشورات',
-    options: VISIBILITY_OPTIONS,
+    labelKey: 'privacy.field.whoCanTagMe.label',
+    descriptionKey: 'privacy.field.whoCanTagMe.description',
+    options: VISIBILITY_OPTION_KEYS,
   },
   {
     key: 'whoCanSendMessages',
-    label: 'من يمكنه مراسلتك',
-    description: 'حدد من يمكنه بدء محادثة معك',
-    options: VISIBILITY_OPTIONS.filter(o => o.value !== 'friends_of_friends'),
+    labelKey: 'privacy.field.whoCanSendMessages.label',
+    descriptionKey: 'privacy.field.whoCanSendMessages.description',
+    options: VISIBILITY_OPTION_KEYS.filter(o => o.value !== 'friends_of_friends'),
   },
   {
     key: 'whoCanFollow',
-    label: 'من يمكنه متابعتك',
-    description: 'حدد من يمكنه متابعة حسابك',
-    options: VISIBILITY_OPTIONS.filter(o => o.value !== 'friends_of_friends'),
+    labelKey: 'privacy.field.whoCanFollow.label',
+    descriptionKey: 'privacy.field.whoCanFollow.description',
+    options: VISIBILITY_OPTION_KEYS.filter(o => o.value !== 'friends_of_friends'),
   },
 ];
 
@@ -92,6 +93,7 @@ interface BlockedUser {
 }
 
 function DataExportButton() {
+  const { t } = useT();
   const [exporting, setExporting] = useState(false);
   const [done, setDone] = useState(false);
   const { showToast } = useToast();
@@ -110,7 +112,7 @@ function DataExportButton() {
       setDone(true);
       setTimeout(() => setDone(false), 4000);
     } catch {
-      showToast('تعذّر تصدير البيانات. يرجى المحاولة مجدداً.', 'error');
+      showToast(t('privacy.export.error'), 'error');
     } finally {
       setExporting(false);
     }
@@ -119,8 +121,8 @@ function DataExportButton() {
   return (
     <div className="flex items-center justify-between p-4 rounded-xl bg-[var(--muted)]/50 border border-[var(--border)]/50">
       <div>
-        <h3 className="font-semibold text-[var(--foreground)]">تحميل نسخة من بياناتك</h3>
-        <p className="text-[var(--primary)]/70 text-sm mt-0.5">ملف JSON يحتوي على ملفك الشخصي، منشوراتك، وإعداداتك</p>
+        <h3 className="font-semibold text-[var(--foreground)]">{t('privacy.export.title')}</h3>
+        <p className="text-[var(--primary)]/70 text-sm mt-0.5">{t('privacy.export.desc')}</p>
       </div>
       <Button
         variant="outline"
@@ -129,13 +131,14 @@ function DataExportButton() {
         loading={exporting}
         className={done ? 'text-[var(--primary)] border-[var(--ring)]' : 'text-[var(--primary)] border-[var(--border)] hover:bg-[var(--muted)]'}
       >
-        {done ? '✓ تم التحميل' : '⬇ تصدير'}
+        {done ? `✓ ${t('privacy.export.done')}` : `⬇ ${t('privacy.export.cta')}`}
       </Button>
     </div>
   );
 }
 
 export default function PrivacyPage() {
+  const { t } = useT();
   const { showToast } = useToast();
   const { data: privacyData, isLoading: privacyLoading } = usePrivacySettings();
   const { data: blocksData, isLoading: blocksLoading } = useBlocks();
@@ -152,9 +155,9 @@ export default function PrivacyPage() {
     setPrivacyError(null);
     try {
       await updatePrivacy.mutateAsync({ [key]: value });
-      showToast('تم حفظ الإعداد', 'success');
+      showToast(t('privacy.saveSuccess'), 'success');
     } catch (err: any) {
-      setPrivacyError(err?.response?.data?.message || 'فشل حفظ إعداد الخصوصية');
+      setPrivacyError(err?.response?.data?.message || t('privacy.saveFailed'));
     }
   };
 
@@ -163,18 +166,18 @@ export default function PrivacyPage() {
     setPrivacyError(null);
     try {
       await updatePrivacy.mutateAsync({ allowSearchEngines: newValue });
-      showToast('تم حفظ الإعداد', 'success');
+      showToast(t('privacy.saveSuccess'), 'success');
     } catch (err: any) {
-      setPrivacyError(err?.response?.data?.message || 'فشل حفظ الإعداد');
+      setPrivacyError(err?.response?.data?.message || t('privacy.saveFailedGeneric'));
     }
   };
 
   const handlePhotoRequestResponse = async (requestId: string, approve: boolean) => {
     try {
       await respondToPhotoRequest.mutateAsync({ requestId, approve });
-      showToast(approve ? 'تم قبول الطلب' : 'تم رفض الطلب', 'success');
+      showToast(approve ? t('privacy.photoRequestApproved') : t('privacy.photoRequestRejected'), 'success');
     } catch {
-      showToast('تعذّر معالجة الطلب', 'error');
+      showToast(t('privacy.photoRequestFailed'), 'error');
     }
   };
 
@@ -190,7 +193,7 @@ export default function PrivacyPage() {
       setShowBlockModal(false);
       setSelectedBlock(null);
     } catch (err: any) {
-      setPrivacyError(err?.response?.data?.message || 'فشل إلغاء الحظر');
+      setPrivacyError(err?.response?.data?.message || t('privacy.unblockFailed'));
     }
   };
 
@@ -217,7 +220,7 @@ export default function PrivacyPage() {
     </button>
   );
 
-  const SelectInput = ({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: typeof VISIBILITY_OPTIONS }) => (
+  const SelectInput = ({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: typeof VISIBILITY_OPTION_KEYS }) => (
     // shrink-0 + min-w-fit (#83): sitting in a `flex justify-between` row
     // next to a `flex-1` label column let the select get squeezed by flex's
     // default shrink behavior on narrow screens, clipping/truncating longer
@@ -229,7 +232,7 @@ export default function PrivacyPage() {
     >
       {options.map((opt) => (
         <option key={opt.value} value={opt.value}>
-          {opt.label}
+          {t(opt.labelKey)}
         </option>
       ))}
     </select>
@@ -247,12 +250,12 @@ export default function PrivacyPage() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <Link href="/settings" className="inline-flex items-center gap-2 text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
-          <span>←</span> <span>العودة للإعدادات</span>
+          <span>←</span> <span>{t('lang.back')}</span>
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-[var(--foreground)]">الخصوصية</h1>
-          <p className="text-[var(--primary)]/70 mt-2">تحكم في من يرى معلوماتك</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">{t('privacy.title')}</h1>
+          <p className="text-[var(--primary)]/70 mt-2">{t('privacy.subtitle')}</p>
         </div>
 
         {privacyError && (
@@ -268,9 +271,9 @@ export default function PrivacyPage() {
         <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
             <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
-              <span>🔒</span> إعدادات الخصوصية
+              <span>🔒</span> {t('privacy.settingsCard.title')}
             </CardTitle>
-            <CardDescription>تحكم في من يرى محتوى حسابك</CardDescription>
+            <CardDescription>{t('privacy.settingsCard.desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
@@ -280,9 +283,9 @@ export default function PrivacyPage() {
                 // as misaligned whenever the description text wrapped (#249).
                 <div key={field.key} className="flex items-center justify-between py-3 border-b border-[var(--border)]/50 last:border-0">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-[var(--foreground)]">{field.label}</h3>
-                    {field.description && (
-                      <p className="text-[var(--primary)]/70 text-sm mt-0.5">{field.description}</p>
+                    <h3 className="font-semibold text-[var(--foreground)]">{t(field.labelKey)}</h3>
+                    {field.descriptionKey && (
+                      <p className="text-[var(--primary)]/70 text-sm mt-0.5">{t(field.descriptionKey)}</p>
                     )}
                   </div>
                   <SelectInput
@@ -295,13 +298,13 @@ export default function PrivacyPage() {
 
               <div className="flex items-start justify-between py-3">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-[var(--foreground)]">محركات البحث</h3>
-                  <p className="text-[var(--primary)]/70 text-sm mt-0.5">السماح لمحركات البحث بالربط إلى ملفك</p>
+                  <h3 className="font-semibold text-[var(--foreground)]">{t('privacy.searchEngines.title')}</h3>
+                  <p className="text-[var(--primary)]/70 text-sm mt-0.5">{t('privacy.searchEngines.desc')}</p>
                 </div>
                 <ToggleSwitch
                   enabled={settings?.allowSearchEngines || false}
                   onClick={handleSearchEnginesToggle}
-                  label="السماح لمحركات البحث"
+                  label={t('privacy.searchEngines.ariaLabel')}
                 />
               </div>
             </div>
@@ -311,15 +314,15 @@ export default function PrivacyPage() {
         <Card variant="default" className="bg-[var(--card)] backdrop-blur-sm border-[var(--border)]/50">
           <CardHeader>
             <CardTitle className="text-[var(--foreground)] flex items-center gap-2">
-              <span>🖼️</span> طلبات رؤية الصور
+              <span>🖼️</span> {t('privacy.photoRequests.title')}
             </CardTitle>
-            <CardDescription>أشخاص طلبوا رؤية صورك الخاصة</CardDescription>
+            <CardDescription>{t('privacy.photoRequests.desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             {photoRequestsLoading ? (
               <Spinner />
             ) : (photoRequestsData?.data?.length ?? 0) === 0 ? (
-              <p className="text-center text-[var(--primary)]/70 py-4">لا توجد طلبات معلقة</p>
+              <p className="text-center text-[var(--primary)]/70 py-4">{t('privacy.photoRequests.empty')}</p>
             ) : (
               <div className="space-y-3">
                 {photoRequestsData?.data?.map((req: any) => (
@@ -332,7 +335,7 @@ export default function PrivacyPage() {
                         {req.user?.fullName?.charAt(0) || '?'}
                       </div>
                       <div>
-                        <p className="font-semibold text-[var(--foreground)]">{req.user?.fullName || 'مستخدم'}</p>
+                        <p className="font-semibold text-[var(--foreground)]">{req.user?.fullName || t('privacy.photoRequests.defaultUser')}</p>
                         {req.user?.username && <p className="text-[var(--primary)]/70 text-sm">@{req.user.username}</p>}
                       </div>
                     </div>
@@ -344,7 +347,7 @@ export default function PrivacyPage() {
                         disabled={respondToPhotoRequest.isPending}
                         className="text-[var(--primary)] border-[var(--border)] hover:bg-[var(--muted)]"
                       >
-                        قبول
+                        {t('privacy.photoRequests.accept')}
                       </Button>
                       <Button
                         variant="outline"
@@ -353,7 +356,7 @@ export default function PrivacyPage() {
                         disabled={respondToPhotoRequest.isPending}
                         className="text-[var(--destructive)] border-[var(--border)] hover:bg-[var(--destructive)]/10"
                       >
-                        رفض
+                        {t('privacy.photoRequests.reject')}
                       </Button>
                     </div>
                   </div>

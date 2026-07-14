@@ -10,6 +10,7 @@ import { ImageCropper } from '@/components/ui/ImageCropper';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { resolveMediaUrl } from '@/lib/media';
+import { useT } from '@/i18n/I18nProvider';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -52,6 +53,7 @@ export const ProfileHeader = ({
   const router = useRouter();
   const qc = useQueryClient();
   const { showToast } = useToast();
+  const { t } = useT();
   const avatarRef = useRef<HTMLInputElement>(null);
   const coverRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -101,8 +103,8 @@ export const ProfileHeader = ({
       qc.invalidateQueries({ queryKey: ['user-profile'] });
       showToast(successMsg, 'success');
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'فشل رفع الصورة';
-      showToast(`${msg} — الصيغ المدعومة: JPG، PNG، GIF، WebP (الحد الأقصى 5 ميجابايت)`, 'error');
+      const msg = err?.response?.data?.message ?? t('profile.uploadFailedGeneric');
+      showToast(t('profile.uploadFailedWithFormats', { msg }), 'error');
     } finally {
       setUploading(false);
     }
@@ -110,12 +112,12 @@ export const ProfileHeader = ({
 
   const handleAvatarCrop = async (blob: Blob) => {
     setAvatarCropFile(null);
-    await uploadBlob(blob, '/users/me/avatar', 'avatar.jpg', 'تم تحديث صورة الملف الشخصي');
+    await uploadBlob(blob, '/users/me/avatar', 'avatar.jpg', t('profile.avatarUpdated'));
   };
 
   const handleCoverCrop = async (blob: Blob) => {
     setCoverCropFile(null);
-    await uploadBlob(blob, '/users/me/cover', 'cover.jpg', 'تم تحديث صورة الغلاف');
+    await uploadBlob(blob, '/users/me/cover', 'cover.jpg', t('profile.coverUpdated'));
   };
 
   const removeImage = async () => {
@@ -134,9 +136,9 @@ export const ProfileHeader = ({
       }
       qc.invalidateQueries({ queryKey: ['my-profile'], refetchType: 'none' });
       qc.invalidateQueries({ queryKey: ['user-profile'] });
-      showToast(kind === 'avatar' ? 'تم إزالة صورة الملف الشخصي' : 'تم إزالة صورة الغلاف', 'success');
+      showToast(kind === 'avatar' ? t('profile.avatarRemoved') : t('profile.coverRemoved'), 'success');
     } catch (err: any) {
-      showToast(err?.response?.data?.message ?? 'فشل إزالة الصورة', 'error');
+      showToast(err?.response?.data?.message ?? t('profile.removeImageFailed'), 'error');
     } finally {
       setUploading(false);
     }
@@ -155,9 +157,9 @@ export const ProfileHeader = ({
     if (!path) return;
     try {
       await navigator.clipboard.writeText(`${window.location.origin}${path}`);
-      showToast('تم نسخ رابط الملف الشخصي', 'success');
+      showToast(t('profile.linkCopied'), 'success');
     } catch {
-      showToast('تعذّر نسخ الرابط', 'error');
+      showToast(t('profile.linkCopyFailed'), 'error');
     }
   };
 
@@ -167,9 +169,9 @@ export const ProfileHeader = ({
     if (!profile.userId) return;
     try {
       await navigator.clipboard.writeText(profile.userId);
-      showToast('تم نسخ المعرف الخاص بك', 'success');
+      showToast(t('profile.uuidCopied'), 'success');
     } catch {
-      showToast('تعذّر نسخ المعرف', 'error');
+      showToast(t('profile.uuidCopyFailed'), 'error');
     }
   };
 
@@ -205,7 +207,7 @@ export const ProfileHeader = ({
               <div className="w-16 h-16 rounded-2xl bg-[var(--card)]/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-2">
                 <Camera size={32} className="text-[var(--card)]/50" />
               </div>
-              <p className="text-sm text-[var(--card)]/70 font-medium">{isSelf ? 'أضف صورة غلاف' : 'لا توجد صورة غلاف'}</p>
+              <p className="text-sm text-[var(--card)]/70 font-medium">{isSelf ? t('profile.addCoverPhoto') : t('profile.noCoverPhoto')}</p>
             </div>
           </div>
         )}
@@ -229,8 +231,8 @@ export const ProfileHeader = ({
               <button
                 onClick={() => coverRef.current?.click()}
                 disabled={uploading}
-                aria-label="تعديل صورة الغلاف"
-                title="يُفضّل صورة غلاف بنسبة 3:1 (مثال 1500×500 بكسل) — حتى 5 ميجابايت" /* #401 */
+                aria-label={t('profile.editCoverPhoto')}
+                title={t('profile.coverPhotoHint')} /* #401 */
                 className="h-9 w-9 flex items-center justify-center bg-[var(--foreground)]/45 hover:bg-[var(--foreground)]/70 backdrop-blur-sm text-[var(--card)] rounded-full transition-all duration-300 hover:scale-105 disabled:opacity-70"
               >
                 {uploading ? <span className="text-xs">...</span> : <Camera size={18} />}
@@ -239,8 +241,8 @@ export const ProfileHeader = ({
                 <button
                   onClick={() => setRemoveImageKind('cover')}
                   disabled={uploading}
-                  aria-label="إزالة صورة الغلاف"
-                  title="إزالة صورة الغلاف"
+                  aria-label={t('profile.removeCoverPhoto')}
+                  title={t('profile.removeCoverPhoto')}
                   className="h-9 w-9 flex items-center justify-center bg-[var(--foreground)]/45 hover:bg-[var(--destructive)]/80 backdrop-blur-sm text-[var(--card)] rounded-full transition-all duration-300 hover:scale-105 disabled:opacity-70"
                 >
                   ✕
@@ -286,7 +288,7 @@ export const ProfileHeader = ({
               <>
                 <button
                   onClick={() => avatarRef.current?.click()}
-                  title="يُفضّل صورة مربعة (مثال 400×400 بكسل) — حتى 5 ميجابايت" /* #406 */
+                  title={t('profile.avatarPhotoHint')} /* #406 */
                   className="absolute bottom-0 right-0 h-8 w-8 rounded-full bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] text-[var(--card)] text-xs flex items-center justify-center shadow-soft hover:shadow-glow hover:scale-110 transition-all duration-200"
                 >
                   {uploading ? '...' : <Camera size={14} />}
@@ -307,7 +309,7 @@ export const ProfileHeader = ({
                   <button
                     onClick={() => setRemoveImageKind('avatar')}
                     disabled={uploading}
-                    title="إزالة الصورة"
+                    title={t('profile.removePhoto')}
                     className="absolute bottom-0 left-0 h-7 w-7 rounded-full bg-[var(--foreground)]/45 hover:bg-[var(--destructive)]/90 text-[var(--card)] text-xs flex items-center justify-center shadow-soft transition-all duration-200 disabled:opacity-70"
                   >
                     ✕
@@ -327,29 +329,29 @@ export const ProfileHeader = ({
                 <span
                   className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm"
                   style={{ background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', color: 'var(--foreground)' }}
-                  title="تم التحقق من السلامة الصحية"
+                  title={t('profile.healthVerifiedTitle')}
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
                   </svg>
-                  مُحقَّق صحياً
+                  {t('profile.healthVerifiedBadge')}
                 </span>
               )}
               {profile.isIdentityVerified && (
                 <span
                   className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm"
                   style={{ background: 'linear-gradient(135deg, var(--accent), #D4A853)', color: '#0A3D2B' }}
-                  title="تم التحقق من الهوية"
+                  title={t('profile.identityVerifiedTitle')}
                 >
                   <SealCheck size={14} weight="fill" />
-                  موثّق الهوية
+                  {t('profile.identityVerifiedBadge')}
                 </span>
               )}
               {/* Copy the profile's unique shareable link (#8). */}
               <button
                 onClick={copyProfileLink}
-                aria-label="نسخ رابط الملف الشخصي"
-                title="نسخ رابط الملف الشخصي"
+                aria-label={t('profile.copyProfileLink')}
+                title={t('profile.copyProfileLink')}
                 className="inline-flex items-center justify-center h-7 w-7 rounded-full text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
               >
                 <LinkSimple size={16} />
@@ -359,8 +361,8 @@ export const ProfileHeader = ({
               {isSelf && (
                 <button
                   onClick={copyMyUuid}
-                  aria-label="نسخ معرّفك (UUID)"
-                  title="نسخ معرّفك (UUID)"
+                  aria-label={t('profile.copyUuid')}
+                  title={t('profile.copyUuid')}
                   className="inline-flex items-center justify-center h-7 w-7 rounded-full text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
                 >
                   <IdentificationCard size={16} />
@@ -376,7 +378,7 @@ export const ProfileHeader = ({
             <p className="mt-1 text-sm text-[var(--muted-foreground)]">
               {profile.location
                   ? profile.location
-                  : [profile.city, profile.country].filter(Boolean).join('، ')}
+                  : [profile.city, profile.country].filter(Boolean).join(t('profile.listSeparator'))}
             </p>
             {profile.workplace && (
               <p className="mt-1 text-sm text-[var(--muted-foreground)] font-medium"><Briefcase size={14} className="inline mr-1" /> {profile.workplace}</p>
@@ -388,12 +390,12 @@ export const ProfileHeader = ({
               <p dir="auto" className="mt-2 text-sm text-[var(--foreground)]/80 line-clamp-2 leading-relaxed">{profile.bio}</p>
             )}
             <p className="mt-2 text-xs text-[var(--muted-foreground)]">
-              انضم في {formatDate(profile.joinDate || profile.createdAt)}
+              {t('profile.joinedPrefix')} {formatDate(profile.joinDate || profile.createdAt)}
               {!!profile.friendCount && (
-                <span className="mr-2">• {profile.friendCount} {profile.friendCount === 1 ? 'صديق' : 'أصدقاء'}</span>
+                <span className="mr-2">• {profile.friendCount} {profile.friendCount === 1 ? t('profile.friendSingular') : t('profile.friendsPlural')}</span>
               )}
               {!!profile.mutualFriends && profile.mutualFriends > 0 && (
-                <span className="mr-2">• {profile.mutualFriends} {profile.mutualFriends === 1 ? 'صديق مشترك' : 'أصدقاء مشترك'}</span>
+                <span className="mr-2">• {profile.mutualFriends} {profile.mutualFriends === 1 ? t('profile.mutualFriendSingular') : t('profile.mutualFriendsPlural')}</span>
               )}
             </p>
           </div>
@@ -405,7 +407,7 @@ export const ProfileHeader = ({
               className="shrink-0 mt-3 sm:mt-16 rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] hover:shadow-soft transition-all duration-300 hover:-translate-y-0.5"
             >
               <PencilSimple size={16} className="inline mr-1" />
-              تعديل الملف
+              {t('profile.editProfile')}
             </button>
           )}
 
@@ -421,7 +423,7 @@ export const ProfileHeader = ({
                   className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2 text-sm font-medium text-[var(--card)] hover:shadow-glow hover:scale-105 transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <UserPlus size={16} />
-                  {friendActionPending ? '...' : 'إضافة صديق'}
+                  {friendActionPending ? '...' : t('profile.addFriend')}
                 </button>
               )}
 
@@ -433,7 +435,7 @@ export const ProfileHeader = ({
                   className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Clock size={16} />
-                  {friendActionPending ? '...' : 'تم الإرسال'}
+                  {friendActionPending ? '...' : t('profile.requestSent')}
                 </button>
               )}
 
@@ -445,7 +447,7 @@ export const ProfileHeader = ({
                   className="rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-4 py-2 text-sm font-medium text-[var(--card)] hover:shadow-glow transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <CheckCircle size={16} />
-                  {friendActionPending ? '...' : 'قبول الطلب'}
+                  {friendActionPending ? '...' : t('profile.acceptRequest')}
                 </button>
               )}
 
@@ -457,7 +459,7 @@ export const ProfileHeader = ({
                   className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--destructive)]/10 hover:border-[var(--destructive)]/30 hover:text-[var(--destructive)] transition-all duration-300 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Users size={16} />
-                  {friendActionPending ? '...' : 'أصدقاء'}
+                  {friendActionPending ? '...' : t('profile.friendsLabel')}
                 </button>
               )}
 
@@ -475,7 +477,7 @@ export const ProfileHeader = ({
                     : { background: 'linear-gradient(135deg, var(--accent) 0%, #D4A853 100%)', color: '#0A3D2B', opacity: sendInterestPending ? 0.5 : 1 }}
                 >
                   <HeartStraight size={16} weight={alreadySentInterest ? 'regular' : 'fill'} />
-                  {sendInterestPending ? '...' : alreadySentInterest ? 'تم إرسال السلام' : 'أرسل السلام'}
+                  {sendInterestPending ? '...' : alreadySentInterest ? t('profile.salamSent') : t('profile.sendSalam')}
                 </button>
               )}
 
@@ -485,7 +487,7 @@ export const ProfileHeader = ({
                 className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)] hover:border-[var(--ring)] transition-all duration-300 flex items-center gap-1.5"
               >
                 <ChatCircle size={16} />
-                رسالة
+                {t('profile.message')}
               </button>
 
               {/* Block user — used to fire immediately on click with no
@@ -496,7 +498,7 @@ export const ProfileHeader = ({
                   onClick={() => setShowBlockConfirm(true)}
                   className="rounded-xl border border-[var(--destructive)]/30 px-4 py-2 text-sm font-medium text-[var(--destructive)] hover:bg-[var(--destructive)]/10 transition-all duration-300"
                 >
-                  حظر
+                  {t('profile.block')}
                 </button>
               )}
 
@@ -504,11 +506,11 @@ export const ProfileHeader = ({
               {onReport && (
                 <button
                   onClick={onReport}
-                  aria-label="إبلاغ عن المستخدم"
+                  aria-label={t('profile.reportUser')}
                   className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--destructive)] transition-all duration-300 flex items-center gap-1.5"
                 >
                   <Flag size={16} />
-                  إبلاغ
+                  {t('profile.report')}
                 </button>
               )}
             </div>
@@ -539,45 +541,45 @@ export const ProfileHeader = ({
         />
       )}
 
-      <Modal open={showUnfriendConfirm} onClose={() => setShowUnfriendConfirm(false)} title="إلغاء الصداقة">
+      <Modal open={showUnfriendConfirm} onClose={() => setShowUnfriendConfirm(false)} title={t('profile.unfriendTitle')}>
         <div className="space-y-4">
-          <p className="text-sm text-[var(--primary)]">هل تريد إلغاء الصداقة مع {profile.fullName}؟</p>
+          <p className="text-sm text-[var(--primary)]">{t('profile.unfriendConfirm', { name: profile.fullName })}</p>
           <div className="flex gap-3">
-            <button onClick={() => setShowUnfriendConfirm(false)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
+            <button onClick={() => setShowUnfriendConfirm(false)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">{t('profile.cancel')}</button>
             <button
               onClick={() => { setShowUnfriendConfirm(false); onUnfriend?.(); }}
               disabled={friendActionPending}
               className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors"
             >
-              إلغاء الصداقة
+              {t('profile.unfriendTitle')}
             </button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={showBlockConfirm} onClose={() => setShowBlockConfirm(false)} title="حظر المستخدم">
+      <Modal open={showBlockConfirm} onClose={() => setShowBlockConfirm(false)} title={t('profile.blockUserTitle')}>
         <div className="space-y-4">
-          <p className="text-sm text-[var(--primary)]">هل تريد حظر {profile.fullName}؟ لن تتمكنا من رؤية بعضكما أو التواصل بعد الحظر.</p>
+          <p className="text-sm text-[var(--primary)]">{t('profile.blockConfirm', { name: profile.fullName })}</p>
           <div className="flex gap-3">
-            <button onClick={() => setShowBlockConfirm(false)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
+            <button onClick={() => setShowBlockConfirm(false)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">{t('profile.cancel')}</button>
             <button
               onClick={() => { setShowBlockConfirm(false); onBlock?.(); }}
               className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 transition-colors"
             >
-              حظر
+              {t('profile.block')}
             </button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={!!removeImageKind} onClose={() => setRemoveImageKind(null)} title="إزالة الصورة">
+      <Modal open={!!removeImageKind} onClose={() => setRemoveImageKind(null)} title={t('profile.removePhoto')}>
         <div className="space-y-4">
           <p className="text-sm text-[var(--primary)]">
-            {removeImageKind === 'avatar' ? 'هل أنت متأكد من إزالة صورة الملف الشخصي؟' : 'هل أنت متأكد من إزالة صورة الغلاف؟'}
+            {removeImageKind === 'avatar' ? t('profile.removeAvatarConfirm') : t('profile.removeCoverConfirm')}
           </p>
           <div className="flex gap-3">
-            <button onClick={() => setRemoveImageKind(null)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">إلغاء</button>
-            <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors">إزالة</button>
+            <button onClick={() => setRemoveImageKind(null)} className="flex-1 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] hover:bg-[var(--muted)] transition-colors">{t('profile.cancel')}</button>
+            <button onClick={removeImage} disabled={uploading} className="flex-1 rounded-xl bg-[var(--destructive)] px-4 py-2.5 text-sm font-semibold text-white hover:bg-[var(--destructive)]/90 disabled:opacity-50 transition-colors">{t('profile.remove')}</button>
           </div>
         </div>
       </Modal>
@@ -589,7 +591,7 @@ export const ProfileHeader = ({
         >
           <button
             onClick={() => setLightboxImage(null)}
-            aria-label="إغلاق"
+            aria-label={t('profile.close')}
             className="absolute top-4 left-4 h-10 w-10 flex items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
           >
             <X size={20} />
@@ -611,6 +613,7 @@ export const ProfileHeader = ({
 // surfaces never disagree (was a client-side calc here → 69% vs dashboard's
 // /users/me/completeness → 100%, #835).
 const ProfileCompletion = ({ profile }: { profile: any }) => {
+  const { t } = useT();
   const { data } = useQuery({
     queryKey: ['profile-completeness'],
     queryFn: () => apiClient.get('/users/me/completeness').then((r) => r.data),
@@ -626,7 +629,7 @@ const ProfileCompletion = ({ profile }: { profile: any }) => {
   return (
     <div className="mt-6 border-t border-[var(--border)]/40 pt-4">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-[var(--muted-foreground)] font-medium">اكتمال الملف الشخصي</span>
+        <span className="text-xs text-[var(--muted-foreground)] font-medium">{t('profile.completion')}</span>
         <span className="text-xs font-bold text-gradient">{pct}%</span>
       </div>
       <div className="h-2 rounded-full bg-[var(--muted)] overflow-hidden">

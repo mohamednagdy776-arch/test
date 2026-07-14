@@ -4,14 +4,16 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { authApi } from '@/features/auth/api';
 import { apiClient } from '@/lib/api-client';
+import { useT } from '@/i18n/I18nProvider';
 
 const STEPS = [
-  { n: '١', label: 'أدخل البريد الجديد وكلمة المرور' },
-  { n: '٢', label: 'نرسل رابط التأكيد إلى البريد الجديد' },
-  { n: '٣', label: 'اضغط الرابط لتأكيد التغيير' },
+  { n: '١', labelKey: 'settings.email.step1' },
+  { n: '٢', labelKey: 'settings.email.step2' },
+  { n: '٣', labelKey: 'settings.email.step3' },
 ];
 
 export default function ChangeEmailPage() {
+  const { t } = useT();
   const [newEmail, setNewEmail] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,17 +34,17 @@ export default function ChangeEmailPage() {
     // Validate the email format client-side (#731) — an invalid address used to
     // pass the non-empty-only check and only fail server-side.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail.trim())) {
-      setError('صيغة البريد الإلكتروني غير صحيحة');
+      setError(t('settings.email.invalidFormat'));
       return;
     }
     setLoading(true);
     try {
       const r: any = await authApi.requestEmailChange(newEmail.trim(), currentPassword);
-      setDone(r?.message || 'تم إرسال رابط التأكيد إلى البريد الإلكتروني الجديد.');
+      setDone(r?.message || t('settings.email.confirmSent'));
       setNewEmail('');
       setCurrentPassword('');
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'تعذّر تغيير البريد الإلكتروني');
+      setError(err?.response?.data?.message || t('settings.email.changeFailed'));
     } finally {
       setLoading(false);
     }
@@ -52,7 +54,7 @@ export default function ChangeEmailPage() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-md mx-auto space-y-6">
         <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
-          <span>←</span> العودة للإعدادات
+          <span>←</span> {t('lang.back')}
         </Link>
 
         {/* Header */}
@@ -62,8 +64,8 @@ export default function ChangeEmailPage() {
               📧
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[var(--primary)]">تغيير البريد الإلكتروني</h1>
-              <p className="text-xs text-[var(--primary)]">عملية آمنة تتطلب التحقق من هويتك</p>
+              <h1 className="text-xl font-bold text-[var(--primary)]">{t('settings.email.title')}</h1>
+              <p className="text-xs text-[var(--primary)]">{t('settings.email.subtitle')}</p>
             </div>
           </div>
 
@@ -74,7 +76,7 @@ export default function ChangeEmailPage() {
                 <span className="h-6 w-6 shrink-0 rounded-full bg-[var(--muted)] text-[var(--primary)] text-xs font-bold flex items-center justify-center">
                   {s.n}
                 </span>
-                <p className="text-xs text-[var(--foreground)]">{s.label}</p>
+                <p className="text-xs text-[var(--foreground)]">{t(s.labelKey)}</p>
               </div>
             ))}
           </div>
@@ -97,12 +99,12 @@ export default function ChangeEmailPage() {
 
           {currentEmail && (
             <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] px-4 py-3 text-sm text-[var(--foreground)]">
-              <span className="font-semibold">البريد الحالي: </span>
+              <span className="font-semibold">{t('settings.email.currentLabel')} </span>
               <span className="font-mono">{currentEmail}</span>
             </div>
           )}
           <div>
-            <label className="block text-sm font-semibold text-[var(--foreground)] mb-1.5">البريد الإلكتروني الجديد</label>
+            <label className="block text-sm font-semibold text-[var(--foreground)] mb-1.5">{t('settings.email.newEmailLabel')}</label>
             <input
               type="email"
               required
@@ -114,7 +116,7 @@ export default function ChangeEmailPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-[var(--foreground)] mb-1.5">كلمة المرور الحالية</label>
+            <label className="block text-sm font-semibold text-[var(--foreground)] mb-1.5">{t('settings.email.currentPasswordLabel')}</label>
             <input
               type="password"
               required
@@ -130,15 +132,15 @@ export default function ChangeEmailPage() {
             disabled={loading || !newEmail || !currentPassword}
             className="w-full rounded-xl bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] py-2.5 text-sm font-semibold text-white shadow-lg shadow-black/10 hover:shadow-xl hover:shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
-            {loading ? 'جارٍ الإرسال...' : 'إرسال رابط التأكيد'}
+            {loading ? t('settings.email.sending') : t('settings.email.sendConfirmLink')}
           </button>
         </form>
 
         {/* Security note */}
         <div className="rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 p-4">
-          <p className="text-xs font-bold text-[var(--accent)] mb-1">🔐 ملاحظة أمنية</p>
+          <p className="text-xs font-bold text-[var(--accent)] mb-1">🔐 {t('settings.email.securityNoteTitle')}</p>
           <p className="text-xs text-[var(--accent)] leading-relaxed">
-            لن يتغير بريدك الإلكتروني حتى تضغط على رابط التأكيد المرسل إلى البريد الجديد. إذا لم تطلب هذا التغيير، تجاهل الرابط.
+            {t('settings.email.securityNote')}
           </p>
         </div>
       </div>

@@ -12,8 +12,10 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { useToast } from '@/components/ui/Toast';
 
 import { resolveMediaUrl } from '@/lib/media';
+import { useT } from '@/i18n/I18nProvider';
 
 function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnfriend?: () => void; onMessage?: () => void; onBlock?: () => void }) {
+  const { t } = useT();
   const name = displayName(user);
   const [showMenu, setShowMenu] = useState(false);
   // getFriends() returns raw User entities with a nested `profile` relation,
@@ -39,7 +41,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnf
             onKeyDown={(e) => e.key === 'Escape' && setShowMenu(false)}
             aria-haspopup="true"
             aria-expanded={showMenu}
-            aria-label="خيارات"
+            aria-label={t('friends.options')}
             className="p-1.5 rounded-lg transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]"
             style={{ color: 'var(--muted-foreground)' }}>
             <DotsThreeVertical size={18} weight="bold" />
@@ -51,15 +53,15 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnf
               <button onClick={() => { onMessage?.(); setShowMenu(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_6%,transparent)]"
                 style={{ color: 'var(--foreground)' }}>
-                <ChatCircle size={15} /> رسالة
+                <ChatCircle size={15} /> {t('friends.message')}
               </button>
               <button onClick={() => { onUnfriend?.(); setShowMenu(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm transition-colors hover:bg-[var(--destructive)]/10 text-[var(--destructive)]">
-                <UserMinus size={15} /> إلغاء الصداقة
+                <UserMinus size={15} /> {t('friends.unfriend')}
               </button>
               <button onClick={() => { onBlock?.(); setShowMenu(false); }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-right text-sm text-[var(--destructive)] transition-colors hover:bg-[var(--destructive)]/10">
-                <Prohibit size={15} /> حظر
+                <Prohibit size={15} /> {t('friends.block')}
               </button>
             </div>
           )}
@@ -69,12 +71,12 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnf
         <button onClick={onMessage}
           className="flex-1 py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-90"
           style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: 'var(--primary-foreground)' }}>
-          رسالة
+          {t('friends.message')}
         </button>
         <button onClick={onUnfriend}
           className="flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors"
           style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}>
-          إلغاء الصداقة
+          {t('friends.unfriend')}
         </button>
       </div>
     </div>
@@ -82,6 +84,7 @@ function FriendCard({ user, onUnfriend, onMessage, onBlock }: { user: any; onUnf
 }
 
 function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept: () => void; onDecline: () => void }) {
+  const { t } = useT();
   const name = displayName(request.requester);
   const mutualCount = request.mutualFriends || 0;
   const avatarSrc = resolveMediaUrl(request.requester?.avatar ?? request.requester?.profile?.avatarUrl);
@@ -97,19 +100,19 @@ function RequestCard({ request, onAccept, onDecline }: { request: any; onAccept:
         </Link>
         <Link href={profileHref} className="flex-1 min-w-0">
           <p className="text-sm font-bold truncate hover:underline" style={{ color: 'var(--foreground)' }}>{name}</p>
-          {mutualCount > 0 && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{mutualCount} صديق مشترك</p>}
+          {mutualCount > 0 && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{t('friends.mutualFriends', { count: mutualCount })}</p>}
         </Link>
       </div>
       <div className="flex gap-2">
         <button onClick={onAccept}
           className="flex-1 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90"
           style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: 'var(--primary-foreground)' }}>
-          قبول
+          {t('friends.accept')}
         </button>
         <button onClick={onDecline}
           className="flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors"
           style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}>
-          رفض
+          {t('friends.decline')}
         </button>
       </div>
     </div>
@@ -120,6 +123,7 @@ function SuggestionCard({ user, onAdd, onFollow, adding, added, following, follo
   user: any; onAdd: () => void; onFollow: () => void;
   adding: boolean; added: boolean; following: boolean; followed: boolean;
 }) {
+  const { t } = useT();
   const name = displayName(user);
   const mutual = user.mutual || 0;
   const avatarSrc = resolveMediaUrl(user.userId?.profile?.avatarUrl);
@@ -135,19 +139,19 @@ function SuggestionCard({ user, onAdd, onFollow, adding, added, following, follo
         </Link>
         <Link href={profileHref} className="flex-1 min-w-0">
           <p className="text-sm font-bold truncate hover:underline" style={{ color: 'var(--foreground)' }}>{name}</p>
-          {mutual > 0 && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{mutual} صديق مشترك</p>}
+          {mutual > 0 && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{t('friends.mutualFriends', { count: mutual })}</p>}
         </Link>
       </div>
       <div className="flex gap-2">
         <button onClick={onAdd} disabled={adding || added}
           className="flex-1 py-2 rounded-xl text-xs font-bold transition-all hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))', color: 'var(--primary-foreground)' }}>
-          {added ? 'تم إرسال الطلب' : adding ? '...' : 'إضافة صديق'}
+          {added ? t('friends.requestSent') : adding ? '...' : t('friends.addFriend')}
         </button>
         <button onClick={onFollow} disabled={following || followed}
           className="flex-1 py-2 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}>
-          {followed ? 'تتم المتابعة' : following ? '...' : 'متابعة'}
+          {followed ? t('friends.followingState') : following ? '...' : t('friends.follow')}
         </button>
       </div>
     </div>
@@ -155,11 +159,12 @@ function SuggestionCard({ user, onAdd, onFollow, adding, added, following, follo
 }
 
 function BirthdayCard({ birthday }: { birthday: any }) {
+  const { t } = useT();
   const name = birthday.name;
   const date = new Date(birthday.date);
   const today = new Date();
   const diffDays = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-  const dateText = diffDays === 0 ? 'اليوم' : diffDays === 1 ? 'غداً' : `خلال ${diffDays} أيام`;
+  const dateText = diffDays === 0 ? t('friends.today') : diffDays === 1 ? t('friends.tomorrow') : t('friends.inDays', { days: diffDays });
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-xl"
@@ -175,20 +180,21 @@ function BirthdayCard({ birthday }: { birthday: any }) {
 }
 
 function FriendListCard({ list, onEdit, onDelete, members }: { list: any; onEdit: () => void; onDelete: () => void; members: any[] }) {
+  const { t } = useT();
   return (
     <div className="rounded-2xl p-4 transition-all hover:-translate-y-0.5"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{list.name}</h3>
         <div className="flex gap-1">
-          <button onClick={onEdit} aria-label="تعديل"
+          <button onClick={onEdit} aria-label={t('friends.edit')}
             className="p-1.5 rounded-lg transition-colors hover:bg-[color-mix(in_srgb,var(--primary)_8%,transparent)]"
             style={{ color: 'var(--primary)' }}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
             </svg>
           </button>
-          <button onClick={onDelete} aria-label="حذف"
+          <button onClick={onDelete} aria-label={t('friends.delete')}
             className="p-1.5 rounded-lg text-[var(--destructive)]/70 transition-colors hover:bg-[var(--destructive)]/10 hover:text-[var(--destructive)]">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -196,7 +202,7 @@ function FriendListCard({ list, onEdit, onDelete, members }: { list: any; onEdit
           </button>
         </div>
       </div>
-      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--muted-foreground)' }}>{members.length} أعضاء</p>
+      <p className="text-xs font-semibold mb-2" style={{ color: 'var(--muted-foreground)' }}>{t('friends.memberCount', { count: members.length })}</p>
       <div className="flex -space-x-2">
         {members.slice(0, 5).map((member: any, idx: number) => (
           <Avatar key={idx} name={displayName(member)} size="sm" shape="circle" />
@@ -213,6 +219,7 @@ function FriendListCard({ list, onEdit, onDelete, members }: { list: any; onEdit
 }
 
 export default function FriendsPage() {
+  const { t } = useT();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'friends' | 'requests' | 'suggestions' | 'lists'>('friends');
   const [searchQuery, setSearchQuery] = useState('');
@@ -283,21 +290,21 @@ export default function FriendsPage() {
   };
 
   const handleUnfriend = (userId: string) => {
-    setConfirmAction({ type: 'unfriend', id: userId, label: 'هل أنت متأكد من إلغاء الصداقة؟' });
+    setConfirmAction({ type: 'unfriend', id: userId, label: t('friends.confirmUnfriend') });
   };
 
   const handleBlock = (userId: string) => {
-    setConfirmAction({ type: 'block', id: userId, label: 'هل أنت متأكد من حظر هذا المستخدم؟' });
+    setConfirmAction({ type: 'block', id: userId, label: t('friends.confirmBlock') });
   };
 
   const handleFollow = (userId: string) => {
     follow(userId, {
       onSuccess: () => {
         setFollowedIds((prev) => new Set(prev).add(userId));
-        showToast?.('تمت المتابعة', 'success');
+        showToast?.(t('friends.followedToast'), 'success');
       },
       onError: (err: any) => {
-        showToast?.(err?.response?.data?.message || 'تعذّرت المتابعة', 'error');
+        showToast?.(err?.response?.data?.message || t('friends.followErrorToast'), 'error');
       },
     });
   };
@@ -306,10 +313,10 @@ export default function FriendsPage() {
     sendRequest(userId, {
       onSuccess: () => {
         setSentRequestIds((prev) => new Set(prev).add(userId));
-        showToast?.('تم إرسال طلب الصداقة', 'success');
+        showToast?.(t('friends.requestSentToast'), 'success');
       },
       onError: (err: any) => {
-        showToast?.(err?.response?.data?.message || 'تعذّر إرسال الطلب', 'error');
+        showToast?.(err?.response?.data?.message || t('friends.requestErrorToast'), 'error');
       },
     });
   };
@@ -322,7 +329,7 @@ export default function FriendsPage() {
   };
 
   const handleDeleteList = (listId: string) => {
-    setConfirmAction({ type: 'deleteList', id: listId, label: 'هل أنت متأكد من حذف هذه القائمة؟' });
+    setConfirmAction({ type: 'deleteList', id: listId, label: t('friends.confirmDeleteList') });
   };
 
   const executeConfirmedAction = () => {
@@ -352,10 +359,10 @@ export default function FriendsPage() {
   };
 
   const tabs = [
-    { id: 'friends', label: 'الأصدقاء', count: friends.length },
-    { id: 'requests', label: 'طلبات الصداقة', count: requests.length },
-    { id: 'suggestions', label: 'اقتراحات', count: suggestions.length },
-    { id: 'lists', label: 'القوائم', count: friendLists.length },
+    { id: 'friends', label: t('nav.friends'), count: friends.length },
+    { id: 'requests', label: t('friends.tabRequests'), count: requests.length },
+    { id: 'suggestions', label: t('friends.tabSuggestions'), count: suggestions.length },
+    { id: 'lists', label: t('friends.tabLists'), count: friendLists.length },
   ] as const;
 
   return (
@@ -363,9 +370,9 @@ export default function FriendsPage() {
       <div className="mb-5">
         <PageHeader
           icon={UsersThree}
-          eyebrow="شبكتك"
-          title="الأصدقاء"
-          subtitle="أصدقاؤك، طلبات الصداقة، والأشخاص الذين قد تعرفهم"
+          eyebrow={t('friends.eyebrow')}
+          title={t('nav.friends')}
+          subtitle={t('friends.subtitle')}
         />
       </div>
 
@@ -373,7 +380,7 @@ export default function FriendsPage() {
           <div className="mb-5 rounded-2xl p-4"
             style={{ background: 'color-mix(in srgb, #f59e0b 6%, var(--card))', border: '1px solid color-mix(in srgb, #f59e0b 20%, transparent)' }}>
             <h2 className="text-sm font-bold mb-3 flex items-center gap-2" style={{ color: 'var(--foreground)' }}>
-              🎂 أعياد ميلاد قادمة
+              {t('friends.upcomingBirthdays')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               {birthdays.slice(0, 6).map((b: any) => (
@@ -406,7 +413,7 @@ export default function FriendsPage() {
               <div className="flex-1 relative">
                 <input
                   type="text"
-                  placeholder="البحث عن الأصدقاء..."
+                  placeholder={t('friends.searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full px-4 py-2.5 pr-10 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] placeholder-[var(--muted-foreground)]/60 focus:outline-none focus:outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-[color-mix(in_srgb,var(--primary)_15%,transparent)]"
@@ -420,12 +427,12 @@ export default function FriendsPage() {
                 onChange={(e) => setSortBy(e.target.value as 'name' | 'recent')}
                 className="px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--card)] text-sm text-[var(--foreground)] focus:outline-none focus:border-[var(--ring)]"
               >
-                <option value="name">ترتيب حسب الاسم</option>
-                <option value="recent">الأحدث إضافة</option>
+                <option value="name">{t('friends.sortByName')}</option>
+                <option value="recent">{t('friends.sortByRecent')}</option>
               </select>
             </div>
 
-            <p className="text-sm text-[var(--primary)] mb-4">لديك {friends.length} أصدقاء</p>
+            <p className="text-sm text-[var(--primary)] mb-4">{t('friends.friendCount', { count: friends.length })}</p>
 
             {friendsLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -445,7 +452,7 @@ export default function FriendsPage() {
             ) : friendsError ? (
               <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
                 <p className="text-3xl mb-2">⚠️</p>
-                <p className="text-sm text-[var(--primary)]">تعذّر تحميل قائمة الأصدقاء</p>
+                <p className="text-sm text-[var(--primary)]">{t('friends.loadFriendsError')}</p>
               </div>
             ) : filteredAndSortedFriends.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -462,7 +469,7 @@ export default function FriendsPage() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-4xl mb-2">👥</p>
-                <p className="text-[var(--primary)]">{searchQuery ? 'لا توجد نتائج للبحث' : 'لم تقم بإضافة أصدقاء بعد'}</p>
+                <p className="text-[var(--primary)]">{searchQuery ? t('friends.noSearchResults') : t('friends.noFriendsYet')}</p>
               </div>
             )}
           </div>
@@ -488,7 +495,7 @@ export default function FriendsPage() {
             ) : requestsError ? (
               <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
                 <p className="text-3xl mb-2">⚠️</p>
-                <p className="text-sm text-[var(--primary)]">تعذّر تحميل طلبات الصداقة</p>
+                <p className="text-sm text-[var(--primary)]">{t('friends.loadRequestsError')}</p>
               </div>
             ) : requests.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -504,7 +511,7 @@ export default function FriendsPage() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-4xl mb-2">📭</p>
-                <p className="text-[var(--primary)]">لا توجد طلبات صداقة</p>
+                <p className="text-[var(--primary)]">{t('friends.noRequests')}</p>
               </div>
             )}
           </div>
@@ -527,7 +534,7 @@ export default function FriendsPage() {
             ) : suggestionsError ? (
               <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
                 <p className="text-3xl mb-2">⚠️</p>
-                <p className="text-sm text-[var(--primary)]">تعذّر تحميل الاقتراحات</p>
+                <p className="text-sm text-[var(--primary)]">{t('friends.loadSuggestionsError')}</p>
               </div>
             ) : suggestions.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -550,7 +557,7 @@ export default function FriendsPage() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-4xl mb-2">💡</p>
-                <p className="text-[var(--primary)]">لا توجد اقتراحات حالياً</p>
+                <p className="text-[var(--primary)]">{t('friends.noSuggestions')}</p>
               </div>
             )}
           </div>
@@ -561,7 +568,7 @@ export default function FriendsPage() {
             <div className="flex gap-2 mb-6">
               <input
                 type="text"
-                placeholder="اسم القائمة الجديدة..."
+                placeholder={t('friends.newListPlaceholder')}
                 value={newListName}
                 onChange={(e) => setNewListName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateList()}
@@ -572,7 +579,7 @@ export default function FriendsPage() {
                 disabled={!newListName.trim()}
                 className="px-4 py-2.5 rounded-xl bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-black/10"
               >
-                إنشاء
+                {t('friends.createList')}
               </button>
             </div>
 
@@ -593,7 +600,7 @@ export default function FriendsPage() {
             ) : listsError ? (
               <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
                 <p className="text-3xl mb-2">⚠️</p>
-                <p className="text-sm text-[var(--primary)]">تعذّر تحميل قوائم الأصدقاء</p>
+                <p className="text-sm text-[var(--primary)]">{t('friends.loadListsError')}</p>
               </div>
             ) : friendLists.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -17,6 +17,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
 
 import { REACTIONS, ReactionPicker } from '@/features/reactions/ReactionPicker';
+import { useT } from '@/i18n/I18nProvider';
 
 // Turn #hashtags, @mentions, and URLs into interactive elements.
 function renderWithHashtags(text: string) {
@@ -39,19 +40,20 @@ function renderWithHashtags(text: string) {
   });
 }
 
-function timeAgo(date: string | Date) {
+function timeAgo(date: string | Date, t: (key: string, vars?: Record<string, string | number>) => string, locale: string) {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'الآن';
-  if (mins < 60) return `${mins} د`;
+  if (mins < 1) return t('post.time.now');
+  if (mins < 60) return t('post.time.minutesAgo', { mins });
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} س`;
+  if (hours < 24) return t('post.time.hoursAgo', { hours });
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} ي`;
-  return new Date(date).toLocaleDateString('ar-EG');
+  if (days < 7) return t('post.time.daysAgo', { days });
+  return new Date(date).toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-US');
 }
 
 function ReactionDisplay({ postId }: { postId: string }) {
+  const { t } = useT();
   const { data } = useReactions(postId);
   const toggle = useToggleReaction();
   const [showPicker, setShowPicker] = useState(false);
@@ -92,7 +94,7 @@ function ReactionDisplay({ postId }: { postId: string }) {
           )}
         >
           <span className="text-base">{currentReaction?.emoji || defaultEmoji}</span>
-          <span>{currentReaction?.label || 'إعجاب'}</span>
+          <span>{currentReaction?.label || t('post.reaction.like')}</span>
         </button>
         {/* Was a single blended total with no per-type breakdown at all --
             users had no way to tell a Like from a Love without opening the
@@ -126,19 +128,20 @@ function ReactionDisplay({ postId }: { postId: string }) {
 }
 
 function ReactionBreakdownModal({ reactions, counts, onClose }: { reactions: any[]; counts: Record<string, number>; onClose: () => void }) {
+  const { t } = useT();
   const [activeTab, setActiveTab] = useState<'all' | string>('all');
   const presentTypes = REACTIONS.filter(r => counts[r.type] > 0);
   const filtered = activeTab === 'all' ? reactions : reactions.filter(r => r.type === activeTab);
 
   return (
-    <Modal open onClose={onClose} title="التفاعلات">
+    <Modal open onClose={onClose} title={t('post.reaction.title')}>
       <div className="space-y-3">
         <div className="flex gap-2 flex-wrap border-b border-[var(--border)] pb-2">
           <button
             onClick={() => setActiveTab('all')}
             className={cn('px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', activeTab === 'all' ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50')}
           >
-            الكل ({reactions.length})
+            {t('post.reaction.allCount', { count: reactions.length })}
           </button>
           {presentTypes.map(r => (
             <button
@@ -152,7 +155,7 @@ function ReactionBreakdownModal({ reactions, counts, onClose }: { reactions: any
         </div>
         <div className="max-h-80 overflow-y-auto space-y-2">
           {filtered.length === 0 ? (
-            <p className="text-sm text-[var(--muted-foreground)] text-center py-6">لا يوجد تفاعلات</p>
+            <p className="text-sm text-[var(--muted-foreground)] text-center py-6">{t('post.reaction.none')}</p>
           ) : filtered.map((r) => {
             const meta = REACTIONS.find(x => x.type === r.type);
             return (
@@ -176,6 +179,7 @@ function ReactionBreakdownModal({ reactions, counts, onClose }: { reactions: any
 // Owner-only voter breakdown per poll option -- the poll UI only ever showed
 // a blended percentage with no way to see who voted for what (#326).
 function PollVotersModal({ postId, onClose }: { postId: string; onClose: () => void }) {
+  const { t } = useT();
   const { data, isLoading } = useQuery({
     queryKey: ['poll-voters', postId],
     queryFn: () => apiClient.get(`/posts/${postId}/poll/voters`).then((r) => r.data),
@@ -183,16 +187,16 @@ function PollVotersModal({ postId, onClose }: { postId: string; onClose: () => v
   const options: { text: string; votes: number; voters: any[] }[] = data?.data ?? [];
 
   return (
-    <Modal open onClose={onClose} title="المصوّتون">
+    <Modal open onClose={onClose} title={t('post.poll.votersTitle')}>
       {isLoading ? (
-        <p className="text-sm text-[var(--muted-foreground)] text-center py-6">جاري التحميل...</p>
+        <p className="text-sm text-[var(--muted-foreground)] text-center py-6">{t('post.loading')}</p>
       ) : (
         <div className="space-y-4 max-h-96 overflow-y-auto">
           {options.map((opt, i) => (
             <div key={i}>
               <p className="text-sm font-bold text-[var(--foreground)] mb-2">{opt.text} ({opt.votes})</p>
               {opt.voters.length === 0 ? (
-                <p className="text-xs text-[var(--muted-foreground)]">لا يوجد مصوّتون</p>
+                <p className="text-xs text-[var(--muted-foreground)]">{t('post.poll.noVoters')}</p>
               ) : (
                 <div className="space-y-1.5">
                   {opt.voters.map((v: any) => (
@@ -213,6 +217,7 @@ function PollVotersModal({ postId, onClose }: { postId: string; onClose: () => v
 }
 
 function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUserId?: string; isOwnPost?: boolean }) {
+  const { t, locale } = useT();
   const [text, setText] = useState('');
   const { data, isLoading } = useComments(postId);
   const addComment = useAddComment();
@@ -227,7 +232,7 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
   // own post at all (#327).
   const handleDeleteComment = (commentId: string) => {
     deleteComment.mutate({ postId, commentId }, {
-      onError: (err: any) => showToast(err?.response?.data?.message || 'تعذّر حذف التعليق', 'error'),
+      onError: (err: any) => showToast(err?.response?.data?.message || t('post.comment.deleteError'), 'error'),
     });
   };
 
@@ -256,12 +261,12 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
                   ) : (
                     <p className="text-xs font-bold text-[var(--foreground)]">{displayName(c.user)}</p>
                   )}
-                  <span className="text-[10px] text-[var(--muted-foreground)]">{timeAgo(c.createdAt)}</span>
+                  <span className="text-[10px] text-[var(--muted-foreground)]">{timeAgo(c.createdAt, t, locale)}</span>
                   {(isOwnPost || (!!myUserId && c.user?.id === myUserId)) && (
                     <button
                       onClick={() => handleDeleteComment(c.id)}
                       disabled={deleteComment.isPending}
-                      aria-label="حذف التعليق"
+                      aria-label={t('post.comment.deleteAria')}
                       className="mr-auto opacity-0 group-hover:opacity-100 transition-opacity text-[var(--muted-foreground)] hover:text-[var(--destructive)] disabled:opacity-40"
                     >
                       <Trash size={13} />
@@ -276,14 +281,14 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
       ) : (
         <div className="flex flex-col items-center justify-center py-4 mb-3">
           <ChatCircle size={32} className="text-[var(--muted-foreground)] mb-1" />
-          <p className="text-xs text-[var(--muted-foreground)]">لا توجد تعليقات بعد — كن أول من يعلق</p>
+          <p className="text-xs text-[var(--muted-foreground)]">{t('post.comment.empty')}</p>
         </div>
       )}
       <form onSubmit={handleSubmit} className="flex gap-2 items-center">
         {/* Was a hardcoded static "أ" placeholder, never the signed-in
             user's real avatar (#265). */}
         <Avatar src={myProfile?.avatarUrl} name={myProfile?.fullName} size="sm" className="shadow-soft" />
-        <input type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder="اكتب تعليقاً..."
+        <input type="text" value={text} onChange={(e) => setText(e.target.value)} placeholder={t('post.comment.placeholder')}
           className="flex-1 rounded-full border border-[var(--border)] bg-[var(--muted)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:bg-[var(--card)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] transition-all duration-300 hover:border-[var(--ring)]" />
         <button type="submit" disabled={!text.trim() || addComment.isPending}
           className="h-9 w-9 rounded-full text-[var(--card)] flex items-center justify-center hover:shadow-glow-lg disabled:opacity-40 transition-all duration-300 active:scale-95 hover:-translate-y-0.5"
@@ -296,6 +301,7 @@ function CommentSection({ postId, myUserId, isOwnPost }: { postId: string; myUse
 }
 
 function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean; onClose: () => void; postId: string; postContent: string }) {
+  const { t } = useT();
   const [content, setContent] = useState('');
   const [mode, setMode] = useState<'feed' | 'friend'>('feed');
   const sharePost = useSharePost();
@@ -309,15 +315,15 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
   // centered on the viewport (#95). The shared Modal component already
   // solves this via a document.body portal (see its own comment re #106).
   return (
-    <Modal open={isOpen} onClose={onClose} title="مشاركة المنشور">
+    <Modal open={isOpen} onClose={onClose} title={t('post.share.title')}>
       {/* Only offered "share to my feed" with no way to send directly to a
           friend in chat -- the only alternative was external apps (#157). */}
       <div className="flex gap-2 mb-4 border-b border-[var(--border)] pb-2">
         <button onClick={() => setMode('feed')} className={cn('px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', mode === 'feed' ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50')}>
-          مشاركة على ملفي
+          {t('post.share.toFeed')}
         </button>
         <button onClick={() => setMode('friend')} className={cn('px-3 py-1.5 rounded-full text-xs font-semibold transition-colors', mode === 'friend' ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50')}>
-          إرسال لصديق
+          {t('post.share.toFriend')}
         </button>
       </div>
       {mode === 'feed' ? (
@@ -325,7 +331,7 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="ما الذي يدور في ذهنك؟"
+            placeholder={t('post.share.placeholder')}
             className="w-full rounded-xl border border-[var(--border)] bg-[var(--muted)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20 focus:border-[var(--ring)] focus:shadow-[0_0_0_4px_rgba(184,137,42,0.08)] mb-4 transition-all duration-300"
             rows={3}
           />
@@ -336,17 +342,17 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
             onClick={async () => {
               try {
                 await sharePost.mutateAsync({ postId, content });
-                showToast('تمت المشاركة بنجاح', 'success');
+                showToast(t('post.share.success'), 'success');
                 onClose();
               } catch {
-                showToast('فشلت المشاركة، حاول مجدداً', 'error');
+                showToast(t('post.share.error'), 'error');
               }
             }}
             disabled={sharePost.isPending}
             className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all hover:-translate-y-0.5 duration-300"
             style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
           >
-            {sharePost.isPending ? 'جاري النشر...' : 'مشاركة'}
+            {sharePost.isPending ? t('post.share.posting') : t('post.share.submit')}
           </button>
         </>
       ) : (
@@ -361,6 +367,7 @@ function ShareModal({ isOpen, onClose, postId, postContent }: { isOpen: boolean;
 // feed (#157). Sends a message containing the post's permalink, which
 // already renders as a rich link-preview card in chat.
 function SendToFriendPicker({ postId, onSent }: { postId: string; onSent: () => void }) {
+  const { t } = useT();
   const { data: friendsData, isLoading } = useFriends();
   const { showToast } = useToast() as any;
   const [sendingTo, setSendingTo] = useState<string | null>(null);
@@ -373,17 +380,17 @@ function SendToFriendPicker({ postId, onSent }: { postId: string; onSent: () => 
       const conversationId = conv?.data?.id ?? conv?.id;
       const url = `${window.location.origin}/posts/${postId}`;
       await chatApi.sendMessage(conversationId, url);
-      showToast('تم الإرسال بنجاح', 'success');
+      showToast(t('post.share.sendSuccess'), 'success');
       onSent();
     } catch {
-      showToast('تعذّر الإرسال، حاول مجدداً', 'error');
+      showToast(t('post.share.sendError'), 'error');
     } finally {
       setSendingTo(null);
     }
   };
 
-  if (isLoading) return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">جاري التحميل...</p>;
-  if (friends.length === 0) return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">لا يوجد أصدقاء</p>;
+  if (isLoading) return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">{t('post.loading')}</p>;
+  if (friends.length === 0) return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">{t('post.share.noFriends')}</p>;
 
   return (
     <div className="space-y-1.5 max-h-72 overflow-y-auto">
@@ -399,7 +406,7 @@ function SendToFriendPicker({ postId, onSent }: { postId: string; onSent: () => 
             className="rounded-xl px-3 py-1.5 text-xs font-bold text-white transition-all disabled:opacity-50"
             style={{ background: 'var(--primary)' }}
           >
-            {sendingTo === f.id ? '...' : 'إرسال'}
+            {sendingTo === f.id ? '...' : t('post.share.send')}
           </button>
         </div>
       ))}
@@ -408,6 +415,7 @@ function SendToFriendPicker({ postId, onSent }: { postId: string; onSent: () => 
 }
 
 function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: () => void; post: any }) {
+  const { t } = useT();
   const [content, setContent] = useState(post.content || '');
   const updatePost = useUpdatePost();
   const { showToast } = useToast() as any;
@@ -417,7 +425,7 @@ function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: ()
   // transform on the ancestor <article> made this dialog's position depend
   // on whether the cursor happened to be over the card when it opened.
   return (
-    <Modal open={isOpen} onClose={onClose} title="تعديل المنشور">
+    <Modal open={isOpen} onClose={onClose} title={t('post.edit.title')}>
       <textarea
         value={content}
         onChange={(e) => setContent(e.target.value)}
@@ -428,23 +436,24 @@ function EditPostModal({ isOpen, onClose, post }: { isOpen: boolean; onClose: ()
         onClick={async () => {
           try {
             await updatePost.mutateAsync({ postId: post.id, data: { content } });
-            showToast('تم تعديل المنشور', 'success');
+            showToast(t('post.edit.success'), 'success');
             onClose();
           } catch {
-            showToast('فشل تعديل المنشور', 'error');
+            showToast(t('post.edit.error'), 'error');
           }
         }}
         disabled={updatePost.isPending || !content.trim()}
         className="w-full py-3 rounded-xl text-[var(--card)] font-medium hover:shadow-glow-lg disabled:opacity-40 transition-all duration-300"
         style={{ background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)' }}
       >
-        {updatePost.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+        {updatePost.isPending ? t('post.edit.saving') : t('post.edit.save')}
       </button>
     </Modal>
   );
 }
 
 function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide, anchorRef }: { postId: string; post: any; isOwnPost?: boolean; savePost: ReturnType<typeof useSavePost>; onClose: () => void; onEdit?: () => void; onHide?: () => void; anchorRef: React.RefObject<HTMLButtonElement> }) {
+  const { t } = useT();
   const { showToast } = useToast() as any;
   // The dropdown used to be a plain absolutely-positioned div nested inside
   // the post <article>, which has overflow-hidden -- any menu near a
@@ -470,21 +479,21 @@ function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide, 
   const pinPost = useUpdatePost();
 
   const menuItems = [
-    ...(isOwnPost && onEdit ? [{ label: 'تعديل المنشور', icon: PencilSimple, action: () => { onEdit(); } }] : []),
-    { label: 'حفظ المنشور', icon: BookmarkSimple, action: () => savePost.mutate(postId) },
+    ...(isOwnPost && onEdit ? [{ label: t('post.edit.title'), icon: PencilSimple, action: () => { onEdit(); } }] : []),
+    { label: t('post.menu.save'), icon: BookmarkSimple, action: () => savePost.mutate(postId) },
     ...(isOwnPost ? [
       // Pin/unpin uses the MapPin (pushpin) icon. It persists via PATCH /posts
       // (isPinned is whitelisted) and reorders the feed; the toast makes the
       // action visibly responsive instead of feeling dead (#11).
-      { label: post.isPinned ? 'إلغاء التثبيت' : 'تثبيت المنشور', icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }, { onSuccess: () => showToast(post.isPinned ? 'تم إلغاء تثبيت المنشور' : 'تم تثبيت المنشور', 'success') }) },
+      { label: post.isPinned ? t('post.menu.unpin') : t('post.menu.pin'), icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }, { onSuccess: () => showToast(post.isPinned ? t('post.menu.unpinSuccess') : t('post.menu.pinSuccess'), 'success') }) },
       // (#12) Removed the duplicate Bookmark "أرشفة المنشور" item: it reused the
       // same icon as "حفظ المنشور" and was dead — isArchived isn't a whitelisted
       // CreatePostDto field, so the global ValidationPipe stripped it and the
       // PATCH did nothing.
-      { label: 'حذف المنشور', icon: Trash, action: () => deletePost.mutate(postId, { onSuccess: () => { showToast('تم حذف المنشور', 'success'); onHide?.(); } }), danger: true },
+      { label: t('post.menu.delete'), icon: Trash, action: () => deletePost.mutate(postId, { onSuccess: () => { showToast(t('post.menu.deleteSuccess'), 'success'); onHide?.(); } }), danger: true },
     ] : [
-      { label: 'عدم الاهتمام', icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }, { onSuccess: () => { showToast('لن تظهر هذه المنشورات بعد الآن', 'success'); onHide?.(); } }) },
-      { label: 'إيقاف مؤقت 30 يوم', icon: Clock, action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }, { onSuccess: () => { showToast('تم إيقاف المنشورات مؤقتاً', 'success'); onHide?.(); } }) },
+      { label: t('post.menu.notInterested'), icon: EyeSlash, action: () => hidePost.mutate({ postId, hideType: 'not_interested' }, { onSuccess: () => { showToast(t('post.menu.notInterestedSuccess'), 'success'); onHide?.(); } }) },
+      { label: t('post.menu.snooze'), icon: Clock, action: () => hidePost.mutate({ postId, hideType: 'snooze', snoozeDays: 30 }, { onSuccess: () => { showToast(t('post.menu.snoozeSuccess'), 'success'); onHide?.(); } }) },
     ]),
   ];
 
@@ -531,6 +540,7 @@ function LinkPreview({ url, title, description, image }: { url: string; title?: 
 }
 
 function PollDisplay({ postId, options, myVote, isOwnPost }: { postId: string; options: { text: string; votes: number }[]; myVote?: number | null; isOwnPost?: boolean }) {
+  const { t } = useT();
   const [showVoters, setShowVoters] = useState(false);
   // Previously always started at null, so a vote "disappeared" on refresh —
   // the backend now tells us which option (if any) this viewer already
@@ -593,10 +603,10 @@ function PollDisplay({ postId, options, myVote, isOwnPost }: { postId: string; o
         );
       })}
       <div className="flex items-center justify-center gap-2 pt-1">
-        <p className="text-xs text-[var(--muted-foreground)] font-medium">{totalVotes} صوت</p>
+        <p className="text-xs text-[var(--muted-foreground)] font-medium">{t('post.poll.voteCount', { count: totalVotes })}</p>
         {isOwnPost && totalVotes > 0 && (
           <button onClick={() => setShowVoters(true)} className="text-xs text-[var(--primary)] font-semibold hover:underline">
-            عرض المصوتين
+            {t('post.poll.showVoters')}
           </button>
         )}
       </div>
@@ -612,6 +622,7 @@ function PollDisplay({ postId, options, myVote, isOwnPost }: { postId: string; o
 const POST_MENU_OPENED_EVENT = 'post-menu-opened';
 
 export function PostCard({ post, showGroupLink = true }: { post: any; showGroupLink?: boolean }) {
+  const { t, locale } = useT();
   const [showComments, setShowComments] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -630,8 +641,8 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
   const { data: myProfileData } = useMyProfile();
   const { showToast } = useToast() as any;
   const savePost = useSavePost({
-    onSuccess: () => showToast('تم حفظ المنشور', 'success'),
-    onError: (err: any) => showToast(err?.response?.data?.message === 'Already saved' ? 'المنشور محفوظ بالفعل' : 'فشل حفظ المنشور', 'error'),
+    onSuccess: () => showToast(t('post.save.success'), 'success'),
+    onError: (err: any) => showToast(err?.response?.data?.message === 'Already saved' ? t('post.save.alreadySaved') : t('post.save.error'), 'error'),
   });
   // `GET /users/me` returns a PROFILE object with both `id` (profile id) and
   // `userId` (the user id). `post.user.id` is a USER id, so we must compare
@@ -670,12 +681,12 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
             ) : (
               <p className="text-sm font-bold text-[var(--foreground)]">{userName}</p>
             )}
-            {post.feeling && <span className="text-xs text-[var(--muted-foreground)] font-medium">شعور {post.feeling}</span>}
-            {showGroupLink && post.group?.name && <><span className="text-xs text-[var(--muted-foreground)]">في</span><a href={`/groups/${post.group.id}`} className="text-xs font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:underline hover:shadow-soft px-1 rounded transition-all">{post.group.name}</a></>}
+            {post.feeling && <span className="text-xs text-[var(--muted-foreground)] font-medium">{t('post.feelingLabel', { feeling: post.feeling })}</span>}
+            {showGroupLink && post.group?.name && <><span className="text-xs text-[var(--muted-foreground)]">{t('post.inGroupPrefix')}</span><a href={`/groups/${post.group.id}`} className="text-xs font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:underline hover:shadow-soft px-1 rounded transition-all">{post.group.name}</a></>}
           </div>
           <p className="text-[11px] text-[var(--muted-foreground)]">
-            {timeAgo(post.createdAt)}
-            {post.editedAt && <span className="mr-1">(تم التعديل)</span>}
+            {timeAgo(post.createdAt, t, locale)}
+            {post.editedAt && <span className="mr-1">{t('post.edited')}</span>}
             {post.location && <> · <MapPin size={12} className="inline" /> {post.location}</>}
           </p>
         </div>
@@ -752,12 +763,12 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
             showComments ? 'bg-[var(--muted)] text-[var(--foreground)] shadow-soft' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50'
           )}>
             <ChatCircle size={18} />
-            تعليقات
+            {t('post.comments')}
           </button>
           {!isOwnPost && (
             <button onClick={() => setShowShareModal(true)} className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50 hover:-translate-y-0.5 hover:shadow-soft transition-all duration-300 flex-1 justify-center">
               <ShareNetwork size={18} />
-              مشاركة
+              {t('post.share.submit')}
             </button>
           )}
         </div>

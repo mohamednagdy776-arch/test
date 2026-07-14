@@ -6,100 +6,101 @@ import {
   Question, Bug, Fingerprint, CaretLeft, IdentificationCard, Envelope, Gear,
 } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { useT } from '@/i18n/I18nProvider';
 
 const sections = [
   {
-    title: 'الملف الشخصي',
+    titleKey: 'settings.section.profile.title',
     icon: User,
-    description: 'عرض وتعديل ملفك الشخصي وصورتك',
+    descriptionKey: 'settings.section.profile.description',
     href: '/profile',
     accent: 'var(--primary)',
     bg: 'color-mix(in srgb, var(--primary) 8%, transparent)',
   },
   {
-    title: 'الحساب',
+    titleKey: 'settings.section.account.title',
     icon: IdentificationCard,
-    description: 'اسم المستخدم وبيانات حسابك الأساسية',
+    descriptionKey: 'settings.section.account.description',
     href: '/settings/account',
     accent: 'var(--secondary)',
     bg: 'color-mix(in srgb, var(--secondary) 8%, transparent)',
   },
   {
-    title: 'البريد الإلكتروني',
+    titleKey: 'settings.section.email.title',
     icon: Envelope,
-    description: 'تغيير بريدك الإلكتروني وتأكيده',
+    descriptionKey: 'settings.section.email.description',
     href: '/settings/email',
     accent: '#0ea5e9',
     bg: 'color-mix(in srgb, #0ea5e9 8%, transparent)',
   },
   {
-    title: 'الأمان',
+    titleKey: 'settings.section.security.title',
     icon: ShieldCheck,
-    description: 'كلمات المرور، الجلسات، والتحقق بخطوتين',
+    descriptionKey: 'settings.section.security.description',
     href: '/settings/security',
     accent: '#f59e0b',
     bg: 'color-mix(in srgb, #f59e0b 8%, transparent)',
   },
   {
-    title: 'توثيق الهوية',
+    titleKey: 'settings.section.verification.title',
     icon: SealCheck,
-    description: 'وثّق هويتك للحصول على شارة موثّق',
+    descriptionKey: 'settings.section.verification.description',
     href: '/settings/verification',
     accent: '#B8892A',
     bg: 'color-mix(in srgb, #B8892A 10%, transparent)',
   },
   {
-    title: 'الخصوصية',
+    titleKey: 'settings.section.privacy.title',
     icon: Lock,
-    description: 'من يرى معلوماتك ويتواصل معك',
+    descriptionKey: 'settings.section.privacy.description',
     href: '/settings/privacy',
     accent: '#06b6d4',
     bg: 'color-mix(in srgb, #06b6d4 8%, transparent)',
   },
   {
-    title: 'الإشعارات',
+    titleKey: 'settings.section.notifications.title',
     icon: Bell,
-    description: 'تحكم في إشعاراتك وتنبيهاتك',
+    descriptionKey: 'settings.section.notifications.description',
     href: '/settings/notifications',
     accent: '#8b5cf6',
     bg: 'color-mix(in srgb, #8b5cf6 8%, transparent)',
   },
   {
-    title: 'المظهر',
+    titleKey: 'settings.section.appearance.title',
     icon: Palette,
-    description: 'تخصيص ألوان ومظهر التطبيق',
+    descriptionKey: 'settings.section.appearance.description',
     href: '/settings/appearance',
     accent: '#ec4899',
     bg: 'color-mix(in srgb, #ec4899 8%, transparent)',
   },
   {
-    title: 'اللغة',
+    titleKey: 'settings.section.language.title',
     icon: Globe,
-    description: 'اختر لغة الواجهة المفضلة',
+    descriptionKey: 'settings.section.language.description',
     href: '/settings/language',
     accent: '#0284c7',
     bg: 'color-mix(in srgb, #0284c7 8%, transparent)',
   },
   {
-    title: 'إدارة الموافقات',
+    titleKey: 'settings.section.consent.title',
     icon: Fingerprint,
-    description: 'طلبات مشاركة البيانات الطبية والجينية',
+    descriptionKey: 'settings.section.consent.description',
     href: '/settings/consent',
     accent: '#10b981',
     bg: 'color-mix(in srgb, #10b981 8%, transparent)',
   },
   {
-    title: 'المساعدة',
+    titleKey: 'settings.section.help.title',
     icon: Question,
-    description: 'احصل على مساعدة ودعم',
+    descriptionKey: 'settings.section.help.description',
     href: '/settings/help',
     accent: '#64748b',
     bg: 'color-mix(in srgb, #64748b 8%, transparent)',
   },
   {
-    title: 'الإبلاغ عن مشكلة',
+    titleKey: 'settings.section.report.title',
     icon: Bug,
-    description: 'أخبرنا عن خطأ أو مشكلة تقنية',
+    descriptionKey: 'settings.section.report.description',
     href: '/settings/report',
     accent: '#ef4444',
     bg: 'color-mix(in srgb, #ef4444 8%, transparent)',
@@ -107,17 +108,18 @@ const sections = [
 ];
 
 export default function SettingsPage() {
+  const { t } = useT();
   return (
     <div className="max-w-2xl mx-auto pb-10 space-y-6">
       <PageHeader
         icon={Gear}
-        eyebrow="حسابك"
-        title="الإعدادات"
-        subtitle="إدارة حسابك وتخصيص تجربتك في طيبت"
+        eyebrow={t('settings.eyebrow')}
+        title={t('settings.title')}
+        subtitle={t('settings.subtitle')}
       />
 
       <div className="space-y-2">
-        {sections.map(({ title, icon: Icon, description, href, accent, bg }) => (
+        {sections.map(({ titleKey, icon: Icon, descriptionKey, href, accent, bg }) => (
           <Link
             key={href}
             href={href}
@@ -142,10 +144,10 @@ export default function SettingsPage() {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold transition-colors duration-200"
                 style={{ color: 'var(--foreground)' }}>
-                {title}
+                {t(titleKey)}
               </p>
               <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--muted-foreground)' }}>
-                {description}
+                {t(descriptionKey)}
               </p>
             </div>
             <CaretLeft

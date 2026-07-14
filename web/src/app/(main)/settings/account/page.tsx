@@ -4,41 +4,43 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { Avatar } from '@/components/ui/Avatar';
+import { useT } from '@/i18n/I18nProvider';
 
 const ACCOUNT_SECTIONS = [
   {
     href: '/settings/email',
     icon: '📧',
-    title: 'البريد الإلكتروني',
-    desc: 'تغيير البريد الإلكتروني المرتبط بحسابك',
+    titleKey: 'settings.account.section.email.title',
+    descKey: 'settings.account.section.email.desc',
   },
   {
     href: '/settings/security',
     icon: '🔐',
-    title: 'كلمة المرور والأمان',
-    desc: 'تغيير كلمة المرور وإدارة الجلسات النشطة',
+    titleKey: 'settings.account.section.security.title',
+    descKey: 'settings.account.section.security.desc',
   },
   {
     href: '/settings/privacy',
     icon: '🔒',
-    title: 'الخصوصية',
-    desc: 'التحكم في من يرى معلوماتك وبياناتك',
+    titleKey: 'settings.account.section.privacy.title',
+    descKey: 'settings.account.section.privacy.desc',
   },
   {
     href: '/settings/notifications',
     icon: '🔔',
-    title: 'الإشعارات',
-    desc: 'ضبط تفضيلات الإشعارات',
+    titleKey: 'settings.account.section.notifications.title',
+    descKey: 'settings.account.section.notifications.desc',
   },
   {
     href: '/profile',
     icon: '👤',
-    title: 'الملف الشخصي',
-    desc: 'تعديل صورتك وبياناتك الشخصية',
+    titleKey: 'settings.account.section.profile.title',
+    descKey: 'settings.account.section.profile.desc',
   },
 ];
 
 export default function AccountPage() {
+  const { t } = useT();
   const { data } = useQuery({
     queryKey: ['me'],
     queryFn: () => apiClient.get('/users/me').then((r) => r.data),
@@ -54,12 +56,12 @@ export default function AccountPage() {
     <div className="min-h-screen bg-gradient-to-br from-[var(--background)] via-[var(--muted)] to-[var(--card)] px-4 py-8">
       <div className="max-w-2xl mx-auto space-y-6">
         <Link href="/settings" className="inline-flex items-center gap-2 text-sm text-[var(--primary)] hover:text-[var(--foreground)] transition-colors">
-          <span>←</span> العودة للإعدادات
+          <span>←</span> {t('lang.back')}
         </Link>
 
         <div>
-          <h1 className="text-3xl font-bold text-[var(--foreground)]">الحساب</h1>
-          <p className="text-[var(--primary)]/70 mt-2">إدارة معلومات حسابك وإعداداته</p>
+          <h1 className="text-3xl font-bold text-[var(--foreground)]">{t('settings.account.title')}</h1>
+          <p className="text-[var(--primary)]/70 mt-2">{t('settings.account.subtitle')}</p>
         </div>
 
         {/* Account summary card */}
@@ -87,8 +89,8 @@ export default function AccountPage() {
                 {section.icon}
               </div>
               <div className="flex-1">
-                <p className="font-semibold text-[var(--foreground)]">{section.title}</p>
-                <p className="text-sm text-[var(--primary)]/70 mt-0.5">{section.desc}</p>
+                <p className="font-semibold text-[var(--foreground)]">{t(section.titleKey)}</p>
+                <p className="text-sm text-[var(--primary)]/70 mt-0.5">{t(section.descKey)}</p>
               </div>
               <span className="text-[var(--muted-foreground)] group-hover:text-[var(--primary)] group-hover:-translate-x-1 transition-all">←</span>
             </Link>

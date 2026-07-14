@@ -19,15 +19,21 @@ import {
 } from '@phosphor-icons/react';
 
 import { resolveMediaUrl } from '@/lib/media';
+import { useT } from '@/i18n/I18nProvider';
 
 // ─── Greeting Banner ──────────────────────────────────────────────────────────
 function GreetingBanner() {
   const router = useRouter();
+  const { t } = useT();
   const { data: profileData } = useMyProfile();
   const user = (profileData as any)?.data;
   const name = (user?.fullName ?? user?.name)?.split(' ')[0] || user?.username || '';
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'صباح الخير' : hour < 17 ? 'مساء الخير' : 'مساء النور';
+  const greeting = name
+    ? t(hour < 12 ? 'dashboard.greeting.morningNamed' : hour < 17 ? 'dashboard.greeting.afternoonNamed' : 'dashboard.greeting.eveningNamed', { name })
+    : t(hour < 12 ? 'dashboard.greeting.morning' : hour < 17 ? 'dashboard.greeting.afternoon' : 'dashboard.greeting.evening');
+  // NOTE: still hardcoded to 'ar-SA' for date formatting -- not a text string,
+  // flagged separately rather than guessed at (see report).
   const today = new Date().toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long' });
 
   return (
@@ -44,10 +50,10 @@ function GreetingBanner() {
         <div className="min-w-0">
           <p className="text-xs font-medium opacity-70 text-white">{today}</p>
           <p className="text-sm font-semibold opacity-90 text-white mt-0.5">
-            {greeting}{name ? `، ${name}` : ''} 👋
+            {greeting} 👋
           </p>
           <h2 className="text-lg font-extrabold text-white mt-0.5 leading-tight">
-            أهلاً بك في مجتمع طيّبت
+            {t('dashboard.welcomeHeading')}
           </h2>
         </div>
         <button
@@ -55,7 +61,7 @@ function GreetingBanner() {
           className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
           style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}>
           <PencilSimple size={15} weight="bold" />
-          منشور جديد
+          {t('dashboard.newPost')}
         </button>
       </div>
     </div>
@@ -65,6 +71,7 @@ function GreetingBanner() {
 // ─── Mobile Widgets Strip (lg:hidden) ─────────────────────────────────────────
 function MobileWidgetsStrip() {
   const router = useRouter();
+  const { t } = useT();
   const { data: chatData } = useChatUnread();
   const { data: notifData } = useNotifUnread();
   const { data: matchesData } = useQuery({
@@ -84,13 +91,13 @@ function MobileWidgetsStrip() {
   const notifCount = notifData?.count ?? notifData?.unread ?? 0;
 
   const chips = [
-    { icon: Heart, label: 'توافقات', value: mc, href: '/matching', color: '#e11d48' },
-    { icon: UsersThree, label: 'أصدقاء', value: fc, href: '/friends', color: 'var(--primary)' },
-    { icon: ChatCircle, label: 'رسائل', value: chatCount, href: '/chat', color: '#3b82f6' },
-    { icon: Bell, label: 'إشعارات', value: notifCount, href: '/notifications', color: 'var(--accent)' },
-    { icon: CalendarBlank, label: 'أحداث', value: null, href: '/events', color: 'var(--secondary)' },
-    { icon: UsersThree, label: 'مجتمعات', value: null, href: '/groups', color: '#7c3aed' },
-    { icon: HouseSimple, label: 'العائلة', value: null, href: '/family', color: '#d97706' },
+    { icon: Heart, label: t('dashboard.chip.matches'), value: mc, href: '/matching', color: '#e11d48' },
+    { icon: UsersThree, label: t('dashboard.chip.friends'), value: fc, href: '/friends', color: 'var(--primary)' },
+    { icon: ChatCircle, label: t('dashboard.chip.messages'), value: chatCount, href: '/chat', color: '#3b82f6' },
+    { icon: Bell, label: t('dashboard.chip.notifications'), value: notifCount, href: '/notifications', color: 'var(--accent)' },
+    { icon: CalendarBlank, label: t('dashboard.chip.events'), value: null, href: '/events', color: 'var(--secondary)' },
+    { icon: UsersThree, label: t('dashboard.chip.communities'), value: null, href: '/groups', color: '#7c3aed' },
+    { icon: HouseSimple, label: t('dashboard.chip.family'), value: null, href: '/family', color: '#d97706' },
   ];
 
   return (
@@ -126,6 +133,7 @@ function MobileWidgetsStrip() {
 // ─── Profile Completeness ──────────────────────────────────────────────────────
 function ProfileCompleteness() {
   const router = useRouter();
+  const { t } = useT();
   const { data, isLoading } = useQuery({
     queryKey: ['profile-completeness'],
     queryFn: () => apiClient.get('/users/me/completeness').then((r) => r.data),
@@ -156,7 +164,7 @@ function ProfileCompleteness() {
           {isDone
             ? <CheckCircle size={18} weight="fill" style={{ color: 'var(--primary)' }} />
             : <WarningCircle size={18} weight="fill" style={{ color: barColor }} />}
-          <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>اكتمال الملف الشخصي</h3>
+          <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{t('dashboard.profileCompleteness')}</h3>
         </div>
         <span className="text-base font-extrabold" style={{ color: barColor }}>{pct}%</span>
       </div>
@@ -165,7 +173,7 @@ function ProfileCompleteness() {
           style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${barColor}, color-mix(in srgb, ${barColor} 70%, white))` }} />
       </div>
       {isDone ? (
-        <p className="text-xs font-semibold" style={{ color: 'var(--primary)' }}>ملفك الشخصي مكتمل! ✓</p>
+        <p className="text-xs font-semibold" style={{ color: 'var(--primary)' }}>{t('dashboard.profileComplete')}</p>
       ) : missing.length > 0 ? (
         <div className="space-y-0.5">
           {missing.slice(0, 3).map((s) => (
@@ -175,7 +183,7 @@ function ProfileCompleteness() {
             onClick={() => router.push('/profile')}
             className="mt-1.5 text-xs font-semibold transition-colors hover:opacity-80"
             style={{ color: 'var(--primary)' }}>
-            أكمل الملف الآن ←
+            {t('dashboard.completeProfileNow')}
           </button>
         </div>
       ) : (
@@ -183,7 +191,7 @@ function ProfileCompleteness() {
           onClick={() => router.push('/profile')}
           className="text-xs font-semibold transition-colors hover:opacity-80"
           style={{ color: 'var(--primary)' }}>
-          تعديل الملف الشخصي →
+          {t('dashboard.editProfile')}
         </button>
       )}
     </div>
@@ -193,6 +201,7 @@ function ProfileCompleteness() {
 // ─── Quick Stats ───────────────────────────────────────────────────────────────
 function QuickStats() {
   const router = useRouter();
+  const { t } = useT();
   const { data: matchesData, isLoading: ml, refetch: rm, isFetching: fm } = useQuery({
     queryKey: ['dashboard-matches-count'],
     queryFn: () => apiClient.get('/matches', { params: { page: 1, limit: 1 } }).then((r) => r.data),
@@ -221,9 +230,9 @@ function QuickStats() {
   const isFetching = fm || ff;
 
   const stats = [
-    { label: 'توافقات', value: mc, icon: Heart, href: '/matching', color: 'rgba(255,255,255,0.9)' },
-    { label: 'أصدقاء', value: fc, icon: UsersThree, href: '/friends', color: 'rgba(255,255,255,0.9)' },
-    { label: 'رسائل', value: chatCount, icon: ChatCircle, href: '/chat', color: 'rgba(255,255,255,0.9)' },
+    { label: t('dashboard.chip.matches'), value: mc, icon: Heart, href: '/matching', color: 'rgba(255,255,255,0.9)' },
+    { label: t('dashboard.chip.friends'), value: fc, icon: UsersThree, href: '/friends', color: 'rgba(255,255,255,0.9)' },
+    { label: t('dashboard.chip.messages'), value: chatCount, icon: ChatCircle, href: '/chat', color: 'rgba(255,255,255,0.9)' },
   ];
 
   return (
@@ -235,11 +244,11 @@ function QuickStats() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendUp size={18} weight="bold" className="text-white/80" />
-          <p className="text-sm font-bold text-white">نشاطك</p>
+          <p className="text-sm font-bold text-white">{t('dashboard.myActivity')}</p>
         </div>
         <button onClick={() => { rm(); rf(); }} disabled={isFetching}
           className="p-1.5 rounded-lg text-white/70 hover:text-white transition-all disabled:opacity-50"
-          aria-label="تحديث">
+          aria-label={t('dashboard.refresh')}>
           <ArrowClockwise size={14} className={isFetching ? 'animate-spin' : ''} />
         </button>
       </div>
@@ -274,6 +283,7 @@ function QuickStats() {
 // ─── Upcoming Events ───────────────────────────────────────────────────────────
 function UpcomingEventsWidget() {
   const router = useRouter();
+  const { t } = useT();
   const { data, isLoading } = useUpcomingEvents(3);
   const events: any[] = data?.data ?? data?.events ?? [];
 
@@ -282,12 +292,12 @@ function UpcomingEventsWidget() {
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CalendarBlank size={18} weight="fill" style={{ color: 'var(--accent)' }} />
-          <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>أحداث قادمة</h3>
+          <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{t('dashboard.upcomingEvents')}</h3>
         </div>
         <button onClick={() => router.push('/events')}
           className="text-xs font-semibold transition-colors hover:opacity-70"
           style={{ color: 'var(--primary)' }}>
-          عرض الكل
+          {t('dashboard.viewAll')}
         </button>
       </div>
       <div className="px-2 pb-3 space-y-0.5">
@@ -303,17 +313,19 @@ function UpcomingEventsWidget() {
           ))
         ) : events.length === 0 ? (
           <div className="text-center py-5 px-2">
-            <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>لا توجد أحداث قادمة</p>
+            <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>{t('dashboard.noUpcomingEvents')}</p>
             <button onClick={() => router.push('/events')}
               className="text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:scale-105 active:scale-95"
               style={{ background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }}>
-              استكشف الأحداث
+              {t('dashboard.exploreEvents')}
             </button>
           </div>
         ) : (
           events.map((event: any) => {
             const date = event.startDate ? new Date(event.startDate) : null;
             const dayNum = date?.getDate();
+            // NOTE: still hardcoded to 'ar-SA' for month-name formatting -- not
+            // a text string, flagged separately rather than guessed at.
             const monthName = date?.toLocaleDateString('ar-SA', { month: 'short' });
             return (
               <button key={event.id}
@@ -326,9 +338,9 @@ function UpcomingEventsWidget() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate group-hover:text-[var(--primary)] transition-colors"
-                    style={{ color: 'var(--foreground)' }}>{event.title || 'حدث'}</p>
+                    style={{ color: 'var(--foreground)' }}>{event.title || t('dashboard.event.fallbackTitle')}</p>
                   <p className="text-[11px] truncate" style={{ color: 'var(--muted-foreground)' }}>
-                    {event.location || event.type || 'حدث مجتمعي'}
+                    {event.location || event.type || t('dashboard.event.fallbackType')}
                   </p>
                 </div>
               </button>
@@ -343,17 +355,18 @@ function UpcomingEventsWidget() {
 // ─── Suggested Connections ─────────────────────────────────────────────────────
 function SuggestedConnections() {
   const router = useRouter();
+  const { t } = useT();
   const { data, isLoading } = useSuggestions(4);
   const suggestions: any[] = data?.data ?? [];
 
   return (
     <div className="rounded-2xl overflow-hidden card-theme-default border">
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-        <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>أشخاص قد تعرفهم</h3>
+        <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{t('dashboard.suggestedPeople')}</h3>
         <button onClick={() => router.push('/friends')}
           className="text-xs font-semibold transition-colors hover:opacity-70"
           style={{ color: 'var(--primary)' }}>
-          عرض الكل
+          {t('dashboard.viewAll')}
         </button>
       </div>
       <div className="px-2 pb-3 space-y-0.5">
@@ -370,7 +383,7 @@ function SuggestedConnections() {
           ))
         ) : suggestions.length === 0 ? (
           <p className="text-center text-xs py-5" style={{ color: 'var(--muted-foreground)' }}>
-            لا توجد اقتراحات حالياً
+            {t('dashboard.noSuggestionsPeople')}
           </p>
         ) : (
           suggestions.map((s: any) => {
@@ -402,13 +415,13 @@ function SuggestedConnections() {
                   <p className="text-sm font-semibold truncate group-hover:text-[var(--primary)] transition-colors"
                     style={{ color: 'var(--foreground)' }}>{nm}</p>
                   <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
-                    {age ? `${age} سنة` : ''}{age && city ? ' · ' : ''}{city}
-                    {mutual > 0 ? ` · ${mutual} مشترك` : ''}
+                    {age ? t('dashboard.ageLabel', { age }) : ''}{age && city ? ' · ' : ''}{city}
+                    {mutual > 0 ? ` · ${t('dashboard.mutualLabel', { mutual })}` : ''}
                   </p>
                 </div>
                 <span className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
                   style={{ background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }}>
-                  إضافة
+                  {t('dashboard.add')}
                 </span>
               </button>
             );
@@ -422,6 +435,7 @@ function SuggestedConnections() {
 // ─── Suggested Groups ──────────────────────────────────────────────────────────
 function SuggestedGroupsWidget() {
   const router = useRouter();
+  const { t } = useT();
   const { data, isLoading } = useSuggestedGroups(3);
   const groups: any[] = data?.data ?? data?.groups ?? [];
 
@@ -430,12 +444,12 @@ function SuggestedGroupsWidget() {
       <div className="px-4 pt-4 pb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <UsersThree size={18} weight="fill" style={{ color: 'var(--secondary)' }} />
-          <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>مجتمعات مقترحة</h3>
+          <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{t('dashboard.suggestedGroups')}</h3>
         </div>
         <button onClick={() => router.push('/groups')}
           className="text-xs font-semibold transition-colors hover:opacity-70"
           style={{ color: 'var(--primary)' }}>
-          عرض الكل
+          {t('dashboard.viewAll')}
         </button>
       </div>
       <div className="px-2 pb-3 space-y-0.5">
@@ -451,10 +465,10 @@ function SuggestedGroupsWidget() {
             </div>
           ))
         ) : groups.length === 0 ? (
-          <p className="text-center text-xs py-5" style={{ color: 'var(--muted-foreground)' }}>لا توجد اقتراحات</p>
+          <p className="text-center text-xs py-5" style={{ color: 'var(--muted-foreground)' }}>{t('dashboard.noSuggestions')}</p>
         ) : (
           groups.map((group: any) => {
-            const name = group.name || 'مجتمع';
+            const name = group.name || t('dashboard.group.fallbackName');
             const count = group.memberCount ?? group.membersCount ?? 0;
             const initial = name.charAt(0);
             return (
@@ -473,14 +487,14 @@ function SuggestedGroupsWidget() {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{name}</p>
                   <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>
-                    {count > 0 ? `${count.toLocaleString('ar-SA')} عضو` : 'مجتمع جديد'}
+                    {count > 0 ? t('dashboard.memberCount', { count: count.toLocaleString('ar-SA') }) : t('dashboard.newCommunity')}
                   </p>
                 </div>
                 <button onClick={() => router.push(`/groups/${group.id}`)}
-                  aria-label={`انضم إلى ${name}`}
+                  aria-label={t('dashboard.joinAriaLabel', { name })}
                   className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 active:scale-95"
                   style={{ background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }}>
-                  انضم
+                  {t('dashboard.join')}
                 </button>
               </div>
             );
@@ -494,6 +508,7 @@ function SuggestedGroupsWidget() {
 // ─── Child Prediction Promo ────────────────────────────────────────────────────
 function ChildPredictionWidget() {
   const router = useRouter();
+  const { t } = useT();
   return (
     <div className="rounded-2xl p-4 overflow-hidden relative"
       style={{
@@ -505,16 +520,16 @@ function ChildPredictionWidget() {
           <Baby size={24} weight="fill" className="text-white" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-white">توقع شكل طفلك</p>
+          <p className="text-sm font-bold text-white">{t('nav.childPrediction')}</p>
           <p className="text-[11px] mt-0.5 leading-relaxed text-white/75">
-            تقنية الذكاء الاصطناعي تتوقع ملامح طفلك من صورتَيكما
+            {t('dashboard.childPredictionDesc')}
           </p>
         </div>
       </div>
       <button onClick={() => router.push('/child-prediction')}
         className="mt-3 w-full rounded-xl px-3 py-2 text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 relative z-10"
         style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: '1px solid rgba(255,255,255,0.3)', backdropFilter: 'blur(8px)' }}>
-        جرّب الآن ←
+        {t('dashboard.tryNow')}
       </button>
       <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-[var(--card)]/5" />
     </div>
@@ -524,16 +539,17 @@ function ChildPredictionWidget() {
 // ─── Quick Actions ─────────────────────────────────────────────────────────────
 function QuickActions() {
   const router = useRouter();
+  const { t } = useT();
   const actions = [
-    { icon: MagnifyingGlass, label: 'ابحث عن أشخاص', href: '/search', color: 'var(--primary)' },
-    { icon: CalendarBlank, label: 'الأحداث', href: '/events', color: 'var(--accent)' },
-    { icon: UsersThree, label: 'المجتمعات', href: '/groups', color: 'var(--secondary)' },
-    { icon: HouseSimple, label: 'شجرة العائلة', href: '/family', color: '#d97706' },
-    { icon: Sparkle, label: 'ترقية الحساب', href: '/upgrade', color: '#ec4899' },
+    { icon: MagnifyingGlass, label: t('dashboard.action.searchPeople'), href: '/search', color: 'var(--primary)' },
+    { icon: CalendarBlank, label: t('dashboard.action.events'), href: '/events', color: 'var(--accent)' },
+    { icon: UsersThree, label: t('nav.communities'), href: '/groups', color: 'var(--secondary)' },
+    { icon: HouseSimple, label: t('dashboard.action.familyTree'), href: '/family', color: '#d97706' },
+    { icon: Sparkle, label: t('upgrade.title'), href: '/upgrade', color: '#ec4899' },
   ];
   return (
     <div className="rounded-2xl p-3 card-theme-default border">
-      <h3 className="text-xs font-bold px-1 mb-2" style={{ color: 'var(--muted-foreground)' }}>روابط سريعة</h3>
+      <h3 className="text-xs font-bold px-1 mb-2" style={{ color: 'var(--muted-foreground)' }}>{t('dashboard.quickLinks')}</h3>
       <div className="space-y-0.5">
         {actions.map(({ icon: Icon, label, href, color }) => (
           <button key={href} onClick={() => router.push(href)}
@@ -556,6 +572,7 @@ function QuickActions() {
 // ─── Trending Topics ───────────────────────────────────────────────────────────
 function TrendingTopics() {
   const router = useRouter();
+  const { t } = useT();
   const { data, isLoading } = useQuery({
     queryKey: ['trending-posts'],
     // Use the user-facing ranked feed. Root GET /posts is the admin-only listing
