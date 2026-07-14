@@ -41,7 +41,14 @@ COPY ai-service/ .
 # catch. Immediately re-load with local_files_only=True afterward as a hard
 # verification gate: this is the exact call the live app makes, so if the
 # build succeeds, the runtime path is guaranteed to work too.
-RUN rm -rf /app/model-cache && python -c "\
+# HF_HUB_DISABLE_XET: huggingface_hub's newer Xet transfer backend (hf-xet,
+# a required transitive dep as of huggingface_hub>=1.0) hung indefinitely at
+# 0% here even though raw HTTPS to the same host measured ~40MB/s via curl
+# -- confirmed live by disabling it and re-testing, which dropped a ~1.2GB
+# file's download time from "still 0% after 11 minutes" to 34s. Only
+# affects this RUN's download; HF_HUB_OFFLINE below prevents any network
+# calls at runtime regardless.
+RUN rm -rf /app/model-cache && HF_HUB_DISABLE_XET=1 python -c "\
 from huggingface_hub import snapshot_download; \
 snapshot_download('SimianLuo/LCM_Dreamshaper_v7', cache_dir='/app/model-cache'); \
 from diffusers import AutoPipelineForImage2Image; \
