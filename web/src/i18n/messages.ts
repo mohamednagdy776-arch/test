@@ -619,6 +619,19 @@ const ar: Dict = {
   'userPage.activityPrivate': 'النشاط خاص',
   'userPage.notFound': 'المستخدم غير موجود',
   'userPage.posts.loadError': 'فشل تحميل المنشورات',
+  // Missed on the first pass -- keys embedded in ternary expressions
+  // (t(cond ? 'a' : 'b')) instead of a direct t('key') call weren't caught
+  // by the key-extraction regex used to build the wave 1/2 key lists.
+  'dashboard.greeting.morning': 'صباح الخير',
+  'dashboard.greeting.afternoon': 'مساء الخير',
+  'dashboard.greeting.evening': 'مساء النور',
+  'dashboard.greeting.morningNamed': 'صباح الخير، {name}',
+  'dashboard.greeting.afternoonNamed': 'مساء الخير، {name}',
+  'dashboard.greeting.eveningNamed': 'مساء النور، {name}',
+  'profileView.yes': 'نعم',
+  'profileView.no': 'لا',
+  'profileView.pagination.prev': 'السابق',
+  'profileView.pagination.next': 'التالي',
 };
 
 const en: Dict = {
@@ -1221,6 +1234,17 @@ const en: Dict = {
   'userPage.activityPrivate': 'Activity is private',
   'userPage.notFound': 'User not found',
   'userPage.posts.loadError': 'Failed to load posts',
+  // Missed on the first pass -- keys embedded in ternary expressions
+  'dashboard.greeting.morning': 'Good morning',
+  'dashboard.greeting.afternoon': 'Good afternoon',
+  'dashboard.greeting.evening': 'Good evening',
+  'dashboard.greeting.morningNamed': 'Good morning, {name}',
+  'dashboard.greeting.afternoonNamed': 'Good afternoon, {name}',
+  'dashboard.greeting.eveningNamed': 'Good evening, {name}',
+  'profileView.yes': 'Yes',
+  'profileView.no': 'No',
+  'profileView.pagination.prev': 'Previous',
+  'profileView.pagination.next': 'Next',
 };
 
 // Urdu, Turkish, Indonesian, Malay, French — the other locales the language
