@@ -6,6 +6,7 @@ import { apiClient } from '@/lib/api-client';
 import type { Match } from '@/types';
 import { ChatCircle } from '@phosphor-icons/react';
 import { resolveMediaUrl } from '@/lib/media';
+import { useT } from '@/i18n/I18nProvider';
 
 interface Props {
   activeMatchId?: string;
@@ -16,18 +17,19 @@ function avatarSrc(url?: string | null) {
   return resolveMediaUrl(url);
 }
 
-function timeLabel(iso: string) {
+function timeLabel(iso: string, yesterdayLabel: string) {
   const d = new Date(iso);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffDays = Math.floor(diffMs / 86400000);
   if (diffDays === 0) return d.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-  if (diffDays === 1) return 'أمس';
+  if (diffDays === 1) return yesterdayLabel;
   if (diffDays < 7) return d.toLocaleDateString('ar-SA', { weekday: 'short' });
   return d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'short' });
 }
 
 export const ChatList = ({ activeMatchId, onSelect }: Props) => {
+  const { t } = useT();
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 20;
 
@@ -62,7 +64,7 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
     return (
       <div className="rounded-2xl p-6 text-center"
         style={{ background: 'color-mix(in srgb, var(--destructive) 6%, var(--muted))', border: '1px solid color-mix(in srgb, var(--destructive) 20%, var(--border))' }}>
-        <p className="text-sm font-medium" style={{ color: 'var(--destructive)' }}>فشل تحميل المحادثات</p>
+        <p className="text-sm font-medium" style={{ color: 'var(--destructive)' }}>{t('chat.list.loadError')}</p>
       </div>
     );
   }
@@ -105,14 +107,14 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
           style={{ background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))' }}>
           <ChatCircle size={26} weight="light" style={{ color: 'var(--primary)', opacity: 0.5 }} />
         </div>
-        <p className="font-semibold text-sm" style={{ color: 'var(--foreground)' }}>لا توجد محادثات بعد</p>
-        <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>اقبل توافقاً لبدء المحادثة</p>
+        <p className="font-semibold text-sm" style={{ color: 'var(--foreground)' }}>{t('chat.list.empty')}</p>
+        <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>{t('chat.list.emptyHint')}</p>
       </div>
     );
   }
 
   const getOtherUserName = (item: any) =>
-    item.name || item.otherUserName || (item.user2Id ? `مستخدم ${item.user2Id.slice(0, 6)}` : 'محادثة');
+    item.name || item.otherUserName || (item.user2Id ? t('chat.list.fallbackUser', { id: item.user2Id.slice(0, 6) }) : t('chat.list.fallbackName'));
 
   const getAvatar = (item: any) =>
     avatarSrc(item.avatar || item.otherUserAvatar || null);
@@ -133,9 +135,9 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
         // Image messages persist with an empty content string -- fell back
         // to the "no messages" placeholder even with a real photo sent (#381).
         const preview = item.lastMessage?.type === 'image'
-          ? '📷 صورة'
-          : (item.lastMessage?.content?.slice(0, 40) || 'لا توجد رسائل بعد');
-        const timeStr = timeLabel(item.lastMessage?.createdAt || item.createdAt);
+          ? t('chat.list.imagePreview')
+          : (item.lastMessage?.content?.slice(0, 40) || t('chat.list.noMessagesYet'));
+        const timeStr = timeLabel(item.lastMessage?.createdAt || item.createdAt, t('chat.list.yesterday'));
 
         return (
           <button key={item.id}
@@ -184,7 +186,7 @@ export const ChatList = ({ activeMatchId, onSelect }: Props) => {
         <button onClick={() => setPage((p) => p + 1)}
           className="w-full py-2.5 text-xs font-semibold text-center rounded-xl transition-all hover:scale-[1.01]"
           style={{ color: 'var(--primary)', background: 'color-mix(in srgb, var(--primary) 5%, var(--muted))' }}>
-          تحميل المزيد
+          {t('chat.list.loadMore')}
         </button>
       )}
     </div>

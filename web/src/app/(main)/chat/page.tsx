@@ -6,6 +6,7 @@ import { ChatWindow } from '@/features/chat/components/ChatWindow';
 import { apiClient } from '@/lib/api-client';
 import type { Match } from '@/types';
 import { ChatCircle } from '@phosphor-icons/react';
+import { useT } from '@/i18n/I18nProvider';
 
 interface DirectMatch extends Match {
   user2Id: string;
@@ -15,6 +16,7 @@ interface DirectMatch extends Match {
 }
 
 export default function ChatPage() {
+  const { t } = useT();
   const [activeMatch, setActiveMatch] = useState<DirectMatch | null>(null);
   const [loading, setLoading] = useState(false);
   const [deepLinkError, setDeepLinkError] = useState<string | null>(null);
@@ -47,7 +49,7 @@ export default function ChatPage() {
       } catch (error: any) {
         console.error('Failed to create conversation:', error);
         handledRef.current = null;
-        setDeepLinkError(error?.response?.data?.message || 'تعذّر فتح المحادثة. يرجى المحاولة مجدداً.');
+        setDeepLinkError(error?.response?.data?.message || t('chat.deepLinkError'));
       } finally {
         setLoading(false);
       }
@@ -64,7 +66,7 @@ export default function ChatPage() {
           (#382), and on mobile the last cards ended up under the fixed
           bottom nav with no reserved clearance (#277). */}
       <div className={`${activeMatch ? 'hidden lg:block' : 'block'} w-full lg:w-80 shrink-0 flex flex-col gap-3 min-h-0`}>
-        <h1 className="text-xl font-extrabold shrink-0" style={{ color: 'var(--foreground)' }}>المحادثات</h1>
+        <h1 className="text-xl font-extrabold shrink-0" style={{ color: 'var(--foreground)' }}>{t('nav.messages')}</h1>
         <div className="flex-1 min-h-0 overflow-y-auto pb-20 lg:pb-0">
           <ChatList activeMatchId={activeMatch?.id} onSelect={setActiveMatch as any} />
         </div>
@@ -81,14 +83,14 @@ export default function ChatPage() {
                 <span className="text-2xl">⚠️</span>
               </div>
               <p className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>
-                تعذّر فتح المحادثة
+                {t('chat.openError')}
               </p>
               <p className="text-xs mb-5" style={{ color: 'var(--muted-foreground)' }}>{deepLinkError}</p>
               <button
                 onClick={() => { setDeepLinkError(null); handledRef.current = null; }}
                 className="rounded-xl px-5 py-2 text-sm font-bold text-white transition-all hover:scale-105 active:scale-95"
                 style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
-                إعادة المحاولة
+                {t('chat.retry')}
               </button>
             </div>
           </div>
@@ -99,7 +101,7 @@ export default function ChatPage() {
               <div className="w-10 h-10 rounded-full border-2 border-transparent animate-spin"
                 style={{ borderTopColor: 'var(--primary)', borderRightColor: 'var(--secondary)' }} />
               <p className="text-sm font-medium" style={{ color: 'var(--muted-foreground)' }}>
-                جاري فتح المحادثة...
+                {t('chat.openingConversation')}
               </p>
             </div>
           </div>
@@ -113,9 +115,9 @@ export default function ChatPage() {
                 style={{ background: 'color-mix(in srgb, var(--primary) 8%, var(--muted))' }}>
                 <ChatCircle size={30} weight="light" style={{ color: 'var(--primary)', opacity: 0.5 }} />
               </div>
-              <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>اختر محادثة للبدء</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{t('chat.selectToStart')}</p>
               <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
-                اختر محادثة من القائمة أو ابحث عن شخص
+                {t('chat.selectHint')}
               </p>
             </div>
           </div>

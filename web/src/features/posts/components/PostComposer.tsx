@@ -9,22 +9,28 @@ import { cn } from '@/lib/utils';
 import { extractFirstUrl } from '@/lib/linkify';
 import { useLinkPreview } from '@/lib/useLinkPreview';
 import { Palette, Image, Smiley, MapPin, Users, Clock, ChartBar, X, Gear, Heart, Plus, Trash } from '@phosphor-icons/react';
+import { useT } from '@/i18n/I18nProvider';
 
 const BACKGROUNDS = [
   '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
   '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
 ];
 
+// `label` here is what gets persisted verbatim to the backend `feeling`
+// column (a free-text field, not an enum) -- translating it directly would
+// silently change what language got saved depending on the active UI
+// locale. Keep `label` (submitted data) unchanged and add `labelKey` for
+// the on-screen chip text only.
 const FEELINGS = [
-  { icon: Smiley, label: 'سعيد' },
-  { icon: Heart, label: 'محب' },
+  { icon: Smiley, label: 'سعيد', labelKey: 'composer.feeling.happy' },
+  { icon: Heart, label: 'محب', labelKey: 'composer.feeling.loving' },
 ];
 
 const AUDIENCE_OPTIONS = [
-  { value: 'public', label: 'عام', icon: Users },
-  { value: 'friends', label: 'أصدقاء', icon: Users },
-  { value: 'friends_of_friends', label: 'أصدقاء الأصدقاء', icon: Users },
-  { value: 'only_me', label: 'أنا فقط', icon: Gear },
+  { value: 'public', labelKey: 'composer.audience.public', icon: Users },
+  { value: 'friends', labelKey: 'composer.audience.friends', icon: Users },
+  { value: 'friends_of_friends', labelKey: 'composer.audience.friendsOfFriends', icon: Users },
+  { value: 'only_me', labelKey: 'composer.audience.onlyMe', icon: Gear },
 ];
 
 interface PostComposerProps {
@@ -33,6 +39,7 @@ interface PostComposerProps {
 }
 
 export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
+  const { t } = useT();
   const [content, setContent] = useState('');
   const [bgColor, setBgColor] = useState<string | null>(null);
   const [feeling, setFeeling] = useState<{ icon: any; label: string } | null>(null);
@@ -84,8 +91,8 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
 
   // Detect a pasted/typed link (debounced) to show a live preview card.
   useEffect(() => {
-    const t = setTimeout(() => setDetectedUrl(extractFirstUrl(content)), 400);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDetectedUrl(extractFirstUrl(content)), 400);
+    return () => clearTimeout(timer);
   }, [content]);
 
   const activeUrl =
@@ -161,11 +168,11 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
         ...linkFields,
       });
 
-      showToast(scheduledAt ? 'تمت جدولة المنشور' : 'تم نشر المنشور بنجاح', 'success');
+      showToast(scheduledAt ? t('composer.toast.scheduled') : t('composer.toast.postSuccess'), 'success');
       resetForm();
       onSuccess?.();
     } catch (err: any) {
-      showToast(err?.response?.data?.message || 'تعذّر نشر المنشور، حاول مرة أخرى', 'error');
+      showToast(err?.response?.data?.message || t('composer.toast.postError'), 'error');
     }
   };
 
@@ -234,7 +241,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="على ما يدور ذهنك؟"
+              placeholder={t('composer.placeholder')}
               className={cn(
                 'w-full resize-none border-none bg-transparent text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none transition-all',
                 bgColor ? 'text-center text-lg font-medium py-8' : 'py-2 min-h-[80px]'
@@ -255,7 +262,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                   // object-cover forced every preview into a fixed short box,
                   // cropping the top/bottom off portrait or square photos
                   // regardless of their real aspect ratio (#339).
-                  <img src={src} alt={`معاينة ${i + 1}`} className="max-h-64 w-full object-contain bg-[var(--muted)] rounded-xl" />
+                  <img src={src} alt={t('composer.mediaPreviewAlt', { index: i + 1 })} className="max-h-64 w-full object-contain bg-[var(--muted)] rounded-xl" />
                 )}
                 <button
                   type="button"
@@ -275,7 +282,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
               type="button"
               onClick={() => setDismissedUrls((d) => [...d, activeUrl])}
               className="absolute top-2 left-2 z-10 h-7 w-7 rounded-full bg-[var(--primary)]/70 text-[var(--card)] flex items-center justify-center hover:bg-[var(--primary)] transition-colors"
-              aria-label="إزالة معاينة الرابط"
+              aria-label={t('composer.removeLinkPreviewAria')}
             >
               <X size={16} />
             </button>
@@ -338,7 +345,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                   className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1', feeling?.label === f.label ? 'bg-[var(--muted-foreground)] text-[var(--card)]' : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]')}
                 >
                   <Icon size={16} weight="fill" />
-                  <span>{f.label}</span>
+                  <span>{t(f.labelKey)}</span>
                 </button>
               );
             })}
@@ -357,7 +364,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                   className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1', audience === a.value ? 'bg-[var(--muted-foreground)] text-[var(--card)]' : 'bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--muted)]')}
                 >
                   <Icon size={16} />
-                  <span>{a.label}</span>
+                  <span>{t(a.labelKey)}</span>
                 </button>
               );
             })}
@@ -376,7 +383,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
             </div>
             {/* Times are entered in the viewer's local timezone (#389). */}
             <p className="mt-1.5 text-[11px] text-[var(--muted-foreground)]">
-              بتوقيتك المحلي ({Intl.DateTimeFormat().resolvedOptions().timeZone})
+              {t('composer.scheduleLocalTz', { tz: Intl.DateTimeFormat().resolvedOptions().timeZone })}
             </p>
           </div>
         )}
@@ -388,7 +395,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              placeholder="أين أنت؟"
+              placeholder={t('composer.locationPlaceholder')}
               className="flex-1 bg-transparent text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none"
             />
             <button type="button" onClick={() => { setLocation(''); setShowLocation(false); }} className="ml-auto text-[var(--muted-foreground)]">
@@ -403,7 +410,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
               type="text"
               value={pollQuestion}
               onChange={(e) => setPollQuestion(e.target.value)}
-              placeholder="ما هو سؤالك؟"
+              placeholder={t('composer.poll.questionPlaceholder')}
               className="w-full bg-transparent text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none border-b border-[var(--border)] pb-2"
             />
             <div className="space-y-2">
@@ -413,7 +420,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
                     type="text"
                     value={opt}
                     onChange={(e) => updatePollOption(i, e.target.value)}
-                    placeholder={`خيار ${i + 1}`}
+                    placeholder={t('composer.poll.optionPlaceholder', { index: i + 1 })}
                     className="flex-1 bg-[var(--card)] rounded-lg px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
                   />
                   {pollOptions.length > 2 && (
@@ -425,7 +432,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
               ))}
             </div>
             <button type="button" onClick={addPollOption} className="text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] flex items-center gap-1">
-              <Plus size={16} /> إضافة خيار
+              <Plus size={16} /> {t('composer.poll.addOption')}
             </button>
             <button type="button" onClick={() => { setShowPollCreator(false); setPollQuestion(''); setPollOptions(['', '']); }} className="ml-auto text-[var(--muted-foreground)] text-sm">
               <X size={16} />
@@ -435,26 +442,26 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
 
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-[var(--border)]/40">
           <div className="flex gap-2 flex-wrap">
-            <button type="button" onClick={() => setShowBgPicker(!showBgPicker)} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" title="لون الخلفية">
+            <button type="button" onClick={() => setShowBgPicker(!showBgPicker)} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" title={t('composer.bgColorTitle')}>
               <Palette size={20} />
             </button>
-            <button type="button" onClick={() => fileRef.current?.click()} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" aria-label="إرفاق صورة أو فيديو">
+            <button type="button" onClick={() => fileRef.current?.click()} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" aria-label={t('composer.attachMediaAria')}>
               <input ref={fileRef} type="file" accept="image/*,video/*" multiple className="hidden" onChange={handleFileChange} />
               <Image size={20} aria-hidden="true" />
             </button>
-            <button type="button" onClick={() => setShowFeelingPicker(!showFeelingPicker)} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" title="شعور">
+            <button type="button" onClick={() => setShowFeelingPicker(!showFeelingPicker)} className="p-2 rounded-lg text-[var(--muted-foreground)] hover:bg-[var(--muted)]/50" title={t('composer.feelingTitle')}>
               <Smiley size={20} />
             </button>
-            <button type="button" onClick={() => setShowLocation((v) => !v)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', (showLocation || location) ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title="موقع">
+            <button type="button" onClick={() => setShowLocation((v) => !v)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', (showLocation || location) ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title={t('composer.locationTitle')}>
               <MapPin size={20} />
             </button>
-            <button type="button" onClick={() => setShowAudiencePicker(!showAudiencePicker)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showAudiencePicker ? 'bg-[var(--muted)]' : 'text-[var(--muted-foreground)]')} title="الجمهور">
+            <button type="button" onClick={() => setShowAudiencePicker(!showAudiencePicker)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showAudiencePicker ? 'bg-[var(--muted)]' : 'text-[var(--muted-foreground)]')} title={t('composer.audienceTitle')}>
               <Users size={20} />
             </button>
-            <button type="button" onClick={() => setShowSchedule(!showSchedule)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showSchedule ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title="جدولة">
+            <button type="button" onClick={() => setShowSchedule(!showSchedule)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showSchedule ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title={t('composer.scheduleTitle')}>
               <Clock size={20} />
             </button>
-            <button type="button" onClick={() => setShowPollCreator(!showPollCreator)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showPollCreator ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title="استطلاع">
+            <button type="button" onClick={() => setShowPollCreator(!showPollCreator)} className={cn('p-2 rounded-lg hover:bg-[var(--muted)]/50', showPollCreator ? 'bg-[var(--muted)] text-[var(--foreground)]' : 'text-[var(--muted-foreground)]')} title={t('composer.pollTitle')}>
               <ChartBar size={20} />
             </button>
           </div>
@@ -464,7 +471,7 @@ export function PostComposer({ groupId, onSuccess }: PostComposerProps) {
             className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--card)] hover:shadow-md disabled:opacity-40 transition-all"
             style={{ background: 'linear-gradient(to right, var(--primary), var(--secondary))' }}
           >
-            {createPost.isPending ? 'جاري النشر...' : scheduleDate ? 'جدولة' : 'نشر'}
+            {createPost.isPending ? t('composer.submit.posting') : scheduleDate ? t('composer.scheduleTitle') : t('composer.submit.post')}
           </button>
         </div>
       </form>

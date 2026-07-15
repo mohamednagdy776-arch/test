@@ -7,6 +7,7 @@ import { ShieldCheck, Plus, Check, X, Trash, Copy } from '@phosphor-icons/react'
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useMyProfile } from '@/features/profile/hooks';
 import { useToast } from '@/components/ui/Toast';
+import { useT } from '@/i18n/I18nProvider';
 
 type RelStatus = 'pending' | 'active' | 'revoked';
 
@@ -21,24 +22,30 @@ interface Relationship {
   permissions?: Record<string, boolean>;
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  father: 'أب',
-  mother: 'أم',
-  brother: 'أخ',
-  wali: 'ولي',
-};
+function useTypeLabels(): Record<string, string> {
+  const { t } = useT();
+  return {
+    father: t('family.relType.father'),
+    mother: t('family.relType.mother'),
+    brother: t('family.relType.brother'),
+    wali: t('family.relType.wali'),
+  };
+}
 
 function StatusBadge({ status }: { status: RelStatus }) {
+  const { t } = useT();
   const map: Record<RelStatus, [string, string]> = {
-    pending: ['في الانتظار', 'bg-[var(--accent)]/15 text-[var(--accent)]'],
-    active: ['نشط', 'bg-[var(--muted)] text-[var(--primary)]'],
-    revoked: ['ملغي', 'bg-[var(--destructive)]/15 text-[var(--destructive)]'],
+    pending: [t('family.status.pending'), 'bg-[var(--accent)]/15 text-[var(--accent)]'],
+    active: [t('family.status.active'), 'bg-[var(--muted)] text-[var(--primary)]'],
+    revoked: [t('family.status.revoked'), 'bg-[var(--destructive)]/15 text-[var(--destructive)]'],
   };
-  const [label, cls] = map[status] ?? ['غير معروف', 'bg-[var(--muted)] text-[var(--foreground)]'];
+  const [label, cls] = map[status] ?? [t('family.status.unknown'), 'bg-[var(--muted)] text-[var(--foreground)]'];
   return <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>{label}</span>;
 }
 
 function RelCard({ rel, onRevoke }: { rel: Relationship; onRevoke: (id: string) => void }) {
+  const { t } = useT();
+  const typeLabels = useTypeLabels();
   return (
     <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)]/50 p-4 flex items-center gap-4">
       <div className="w-12 h-12 rounded-2xl bg-[var(--muted)] flex items-center justify-center text-2xl shrink-0">
@@ -46,9 +53,9 @@ function RelCard({ rel, onRevoke }: { rel: Relationship; onRevoke: (id: string) 
       </div>
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-[var(--foreground)] text-sm">
-          {TYPE_LABELS[rel.relationshipType] ?? rel.relationshipType}
+          {typeLabels[rel.relationshipType] ?? rel.relationshipType}
         </p>
-        <p className="text-xs text-[var(--primary)]/60 mt-0.5 truncate">المعرف: {rel.guardianUserId}</p>
+        <p className="text-xs text-[var(--primary)]/60 mt-0.5 truncate">{t('family.idLabel', { id: rel.guardianUserId })}</p>
       </div>
       <div className="flex flex-col items-end gap-2">
         <StatusBadge status={rel.status} />
@@ -57,7 +64,7 @@ function RelCard({ rel, onRevoke }: { rel: Relationship; onRevoke: (id: string) 
             onClick={() => onRevoke(rel.id)}
             className="text-xs text-[var(--destructive)] hover:text-[var(--destructive)] flex items-center gap-1 transition-colors"
           >
-            <Trash size={12} /> إلغاء
+            <Trash size={12} /> {t('family.cancel')}
           </button>
         )}
       </div>
@@ -66,6 +73,8 @@ function RelCard({ rel, onRevoke }: { rel: Relationship; onRevoke: (id: string) 
 }
 
 function InviteGuardianModal({ onClose }: { onClose: () => void }) {
+  const { t } = useT();
+  const typeLabels = useTypeLabels();
   const qc = useQueryClient();
   const [guardianUserId, setGuardianUserId] = useState('');
   const [type, setType] = useState('father');
@@ -78,14 +87,14 @@ function InviteGuardianModal({ onClose }: { onClose: () => void }) {
       qc.invalidateQueries({ queryKey: ['my-guardians'] });
       onClose();
     },
-    onError: (e: any) => setError(e.response?.data?.message ?? 'حدث خطأ'),
+    onError: (e: any) => setError(e.response?.data?.message ?? t('family.genericError')),
   });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="bg-[var(--card)] rounded-3xl shadow-2xl w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-[var(--foreground)]">دعوة ولي أمر</h2>
+          <h2 className="text-lg font-bold text-[var(--foreground)]">{t('family.inviteGuardian')}</h2>
           <button onClick={onClose} className="text-[var(--primary)] hover:text-[var(--primary)]">
             <X size={20} />
           </button>
@@ -93,24 +102,24 @@ function InviteGuardianModal({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-[var(--foreground)] mb-1.5 block">معرف ولي الأمر</label>
+            <label className="text-sm font-medium text-[var(--foreground)] mb-1.5 block">{t('family.guardianIdLabel')}</label>
             <input
               type="text"
               value={guardianUserId}
               onChange={(e) => setGuardianUserId(e.target.value)}
-              placeholder="أدخل UUID الخاص بولي الأمر"
+              placeholder={t('family.guardianIdPlaceholder')}
               className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium text-[var(--foreground)] mb-1.5 block">نوع العلاقة</label>
+            <label className="text-sm font-medium text-[var(--foreground)] mb-1.5 block">{t('family.relationshipTypeLabel')}</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
               className="w-full rounded-2xl border border-[var(--border)] bg-[var(--card)] px-4 py-2.5 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
             >
-              {Object.entries(TYPE_LABELS).map(([v, l]) => (
+              {Object.entries(typeLabels).map(([v, l]) => (
                 <option key={v} value={v}>{l}</option>
               ))}
             </select>
@@ -124,7 +133,7 @@ function InviteGuardianModal({ onClose }: { onClose: () => void }) {
             className="w-full rounded-2xl py-3 text-sm font-bold text-white transition-all disabled:opacity-50"
             style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
           >
-            {mutation.isPending ? 'جار الإرسال...' : 'إرسال الدعوة'}
+            {mutation.isPending ? t('family.sending') : t('family.sendInvite')}
           </button>
         </div>
       </div>
@@ -133,6 +142,8 @@ function InviteGuardianModal({ onClose }: { onClose: () => void }) {
 }
 
 export default function FamilyPage() {
+  const { t } = useT();
+  const typeLabels = useTypeLabels();
   const qc = useQueryClient();
   const { showToast } = useToast();
   const [showInvite, setShowInvite] = useState(false);
@@ -142,7 +153,7 @@ export default function FamilyPage() {
   const copyMyUuid = async () => {
     if (!myUserId) return;
     await navigator.clipboard.writeText(myUserId);
-    showToast('تم نسخ المعرّف', 'success');
+    showToast(t('family.uuidCopiedToast'), 'success');
   };
 
   const { data, isLoading } = useQuery({
@@ -193,16 +204,16 @@ export default function FamilyPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <PageHeader
           icon={ShieldCheck}
-          eyebrow="وضع العائلة"
-          title="العائلة"
-          subtitle="إدارة أولياء الأمور والصلاحيات"
+          eyebrow={t('family.eyebrow')}
+          title={t('family.title')}
+          subtitle={t('family.subtitle')}
           action={
             <button
               onClick={() => setShowInvite(true)}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
               style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}
             >
-              <Plus size={15} weight="bold" /> دعوة ولي أمر
+              <Plus size={15} weight="bold" /> {t('family.inviteGuardian')}
             </button>
           }
         />
@@ -212,7 +223,7 @@ export default function FamilyPage() {
             whoever needs to invite them (#111). */}
         <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)]/50 p-4 flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-[var(--foreground)]">معرّفك (UUID)</p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">{t('family.myUuid')}</p>
             <p className="text-xs text-[var(--primary)]/60 mt-0.5 truncate font-mono">{myUserId || '...'}</p>
           </div>
           <button
@@ -221,22 +232,22 @@ export default function FamilyPage() {
             className="shrink-0 flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold border transition-all disabled:opacity-50"
             style={{ borderColor: 'var(--border)', color: 'var(--primary)' }}
           >
-            <Copy size={13} /> نسخ
+            <Copy size={13} /> {t('family.copy')}
           </button>
         </div>
 
         {wardInvites.length > 0 && (
           <section>
-            <h2 className="text-sm font-bold text-[var(--accent)] mb-3">📨 دعوات موجهة إليك ({wardInvites.length})</h2>
+            <h2 className="text-sm font-bold text-[var(--accent)] mb-3">{t('family.invitesReceived', { count: wardInvites.length })}</h2>
             <div className="space-y-3">
               {wardInvites.map((r) => (
                 <div key={r.id} className="rounded-2xl bg-[var(--card)] border border-[var(--border)]/50 p-4 flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-[var(--muted)] flex items-center justify-center text-2xl shrink-0">🛡️</div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-[var(--foreground)] text-sm">
-                      دعوة لتكون {TYPE_LABELS[r.relationshipType] ?? r.relationshipType}
+                      {t('family.inviteToBe', { type: typeLabels[r.relationshipType] ?? r.relationshipType })}
                     </p>
-                    <p className="text-xs text-[var(--primary)]/60 mt-0.5 truncate">من: {r.wardUserId}</p>
+                    <p className="text-xs text-[var(--primary)]/60 mt-0.5 truncate">{t('family.fromLabel', { id: r.wardUserId })}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
@@ -245,7 +256,7 @@ export default function FamilyPage() {
                       className="rounded-xl px-4 py-2 text-xs font-bold transition-all disabled:opacity-50 border"
                       style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}
                     >
-                      {revoke.isPending ? '...' : 'رفض'}
+                      {revoke.isPending ? '...' : t('family.reject')}
                     </button>
                     <button
                       onClick={() => acceptInvite.mutate(r.id)}
@@ -253,7 +264,7 @@ export default function FamilyPage() {
                       className="rounded-xl px-4 py-2 text-xs font-bold text-white transition-all disabled:opacity-50"
                       style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
                     >
-                      {acceptInvite.isPending ? '...' : 'قبول'}
+                      {acceptInvite.isPending ? '...' : t('family.accept')}
                     </button>
                   </div>
                 </div>
@@ -271,14 +282,14 @@ export default function FamilyPage() {
         ) : relationships.length === 0 ? (
           <div className="text-center py-20">
             <ShieldCheck size={64} className="text-[var(--border)] mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">لا توجد علاقات عائلية</h2>
-            <p className="text-[var(--primary)]/70 text-sm mb-6">ادعُ ولي أمر للإشراف على حسابك</p>
+            <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">{t('family.noRelationships')}</h2>
+            <p className="text-[var(--primary)]/70 text-sm mb-6">{t('family.inviteGuardianPrompt')}</p>
             <button
               onClick={() => setShowInvite(true)}
               className="rounded-2xl px-6 py-3 text-sm font-bold text-white"
               style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary))' }}
             >
-              دعوة ولي أمر الآن
+              {t('family.inviteGuardianNow')}
             </button>
           </div>
         ) : (
@@ -286,7 +297,7 @@ export default function FamilyPage() {
             {active.length > 0 && (
               <section>
                 <h2 className="text-sm font-bold text-[var(--primary)] mb-3 flex items-center gap-2">
-                  <Check size={14} weight="bold" /> أولياء الأمور النشطون ({active.length})
+                  <Check size={14} weight="bold" /> {t('family.activeGuardians', { count: active.length })}
                 </h2>
                 <div className="space-y-3">
                   {active.map((r) => <RelCard key={r.id} rel={r} onRevoke={(id) => revoke.mutate(id)} />)}
@@ -296,7 +307,7 @@ export default function FamilyPage() {
 
             {pending.length > 0 && (
               <section>
-                <h2 className="text-sm font-bold text-[var(--accent)] mb-3">⏳ دعوات في الانتظار ({pending.length})</h2>
+                <h2 className="text-sm font-bold text-[var(--accent)] mb-3">{t('family.pendingInvites', { count: pending.length })}</h2>
                 <div className="space-y-3">
                   {pending.map((r) => <RelCard key={r.id} rel={r} onRevoke={(id) => revoke.mutate(id)} />)}
                 </div>
@@ -305,7 +316,7 @@ export default function FamilyPage() {
 
             {revoked.length > 0 && (
               <section>
-                <h2 className="text-sm font-bold text-[var(--muted-foreground)] mb-3">سجل العلاقات الملغاة ({revoked.length})</h2>
+                <h2 className="text-sm font-bold text-[var(--muted-foreground)] mb-3">{t('family.revokedHistory', { count: revoked.length })}</h2>
                 <div className="space-y-3 opacity-60">
                   {revoked.map((r) => <RelCard key={r.id} rel={r} onRevoke={() => {}} />)}
                 </div>

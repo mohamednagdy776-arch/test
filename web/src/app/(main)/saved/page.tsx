@@ -14,8 +14,10 @@ import { useToast } from '@/components/ui/Toast';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { resolveMediaUrl } from '@/lib/media';
 import { BookmarkSimple } from '@phosphor-icons/react';
+import { useT } from '@/i18n/I18nProvider';
 
 export default function SavedPage() {
+  const { t } = useT();
   const router = useRouter();
   const { data: savedData, isLoading: savedLoading } = useSavedItems();
   const removeSaved = useRemoveSaved();
@@ -30,9 +32,9 @@ export default function SavedPage() {
     if (!pendingRemoveId) return;
     try {
       await removeSaved.mutateAsync(pendingRemoveId);
-      showToast('تمت إزالة العنصر من المحفوظات', 'success');
+      showToast(t('saved.removeSuccess'), 'success');
     } catch (err: any) {
-      showToast(err?.response?.data?.message || 'فشل إزالة العنصر', 'error');
+      showToast(err?.response?.data?.message || t('saved.removeError'), 'error');
     } finally {
       setPendingRemoveId(null);
     }
@@ -47,9 +49,9 @@ export default function SavedPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <PageHeader
         icon={BookmarkSimple}
-        eyebrow="مجموعتك"
-        title="المحفوظات"
-        subtitle="العناصر التي حفظتها لإعادة مشاهدتها لاحقاً"
+        eyebrow={t('saved.eyebrow')}
+        title={t('nav.saved')}
+        subtitle={t('saved.subtitle')}
       />
 
       {savedLoading ? (
@@ -60,8 +62,8 @@ export default function SavedPage() {
         <Card className="bg-[var(--card)] shadow-lg shadow-black/5 border border-[var(--border)]">
           <CardContent className="py-12 text-center">
             <div className="text-4xl mb-3">🔖</div>
-            <p className="text-[var(--primary)]">لا توجد عناصر محفوظة</p>
-            <p className="text-sm text-[var(--primary)]/60 mt-1">احفظ المنشورات والصور والفيديوهات لتجدها لاحقاً</p>
+            <p className="text-[var(--primary)]">{t('saved.empty')}</p>
+            <p className="text-sm text-[var(--primary)]/60 mt-1">{t('saved.emptyHint')}</p>
           </CardContent>
         </Card>
       ) : (
@@ -82,7 +84,7 @@ export default function SavedPage() {
                             onClick={() => router.push(`/watch/${item.entity.id}`)}
                           />
                         </div>
-                        <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.savedAt)}</p>
+                        <p className="text-sm text-[var(--primary)]/60">{t('saved.savedOn', { date: formatDate(item.savedAt) })}</p>
                       </div>
                     )}
                     {item.entityType === 'story' && item.entity && (
@@ -102,8 +104,8 @@ export default function SavedPage() {
                           ) : '📸'}
                         </div>
                         <div>
-                          <p className="font-semibold text-[var(--foreground)]">قصة</p>
-                          <p className="text-sm text-[var(--primary)]/60">تم الحفظ في {formatDate(item.savedAt)}</p>
+                          <p className="font-semibold text-[var(--foreground)]">{t('saved.story')}</p>
+                          <p className="text-sm text-[var(--primary)]/60">{t('saved.savedOn', { date: formatDate(item.savedAt) })}</p>
                         </div>
                       </button>
                     )}
@@ -131,12 +133,12 @@ export default function SavedPage() {
         />
       )}
 
-      <Modal open={!!pendingRemoveId} onClose={() => setPendingRemoveId(null)} title="إزالة من المحفوظات">
+      <Modal open={!!pendingRemoveId} onClose={() => setPendingRemoveId(null)} title={t('saved.removeModalTitle')}>
         <div className="space-y-4">
-          <p className="text-sm text-[var(--primary)]">هل أنت متأكد من إزالة هذا العنصر من المحفوظات؟</p>
+          <p className="text-sm text-[var(--primary)]">{t('saved.removeConfirm')}</p>
           <div className="flex gap-3">
-            <Button variant="ghost" onClick={() => setPendingRemoveId(null)} className="flex-1 text-[var(--primary)]">إلغاء</Button>
-            <Button variant="danger" onClick={handleRemoveSaved} loading={removeSaved.isPending} className="flex-1">إزالة</Button>
+            <Button variant="ghost" onClick={() => setPendingRemoveId(null)} className="flex-1 text-[var(--primary)]">{t('saved.cancel')}</Button>
+            <Button variant="danger" onClick={handleRemoveSaved} loading={removeSaved.isPending} className="flex-1">{t('saved.remove')}</Button>
           </div>
         </div>
       </Modal>

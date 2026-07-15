@@ -15,15 +15,21 @@ import {
   ArrowLeft, Users, Trash, SignOut, Lock, Globe, EyeSlash,
   PencilLine, UserPlus,
 } from '@phosphor-icons/react';
+import { useT } from '@/i18n/I18nProvider';
 
 
-function privacyInfo(privacy: string) {
-  if (privacy === 'public')  return { label: 'عام',  icon: Globe,     style: { background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))', color: 'var(--primary)' } };
-  if (privacy === 'private') return { label: 'خاص',  icon: Lock,      style: { background: 'color-mix(in srgb, var(--accent) 12%, var(--muted))',  color: 'var(--accent)' } };
-  return                            { label: 'سري',  icon: EyeSlash,  style: { background: 'color-mix(in srgb, var(--destructive) 10%, var(--muted))', color: 'var(--destructive)' } };
+function usePrivacyInfo() {
+  const { t } = useT();
+  return (privacy: string) => {
+    if (privacy === 'public')  return { label: t('groups.privacyPublicBadge'),  icon: Globe,     style: { background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))', color: 'var(--primary)' } };
+    if (privacy === 'private') return { label: t('groups.privacyPrivateBadge'),  icon: Lock,      style: { background: 'color-mix(in srgb, var(--accent) 12%, var(--muted))',  color: 'var(--accent)' } };
+    return                            { label: t('groups.privacySecretBadge'),  icon: EyeSlash,  style: { background: 'color-mix(in srgb, var(--destructive) 10%, var(--muted))', color: 'var(--destructive)' } };
+  };
 }
 
 export default function GroupDetailPage() {
+  const { t } = useT();
+  const privacyInfo = usePrivacyInfo();
   const { id } = useParams<{ id: string }>();
   const router  = useRouter();
   const { data, isLoading, error } = useGroup(id);
@@ -64,12 +70,12 @@ export default function GroupDetailPage() {
           style={{ background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))' }}>
           <Users size={30} weight="light" style={{ color: 'var(--primary)', opacity: 0.5 }} />
         </div>
-        <p className="font-bold mb-1" style={{ color: 'var(--foreground)' }}>تعذّر تحميل المجتمع</p>
-        <p className="text-sm mb-5" style={{ color: 'var(--muted-foreground)' }}>حدث خطأ أثناء التحميل، يرجى المحاولة مجدداً</p>
+        <p className="font-bold mb-1" style={{ color: 'var(--foreground)' }}>{t('groups.loadError')}</p>
+        <p className="text-sm mb-5" style={{ color: 'var(--muted-foreground)' }}>{t('groups.loadErrorDesc')}</p>
         <button onClick={() => router.push('/groups')}
           className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105"
           style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
-          العودة للمجتمعات
+          {t('groups.backToGroupsCta')}
         </button>
       </div>
     );
@@ -91,7 +97,7 @@ export default function GroupDetailPage() {
         className="flex items-center gap-1.5 text-sm font-medium transition-all hover:gap-2"
         style={{ color: 'var(--primary)' }}>
         <ArrowLeft size={15} />
-        عودة للمجتمعات
+        {t('groups.backLabel')}
       </button>
 
       {/* ── Group hero card ───────────────────────────────────── */}
@@ -131,16 +137,16 @@ export default function GroupDetailPage() {
                 </span>
               )}
               <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--muted-foreground)' }}>
-                {group.description || 'لا يوجد وصف للمجتمع'}
+                {group.description || t('groups.noDescription')}
               </p>
               <div className="flex items-center gap-4">
                 <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
                   <Users size={13} />
-                  {(group.memberCount ?? 0).toLocaleString('ar-SA')} عضو
+                  {t('groups.memberCount', { count: (group.memberCount ?? 0).toLocaleString('ar-SA') })}
                 </span>
                 <span className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>
                   <PencilLine size={13} />
-                  {posts.length.toLocaleString('ar-SA')} منشور
+                  {t('groups.postCount', { count: posts.length.toLocaleString('ar-SA') })}
                 </span>
               </div>
             </div>
@@ -149,11 +155,11 @@ export default function GroupDetailPage() {
             <div className="shrink-0 flex items-center gap-2">
               {(group.isOwner || group.isAdmin) && (
                 <button onClick={() => { setEditName(group.name || ''); setEditDescription(group.description || ''); setShowManageModal(true); }}
-                  aria-label="إدارة المجتمع"
+                  aria-label={t('groups.manageAria')}
                   className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-105 active:scale-95"
                   style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
                   <PencilLine size={13} />
-                  إدارة
+                  {t('groups.manage')}
                 </button>
               )}
               {/* No invite mechanism existed at all -- secret groups are
@@ -161,20 +167,20 @@ export default function GroupDetailPage() {
                   grow one past its creator (#299). */}
               {(group.isOwner || group.isAdmin) && (
                 <button onClick={() => setShowInviteModal(true)}
-                  aria-label="دعوة عضو"
+                  aria-label={t('groups.inviteMember')}
                   className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-105 active:scale-95"
                   style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
                   <UserPlus size={13} />
-                  دعوة عضو
+                  {t('groups.inviteMember')}
                 </button>
               )}
               {(group.isOwner || group.isAdmin) && (
                 <button onClick={() => setShowDeleteModal(true)} disabled={deleteGroup.isPending}
-                  aria-label="حذف المجتمع"
+                  aria-label={t('groups.deleteGroup')}
                   className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                   style={{ border: '1px solid color-mix(in srgb, var(--destructive) 30%, var(--border))', color: 'var(--destructive)' }}>
                   <Trash size={13} />
-                  {deleteGroup.isPending ? '...' : 'حذف'}
+                  {deleteGroup.isPending ? '...' : t('groups.delete')}
                 </button>
               )}
               {group.isMember ? (
@@ -182,17 +188,17 @@ export default function GroupDetailPage() {
                   onClick={async () => {
                     try {
                       await leaveGroup.mutateAsync(id);
-                      showToast('غادرت المجتمع', 'success');
+                      showToast(t('groups.leftGroupToast'), 'success');
                       router.push('/groups');
                     } catch (err: any) {
-                      showToast(err?.response?.data?.message || 'فشل مغادرة المجتمع', 'error');
+                      showToast(err?.response?.data?.message || t('groups.leaveErrorToast'), 'error');
                     }
                   }}
                   disabled={leaveGroup.isPending}
                   className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
                   style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
                   <SignOut size={13} />
-                  {leaveGroup.isPending ? '...' : 'مغادرة'}
+                  {leaveGroup.isPending ? '...' : t('groups.leave')}
                 </button>
               ) : (
                 <button
@@ -202,19 +208,19 @@ export default function GroupDetailPage() {
                       const joinStatus = res?.data?.joinStatus ?? res?.joinStatus;
                       showToast(
                         joinStatus === 'pending'
-                          ? 'تم إرسال طلب الانضمام، في انتظار موافقة المشرف'
-                          : 'انضممت إلى المجتمع',
+                          ? t('groups.joinPendingToast')
+                          : t('groups.joinedToast'),
                         'success',
                       );
                     } catch (err: any) {
-                      showToast(err?.response?.data?.message || 'فشل الانضمام إلى المجتمع', 'error');
+                      showToast(err?.response?.data?.message || t('groups.joinErrorToast'), 'error');
                     }
                   }}
                   disabled={joinGroup.isPending}
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                   style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', boxShadow: '0 4px 14px color-mix(in srgb, var(--primary) 30%, transparent)' }}>
                   <Users size={14} weight="fill" />
-                  {joinGroup.isPending ? 'جاري...' : 'انضم'}
+                  {joinGroup.isPending ? t('groups.processingEllipsis') : t('groups.join')}
                 </button>
               )}
             </div>
@@ -227,7 +233,7 @@ export default function GroupDetailPage() {
           other option the public composer has (poll, feelings, background
           color, tagging, location, audience...) (#360). */}
       {group.isMember && (
-        <PostComposer groupId={id} onSuccess={() => showToast('تم نشر المنشور بنجاح', 'success')} />
+        <PostComposer groupId={id} onSuccess={() => showToast(t('groups.postCreatedToast'), 'success')} />
       )}
 
       {/* ── Posts feed ────────────────────────────────────────── */}
@@ -243,8 +249,8 @@ export default function GroupDetailPage() {
               style={{ background: 'color-mix(in srgb, var(--primary) 10%, var(--muted))' }}>
               <PencilLine size={26} weight="light" style={{ color: 'var(--primary)', opacity: 0.5 }} />
             </div>
-            <p className="font-bold" style={{ color: 'var(--foreground)' }}>لا توجد منشورات بعد</p>
-            <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>كن أول من يشارك في هذا المجتمع</p>
+            <p className="font-bold" style={{ color: 'var(--foreground)' }}>{t('groups.noPosts')}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>{t('groups.noPostsDesc')}</p>
           </div>
         ) : (
           posts.map((p: any) => <PostCard key={p.id} post={p} showGroupLink={false} />)
@@ -252,47 +258,47 @@ export default function GroupDetailPage() {
       </div>
 
       {/* ── Delete confirmation modal ─────────────────────────── */}
-      <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="حذف المجتمع">
+      <Modal open={showDeleteModal} onClose={() => setShowDeleteModal(false)} title={t('groups.deleteGroup')}>
         <div className="space-y-4">
           <div className="rounded-xl p-4 text-sm leading-relaxed"
             style={{ background: 'color-mix(in srgb, var(--destructive) 6%, var(--muted))', color: 'var(--foreground)' }}>
-            هل أنت متأكد من حذف <strong>{group.name}</strong>؟ لا يمكن التراجع عن هذا الإجراء وسيُحذف المجتمع نهائياً مع كل منشوراته.
+            {t('groups.deleteConfirmMsg', { name: group.name })}
           </div>
           <div className="flex gap-3">
             <button onClick={() => setShowDeleteModal(false)}
               className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-[1.01]"
               style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
-              إلغاء
+              {t('groups.cancel')}
             </button>
             <button
               onClick={async () => {
                 setShowDeleteModal(false);
                 try {
                   await deleteGroup.mutateAsync(id);
-                  showToast('تم حذف المجتمع', 'success');
+                  showToast(t('groups.deletedToast'), 'success');
                   router.push('/groups');
                 } catch (err: any) {
-                  showToast(err?.response?.data?.message || 'فشل حذف المجتمع', 'error');
+                  showToast(err?.response?.data?.message || t('groups.deleteErrorToast'), 'error');
                 }
               }}
               disabled={deleteGroup.isPending}
               className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.01] active:scale-95 disabled:opacity-50"
               style={{ background: 'var(--destructive)' }}>
               <Trash size={13} />
-              {deleteGroup.isPending ? 'جاري...' : 'تأكيد الحذف'}
+              {deleteGroup.isPending ? t('groups.processingEllipsis') : t('groups.confirmDelete')}
             </button>
           </div>
         </div>
       </Modal>
 
-      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title="دعوة عضو">
+      <Modal open={showInviteModal} onClose={() => setShowInviteModal(false)} title={t('groups.inviteMember')}>
         <div className="space-y-3 max-h-96 overflow-y-auto">
           {(() => {
             const friends: any[] = friendsData?.data ?? [];
             const memberIds = new Set((membersData?.data?.data ?? membersData?.data ?? []).map((m: any) => m.user?.id ?? m.id));
             const invitable = friends.filter((f: any) => !memberIds.has(f.id));
             if (invitable.length === 0) {
-              return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">لا يوجد أصدقاء يمكن دعوتهم</p>;
+              return <p className="text-sm text-[var(--muted-foreground)] text-center py-6">{t('groups.noInvitableFriends')}</p>;
             }
             return invitable.map((f: any) => (
               <div key={f.id} className="flex items-center justify-between gap-3 p-2 rounded-xl hover:bg-[var(--muted)]/50 transition-colors">
@@ -304,16 +310,16 @@ export default function GroupDetailPage() {
                   onClick={async () => {
                     try {
                       await inviteMember.mutateAsync(f.id);
-                      showToast('تمت الدعوة بنجاح', 'success');
+                      showToast(t('groups.inviteSuccessToast'), 'success');
                     } catch (err: any) {
-                      showToast(err?.response?.data?.message || 'فشلت الدعوة', 'error');
+                      showToast(err?.response?.data?.message || t('groups.inviteErrorToast'), 'error');
                     }
                   }}
                   disabled={inviteMember.isPending}
                   className="rounded-xl px-3 py-1.5 text-xs font-bold text-white transition-all disabled:opacity-50"
                   style={{ background: 'var(--primary)' }}
                 >
-                  دعوة
+                  {t('groups.inviteBtn')}
                 </button>
               </div>
             ));
@@ -321,18 +327,18 @@ export default function GroupDetailPage() {
         </div>
       </Modal>
 
-      <Modal open={showManageModal} onClose={() => setShowManageModal(false)} title="إدارة المجتمع" size="lg">
+      <Modal open={showManageModal} onClose={() => setShowManageModal(false)} title={t('groups.manageAria')} size="lg">
         <div className="space-y-6">
           <div className="space-y-3">
-            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>تعديل التفاصيل</h3>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{t('groups.editDetails')}</h3>
             <div>
-              <label className="mb-1 block text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>الاسم</label>
+              <label className="mb-1 block text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{t('groups.nameFieldLabel')}</label>
               <input value={editName} onChange={(e) => setEditName(e.target.value)}
                 className="w-full rounded-xl border px-3 py-2 text-sm"
                 style={{ borderColor: 'var(--border)', color: 'var(--foreground)', background: 'var(--card)' }} />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>الوصف</label>
+              <label className="mb-1 block text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{t('groups.descriptionFieldLabel')}</label>
               <textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3}
                 className="w-full rounded-xl border px-3 py-2 text-sm resize-none"
                 style={{ borderColor: 'var(--border)', color: 'var(--foreground)', background: 'var(--card)' }} />
@@ -341,33 +347,33 @@ export default function GroupDetailPage() {
               onClick={async () => {
                 try {
                   await updateGroup.mutateAsync({ id, data: { name: editName, description: editDescription } });
-                  showToast('تم تحديث المجتمع', 'success');
+                  showToast(t('groups.updatedToast'), 'success');
                 } catch (err: any) {
-                  showToast(err?.response?.data?.message || 'فشل تحديث المجتمع', 'error');
+                  showToast(err?.response?.data?.message || t('groups.updateErrorToast'), 'error');
                 }
               }}
               disabled={updateGroup.isPending || !editName.trim()}
               className="rounded-xl px-4 py-2 text-sm font-bold text-white transition-all disabled:opacity-50"
               style={{ background: 'var(--primary)' }}>
-              {updateGroup.isPending ? 'جاري الحفظ...' : 'حفظ التعديلات'}
+              {updateGroup.isPending ? t('groups.saving') : t('groups.saveChanges')}
             </button>
           </div>
 
           <div className="space-y-3 border-t pt-4" style={{ borderColor: 'var(--border)' }}>
-            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>الأعضاء ({membersData?.data?.total ?? membersData?.total ?? 0})</h3>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{t('groups.membersCountTitle', { count: membersData?.data?.total ?? membersData?.total ?? 0 })}</h3>
             <div className="max-h-72 overflow-y-auto space-y-2">
               {(membersData?.data?.data ?? membersData?.data ?? []).map((m: any) => (
                 <div key={m.id} className="flex items-center justify-between rounded-xl border p-2.5" style={{ borderColor: 'var(--border)' }}>
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{m.fullName || m.username || 'مستخدم'}</span>
+                    <span className="text-sm font-medium truncate" style={{ color: 'var(--foreground)' }}>{m.fullName || m.username || t('groups.defaultUser')}</span>
                     {m.role === 'admin' && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--primary) 12%, var(--muted))', color: 'var(--primary)' }}>مشرف</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--primary) 12%, var(--muted))', color: 'var(--primary)' }}>{t('groups.adminBadge')}</span>
                     )}
                     {m.isBanned && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--destructive) 12%, var(--muted))', color: 'var(--destructive)' }}>محظور</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--destructive) 12%, var(--muted))', color: 'var(--destructive)' }}>{t('groups.bannedBadge')}</span>
                     )}
                     {m.status === 'pending' && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--muted))', color: 'var(--accent)' }}>بانتظار الموافقة</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--muted))', color: 'var(--accent)' }}>{t('groups.pendingApprovalBadge')}</span>
                     )}
                   </div>
                   {/* Pending join requests only had a Block action available --
@@ -376,23 +382,23 @@ export default function GroupDetailPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <button onClick={() => rejectJoinRequest.mutate(m.id)} disabled={rejectJoinRequest.isPending}
                         className="text-xs font-medium" style={{ color: 'var(--destructive)' }}>
-                        رفض
+                        {t('groups.reject')}
                       </button>
                       <button onClick={() => approveJoinRequest.mutate(m.id)} disabled={approveJoinRequest.isPending}
                         className="text-xs font-medium" style={{ color: 'var(--primary)' }}>
-                        قبول
+                        {t('groups.accept')}
                       </button>
                     </div>
                   ) : m.role !== 'admin' && (
                     m.isBanned ? (
                       <button onClick={() => unbanMember.mutate(m.id)} disabled={unbanMember.isPending}
                         className="text-xs font-medium shrink-0" style={{ color: 'var(--primary)' }}>
-                        إلغاء الحظر
+                        {t('groups.unban')}
                       </button>
                     ) : (
                       <button onClick={() => banMember.mutate(m.id)} disabled={banMember.isPending}
                         className="text-xs font-medium shrink-0" style={{ color: 'var(--destructive)' }}>
-                        حظر
+                        {t('groups.ban')}
                       </button>
                     )
                   )}

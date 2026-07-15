@@ -4,6 +4,7 @@ import { resolveMediaUrl } from '@/lib/media';
 import { useRouter } from 'next/navigation';
 import { MapPin, GraduationCap, Scales, Briefcase, Eye, ChatCircle } from '@phosphor-icons/react';
 import { educationLabel, lifestyleLabel, prayerLevelLabel } from '@/features/profile/labels';
+import { useT } from '@/i18n/I18nProvider';
 
 // Had its own separate, less-complete label maps (missing several stored enum
 // spellings like "bachelors"/"masters"/"liberal"/"usually", and no case/
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export const UserCard = ({ user, onView }: Props) => {
+  const { t } = useT();
   const router = useRouter();
   const avatarSrc = user.avatarUrl
     ? (resolveMediaUrl(user.avatarUrl))
@@ -55,24 +57,24 @@ export const UserCard = ({ user, onView }: Props) => {
             style={isMale
               ? { background: 'color-mix(in srgb, #3b82f6 12%, var(--muted))', color: '#3b82f6' }
               : { background: 'color-mix(in srgb, #ec4899 12%, var(--muted))', color: '#ec4899' }}>
-            {isMale ? 'ذكر' : 'أنثى'}
+            {isMale ? t('search.userCard.male') : t('search.userCard.female')}
           </span>
         </div>
 
         {/* Name + meta */}
         <div className="mb-3">
           <h3 className="font-bold text-base truncate" style={{ color: 'var(--foreground)' }}>
-            {user.fullName || user.username || 'مستخدم'}
+            {user.fullName || user.username || t('privacy.photoRequests.defaultUser')}
           </h3>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             {user.age && (
-              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{user.age} سنة</span>
+              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{t('dashboard.ageLabel', { age: user.age })}</span>
             )}
             {(user.city || user.country) && (
               <span className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--muted-foreground)' }}>
                 {user.age && <span>·</span>}
                 <MapPin size={10} />
-                {[user.city, user.country].filter(Boolean).join('، ')}
+                {[user.city, user.country].filter(Boolean).join(t('profile.listSeparator') + ' ')}
               </span>
             )}
           </div>
@@ -104,11 +106,11 @@ export const UserCard = ({ user, onView }: Props) => {
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 text-white"
             style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))', boxShadow: '0 2px 8px color-mix(in srgb, var(--primary) 25%, transparent)' }}>
             <Eye size={13} weight="fill" />
-            عرض الملف
+            {t('search.userCard.viewProfile')}
           </button>
           {user.id && (
             <button onClick={() => router.push(`/chat?user=${user.id}`)}
-              aria-label="إرسال رسالة"
+              aria-label={t('search.userCard.sendMessageAria')}
               className="flex items-center justify-center w-10 h-10 rounded-xl transition-all hover:scale-105 active:scale-95"
               style={{ background: 'linear-gradient(135deg, var(--accent), #c8952e)', color: 'white' }}>
               <ChatCircle size={15} weight="fill" />

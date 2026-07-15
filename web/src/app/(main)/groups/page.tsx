@@ -5,13 +5,32 @@ import { useCreateGroup } from '@/features/groups/hooks';
 import { useToast } from '@/components/ui/Toast';
 import { useState, useRef } from 'react';
 import { Users, Plus, X, Image as ImageIcon } from '@phosphor-icons/react';
+import { useT } from '@/i18n/I18nProvider';
 
+// NOTE: these are the actual category values stored on the group (backend
+// enum-like field), not just display labels -- keep the underlying value in
+// Arabic and only translate what's shown in the <option>.
 const CATEGORIES = [
   'دراسة', 'صحة', 'رياضة', 'تكنولوجيا', 'فنون',
   'موسيقى', 'ألعاب', 'طعام', 'سفر', 'أعمال', 'أخرى',
 ];
 
+const CATEGORY_KEYS: Record<string, string> = {
+  'دراسة': 'groups.categoryOption.study',
+  'صحة': 'groups.categoryOption.health',
+  'رياضة': 'groups.categoryOption.sports',
+  'تكنولوجيا': 'groups.categoryOption.tech',
+  'فنون': 'groups.categoryOption.arts',
+  'موسيقى': 'groups.categoryOption.music',
+  'ألعاب': 'groups.categoryOption.games',
+  'طعام': 'groups.categoryOption.food',
+  'سفر': 'groups.categoryOption.travel',
+  'أعمال': 'groups.categoryOption.business',
+  'أخرى': 'groups.categoryOption.other',
+};
+
 export default function GroupsPage() {
+  const { t } = useT();
   const [showCreate, setShowCreate]     = useState(false);
   const [name, setName]                 = useState('');
   const [description, setDescription]  = useState('');
@@ -51,10 +70,10 @@ export default function GroupsPage() {
         category: category.trim(),
         coverPhoto: coverPhoto || undefined,
       });
-      showToast('تم إنشاء المجتمع بنجاح', 'success');
+      showToast(t('groups.createSuccessToast'), 'success');
       resetForm();
     } catch (err: any) {
-      showToast(err?.response?.data?.message || 'فشل إنشاء المجتمع', 'error');
+      showToast(err?.response?.data?.message || t('groups.createErrorToast'), 'error');
     }
   };
 
@@ -75,16 +94,16 @@ export default function GroupsPage() {
           <div>
             <div className="flex items-center gap-1.5 mb-1">
               <Users size={14} weight="fill" className="text-white/70" />
-              <span className="text-[11px] font-semibold text-white/70">المجتمعات</span>
+              <span className="text-[11px] font-semibold text-white/70">{t('groups.eyebrow')}</span>
             </div>
-            <h1 className="text-xl font-extrabold text-white">اكتشف وانضم</h1>
-            <p className="text-xs text-white/70 mt-0.5">جد مجتمعاتك وشارك مع أشخاص مثلك</p>
+            <h1 className="text-xl font-extrabold text-white">{t('groups.heroTitle')}</h1>
+            <p className="text-xs text-white/70 mt-0.5">{t('groups.heroSubtitle')}</p>
           </div>
           <button onClick={() => setShowCreate((v) => !v)}
             className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95"
             style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}>
             {showCreate ? <X size={15} /> : <Plus size={15} />}
-            {showCreate ? 'إلغاء' : 'إنشاء مجتمع'}
+            {showCreate ? t('groups.cancel') : t('groups.createGroup')}
           </button>
         </div>
       </div>
@@ -98,7 +117,7 @@ export default function GroupsPage() {
             {coverPreview ? (
               <>
                 <Image src={coverPreview} alt="" fill className="object-cover" />
-                <button type="button" aria-label="إزالة صورة الغلاف"
+                <button type="button" aria-label={t('groups.removeCoverPhoto')}
                   onClick={() => { setCoverPhoto(null); setCoverPreview(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}
                   className="absolute top-3 left-3 w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:scale-110"
                   style={{ background: 'rgba(0,0,0,0.55)', color: 'white' }}>
@@ -113,7 +132,7 @@ export default function GroupsPage() {
                   style={{ background: 'rgba(255,255,255,0.2)' }}>
                   <ImageIcon size={22} className="text-white" />
                 </div>
-                <span className="text-sm font-semibold text-white/90">إضافة صورة غلاف</span>
+                <span className="text-sm font-semibold text-white/90">{t('groups.addCoverPhoto')}</span>
               </button>
             )}
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
@@ -123,36 +142,36 @@ export default function GroupsPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>
-                  اسم المجتمع <span style={{ color: 'var(--destructive)' }}>*</span>
+                  {t('groups.nameLabel')} <span style={{ color: 'var(--destructive)' }}>*</span>
                 </label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)}
-                  placeholder="اسم المجتمع" required
+                  placeholder={t('groups.nameLabel')} required
                   className={inputClass} style={inputStyle} />
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>الفئة</label>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>{t('groups.categoryLabel')}</label>
                 <select value={category} onChange={(e) => setCategory(e.target.value)}
                   className={`${inputClass} cursor-pointer appearance-none`} style={inputStyle}>
-                  <option value="">اختر الفئة</option>
-                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                  <option value="">{t('groups.categoryPlaceholder')}</option>
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{t(CATEGORY_KEYS[c])}</option>)}
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>الخصوصية</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>{t('groups.privacyLabel')}</label>
               <select value={privacy} onChange={(e) => setPrivacy(e.target.value as any)}
                 className={`${inputClass} cursor-pointer appearance-none`} style={inputStyle}>
-                <option value="public">عام — يمكن للجميع الرؤية والانضمام</option>
-                <option value="private">خاص — يتطلب موافقة المسؤول</option>
-                <option value="secret">سري — للأعضاء فقط</option>
+                <option value="public">{t('groups.privacyPublicOption')}</option>
+                <option value="private">{t('groups.privacyPrivateOption')}</option>
+                <option value="secret">{t('groups.privacySecretOption')}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>الوصف (اختياري)</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--muted-foreground)' }}>{t('groups.descriptionLabel')}</label>
               <textarea value={description} onChange={(e) => setDescription(e.target.value)}
-                placeholder="وصف المجتمع..." rows={2} style={inputStyle}
+                placeholder={t('groups.descriptionPlaceholder')} rows={2} style={inputStyle}
                 className={`${inputClass} resize-none`} />
             </div>
 
@@ -160,12 +179,12 @@ export default function GroupsPage() {
               <button type="button" onClick={resetForm}
                 className="px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95"
                 style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
-                إلغاء
+                {t('groups.cancel')}
               </button>
               <button type="submit" disabled={createGroup.isPending || !name.trim()}
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
-                {createGroup.isPending ? 'جاري الإنشاء...' : (<><Plus size={14} /> إنشاء</>)}
+                {createGroup.isPending ? t('groups.creating') : (<><Plus size={14} /> {t('groups.create')}</>)}
               </button>
             </div>
           </div>

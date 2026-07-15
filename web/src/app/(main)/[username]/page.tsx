@@ -11,6 +11,7 @@ import { ProfileTabs } from '@/features/profile/components/ProfileTabs';
 import { ActivityLogViewer } from '@/features/profile/components/ActivityLogViewer';
 import { PostCard } from '@/features/posts/components/PostCard';
 import Link from 'next/link';
+import { useT } from '@/i18n/I18nProvider';
 
 type Tab = 'posts' | 'about' | 'friends' | 'photos' | 'videos' | 'activity';
 
@@ -18,6 +19,7 @@ type Tab = 'posts' | 'about' | 'friends' | 'photos' | 'videos' | 'activity';
 const safeWebsite = (url?: string) => (url && /^https?:\/\//i.test(url) ? url : null);
 
 export default function UserProfilePage() {
+  const { t } = useT();
   const params = useParams();
   const router = useRouter();
   const username = params.username as string;
@@ -65,7 +67,7 @@ export default function UserProfilePage() {
     return (
       <div className="text-center py-16">
         <p className="text-4xl mb-3">👤</p>
-        <p className="text-[var(--primary)] font-medium">المستخدم غير موجود</p>
+        <p className="text-[var(--primary)] font-medium">{t('userPage.notFound')}</p>
       </div>
     );
   }
@@ -93,7 +95,7 @@ export default function UserProfilePage() {
         {activeTab === 'videos'   && <VideosTab   userId={profile.userId} />}
         {activeTab === 'activity' && (isSelf
           ? <ActivityLogViewer userId={profile.userId} />
-          : <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center text-[var(--primary)]">🔒 النشاط خاص</div>
+          : <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center text-[var(--primary)]">{t('userPage.activityPrivate')}</div>
         )}
       </div>
     </div>
@@ -101,6 +103,7 @@ export default function UserProfilePage() {
 }
 
 function PostsTab({ userId }: { userId: string }) {
+  const { t } = useT();
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
   const { data, isLoading, isError } = useQuery({
@@ -127,7 +130,7 @@ function PostsTab({ userId }: { userId: string }) {
     return (
       <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center">
         <p className="text-2xl mb-2">⚠️</p>
-        <p className="text-[var(--primary)] text-sm">فشل تحميل المنشورات</p>
+        <p className="text-[var(--primary)] text-sm">{t('userPage.posts.loadError')}</p>
       </div>
     );
   }
@@ -136,7 +139,7 @@ function PostsTab({ userId }: { userId: string }) {
     return (
       <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-10 text-center">
         <p className="text-3xl mb-2">📝</p>
-        <p className="text-[var(--primary)]">لا توجد منشورات</p>
+        <p className="text-[var(--primary)]">{t('profileView.posts.empty')}</p>
       </div>
     );
   }

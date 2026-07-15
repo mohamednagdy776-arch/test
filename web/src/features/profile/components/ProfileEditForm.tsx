@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { COUNTRIES } from '@/lib/countries';
+import { useT } from '@/i18n/I18nProvider';
 
 interface Props {
   initial: any;
@@ -20,8 +21,6 @@ const empty = {
   workEntries: [], educationEntries: [],
 };
 
-const tabs = ['الأساسية', 'التعليم والعمل', 'الدين', 'التفضيلات'];
-
 // Module-scope stable component — defining it inside render would remount
 // inputs every keystroke and drop focus (H-08).
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -32,6 +31,8 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 );
 
 export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
+  const { t } = useT();
+  const tabs = [t('profileEdit.tab.basic'), t('profileEdit.tab.workEducation'), t('profileEdit.tab.religion'), t('profileEdit.tab.preferences')];
   const [tab, setTab] = useState(0);
   const [form, setForm] = useState({ ...empty, ...(initial ?? {}) });
   const [formError, setFormError] = useState('');
@@ -57,14 +58,14 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
     setFormError('');
     // Reject a whitespace-only name and trim before saving (#407).
     const fullName = (form.fullName ?? '').trim();
-    if (form.fullName && !fullName) { setTab(0); setFormError('يرجى إدخال اسم صحيح'); return; }
-    if (!form.gender) { setTab(0); setFormError('يرجى اختيار الجنس'); return; }
-    if (!form.age || form.age < 18 || form.age > 99) { setTab(0); setFormError('يرجى إدخال عمر صحيح (18-99)'); return; }
+    if (form.fullName && !fullName) { setTab(0); setFormError(t('profileEdit.error.invalidName')); return; }
+    if (!form.gender) { setTab(0); setFormError(t('profileEdit.error.genderRequired')); return; }
+    if (!form.age || form.age < 18 || form.age > 99) { setTab(0); setFormError(t('profileEdit.error.invalidAge')); return; }
     // Children count cannot be negative — the backend @Min(0) would otherwise
     // reject with a generic 400 and no clear message (#44).
-    if (form.childrenCount != null && form.childrenCount < 0) { setTab(0); setFormError('عدد الأطفال لا يمكن أن يكون سالباً'); return; }
+    if (form.childrenCount != null && form.childrenCount < 0) { setTab(0); setFormError(t('profileEdit.error.negativeChildren')); return; }
     if (form.minAge && form.maxAge && form.minAge > form.maxAge) {
-      setTab(3); setFormError('الحد الأدنى للعمر يجب أن يكون أقل من الحد الأقصى'); return;
+      setTab(3); setFormError(t('profileEdit.error.minMaxAge')); return;
     }
     save.mutate({ ...form, fullName });
   };
@@ -91,7 +92,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
     <Field label={label}>
       <select value={(form as any)[k] ?? ''} onChange={str(k)}
         className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none">
-        <option value="">اختر...</option>
+        <option value="">{t('profileEdit.selectPlaceholder')}</option>
         {opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
       </select>
     </Field>
@@ -101,8 +102,8 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
     <Field label={label}>
       <select value={String((form as any)[k])} onChange={bool(k)}
         className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-[var(--ring)] focus:outline-none">
-        <option value="true">نعم</option>
-        <option value="false">لا</option>
+        <option value="true">{t('profileView.yes')}</option>
+        <option value="false">{t('profileView.no')}</option>
       </select>
     </Field>
   );
@@ -110,29 +111,29 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
   const tabContent = [
     // Tab 0 — Basic
     <div key="basic" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {inp('fullName', 'الاسم الكامل', 'text', 'أحمد محمد', 100)}
-      {inp('age', 'العمر', 'number', '25')}
-      {sel('gender', 'الجنس', [['male', 'ذكر'], ['female', 'أنثى']])}
+      {inp('fullName', t('profileEdit.field.fullName'), 'text', t('profileEdit.placeholder.fullName'), 100)}
+      {inp('age', t('profileEdit.field.age'), 'number', '25')}
+      {sel('gender', t('profileEdit.field.gender'), [['male', 'ذكر'], ['female', 'أنثى']])}
       {/* Was free text -- the same country could be stored as "مصر" in one
           profile and "Egypt" in another, so search could never reliably
           match across profiles (#345). A fixed list keeps new data
           consistent and searchable. */}
-      {sel('country', 'الدولة', COUNTRIES)}
-      {inp('city', 'المدينة', 'text', 'القاهرة')}
-      {inp('location', 'الموقع (مدينة/دولة)', 'text', 'القاهرة، مصر')}
-      {sel('socialStatus', 'الحالة الاجتماعية', [['single', 'أعزب'], ['divorced', 'مطلق'], ['widowed', 'أرمل']])}
-      {sel('relationshipStatus', 'الحالة العاطفية', [
+      {sel('country', t('profileEdit.field.country'), COUNTRIES)}
+      {inp('city', t('profileEdit.field.city'), 'text', t('profileEdit.placeholder.city'))}
+      {inp('location', t('profileEdit.field.location'), 'text', t('profileEdit.placeholder.location'))}
+      {sel('socialStatus', t('profileEdit.field.socialStatus'), [['single', 'أعزب'], ['divorced', 'مطلق'], ['widowed', 'أرمل']])}
+      {sel('relationshipStatus', t('profileEdit.field.relationshipStatus'), [
         ['single', form.gender === 'female' ? 'عزباء' : 'أعزب'],
         ['in_relationship', 'في علاقة'],
         ['engaged', form.gender === 'female' ? 'مخطوبة' : 'مخطوب'],
         ['married', form.gender === 'female' ? 'متزوجة' : 'متزوج'],
       ])}
-      {inp('childrenCount', 'عدد الأطفال', 'number', '0', undefined, 0)}
-      {inp('workplace', 'مكان العمل', 'text', 'شركة تقنية')}
-      {inp('website', 'الموقع الإلكتروني', 'url', 'https://example.com')}
+      {inp('childrenCount', t('profileEdit.field.childrenCount'), 'number', '0', undefined, 0)}
+      {inp('workplace', t('profileEdit.field.workplace'), 'text', t('profileEdit.placeholder.workplace'))}
+      {inp('website', t('profileEdit.field.website'), 'url', 'https://example.com')}
       <div className="sm:col-span-2">
-        <label className="mb-1 block text-xs font-medium text-[var(--muted-foreground)]">نبذة شخصية</label>
-        <textarea value={form.bio} onChange={str('bio')} rows={3} maxLength={500} placeholder="اكتب نبذة مختصرة عن نفسك..."
+        <label className="mb-1 block text-xs font-medium text-[var(--muted-foreground)]">{t('profileEdit.field.bio')}</label>
+        <textarea value={form.bio} onChange={str('bio')} rows={3} maxLength={500} placeholder={t('profileEdit.placeholder.bio')}
           className="w-full rounded-lg border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:border-[var(--ring)] focus:outline-none focus:ring-1 focus:ring-[var(--ring)]/30 resize-none" />
         <p className="text-xs text-[var(--muted-foreground)] mt-1">{form.bio?.length || 0}/500</p>
       </div>
@@ -140,42 +141,42 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
 
     // Tab 1 — Education & Work
     <div key="work" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {sel('education', 'المستوى التعليمي', [
+      {sel('education', t('profileEdit.field.educationLevel'), [
         ['high_school', 'ثانوية عامة'], ['diploma', 'دبلوم'], ['bachelor', 'بكالوريوس'],
         ['master', 'ماجستير'], ['phd', 'دكتوراه'],
       ])}
-      {inp('jobTitle', 'المسمى الوظيفي', 'text', 'مهندس برمجيات')}
-      {sel('financialLevel', 'المستوى المادي', [
+      {inp('jobTitle', t('profileEdit.field.jobTitle'), 'text', t('profileEdit.placeholder.jobTitle'))}
+      {sel('financialLevel', t('profileEdit.field.financialLevel'), [
         ['low', 'منخفض'], ['medium', 'متوسط'], ['high', 'مرتفع'], ['very_high', 'مرتفع جداً'],
       ])}
-      {sel('culturalLevel', 'المستوى الثقافي', [
+      {sel('culturalLevel', t('profileEdit.field.culturalLevel'), [
         ['low', 'منخفض'], ['medium', 'متوسط'], ['high', 'مرتفع'],
       ])}
-      {sel('lifestyle', 'نمط الحياة', [
+      {sel('lifestyle', t('profileEdit.field.lifestyle'), [
         ['conservative', 'محافظ'], ['moderate', 'معتدل'], ['open', 'منفتح'],
       ])}
     </div>,
 
     // Tab 2 — Religious
     <div key="religion" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {sel('sect', 'المذهب', [
+      {sel('sect', t('profileEdit.field.sect'), [
         ['sunni', 'سني'], ['shia', 'شيعي'], ['other', 'أخرى'],
       ])}
-      {sel('prayerLevel', 'مستوى الصلاة', [
+      {sel('prayerLevel', t('profileEdit.field.prayerLevel'), [
         ['always', 'دائماً'], ['mostly', 'في الغالب'], ['sometimes', 'أحياناً'], ['rarely', 'نادراً'],
       ])}
-      {sel('religiousCommitment', 'الالتزام الديني', [
+      {sel('religiousCommitment', t('profileEdit.field.religiousCommitment'), [
         ['very_committed', 'ملتزم جداً'], ['committed', 'ملتزم'], ['moderate', 'معتدل'], ['low', 'منخفض'],
       ])}
     </div>,
 
     // Tab 3 — Preferences
     <div key="prefs" className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {inp('minAge', 'الحد الأدنى للعمر', 'number', '20')}
-      {inp('maxAge', 'الحد الأقصى للعمر', 'number', '40')}
-      {inp('preferredCountry', 'الدولة المفضلة', 'text', 'مصر')}
-      {boolSel('relocateWilling', 'الاستعداد للانتقال')}
-      {boolSel('wantsChildren', 'الرغبة في الإنجاب')}
+      {inp('minAge', t('profileEdit.field.minAge'), 'number', '20')}
+      {inp('maxAge', t('profileEdit.field.maxAge'), 'number', '40')}
+      {inp('preferredCountry', t('profileEdit.field.preferredCountry'), 'text', t('profileEdit.placeholder.preferredCountry'))}
+      {boolSel('relocateWilling', t('profileEdit.field.relocateWilling'))}
+      {boolSel('wantsChildren', t('profileEdit.field.wantsChildren'))}
     </div>,
   ];
 
@@ -183,21 +184,21 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
     <div className="rounded-xl bg-[var(--card)] shadow-card-hover border border-[var(--border)]/60 overflow-hidden">
       <div className="border-b border-[var(--border)]/40 px-6 py-4 flex items-center justify-between">
         <h2 className="text-lg font-bold text-[var(--foreground)]">
-          {initial?.fullName ? 'تعديل الملف الشخصي' : 'أكمل ملفك الشخصي'}
+          {initial?.fullName ? t('profileEdit.title.edit') : t('profileEdit.title.complete')}
         </h2>
         {onCancel && (
-          <button onClick={onCancel} className="text-sm text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)]">إلغاء</button>
+          <button onClick={onCancel} className="text-sm text-[var(--muted-foreground)] hover:text-[var(--muted-foreground)]">{t('profile.cancel')}</button>
         )}
       </div>
 
       {/* Tabs */}
       <div className="flex border-b overflow-x-auto">
-        {tabs.map((t, i) => (
-          <button key={t} onClick={() => setTab(i)}
+        {tabs.map((tabLabel, i) => (
+          <button key={tabLabel} onClick={() => setTab(i)}
             className={`shrink-0 px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
               tab === i ? 'border-[var(--accent)] text-[var(--foreground)]' : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
             }`}>
-            {t}
+            {tabLabel}
           </button>
         ))}
       </div>
@@ -205,7 +206,7 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
       <form onSubmit={handleSubmit} className="p-6">
         {(save.isError || formError) && (
           <div className="mb-4 rounded-lg bg-[var(--destructive)]/10 border border-[var(--destructive)]/30 px-4 py-3 text-sm text-[var(--destructive)]">
-            {formError || 'فشل الحفظ، حاول مرة أخرى'}
+            {formError || t('profileEdit.error.saveFailed')}
           </div>
         )}
 
@@ -214,21 +215,21 @@ export const ProfileEditForm = ({ initial, onSaved, onCancel }: Props) => {
         <div className="mt-6 flex items-center justify-between border-t pt-4">
           <div className="flex gap-2">
             {tab > 0 && (
-              <button type="button" onClick={() => setTab(t => t - 1)}
+              <button type="button" onClick={() => setTab(v => v - 1)}
                 className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm text-[var(--muted-foreground)] hover:bg-[var(--muted)]">
-                → السابق
+                → {t('profileView.pagination.prev')}
               </button>
             )}
             {tab < tabs.length - 1 && (
-              <button type="button" onClick={() => setTab(t => t + 1)}
+              <button type="button" onClick={() => setTab(v => v + 1)}
                 className="rounded-lg bg-[var(--muted)] px-4 py-2 text-sm font-medium text-[var(--foreground)] hover:bg-[var(--muted)]">
-                ← التالي
+                ← {t('profileView.pagination.next')}
               </button>
             )}
           </div>
           <button type="submit" disabled={save.isPending}
             className="rounded-lg bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] px-6 py-2 text-sm font-semibold text-[var(--card)] hover:shadow-glow disabled:opacity-50">
-            {save.isPending ? 'جاري الحفظ...' : 'حفظ الملف الشخصي'}
+            {save.isPending ? t('post.edit.saving') : t('profileEdit.saveButton')}
           </button>
         </div>
       </form>

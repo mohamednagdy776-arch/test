@@ -6,10 +6,12 @@ import { usePushNotifications } from '@/features/notifications/usePushNotificati
 import { Spinner } from '@/components/ui/Spinner';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Bell, Checks } from '@phosphor-icons/react';
+import { useT } from '@/i18n/I18nProvider';
 
 type Tab = 'all' | 'unread' | 'mentions' | 'likes' | 'comments';
 
 export default function NotificationsPage() {
+  const { t } = useT();
   const [activeTab, setActiveTab] = useState<Tab>('all');
   usePushNotifications();
   // Load-more pagination: bump the page size on demand instead of being stuck
@@ -31,11 +33,11 @@ export default function NotificationsPage() {
   const filtered = activeTab === 'unread' ? allNotifications.filter((n) => !n.readStatus) : allNotifications;
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
-    { id: 'all', label: 'الكل', count: allNotifications.length },
-    { id: 'unread', label: 'غير مقروء', count: unreadCount },
-    { id: 'likes', label: 'الإعجابات' },
-    { id: 'comments', label: 'التعليقات' },
-    { id: 'mentions', label: 'الإشارات' },
+    { id: 'all', label: t('notifications.tabAll'), count: allNotifications.length },
+    { id: 'unread', label: t('notifications.tabUnread'), count: unreadCount },
+    { id: 'likes', label: t('notifications.tabLikes') },
+    { id: 'comments', label: t('notifications.tabComments') },
+    { id: 'mentions', label: t('notifications.tabMentions') },
   ];
 
   return (
@@ -43,9 +45,9 @@ export default function NotificationsPage() {
       <div className="max-w-2xl mx-auto space-y-6">
         <PageHeader
           icon={Bell}
-          eyebrow="تنبيهاتك"
-          title="الإشعارات"
-          subtitle="آخر التفاعلات والتحديثات على حسابك"
+          eyebrow={t('notifications.eyebrow')}
+          title={t('nav.notifications')}
+          subtitle={t('notifications.subtitle')}
           action={unreadCount > 0 ? (
             <button
               onClick={() => markAllAsRead.mutate()}
@@ -54,7 +56,7 @@ export default function NotificationsPage() {
               style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}
             >
               <Checks size={15} weight="bold" />
-              تعيين الكل كمقروء
+              {t('notifications.markAllRead')}
             </button>
           ) : undefined}
         />
@@ -99,7 +101,7 @@ export default function NotificationsPage() {
                     onClick={() => setLimit((l) => l + 20)}
                     className="px-5 py-2 text-sm font-medium text-[var(--primary)] rounded-full border border-[var(--border)] hover:bg-[var(--muted)] transition-colors"
                   >
-                    تحميل المزيد
+                    {t('notifications.loadMore')}
                   </button>
                 </div>
               )}

@@ -15,6 +15,7 @@ import { PostCard } from '@/features/posts/components/PostCard';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
 import { interestsApi } from '@/features/interests/api';
+import { useT } from '@/i18n/I18nProvider';
 import {
   socialStatusLabel, educationLabel, lifestyleLabel,
   sectLabel, prayerLevelLabel, religiousCommitmentLabel,
@@ -29,6 +30,7 @@ export const ProfileView = ({ userId }: Props) => {
   const qc = useQueryClient();
   const router = useRouter();
   const { showToast } = useToast();
+  const { t } = useT();
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('posts');
   const [reportOpen, setReportOpen] = useState(false);
@@ -100,7 +102,7 @@ export const ProfileView = ({ userId }: Props) => {
     // then permanently 404'd and the page got stuck showing the generic
     // "failed to load" error/retry box forever (#276). Navigate away instead.
     onSuccess: () => {
-      showToast('تم حظر المستخدم', 'success');
+      showToast(t('profileView.userBlockedToast'), 'success');
       router.push('/friends');
     },
   });
@@ -117,17 +119,17 @@ export const ProfileView = ({ userId }: Props) => {
   const sendInterest = useMutation({
     mutationFn: () => interestsApi.send(profileUserId),
     onSuccess: (res: any) => {
-      showToast(res?.message || 'تم إرسال اهتمامك', 'success');
+      showToast(res?.message || t('profileView.interestSentToast'), 'success');
       qc.invalidateQueries({ queryKey: ['sent-interests'] });
     },
-    onError: () => showToast('تعذّر إرسال الاهتمام', 'error'),
+    onError: () => showToast(t('profileView.interestSendError'), 'error'),
   });
 
   // Request to view private/on-request photos (#752).
   const requestPhotos = useMutation({
     mutationFn: () => profileApi.requestPhotoAccess(profileUserId),
-    onSuccess: (res: any) => showToast(res?.message || 'تم إرسال طلب رؤية الصور', 'success'),
-    onError: () => showToast('تعذّر إرسال الطلب', 'error'),
+    onSuccess: (res: any) => showToast(res?.message || t('profileView.photoRequestSentToast'), 'success'),
+    onError: () => showToast(t('profileView.photoRequestError'), 'error'),
   });
 
   const friendActionPending =
@@ -149,12 +151,12 @@ export const ProfileView = ({ userId }: Props) => {
   if (isError) {
     return (
       <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-12 text-center">
-        <p className="text-[var(--muted-foreground)] text-sm mb-4">تعذّر تحميل الملف الشخصي</p>
+        <p className="text-[var(--muted-foreground)] text-sm mb-4">{t('profileView.loadError')}</p>
         <button
           onClick={() => refetch()}
           className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--muted)] transition-colors"
         >
-          أعد المحاولة
+          {t('profileView.retry')}
         </button>
       </div>
     );
@@ -183,21 +185,21 @@ export const ProfileView = ({ userId }: Props) => {
   if (!profile) {
     return (
       <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-12 text-center">
-        <p className="text-[var(--muted-foreground)] text-sm">لم يتم العثور على هذا الملف الشخصي</p>
+        <p className="text-[var(--muted-foreground)] text-sm">{t('profileView.notFound')}</p>
       </div>
     );
   }
 
   const aboutContent = (
     <div className="space-y-4">
-      <ProfileSection title="المعلومات الأساسية" icon="👤">
+      <ProfileSection title={t('profileView.section.basicInfo')} icon="👤">
         <Grid items={[
-          ['العمر', profile.age ? `${profile.age} سنة` : '—'],
-          ['الجنس', profile.gender === 'male' ? 'ذكر' : profile.gender === 'female' ? 'أنثى' : '—'],
-          ['الدولة', profile.country || '—'],
-          ['المدينة', profile.city || '—'],
-          ['الحالة الاجتماعية', socialStatusLabel(profile.socialStatus)],
-          ['عدد الأطفال', String(profile.childrenCount ?? 0)],
+          [t('profileView.field.age'), profile.age ? t('dashboard.ageLabel', { age: profile.age }) : '—'],
+          [t('profileView.field.gender'), profile.gender === 'male' ? 'ذكر' : profile.gender === 'female' ? 'أنثى' : '—'],
+          [t('profileView.field.country'), profile.country || '—'],
+          [t('profileView.field.city'), profile.city || '—'],
+          [t('profileView.field.socialStatus'), socialStatusLabel(profile.socialStatus)],
+          [t('profileView.field.childrenCount'), String(profile.childrenCount ?? 0)],
         ]} />
         {profile.bio && (
           // dir="auto" so an LTR bio in this RTL container aligns and puts
@@ -208,31 +210,31 @@ export const ProfileView = ({ userId }: Props) => {
         )}
       </ProfileSection>
 
-      <ProfileSection title="التعليم والعمل" icon="💼">
+      <ProfileSection title={t('profileView.section.educationWork')} icon="💼">
         <Grid items={[
-          ['المستوى التعليمي', educationLabel(profile.education)],
-          ['المسمى الوظيفي', profile.jobTitle || '—'],
-          ['المستوى المادي', financialLevelLabel(profile.financialLevel)],
-          ['المستوى الثقافي', culturalLevelLabel(profile.culturalLevel)],
-          ['نمط الحياة', lifestyleLabel(profile.lifestyle)],
+          [t('profileView.field.educationLevel'), educationLabel(profile.education)],
+          [t('profileView.field.jobTitle'), profile.jobTitle || '—'],
+          [t('profileView.field.financialLevel'), financialLevelLabel(profile.financialLevel)],
+          [t('profileView.field.culturalLevel'), culturalLevelLabel(profile.culturalLevel)],
+          [t('profileView.field.lifestyle'), lifestyleLabel(profile.lifestyle)],
         ]} />
       </ProfileSection>
 
-      <ProfileSection title="المعلومات الدينية" icon="🕌">
+      <ProfileSection title={t('profileView.section.religiousInfo')} icon="🕌">
         <Grid items={[
-          ['المذهب', sectLabel(profile.sect)],
-          ['مستوى الصلاة', prayerLevelLabel(profile.prayerLevel)],
-          ['الالتزام الديني', religiousCommitmentLabel(profile.religiousCommitment)],
+          [t('profileView.field.sect'), sectLabel(profile.sect)],
+          [t('profileView.field.prayerLevel'), prayerLevelLabel(profile.prayerLevel)],
+          [t('profileView.field.religiousCommitment'), religiousCommitmentLabel(profile.religiousCommitment)],
         ]} />
       </ProfileSection>
 
       {isSelf && (
-        <ProfileSection title="تفضيلات الزواج" icon="💍">
+        <ProfileSection title={t('profileView.section.marriagePrefs')} icon="💍">
           <Grid items={[
-            ['الفئة العمرية المفضلة', profile.minAge && profile.maxAge ? `${profile.minAge} - ${profile.maxAge} سنة` : '—'],
-            ['الدولة المفضلة', profile.preferredCountry || '—'],
-            ['الانتقال للخارج', profile.relocateWilling === true ? 'نعم' : profile.relocateWilling === false ? 'لا' : '—'],
-            ['رغبة في الإنجاب', profile.wantsChildren === true ? 'نعم' : profile.wantsChildren === false ? 'لا' : '—'],
+            [t('profileView.field.preferredAgeRange'), profile.minAge && profile.maxAge ? t('profileView.ageRangeValue', { min: profile.minAge, max: profile.maxAge }) : '—'],
+            [t('profileView.field.preferredCountry'), profile.preferredCountry || '—'],
+            [t('profileView.field.relocateWilling'), profile.relocateWilling === true ? t('profileView.yes') : profile.relocateWilling === false ? t('profileView.no') : '—'],
+            [t('profileView.field.wantsChildren'), profile.wantsChildren === true ? t('profileView.yes') : profile.wantsChildren === false ? t('profileView.no') : '—'],
           ]} />
         </ProfileSection>
       )}
@@ -241,7 +243,7 @@ export const ProfileView = ({ userId }: Props) => {
 
   const placeholder = (label: string) => (
     <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-10 text-center">
-      <p className="text-sm text-[var(--muted-foreground)]">{label} قريباً</p>
+      <p className="text-sm text-[var(--muted-foreground)]">{label} {t('profileView.comingSoon')}</p>
     </div>
   );
 
@@ -251,12 +253,12 @@ export const ProfileView = ({ userId }: Props) => {
   const renderTab = (): React.ReactNode => {
     switch (activeTab) {
       case 'about':    return aboutContent;
-      case 'posts':    return profileUserId ? <ProfilePostsFeed userId={profileUserId} /> : placeholder('المنشورات');
-      case 'friends':  return profileUserId ? <ProfileFriendsFeed userId={profileUserId} /> : placeholder('الأصدقاء');
-      case 'photos':   return profileUserId ? <ProfilePhotosFeed userId={profileUserId} /> : placeholder('الصور');
-      case 'videos':   return profileUserId ? <ProfileVideosFeed userId={profileUserId} /> : placeholder('الفيديوهات');
+      case 'posts':    return profileUserId ? <ProfilePostsFeed userId={profileUserId} /> : placeholder(t('profileView.tabName.posts'));
+      case 'friends':  return profileUserId ? <ProfileFriendsFeed userId={profileUserId} /> : placeholder(t('profileView.tabName.friends'));
+      case 'photos':   return profileUserId ? <ProfilePhotosFeed userId={profileUserId} /> : placeholder(t('profileView.tabName.photos'));
+      case 'videos':   return profileUserId ? <ProfileVideosFeed userId={profileUserId} /> : placeholder(t('profileView.tabName.videos'));
       // Activity log is private to its owner (server 403s for others).
-      case 'activity': return isSelf && profileUserId ? <ActivityLogViewer userId={profileUserId} /> : placeholder('النشاط غير متاح');
+      case 'activity': return isSelf && profileUserId ? <ActivityLogViewer userId={profileUserId} /> : placeholder(t('profileView.tabName.activityUnavailable'));
       default:         return null;
     }
   };
@@ -283,7 +285,7 @@ export const ProfileView = ({ userId }: Props) => {
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
             <span className="text-lg">🔒</span>
-            <span>صور هذا المستخدم خاصة</span>
+            <span>{t('profileView.photosLockedMessage')}</span>
           </div>
           <button
             onClick={() => requestPhotos.mutate()}
@@ -291,7 +293,7 @@ export const ProfileView = ({ userId }: Props) => {
             className="rounded-xl px-4 py-2 text-sm font-semibold text-[var(--primary-foreground)] disabled:opacity-50 transition-all"
             style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}
           >
-            {requestPhotos.isPending ? '...' : 'اطلب رؤية الصور'}
+            {requestPhotos.isPending ? '...' : t('profileView.requestPhotosButton')}
           </button>
         </div>
       )}
@@ -312,6 +314,7 @@ export const ProfileView = ({ userId }: Props) => {
 // Posts tab — fetches and renders the profile user's own posts. (Was a static
 // "coming soon" placeholder; the backend GET /users/:id/posts is implemented.)
 const ProfilePostsFeed = ({ userId }: { userId: string }) => {
+  const { t } = useT();
   const [page, setPage] = useState(1);
   const PAGE_SIZE = 10;
   const { data, isLoading, isError } = useQuery({
@@ -329,9 +332,9 @@ const ProfilePostsFeed = ({ userId }: { userId: string }) => {
     </div>
   );
 
-  if (isLoading) return shell('جاري تحميل المنشورات...');
-  if (isError) return shell('تعذّر تحميل المنشورات');
-  if (posts.length === 0 && page === 1) return shell('لا توجد منشورات');
+  if (isLoading) return shell(t('profileView.posts.loading'));
+  if (isError) return shell(t('profileView.posts.loadError'));
+  if (posts.length === 0 && page === 1) return shell(t('profileView.posts.empty'));
 
   return (
     <div className="space-y-4">
@@ -340,9 +343,9 @@ const ProfilePostsFeed = ({ userId }: { userId: string }) => {
       ))}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">
-          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]/40 disabled:opacity-40 transition-colors">السابق</button>
+          <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]/40 disabled:opacity-40 transition-colors">{t('profileView.pagination.prev')}</button>
           <span className="text-sm text-[var(--muted-foreground)]">{page} / {totalPages}</span>
-          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]/40 disabled:opacity-40 transition-colors">التالي</button>
+          <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--muted-foreground)] border border-[var(--border)] hover:bg-[var(--muted)]/40 disabled:opacity-40 transition-colors">{t('profileView.pagination.next')}</button>
         </div>
       )}
     </div>
@@ -357,15 +360,16 @@ const feedShell = (msg: string) => (
 
 // Friends grid for the profile "Friends" tab (was a placeholder).
 const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
+  const { t } = useT();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['profile-friends', userId],
     queryFn: () => profileApi.getFriends(userId),
     enabled: !!userId,
   });
   const friends: any[] = (data as any)?.data?.data ?? (data as any)?.data ?? [];
-  if (isLoading) return feedShell('جاري تحميل الأصدقاء...');
-  if (isError) return feedShell('تعذّر تحميل الأصدقاء');
-  if (friends.length === 0) return feedShell('لا توجد أصدقاء');
+  if (isLoading) return feedShell(t('profileView.friends.loading'));
+  if (isError) return feedShell(t('profileView.friends.loadError'));
+  if (friends.length === 0) return feedShell(t('profileView.friends.empty'));
   return (
     // Fixed 3-column grid with no mobile breakpoint squeezed avatars/tiles on
     // narrow phones (#166) -- the newer [username] route already uses a
@@ -385,6 +389,7 @@ const ProfileFriendsFeed = ({ userId }: { userId: string }) => {
 
 // Photos grid for the profile "Photos" tab (was a placeholder).
 const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
+  const { t } = useT();
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const { data, isLoading, isError } = useQuery({
     queryKey: ['profile-photos', userId],
@@ -392,9 +397,9 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
     enabled: !!userId,
   });
   const photos: any[] = (data as any)?.data?.data ?? [];
-  if (isLoading) return feedShell('جاري تحميل الصور...');
-  if (isError) return feedShell('تعذّر تحميل الصور');
-  if (photos.length === 0) return feedShell('لا توجد صور');
+  if (isLoading) return feedShell(t('profileView.photos.loading'));
+  if (isError) return feedShell(t('profileView.photos.loadError'));
+  if (photos.length === 0) return feedShell(t('profileView.photos.empty'));
   return (
     <>
       {lightboxUrl && (
@@ -404,7 +409,7 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
         >
           <button
             onClick={() => setLightboxUrl(null)}
-            aria-label="إغلاق"
+            aria-label={t('profile.close')}
             className="absolute top-4 left-4 text-white text-2xl hover:text-[var(--muted-foreground)]/70 transition-colors"
           >
             ✕
@@ -431,7 +436,7 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
               key={i}
               onClick={() => setLightboxUrl(photoUrl)}
               className="aspect-square bg-[var(--muted)] rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
-              aria-label={`عرض الصورة ${i + 1}`}
+              aria-label={t('profileView.viewPhotoAria', { n: i + 1 })}
             >
               <img src={resolveMediaUrl(photoUrl) ?? ''} alt="" className="w-full h-full object-cover hover:opacity-90 transition-opacity" />
             </button>
@@ -444,15 +449,16 @@ const ProfilePhotosFeed = ({ userId }: { userId: string }) => {
 
 // Videos for the profile "Videos" tab (was a placeholder).
 const ProfileVideosFeed = ({ userId }: { userId: string }) => {
+  const { t } = useT();
   const { data, isLoading, isError } = useQuery({
     queryKey: ['profile-videos', userId],
     queryFn: () => profileApi.getVideos(userId),
     enabled: !!userId,
   });
   const videos: any[] = (data as any)?.data?.data ?? [];
-  if (isLoading) return feedShell('جاري تحميل الفيديوهات...');
-  if (isError) return feedShell('تعذّر تحميل الفيديوهات');
-  if (videos.length === 0) return feedShell('لا توجد فيديوهات');
+  if (isLoading) return feedShell(t('profileView.videos.loading'));
+  if (isError) return feedShell(t('profileView.videos.loadError'));
+  if (videos.length === 0) return feedShell(t('profileView.videos.empty'));
   return (
     <div className="rounded-xl bg-[var(--card)] border border-[var(--border)]/60 p-6 grid grid-cols-2 sm:grid-cols-3 gap-4">
       {videos.map((v: any, i: number) => (

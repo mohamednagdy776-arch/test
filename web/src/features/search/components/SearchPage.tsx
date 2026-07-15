@@ -18,6 +18,7 @@ import {
   type SuggestionItem,
 } from '../api';
 import { type SearchFiltersState, type TabType, emptyFilters } from '../types';
+import { useT } from '@/i18n/I18nProvider';
 import {
   MagnifyingGlass, SlidersHorizontal, X, Clock, Fire,
   Users, Newspaper, CalendarBlank, FileText, User, ArrowLeft,
@@ -131,6 +132,7 @@ function PageResultCard({ item }: { item: any }) {
 }
 
 function EventResultCard({ item }: { item: any }) {
+  const { t } = useT();
   const router = useRouter();
   const date = item.startDate ? new Date(item.startDate) : null;
   const dayNum = date?.getDate();
@@ -157,7 +159,7 @@ function EventResultCard({ item }: { item: any }) {
           <div className="flex-1 min-w-0">
             <h3 className="font-bold truncate" style={{ color: 'var(--foreground)' }}>{item.title || item.name}</h3>
             <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>
-              {item.location || item.type || 'فعالية'}
+              {item.location || item.type || t('search.results.eventFallback')}
             </p>
           </div>
         </div>
@@ -169,7 +171,7 @@ function EventResultCard({ item }: { item: any }) {
         <button onClick={() => router.push(`/events/${item.id}`)}
           className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all hover:scale-[1.02] active:scale-95 text-white"
           style={{ background: 'linear-gradient(135deg, #d97706, var(--accent))' }}>
-          عرض الفعالية
+          {t('search.results.viewEvent')}
         </button>
       </div>
     </div>
@@ -177,8 +179,9 @@ function EventResultCard({ item }: { item: any }) {
 }
 
 function PostResultCard({ item }: { item: any }) {
+  const { t } = useT();
   const router = useRouter();
-  const authorName = item.author?.fullName || item.author?.username || 'مستخدم';
+  const authorName = item.author?.fullName || item.author?.username || t('privacy.photoRequests.defaultUser');
   const avatarSrc = item.author?.avatar
     ? (resolveMediaUrl(item.author.avatar))
     : null;
@@ -210,15 +213,15 @@ function PostResultCard({ item }: { item: any }) {
           </div>
         </div>
         <p className="text-sm leading-relaxed line-clamp-3 mb-3" style={{ color: 'var(--foreground)' }}>
-          {item.content || item.title || 'منشور'}
+          {item.content || item.title || t('search.results.postFallback')}
         </p>
         <div className="flex items-center justify-between">
           <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-            {reactions > 0 ? `${reactions.toLocaleString('ar-SA')} تفاعل` : ''}
+            {reactions > 0 ? t('search.results.reactionCount', { count: reactions.toLocaleString('ar-SA') }) : ''}
           </span>
           <span className="flex items-center gap-1 text-xs font-semibold group-hover:gap-1.5 transition-all"
             style={{ color: 'var(--primary)' }}>
-            عرض المنشور <ArrowLeft size={12} />
+            {t('search.results.viewPost')} <ArrowLeft size={12} />
           </span>
         </div>
       </div>

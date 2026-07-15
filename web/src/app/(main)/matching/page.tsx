@@ -14,10 +14,12 @@ import {
   X, SlidersHorizontal, Robot,
 } from '@phosphor-icons/react';
 import type { Match } from '@/types';
+import { useT } from '@/i18n/I18nProvider';
 
 type Tab = 'pending' | 'accepted' | 'rejected';
 
 export default function MatchingPage() {
+  const { t } = useT();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>('pending');
@@ -93,7 +95,7 @@ export default function MatchingPage() {
     } catch (err: any) {
       if (prevAllData !== undefined) queryClient.setQueryData(['matches-all-counts'], prevAllData);
       if (prevFilteredData !== undefined) queryClient.setQueryData(filteredKey, prevFilteredData);
-      setActionError(err?.response?.data?.message || 'فشلت العملية، يرجى المحاولة مجدداً');
+      setActionError(err?.response?.data?.message || t('matching.actionFailed'));
     } finally {
       setActionLoading(null);
     }
@@ -128,16 +130,16 @@ export default function MatchingPage() {
           <div>
             <div className="flex items-center gap-1.5 mb-1">
               <Robot size={14} weight="fill" className="text-white/70" />
-              <span className="text-[11px] font-semibold text-white/70">مدعوم بالذكاء الاصطناعي</span>
+              <span className="text-[11px] font-semibold text-white/70">{t('matching.aiPowered')}</span>
             </div>
-            <h1 className="text-xl font-extrabold text-white">اكتشف توافقاتك</h1>
-            <p className="text-xs text-white/70 mt-0.5">نظام ذكي يجد أفضل التوافقات لك</p>
+            <h1 className="text-xl font-extrabold text-white">{t('matching.heroTitle')}</h1>
+            <p className="text-xs text-white/70 mt-0.5">{t('matching.heroSubtitle')}</p>
           </div>
           <button onClick={() => generateMatches.mutate()} disabled={generateMatches.isPending}
             className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-bold transition-all hover:scale-105 active:scale-95 disabled:opacity-60"
             style={{ background: 'rgba(255,255,255,0.2)', color: 'white', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.3)' }}>
             <Sparkle size={15} weight="fill" className={generateMatches.isPending ? 'animate-spin' : ''} />
-            {generateMatches.isPending ? 'يبحث...' : 'إيجاد توافقات'}
+            {generateMatches.isPending ? t('matching.searching') : t('matching.findMatches')}
           </button>
         </div>
       </div>
@@ -156,7 +158,7 @@ export default function MatchingPage() {
             ? { background: 'color-mix(in srgb, var(--primary) 12%, var(--muted))', color: 'var(--primary)', border: '1px solid color-mix(in srgb, var(--primary) 25%, var(--border))' }
             : { background: 'var(--card)', color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}>
           <SlidersHorizontal size={15} />
-          فلترة
+          {t('matching.filterLabel')}
           {hasFilters && (
             <span className="absolute -top-1 -left-1 w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center"
               style={{ background: 'var(--accent)' }}>!</span>
@@ -170,47 +172,47 @@ export default function MatchingPage() {
           style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-bold flex items-center gap-1.5" style={{ color: 'var(--muted-foreground)' }}>
-              <MagnifyingGlass size={13} /> فلاتر البحث
+              <MagnifyingGlass size={13} /> {t('matching.searchFilters')}
             </p>
             {hasFilters && (
               <button onClick={() => { setAgeMin(18); setAgeMax(45); setLocation(''); setPrayerLevel(''); }}
                 className="flex items-center gap-1 text-xs font-semibold hover:opacity-70 transition-opacity"
                 style={{ color: 'var(--accent)' }}>
-                <X size={12} /> مسح الفلاتر
+                <X size={12} /> {t('matching.clearFilters')}
               </button>
             )}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>العمر</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>{t('matching.filterAge')}</label>
               <div className="flex items-center gap-2">
                 <input type="number" value={ageMin} min={18} max={ageMax}
                   onChange={(e) => setAgeMin(parseInt(e.target.value) || 18)}
-                  placeholder="من"
+                  placeholder={t('matching.from')}
                   className="w-full px-3 py-2.5 rounded-xl text-sm text-center transition-all focus:outline-none focus:ring-2"
                   style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
                 <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>—</span>
                 <input type="number" value={ageMax} min={ageMin} max={99}
                   onChange={(e) => setAgeMax(parseInt(e.target.value) || 45)}
-                  placeholder="إلى"
+                  placeholder={t('matching.to')}
                   className="w-full px-3 py-2.5 rounded-xl text-sm text-center transition-all focus:outline-none focus:ring-2"
                   style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
               </div>
             </div>
             <div>
-              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>الموقع</label>
+              <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>{t('matching.locationLabel')}</label>
               <div className="relative">
                 <MapPin size={14} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
                   style={{ color: 'var(--muted-foreground)' }} />
                 <input type="text" value={location} onChange={(e) => setLocation(e.target.value)}
-                  placeholder="المدينة أو المنطقة"
+                  placeholder={t('matching.locationPlaceholder')}
                   className="w-full pr-8 pl-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2"
                   style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
               </div>
             </div>
             <div>
               <label className="block text-xs font-semibold mb-1.5 flex items-center gap-1" style={{ color: 'var(--foreground)' }}>
-                <Scales size={12} /> الالتزام الديني
+                <Scales size={12} /> {t('matching.religiousCommitment')}
               </label>
               {/* Values were 'high'/'medium'/'low', matching neither this
                   field's real name (religiousCommitment) nor its actual
@@ -220,11 +222,11 @@ export default function MatchingPage() {
               <select value={prayerLevel} onChange={(e) => setPrayerLevel(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 cursor-pointer appearance-none"
                 style={{ background: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-                <option value="">الكل</option>
-                <option value="very_committed">ملتزم جداً</option>
-                <option value="committed">ملتزم</option>
-                <option value="moderate">معتدل</option>
-                <option value="low">منخفض</option>
+                <option value="">{t('matching.commitment.all')}</option>
+                <option value="very_committed">{t('matching.commitment.veryCommitted')}</option>
+                <option value="committed">{t('matching.commitment.committed')}</option>
+                <option value="moderate">{t('matching.commitment.moderate')}</option>
+                <option value="low">{t('matching.commitment.low')}</option>
               </select>
             </div>
           </div>
@@ -244,7 +246,7 @@ export default function MatchingPage() {
         <div className="rounded-xl px-4 py-3 flex items-center gap-2 text-sm animate-fade-in"
           style={{ background: 'color-mix(in srgb, var(--primary) 8%, transparent)', border: '1px solid color-mix(in srgb, var(--primary) 20%, transparent)', color: 'var(--primary)' }}>
           <Sparkle size={14} weight="fill" />
-          <span>تم إنشاء توافقات جديدة! تحقق من قائمة الانتظار.</span>
+          <span>{t('matching.matchesGeneratedSuccess')}</span>
         </div>
       )}
 
@@ -259,10 +261,10 @@ export default function MatchingPage() {
         <div className="rounded-2xl p-10 text-center"
           style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
           <p className="text-3xl mb-2">⚠️</p>
-          <p className="font-semibold" style={{ color: 'var(--foreground)' }}>فشل تحميل التوافقات</p>
+          <p className="font-semibold" style={{ color: 'var(--foreground)' }}>{t('matching.loadError')}</p>
           <button onClick={() => refetch()} className="mt-4 px-4 py-2 rounded-xl text-sm font-bold text-white"
             style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
-            إعادة المحاولة
+            {t('matching.retry')}
           </button>
         </div>
       ) : matches.length === 0 ? (
@@ -273,18 +275,18 @@ export default function MatchingPage() {
             <Sparkle size={32} weight="light" style={{ color: 'var(--primary)', opacity: 0.5 }} />
           </div>
           <p className="text-base font-bold" style={{ color: 'var(--foreground)' }}>
-            {tab === 'pending' ? 'لا توجد توافقات في الانتظار'
-              : tab === 'accepted' ? 'لم تقبل أي توافق بعد'
-              : 'لم ترفض أي توافق'}
+            {tab === 'pending' ? t('matching.emptyPending')
+              : tab === 'accepted' ? t('matching.emptyAccepted')
+              : t('matching.emptyRejected')}
           </p>
           <p className="text-sm mt-1 mb-5" style={{ color: 'var(--muted-foreground)' }}>
-            {hasFilters ? 'جرّب تغيير فلاتر البحث' : 'اضغط على "إيجاد توافقات" لبدء البحث'}
+            {hasFilters ? t('matching.tryChangingFilters') : t('matching.pressToStart')}
           </p>
           <button onClick={() => generateMatches.mutate()} disabled={generateMatches.isPending}
             className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:scale-105 disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
             <Sparkle size={13} className="inline ml-1" />
-            {generateMatches.isPending ? 'يبحث...' : 'إيجاد توافقات'}
+            {generateMatches.isPending ? t('matching.searching') : t('matching.findMatches')}
           </button>
         </div>
       ) : (
