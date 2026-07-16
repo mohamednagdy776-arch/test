@@ -656,6 +656,10 @@ const ar: Dict = {
   'archive.unarchive': 'إلغاء الأرشفة',
   'archive.unarchiveError': 'فشل إلغاء الأرشفة',
   'archive.unarchiveSuccess': 'تم إلغاء أرشفة العنصر',
+  'post.menu.archive': 'أرشفة',
+  'post.menu.archiveSuccess': 'تم أرشفة المنشور',
+  'storyViewer.menu.archive': 'أرشفة القصة',
+  'storyViewer.archiveSuccess': 'تم أرشفة القصة',
   // saved.* -- wave 2, added for #234/#183/#66
   'saved.cancel': 'إلغاء',
   'saved.empty': 'لا توجد عناصر محفوظة',
@@ -1396,6 +1400,10 @@ const en: Dict = {
   'archive.unarchive': 'Unarchive',
   'archive.unarchiveError': 'Failed to unarchive item',
   'archive.unarchiveSuccess': 'Item unarchived',
+  'post.menu.archive': 'Archive',
+  'post.menu.archiveSuccess': 'Post archived',
+  'storyViewer.menu.archive': 'Archive Story',
+  'storyViewer.archiveSuccess': 'Story archived',
   // saved.* -- wave 2, added for #234/#183/#66
   'saved.cancel': 'Cancel',
   'saved.empty': 'No saved items',

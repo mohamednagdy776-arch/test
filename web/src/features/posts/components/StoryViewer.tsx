@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useViewStory, useStoryViewers, useReactToStory, useDeleteStory } from '../hooks';
+import { useViewStory, useStoryViewers, useReactToStory, useDeleteStory, useArchiveStory } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
@@ -60,6 +60,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   const { data: viewersData } = useStoryViewers(currentStory?.id || '');
   const reactToStory = useReactToStory();
   const deleteStory = useDeleteStory();
+  const archiveStory = useArchiveStory();
   const { showToast } = useToast() as any;
   const viewers = viewersData?.data || [];
 
@@ -436,6 +437,27 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                     </svg>
                     إضافة للمحفوظات
                   </button>
+                  {/* Archive Story — owner-only (#416). Reversible (toggle via
+                      POST /stories/:id/archive), so no confirmation dialog
+                      needed unlike Delete below. */}
+                  {isOwnStory && (
+                    <button
+                      onClick={() => {
+                        if (currentStory?.id) {
+                          archiveStory.mutate(currentStory.id, {
+                            onSuccess: () => showToast(t('storyViewer.archiveSuccess'), 'success'),
+                          });
+                        }
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-4 py-2.5 text-right text-sm text-white/90 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                    >
+                      <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m6 4.125h4.5M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
+                      </svg>
+                      {t('storyViewer.menu.archive')}
+                    </button>
+                  )}
                   {/* Delete Story — owner-only (#415). Requires confirmation
                       since deletion is irreversible. */}
                   {isOwnStory && (

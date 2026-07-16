@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost } from '../hooks';
+import { useReactions, useToggleReaction, useComments, useAddComment, useSavePost, useSharePost, useHidePost, useDeletePost, useUpdatePost, useArchivePost } from '../hooks';
 import { useDeleteComment } from '@/features/comments/hooks';
 import { useMyProfile } from '@/features/profile/hooks';
 import { useFriends } from '@/features/friends/hooks';
@@ -14,7 +14,7 @@ import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
 import { Modal } from '@/components/ui/Modal';
 import { Avatar } from '@/components/ui/Avatar';
-import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt, PencilSimple } from '@phosphor-icons/react';
+import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Trash, X, DotsThreeVertical, PaperPlaneTilt, PencilSimple, Archive } from '@phosphor-icons/react';
 
 import { REACTIONS, ReactionPicker } from '@/features/reactions/ReactionPicker';
 import { useT } from '@/i18n/I18nProvider';
@@ -610,6 +610,7 @@ function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide, 
   const hidePost = useHidePost();
   const deletePost = useDeletePost();
   const pinPost = useUpdatePost();
+  const archivePost = useArchivePost();
 
   const menuItems = [
     ...(isOwnPost && onEdit ? [{ label: t('post.edit.title'), icon: PencilSimple, action: () => { onEdit(); } }] : []),
@@ -619,6 +620,10 @@ function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide, 
       // (isPinned is whitelisted) and reorders the feed; the toast makes the
       // action visibly responsive instead of feeling dead (#11).
       { label: post.isPinned ? t('post.menu.unpin') : t('post.menu.pin'), icon: MapPin, action: () => pinPost.mutate({ postId, data: { isPinned: !post.isPinned } }, { onSuccess: () => showToast(post.isPinned ? t('post.menu.unpinSuccess') : t('post.menu.pinSuccess'), 'success') }) },
+      // Archive: POST /posts/:postId/archive (toggle). Excludes the post from
+      // the main feed/profile queries; visible again from the new /archive
+      // page (#416).
+      { label: t('post.menu.archive'), icon: Archive, action: () => archivePost.mutate(postId, { onSuccess: () => { showToast(t('post.menu.archiveSuccess'), 'success'); onHide?.(); } }) },
       // (#12) Removed the duplicate Bookmark "أرشفة المنشور" item: it reused the
       // same icon as "حفظ المنشور" and was dead — isArchived isn't a whitelisted
       // CreatePostDto field, so the global ValidationPipe stripped it and the
