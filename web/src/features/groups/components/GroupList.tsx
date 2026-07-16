@@ -12,6 +12,7 @@ import { useRouter } from 'next/navigation';
 import {
   MagnifyingGlass, X, Users, Clock, ArrowLeft, CaretDown,
 } from '@phosphor-icons/react';
+import { useT } from '@/i18n/I18nProvider';
 
 
 const CATEGORIES = [
@@ -129,6 +130,7 @@ function GroupCard({ group, isMember, isPending, onJoin, onLeave, isJoining, isL
 }
 
 export const GroupList = () => {
+  const { t } = useT();
   const [activeTab, setActiveTab] = useState<'my' | 'discover' | 'private'>('my');
   const [searchQuery, setSearchQuery] = useState('');
   const [category, setCategory] = useState('');
@@ -414,10 +416,21 @@ export const GroupList = () => {
                       style={{ background: 'color-mix(in srgb, var(--accent) 15%, var(--muted))' }}>
                       <Clock size={14} style={{ color: 'var(--accent)' }} />
                     </div>
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{g.name}</p>
                       <p className="text-xs" style={{ color: 'var(--accent)' }}>في انتظار الموافقة</p>
                     </div>
+                    {/* A pending request had no way to be undone -- the row just
+                        sat here forever (#409). DELETE /:id/leave already
+                        deletes the membership row regardless of status, so it
+                        doubles as "cancel my pending request". */}
+                    <button
+                      onClick={() => leaveGroup.mutate(g.id)}
+                      disabled={leaveGroup.isPending}
+                      className="shrink-0 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                      style={{ border: '1px solid color-mix(in srgb, var(--accent) 30%, var(--border))', color: 'var(--accent)' }}>
+                      {leaveGroup.isPending ? '...' : t('groups.cancelRequest')}
+                    </button>
                   </div>
                 ))}
               </div>

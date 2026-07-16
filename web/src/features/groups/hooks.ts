@@ -100,6 +100,10 @@ export function useLeaveGroup() {
       // Refresh the detail page so isMember flips and the UI updates without a
       // manual reload (#35).
       qc.invalidateQueries({ queryKey: ['group', id] });
+      // This endpoint also serves as "cancel my pending join request" (#409) --
+      // without invalidating this, a cancelled request stayed listed until a
+      // manual reload since nothing else here overlaps with its query key.
+      qc.invalidateQueries({ queryKey: ['pending-requests'] });
     },
   });
 }

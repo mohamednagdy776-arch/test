@@ -62,7 +62,13 @@ export class UsersService {
       .leftJoinAndSelect('originalPost.user', 'originalPostUser')
       .leftJoinAndSelect('originalPostUser.profile', 'originalPostUserProfile')
       .where('post.user_id = :userId', { userId })
-      .orderBy('post.createdAt', 'DESC')
+      // Pin/unpin (PATCH /posts, isPinned) saved and the toast fired, but
+      // this query never sorted pinned posts first the way the main feed
+      // queries do (PostsService.getFeed/getFeedByCursor) -- a pinned post
+      // stayed exactly where chronological order put it, so pinning had no
+      // visible effect on the profile Posts tab at all (#400).
+      .orderBy('post.isPinned', 'DESC')
+      .addOrderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 

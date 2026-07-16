@@ -8,7 +8,7 @@ import {
   House, MagnifyingGlass, Heart, UsersThree, UsersFour, User, Flag,
   CalendarBlank, ChatCircle, Gear, Clock, PlayCircle, FilmStrip,
   ShieldCheck, ShareNetwork, TestTube, Baby, Sparkle, SignOut,
-  BookmarkSimple, Crown, Bell, HeartStraight,
+  BookmarkSimple, Crown, Bell, HeartStraight, Archive,
 } from '@phosphor-icons/react';
 import { authApi } from '@/features/auth/api';
 import { resolveMediaUrl } from '@/lib/media';
@@ -24,6 +24,7 @@ const navGroups = [
       { labelKey: 'nav.messages', href: '/chat', icon: ChatCircle },
       { labelKey: 'nav.notifications', href: '/notifications', icon: Bell },
       { labelKey: 'nav.saved', href: '/saved', icon: BookmarkSimple },
+      { labelKey: 'nav.archive', href: '/archive', icon: Archive },
     ],
   },
   {

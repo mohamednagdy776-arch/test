@@ -34,6 +34,16 @@ export class SavedService {
       postIds.length
         ? this.postRepo.createQueryBuilder('post')
             .leftJoinAndSelect('post.user', 'user')
+            // Missing this join (same class of bug as #335/#355 on the main
+            // feed) left post.user.profile undefined for every saved post,
+            // so the Saved Posts page always fell back to the initials
+            // placeholder instead of the author's real avatar (#411). Also
+            // join the shared-post chain so a saved repost renders its
+            // source author's avatar too, matching the main feed queries.
+            .leftJoinAndSelect('user.profile', 'userProfile')
+            .leftJoinAndSelect('post.originalPost', 'originalPost')
+            .leftJoinAndSelect('originalPost.user', 'originalPostUser')
+            .leftJoinAndSelect('originalPostUser.profile', 'originalPostUserProfile')
             .where('post.id IN (:...postIds)', { postIds })
             .getMany()
         : Promise.resolve([] as Post[]),

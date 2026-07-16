@@ -19,12 +19,17 @@ import { ChatCircle, ShareNetwork, MapPin, BookmarkSimple, EyeSlash, Clock, Tras
 import { REACTIONS, ReactionPicker } from '@/features/reactions/ReactionPicker';
 import { useT } from '@/i18n/I18nProvider';
 
+// Splits post text into plain-text chunks and #hashtag/@mention/url tokens.
+// Shared by renderWithHashtags() and truncateContent() so truncation always
+// agrees with the tokens the renderer treats as atomic (#398).
+const HASHTAG_MENTION_URL_RE = /(#[\p{L}0-9_]+|@[a-zA-Z0-9_]+|\bhttps?:\/\/[^\s<>"')]+)/gu;
+const SPECIAL_TOKEN_RE = /^(#[\p{L}0-9_]+|@[a-zA-Z0-9_]+|https?:\/\/)/u;
+
 // Turn #hashtags, @mentions, and URLs into interactive elements.
 function renderWithHashtags(text: string) {
   if (!text) return text;
-  const URL_RE = /\bhttps?:\/\/[^\s<>"')]+/gi;
   const TRAILING = /[.,;:!?)]+$/;
-  const parts = text.split(/(#[\p{L}0-9_]+|@[a-zA-Z0-9_]+|\bhttps?:\/\/[^\s<>"')]+)/gu);
+  const parts = text.split(HASHTAG_MENTION_URL_RE);
   return parts.map((part, i) => {
     if (/^#[\p{L}0-9_]+$/u.test(part)) {
       return <Link key={i} href={`/search?q=${encodeURIComponent(part)}`} className="text-[var(--primary)] font-medium hover:underline">{part}</Link>;
@@ -38,6 +43,66 @@ function renderWithHashtags(text: string) {
     }
     return part;
   });
+}
+
+const CONTENT_TRUNCATE_LIMIT = 280;
+
+// Truncates near `limit` characters WITHOUT ever slicing a #hashtag,
+// @mention, or URL token in half, and without cutting a plain word in half
+// either -- backs off to the nearest earlier word boundary/token boundary
+// instead (#398).
+function truncateContent(text: string, limit: number): string {
+  if (!text || text.length <= limit) return text;
+  const tokens = text.split(HASHTAG_MENTION_URL_RE);
+  let out = '';
+  for (const token of tokens) {
+    if (!token || out.length >= limit) break;
+    const remaining = limit - out.length;
+    if (token.length <= remaining) {
+      out += token;
+      continue;
+    }
+    // Token doesn't fully fit. A hashtag/mention/url is atomic -- drop it
+    // whole rather than slice it; a plain-text chunk backs off to its last
+    // whitespace within the remaining budget.
+    if (SPECIAL_TOKEN_RE.test(token)) break;
+    const slice = token.slice(0, remaining);
+    const lastSpace = slice.lastIndexOf(' ');
+    out += lastSpace > 0 ? slice.slice(0, lastSpace) : slice;
+    break;
+  }
+  return out.replace(/\s+$/, '');
+}
+
+// Post content used to always render in full with no way to collapse a long
+// post, forcing every reader to scroll past it (#398). Truncates to a
+// preview with a "See More" toggle that expands the SAME rendered content
+// (hashtags/mentions/links stay clickable in both states) in place -- no
+// navigation, just local component state.
+function PostContent({ content, className }: { content: string; className?: string }) {
+  const { t } = useT();
+  const [expanded, setExpanded] = useState(false);
+  if (!content) return null;
+  const isLong = content.length > CONTENT_TRUNCATE_LIMIT;
+  const shown = !isLong || expanded ? content : truncateContent(content, CONTENT_TRUNCATE_LIMIT);
+
+  return (
+    <>
+      <p dir="auto" className={className}>
+        {renderWithHashtags(shown)}
+        {isLong && !expanded && '…'}
+      </p>
+      {isLong && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v); }}
+          className="mt-1 text-xs font-semibold underline opacity-90 hover:opacity-100 transition-opacity"
+        >
+          {expanded ? t('post.content.seeLess') : t('post.content.seeMore')}
+        </button>
+      )}
+    </>
+  );
 }
 
 function timeAgo(date: string | Date, t: (key: string, vars?: Record<string, string | number>) => string, locale: string) {
@@ -58,7 +123,10 @@ function ReactionDisplay({ postId }: { postId: string }) {
   const toggle = useToggleReaction();
   const [showPicker, setShowPicker] = useState(false);
   const [showBreakdown, setShowBreakdown] = useState(false);
-  const pickerRef = useRef<HTMLDivElement>(null);
+  const reactionBtnRef = useRef<HTMLButtonElement>(null);
+  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFiredRef = useRef(false);
 
   const reactionData = data?.data;
   const counts: Record<string, number> = reactionData?.counts ?? {};
@@ -66,27 +134,74 @@ function ReactionDisplay({ postId }: { postId: string }) {
   const total: number = reactionData?.total ?? 0;
   const reactionList: any[] = reactionData?.reactions ?? [];
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) setShowPicker(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+  useEffect(() => () => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    if (longPressTimeoutRef.current) clearTimeout(longPressTimeoutRef.current);
   }, []);
 
-  // Without the viewer's own reaction, this always fell back to the generic
-  // 👍/"إعجاب" placeholder regardless of what reactions the post actually
-  // received (e.g. an all-Love post still showed a plain Like icon) --
-  // show the most-picked reaction type instead (#328).
-  const topType = Object.entries(counts).sort((a, b) => b[1] - a[1])[0]?.[0];
-  const currentReaction = REACTIONS.find(r => r.type === userReaction) ?? REACTIONS.find(r => r.type === topType);
+  // Opening required a full click, and (see ReactionPicker.tsx) it rendered
+  // anchored to the wrong element in the app's default RTL layout (#388).
+  // Hovering the button now reveals the picker immediately; leaving it
+  // schedules a short-delayed close so the cursor has time to travel onto
+  // the (portaled) picker itself, which cancels the pending close below.
+  const openPicker = () => {
+    if (closeTimeoutRef.current) { clearTimeout(closeTimeoutRef.current); closeTimeoutRef.current = null; }
+    setShowPicker(true);
+  };
+  const scheduleClosePicker = () => {
+    if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
+    closeTimeoutRef.current = setTimeout(() => setShowPicker(false), 250);
+  };
+  const closePicker = () => {
+    if (closeTimeoutRef.current) { clearTimeout(closeTimeoutRef.current); closeTimeoutRef.current = null; }
+    setShowPicker(false);
+  };
+
+  // Touch has no hover -- long-pressing the button is the equivalent reveal
+  // gesture. The trailing click that follows a touch release must NOT also
+  // toggle the reaction underneath the freshly-opened picker.
+  const handleTouchStart = () => {
+    longPressFiredRef.current = false;
+    longPressTimeoutRef.current = setTimeout(() => {
+      longPressFiredRef.current = true;
+      openPicker();
+    }, 450);
+  };
+  const handleTouchEnd = () => {
+    if (longPressTimeoutRef.current) { clearTimeout(longPressTimeoutRef.current); longPressTimeoutRef.current = null; }
+  };
+
+  // A plain click no longer opens any menu -- it immediately toggles the
+  // default Like reaction (or removes/switches the viewer's existing
+  // reaction, same semantics the backend already applies for a repeated
+  // toggle of the same type) (#388).
+  const handleClick = () => {
+    if (longPressFiredRef.current) { longPressFiredRef.current = false; return; }
+    toggle.mutate({ postId, type: userReaction ?? 'like' });
+  };
+
+  // Previously fell back to the most-picked reaction type across ALL users
+  // whenever the viewer had no reaction of their own, which visually read as
+  // the viewer having reacted with whatever was globally popular (e.g. an
+  // all-Love post highlighted the button as "loved" for someone who never
+  // reacted at all), and that phantom reaction was never actually counted
+  // as theirs either (#397). The active/highlighted state must reflect ONLY
+  // the current viewer's own reaction; no reaction means the neutral
+  // default appearance.
+  const currentReaction = REACTIONS.find(r => r.type === userReaction);
   const defaultEmoji = '👍';
 
   return (
-    <div className="relative" ref={pickerRef}>
+    <div className="relative">
       <div className="flex items-center gap-1">
         <button
-          onClick={() => setShowPicker(!showPicker)}
+          ref={reactionBtnRef}
+          onClick={handleClick}
+          onMouseEnter={openPicker}
+          onMouseLeave={scheduleClosePicker}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          onTouchCancel={handleTouchEnd}
           className={cn(
             'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-300 active:scale-95',
             'hover:-translate-y-0.5 hover:shadow-soft',
@@ -115,7 +230,11 @@ function ReactionDisplay({ postId }: { postId: string }) {
           </button>
         )}
       </div>
-      {showPicker && <ReactionPicker onSelect={(type) => toggle.mutate({ postId, type })} onClose={() => setShowPicker(false)} />}
+      {showPicker && (
+        <div onMouseEnter={openPicker} onMouseLeave={scheduleClosePicker}>
+          <ReactionPicker onSelect={(type) => toggle.mutate({ postId, type })} onClose={closePicker} anchorRef={reactionBtnRef} />
+        </div>
+      )}
       {showBreakdown && (
         <ReactionBreakdownModal
           reactions={reactionList}
@@ -460,11 +579,25 @@ function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide, 
   // viewport/container edge (very common on the narrower Profile -> Posts
   // tab layout) got clipped (#241). Render it through a portal at fixed
   // coordinates computed from the trigger button instead.
-  const [coords, setCoords] = useState<{ top: number; right: number } | null>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  // w-56 below.
+  const MENU_WIDTH = 224;
   useEffect(() => {
     const rect = anchorRef.current?.getBoundingClientRect();
-    if (rect) setCoords({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+    if (rect) {
+      // Was anchored purely from the viewport's right edge (`right: innerWidth
+      // - rect.right`), which stays on-screen when the trigger sits near the
+      // right edge but overflows off the LEFT edge whenever it doesn't --
+      // including the common case of a 3-dot button positioned near the left
+      // in this app's default RTL layout, or any menu near the narrower
+      // Profile -> Posts tab column (#412). Compute an explicit `left` and
+      // clamp it to the viewport on both sides instead.
+      let left = rect.right - MENU_WIDTH;
+      left = Math.min(left, window.innerWidth - MENU_WIDTH - 8);
+      left = Math.max(left, 8);
+      setCoords({ top: rect.bottom + 8, left });
+    }
     const handler = (e: MouseEvent) => {
       const target = e.target as Node;
       if (anchorRef.current?.contains(target) || menuRef.current?.contains(target)) return;
@@ -506,7 +639,7 @@ function PostMenu({ postId, post, isOwnPost, savePost, onClose, onEdit, onHide, 
       // background bled past the container's own rounded-xl corners at the
       // top/bottom, reading as an inconsistent border radius (#222).
       className="fixed w-56 bg-[var(--card)] rounded-xl shadow-glow-lg border border-[var(--border)]/60 py-2 animate-scale-in z-[60] overflow-hidden"
-      style={{ top: coords.top, right: coords.right }}
+      style={{ top: coords.top, left: coords.left }}
     >
       {menuItems.map((item, i) => {
         const Icon = item.icon;
@@ -683,6 +816,15 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
             )}
             {post.feeling && <span className="text-xs text-[var(--muted-foreground)] font-medium">{t('post.feelingLabel', { feeling: post.feeling })}</span>}
             {showGroupLink && post.group?.name && <><span className="text-xs text-[var(--muted-foreground)]">{t('post.inGroupPrefix')}</span><a href={`/groups/${post.group.id}`} className="text-xs font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:underline hover:shadow-soft px-1 rounded transition-all">{post.group.name}</a></>}
+            {/* Pinning had a working mutation but no visible effect anywhere
+                -- neither a badge here nor a sort change on the Profile Posts
+                tab, so it looked completely dead (#400). */}
+            {post.isPinned && (
+              <span className="flex items-center gap-1 text-xs font-semibold text-[var(--primary)]">
+                <MapPin size={12} weight="fill" />
+                {t('post.pinned')}
+              </span>
+            )}
           </div>
           <p className="text-[11px] text-[var(--muted-foreground)]">
             {timeAgo(post.createdAt, t, locale)}
@@ -708,20 +850,28 @@ export function PostCard({ post, showGroupLink = true }: { post: any; showGroupL
       {post.bgColor ? (
         <div className="px-4 pt-3">
           <div className="px-4 py-6 rounded-xl text-center shadow-card-hover" style={{ backgroundColor: post.bgColor }}>
-            <p dir="auto" className="text-lg text-[var(--card)] font-medium whitespace-pre-wrap">{renderWithHashtags(post.content)}</p>
+            <PostContent content={post.content} className="text-lg text-[var(--card)] font-medium whitespace-pre-wrap" />
           </div>
         </div>
       ) : (
         <div className="px-4 py-3">
-          <p dir="auto" className="text-sm text-[var(--foreground)]/85 leading-relaxed whitespace-pre-wrap">{renderWithHashtags(post.content)}</p>
+          <PostContent content={post.content} className="text-sm text-[var(--foreground)]/85 leading-relaxed whitespace-pre-wrap" />
         </div>
       )}
       {isShared && post.originalPost && (
         <div className="px-4 pt-1 pb-2">
           <div className="p-3 rounded-xl bg-[var(--muted)] border border-[var(--border)]/40 shadow-card-hover transition-all duration-300 hover:shadow-glow">
             <div className="flex items-center gap-2 mb-2">
-              <div className="h-6 w-6 rounded-full bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-[var(--card)] text-xs flex items-center justify-center shadow-soft">
-                {displayName(post.originalPost.user).charAt(0)}
+              {/* Always rendered the initials circle, never the original
+                  author's real avatar even when one existed (#413) -- same
+                  resolveMediaUrl() pattern the primary post author avatar
+                  above uses, initials-only as the no-picture fallback. */}
+              <div className="h-6 w-6 shrink-0 rounded-full overflow-hidden bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] text-[var(--card)] text-xs flex items-center justify-center shadow-soft">
+                {resolveMediaUrl(post.originalPost.user?.profile?.avatarUrl) ? (
+                  <img src={resolveMediaUrl(post.originalPost.user?.profile?.avatarUrl) ?? ''} alt={displayName(post.originalPost.user)} className="h-full w-full object-cover" />
+                ) : (
+                  displayName(post.originalPost.user).charAt(0)
+                )}
               </div>
               {post.originalPost.user?.id ? (
                 <Link href={post.originalPost.user?.username ? `/${post.originalPost.user.username}` : `/profile/${post.originalPost.user.id}`} className="text-xs font-medium text-[var(--foreground)] hover:underline">{displayName(post.originalPost.user)}</Link>

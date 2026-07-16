@@ -132,6 +132,29 @@ export class StoriesService {
     return { success: true };
   }
 
+  // Toggle-friendly, mirroring PostsService.toggleArchive -- one route handles
+  // both archive and unarchive (#416). Owner-only.
+  async toggleArchiveStory(storyId: string, userId: string) {
+    const story = await this.storyRepo.findOne({ where: { id: storyId } });
+    if (!story) throw new NotFoundException('Story not found');
+    if (story.userId !== userId) throw new ForbiddenException('Not authorized');
+
+    story.isArchived = !story.isArchived;
+    return this.storyRepo.save(story);
+  }
+
+  // Auth-scoped to the caller's own archived stories only (#416).
+  async getArchivedStories(userId: string, page: number, limit: number) {
+    const [data, total] = await this.storyRepo.findAndCount({
+      where: { userId, isArchived: true },
+      relations: ['user', 'user.profile'],
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total };
+  }
+
   async viewStory(storyId: string, viewerId: string) {
     const existing = await this.viewRepo.findOne({ where: { storyId, userId: viewerId } });
     if (existing) return { success: true };

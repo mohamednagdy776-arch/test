@@ -48,6 +48,16 @@ export class StoriesController {
     return ok(story, 'Story created');
   }
 
+  // Own archived stories only (#416). Must stay above the `stories/:id`
+  // wildcard below or "archived" would be swallowed as a story id.
+  @Get('stories/archived')
+  async getArchivedStories(@CurrentUser() user: User, @Query('page') page?: string, @Query('limit') limit?: string) {
+    const p = page ? parseInt(page, 10) : 1;
+    const l = limit ? parseInt(limit, 10) : 10;
+    const { data, total } = await this.storiesService.getArchivedStories(user.id, p, l);
+    return paginated(data, total, p, l);
+  }
+
   @Delete('stories/:id')
   async deleteStory(@CurrentUser() user: User, @Param('id') storyId: string) {
     const result = await this.storiesService.deleteStory(storyId, user.id);
@@ -74,6 +84,14 @@ export class StoriesController {
     // Only the story owner may see who viewed it (#145).
     const viewers = await this.storiesService.getStoryViewers(storyId, user.id);
     return ok(viewers, 'Viewers retrieved');
+  }
+
+  // Toggles isArchived so this one route handles both archive and unarchive
+  // (#416), same pattern as PostsController's POST :postId/archive.
+  @Post('stories/:id/archive')
+  async archiveStory(@CurrentUser() user: User, @Param('id') storyId: string) {
+    const story = await this.storiesService.toggleArchiveStory(storyId, user.id);
+    return ok(story, story.isArchived ? 'Story archived' : 'Story unarchived');
   }
 
   @Post('stories/:id/reactions')

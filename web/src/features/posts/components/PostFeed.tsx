@@ -98,10 +98,23 @@ export function PostFeed() {
   const recentFeed = useRecentFeed();
   const loaderRef = useRef<HTMLDivElement>(null);
 
-  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage } = 
+  const { data, isLoading, isError, fetchNextPage, hasNextPage, isFetchingNextPage, refetch, isRefetching } =
     feedType === 'ranked' ? rankedFeed : recentFeed;
 
   const posts = data?.pages?.flatMap((page: any) => page.data || []) || [];
+
+  // A background refetch (e.g. triggered by regaining window focus after the
+  // tab was idle) can transiently fail (network blip, brief 5xx) while
+  // perfectly good cached posts are still sitting in `data` -- React Query
+  // does not clear `data` just because a refetch errored. Previously this
+  // component nuked the whole rendered feed and replaced it with a hard
+  // error box any time `isError` was true, even with posts already on
+  // screen, which looked like the feed had crashed (#430). Only show the
+  // full-page error when there's genuinely nothing to fall back on; when we
+  // already have posts, keep showing them and surface a small non-blocking
+  // retry affordance instead.
+  const showHardError = isError && posts.length === 0;
+  const showInlineRetry = isError && posts.length > 0;
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -123,9 +136,15 @@ export function PostFeed() {
     </div>
   );
 
-  if (isError) return (
+  if (showHardError) return (
     <div className="rounded-2xl bg-[#B05252]/10 border border-[#B05252]/30 p-6 text-center">
       <p className="text-sm font-medium text-[#B05252]">فشل تحميل المنشورات</p>
+      <button
+        onClick={() => refetch()}
+        className="mt-3 text-sm font-medium text-[var(--primary)] hover:underline"
+      >
+        إعادة المحاولة
+      </button>
     </div>
   );
 
@@ -133,6 +152,19 @@ export function PostFeed() {
     <div className="space-y-6">
       <PostComposer />
       <StoriesBar />
+
+      {showInlineRetry && (
+        <div className="rounded-xl bg-[#B05252]/10 border border-[#B05252]/30 px-4 py-2.5 flex items-center justify-between gap-3">
+          <p className="text-xs font-medium text-[#B05252]">تعذّر تحديث المنشورات</p>
+          <button
+            onClick={() => refetch()}
+            disabled={isRefetching}
+            className="text-xs font-semibold text-[#B05252] hover:underline disabled:opacity-50 shrink-0"
+          >
+            {isRefetching ? '...' : 'إعادة المحاولة'}
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between mb-4">
         <div className="flex bg-[var(--muted)]/50 rounded-xl p-1">

@@ -57,6 +57,13 @@ export const postsApi = {
   getSavedPosts: (page = 1, limit = 10) =>
     apiClient.get('/posts/saved', { params: { page, limit } }).then((r) => r.data),
 
+  // Toggle-friendly endpoint (#416): same route archives and unarchives.
+  archivePost: (postId: string) =>
+    apiClient.post(`/posts/${postId}/archive`).then((r) => r.data),
+
+  getArchivedPosts: (page = 1, limit = 10) =>
+    apiClient.get('/posts/archived', { params: { page, limit } }).then((r) => r.data),
+
   getComments: (postId: string) =>
     apiClient.get(`/posts/${postId}/comments`).then((r) => r.data),
 
@@ -102,4 +109,11 @@ export const storiesApi = {
 
   getHighlights: () =>
     apiClient.get('/highlights').then((r) => r.data),
+
+  // Toggle-friendly endpoint (#416): same route archives and unarchives.
+  archiveStory: (storyId: string) =>
+    apiClient.post(`/stories/${storyId}/archive`).then((r) => r.data),
+
+  getArchivedStories: (page = 1, limit = 10) =>
+    apiClient.get('/stories/archived', { params: { page, limit } }).then((r) => r.data),
 };

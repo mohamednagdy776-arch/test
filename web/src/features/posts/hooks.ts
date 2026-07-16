@@ -151,6 +151,29 @@ export function useSavedPosts(page = 1, limit = 10) {
   });
 }
 
+// Archive (#416) -- own archived posts only.
+export function useArchivedPosts(page = 1, limit = 10) {
+  return useQuery({
+    queryKey: ['archived-posts', page],
+    queryFn: () => postsApi.getArchivedPosts(page, limit),
+  });
+}
+
+// Toggle-friendly: calling this on an already-archived post unarchives it.
+export function useArchivePost() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (postId: string) => postsApi.archivePost(postId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['archived-posts'] });
+      qc.invalidateQueries({ queryKey: ['feed'] });
+      qc.invalidateQueries({ queryKey: ['feed-recent'] });
+      qc.invalidateQueries({ queryKey: ['profile-posts'] });
+      qc.invalidateQueries({ queryKey: ['group-posts'] });
+    },
+  });
+}
+
 export function useComments(postId: string) {
   return useQuery({
     queryKey: ['comments', postId],
@@ -159,6 +182,13 @@ export function useComments(postId: string) {
   });
 }
 
+// Only invalidated its own ['comments', postId] query -- every other place
+// that shows a post's commentsCount as a baked-in field on the post object
+// itself (main feed, group feed, profile posts, and the dashboard's Trending
+// Posts widget, which sums likesCount + commentsCount) kept whatever count it
+// last fetched until its own staleTime lapsed or a full reload happened, so
+// it visibly disagreed with the live count PostCard renders via useComments/
+// useReactions (#429).
 export function useAddComment() {
   const qc = useQueryClient();
   return useMutation({
@@ -166,6 +196,12 @@ export function useAddComment() {
       postsApi.addComment(postId, content, parentId),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['comments', variables.postId] });
+      qc.invalidateQueries({ queryKey: ['post', variables.postId] });
+      qc.invalidateQueries({ queryKey: ['feed'] });
+      qc.invalidateQueries({ queryKey: ['feed-recent'] });
+      qc.invalidateQueries({ queryKey: ['trending-posts'] });
+      qc.invalidateQueries({ queryKey: ['group-posts'] });
+      qc.invalidateQueries({ queryKey: ['profile-posts'] });
     },
   });
 }
@@ -178,6 +214,11 @@ export function useReactions(postId: string) {
   });
 }
 
+// Same staleness class as useAddComment above, for likesCount instead of
+// commentsCount -- reacting to a post only ever refreshed PostCard's own live
+// ['reactions', postId] total, never the baked-in likesCount other widgets
+// (Trending Posts on the dashboard, main/group feeds, profile posts) compute
+// from (#429).
 export function useToggleReaction() {
   const qc = useQueryClient();
   return useMutation({
@@ -185,6 +226,12 @@ export function useToggleReaction() {
       postsApi.toggleReaction(postId, type),
     onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['reactions', variables.postId] });
+      qc.invalidateQueries({ queryKey: ['post', variables.postId] });
+      qc.invalidateQueries({ queryKey: ['feed'] });
+      qc.invalidateQueries({ queryKey: ['feed-recent'] });
+      qc.invalidateQueries({ queryKey: ['trending-posts'] });
+      qc.invalidateQueries({ queryKey: ['group-posts'] });
+      qc.invalidateQueries({ queryKey: ['profile-posts'] });
     },
   });
 }
@@ -264,5 +311,25 @@ export function useHighlights() {
   return useQuery({
     queryKey: ['highlights'],
     queryFn: () => storiesApi.getHighlights(),
+  });
+}
+
+// Archive (#416) -- own archived stories only.
+export function useArchivedStories(page = 1, limit = 10) {
+  return useQuery({
+    queryKey: ['archived-stories', page],
+    queryFn: () => storiesApi.getArchivedStories(page, limit),
+  });
+}
+
+// Toggle-friendly: calling this on an already-archived story unarchives it.
+export function useArchiveStory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (storyId: string) => storiesApi.archiveStory(storyId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['archived-stories'] });
+      qc.invalidateQueries({ queryKey: ['stories'] });
+    },
   });
 }

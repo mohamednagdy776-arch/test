@@ -25,6 +25,14 @@ export class PostsController {
     return paginated(data, total, query.page!, query.limit!);
   }
 
+  // Own archived posts only -- never other users' (#416). Must stay above the
+  // `:postId` wildcard below or "archived" would be swallowed as a postId.
+  @Get('archived')
+  async getArchivedPosts(@CurrentUser() user: User, @Query() query: PaginationDto) {
+    const { data, total } = await this.postsService.getArchivedPosts(user.id, query.page!, query.limit!);
+    return paginated(data, total, query.page!, query.limit!);
+  }
+
   @Get(':postId')
   async getPost(@Param('postId') postId: string, @CurrentUser() user: User) {
     const post = await this.postsService.findById(postId, user.id);
@@ -49,10 +57,13 @@ export class PostsController {
     return ok(post, post.isPinned ? 'Post pinned' : 'Post unpinned');
   }
 
+  // Toggles isArchived (same pattern as togglePin above) so this one route
+  // handles both archive and unarchive (#416) instead of only ever setting
+  // isArchived = true with no way back.
   @Post(':postId/archive')
   async archivePost(@Param('postId') postId: string, @CurrentUser() user: User) {
-    const post = await this.postsService.archive(postId, user.id);
-    return ok(post, 'Post archived');
+    const post = await this.postsService.toggleArchive(postId, user.id);
+    return ok(post, post.isArchived ? 'Post archived' : 'Post unarchived');
   }
 
   @Post(':postId/save')

@@ -51,7 +51,9 @@ export class PostsService {
 
   async findByGroup(groupId: string, page: number, limit: number) {
     const [data, total] = await this.postsRepo.findAndCount({
-      where: { group: { id: groupId } },
+      // Archiving a post is supposed to hide it from normal views (#416) --
+      // without this, an archived group post kept showing up in the group feed.
+      where: { group: { id: groupId }, isArchived: false },
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -77,6 +79,8 @@ export class PostsService {
       .leftJoinAndSelect('user.profile', 'userProfile')
       .leftJoinAndSelect('post.group', 'group')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      // Archived posts are hidden from normal feed views by design (#416).
+      .andWhere('post.isArchived = false')
       .orderBy('post.isPinned', 'DESC')
       .addOrderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
@@ -93,6 +97,7 @@ export class PostsService {
       .leftJoinAndSelect('user.profile', 'userProfile')
       .leftJoinAndSelect('post.group', 'group')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      .andWhere('post.isArchived = false')
       .orderBy('post.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -122,6 +127,8 @@ export class PostsService {
         'engagement',
       )
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      // Archived posts are hidden from normal feed views by design (#416).
+      .andWhere('post.isArchived = false')
       // "Most Relevant" ranks by real engagement so this feed differs from the
       // chronological /feed/recent (#16). Pinned first.
       .orderBy('post.isPinned', 'DESC')
@@ -150,6 +157,8 @@ export class PostsService {
       .leftJoinAndSelect('originalPost.user', 'originalPostUser')
       .leftJoinAndSelect('originalPostUser.profile', 'originalPostUserProfile')
       .andWhere('(post.scheduled_at IS NULL OR post.scheduled_at <= :now)', { now })
+      // Archived posts are hidden from normal feed views by design (#416).
+      .andWhere('post.isArchived = false')
       .orderBy('post.createdAt', 'DESC')
       .take(limit + 1);
     if (cursor) {
@@ -213,6 +222,24 @@ export class PostsService {
 
     if (post.userId === viewerId) return post;
 
+    // Posts that belong to a group are gated by group membership, not the
+    // author's personal audience default. The composer defaults every post to
+    // audience 'friends' regardless of where it's posted, so a group post from
+    // a member you aren't personally friends with used to 404 here even though
+    // you're both in the group and can already see the post in the group's own
+    // feed (which only checks membership, not audience) -- opening a shared
+    // link to it wrongly denied access (#410). Membership alone is sufficient.
+    if (post.group) {
+      const memberRows = await this.postsRepo.manager.query(
+        `SELECT 1 FROM group_members WHERE group_id = $1 AND user_id = $2 AND status = 'active' LIMIT 1`,
+        [post.group.id, viewerId],
+      );
+      if (memberRows.length) {
+        return this.sanitizePolls([post], viewerId)[0];
+      }
+      throw new NotFoundException('Post not found');
+    }
+
     if (post.audience === 'only_me') {
       throw new NotFoundException('Post not found');
     }
@@ -263,13 +290,28 @@ export class PostsService {
     return this.postsRepo.save(post);
   }
 
-  async archive(postId: string, userId: string) {
+  // Toggle-friendly like togglePin(): the old version only ever set
+  // isArchived = true with no route back, so once archived a post could never
+  // be unarchived again (#416).
+  async toggleArchive(postId: string, userId: string) {
     const post = await this.postsRepo.findOne({ where: { id: postId } });
     if (!post) throw new NotFoundException('Post not found');
     if (post.userId !== userId) throw new ForbiddenException('Not authorized');
 
-    post.isArchived = true;
+    post.isArchived = !post.isArchived;
     return this.postsRepo.save(post);
+  }
+
+  // Auth-scoped to the caller's own archived posts only (#416).
+  async getArchivedPosts(userId: string, page: number, limit: number) {
+    const [data, total] = await this.postsRepo.findAndCount({
+      where: { userId, isArchived: true },
+      order: { updatedAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+      relations: ['user', 'user.profile', 'group'],
+    });
+    return { data, total };
   }
 
   async saveForLater(postId: string, userId: string) {

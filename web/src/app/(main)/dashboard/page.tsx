@@ -1,11 +1,12 @@
 'use client';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { PostFeed } from '@/features/posts/components/PostFeed';
-import { useSuggestions } from '@/features/friends/hooks';
+import { useSuggestions, useSendFriendRequest } from '@/features/friends/hooks';
 import { useMyProfile } from '@/features/profile/hooks';
 import { useUpcomingEvents } from '@/features/events/hooks';
-import { useSuggestedGroups } from '@/features/groups/hooks';
+import { useSuggestedGroups, useJoinGroup } from '@/features/groups/hooks';
 import { useUnreadCount as useChatUnread } from '@/features/chat/hooks';
 import { useUnreadCount as useNotifUnread } from '@/features/notifications/hooks';
 import { apiClient } from '@/lib/api-client';
@@ -20,6 +21,7 @@ import {
 
 import { resolveMediaUrl } from '@/lib/media';
 import { useT } from '@/i18n/I18nProvider';
+import { useToast } from '@/components/ui/Toast';
 
 // ─── Greeting Banner ──────────────────────────────────────────────────────────
 function GreetingBanner() {
@@ -358,6 +360,14 @@ function SuggestedConnections() {
   const { t } = useT();
   const { data, isLoading } = useSuggestions(4);
   const suggestions: any[] = data?.data ?? [];
+  const sendFriendRequest = useSendFriendRequest();
+  const { showToast } = useToast() as any;
+  // Tracks which suggested users we've already sent a request to this
+  // session, so the button flips to "Requested"/disabled and the card stops
+  // looking like clicking Add did nothing (#403, #405). The whole row used to
+  // be one big navigate-to-profile button with no separate handler or real
+  // API call behind "Add" at all (#402).
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set());
 
   return (
     <div className="rounded-2xl overflow-hidden card-theme-default border">
@@ -397,10 +407,18 @@ function SuggestedConnections() {
             // suggestions API nests the avatar under `.profile.avatarUrl`,
             // never a flat `.avatar`.
             const avatarUrl = resolveMediaUrl(u?.avatar ?? u?.profile?.avatarUrl);
+            const alreadySent = sentIds.has(u?.id);
+            const isPendingThis = sendFriendRequest.isPending && sendFriendRequest.variables === u?.id;
+            const goToProfile = () => u?.username && router.push(`/${u.username}`);
             return (
-              <button key={u?.id ?? nm}
-                onClick={() => u?.username && router.push(`/${u.username}`)}
-                className="w-full flex items-center gap-3 rounded-xl p-2.5 text-right transition-all hover:bg-[color-mix(in_srgb,var(--primary)_6%,transparent)] group">
+              // Was a <button> with the "Add" chip nested inside it (invalid
+              // nesting, and clicking anywhere -- including "Add" -- just fired
+              // this navigate handler since there was no separate click target).
+              <div key={u?.id ?? nm}
+                role="button" tabIndex={0}
+                onClick={goToProfile}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToProfile(); } }}
+                className="w-full flex items-center gap-3 rounded-xl p-2.5 text-right transition-all hover:bg-[color-mix(in_srgb,var(--primary)_6%,transparent)] group cursor-pointer">
                 <div className="relative shrink-0">
                   {avatarUrl ? (
                     <Image src={avatarUrl} alt={nm} width={40} height={40} className="w-10 h-10 rounded-xl object-cover" />
@@ -419,11 +437,25 @@ function SuggestedConnections() {
                     {mutual > 0 ? ` · ${t('dashboard.mutualLabel', { mutual })}` : ''}
                   </p>
                 </div>
-                <span className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all"
-                  style={{ background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }}>
-                  {t('dashboard.add')}
-                </span>
-              </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (!u?.id || alreadySent || sendFriendRequest.isPending) return;
+                    sendFriendRequest.mutate(u.id, {
+                      onSuccess: () => setSentIds((prev) => new Set(prev).add(u.id)),
+                      onError: (err: any) => showToast?.(err?.response?.data?.message || t('friends.addFriend'), 'error'),
+                    });
+                  }}
+                  disabled={alreadySent || isPendingThis}
+                  className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all disabled:opacity-60 disabled:cursor-default"
+                  style={{
+                    background: alreadySent ? 'var(--muted)' : 'color-mix(in srgb, var(--primary) 10%, transparent)',
+                    color: alreadySent ? 'var(--muted-foreground)' : 'var(--primary)',
+                  }}>
+                  {alreadySent ? t('dashboard.requested') : t('dashboard.add')}
+                </button>
+              </div>
             );
           })
         )}
@@ -438,6 +470,13 @@ function SuggestedGroupsWidget() {
   const { t } = useT();
   const { data, isLoading } = useSuggestedGroups(3);
   const groups: any[] = data?.data ?? data?.groups ?? [];
+  const joinGroup = useJoinGroup();
+  const { showToast } = useToast() as any;
+  // Join used to just router.push to the group page with no real API call
+  // behind it at all (#425). Track per-group result locally so the button
+  // gives feedback ("Joined"/"Requested") instead of silently navigating away
+  // (#428) -- private groups return a 'pending' status rather than 'active'.
+  const [joinedStatus, setJoinedStatus] = useState<Record<string, 'active' | 'pending'>>({});
 
   return (
     <div className="rounded-2xl overflow-hidden card-theme-default border">
@@ -471,6 +510,8 @@ function SuggestedGroupsWidget() {
             const name = group.name || t('dashboard.group.fallbackName');
             const count = group.memberCount ?? group.membersCount ?? 0;
             const initial = name.charAt(0);
+            const status = joinedStatus[group.id];
+            const isPendingThis = joinGroup.isPending && joinGroup.variables === group.id;
             return (
               <div key={group.id} className="flex items-center gap-3 rounded-xl p-2.5">
                 <div className="shrink-0 w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center text-sm font-bold">
@@ -490,11 +531,28 @@ function SuggestedGroupsWidget() {
                     {count > 0 ? t('dashboard.memberCount', { count: count.toLocaleString('ar-SA') }) : t('dashboard.newCommunity')}
                   </p>
                 </div>
-                <button onClick={() => router.push(`/groups/${group.id}`)}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (status || joinGroup.isPending) return;
+                    joinGroup.mutate(group.id, {
+                      onSuccess: (res: any) => {
+                        const joinStatus: 'active' | 'pending' = res?.data?.joinStatus ?? res?.joinStatus ?? 'active';
+                        setJoinedStatus((prev) => ({ ...prev, [group.id]: joinStatus }));
+                        showToast?.(joinStatus === 'pending' ? t('groups.joinPendingToast') : t('groups.joinedToast'), 'success');
+                      },
+                      onError: (err: any) => showToast?.(err?.response?.data?.message || t('groups.joinErrorToast'), 'error'),
+                    });
+                  }}
+                  disabled={!!status || isPendingThis}
                   aria-label={t('dashboard.joinAriaLabel', { name })}
-                  className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 active:scale-95"
-                  style={{ background: 'color-mix(in srgb, var(--primary) 10%, transparent)', color: 'var(--primary)' }}>
-                  {t('dashboard.join')}
+                  className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-60 disabled:cursor-default disabled:hover:scale-100"
+                  style={{
+                    background: status ? 'var(--muted)' : 'color-mix(in srgb, var(--primary) 10%, transparent)',
+                    color: status ? 'var(--muted-foreground)' : 'var(--primary)',
+                  }}>
+                  {status === 'pending' ? t('dashboard.requested') : status === 'active' ? t('dashboard.joined') : t('dashboard.join')}
                 </button>
               </div>
             );

@@ -12,6 +12,16 @@ import { useToast } from '@/components/ui/Toast';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Clock } from '@phosphor-icons/react';
 
+// Saved-video thumbnails had no error fallback -- a broken/unresolved
+// thumbnail URL rendered as a broken-image icon instead of falling back to
+// the same ▶️ placeholder already used here for videos with no thumbnail at
+// all (#420, same class of bug fixed for the Watch grid in #396).
+function SavedVideoThumb({ src }: { src?: string | null }) {
+  const [errored, setErrored] = useState(false);
+  if (!src || errored) return <>▶️</>;
+  return <img src={src} alt="" className="w-full h-full object-cover" onError={() => setErrored(true)} />;
+}
+
 export default function MemoriesPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'memories' | 'saved'>('memories');
@@ -183,9 +193,7 @@ export default function MemoriesPage() {
                           {/* Was a static ▶️ placeholder that never read the
                               video's real thumbnail (#240). */}
                           <div className="w-32 h-20 shrink-0 bg-gradient-to-br from-[var(--muted)] to-[var(--accent)]/20 rounded-xl flex items-center justify-center text-2xl overflow-hidden">
-                            {item.entity.thumbnailUrl ? (
-                              <img src={item.entity.thumbnailUrl} alt="" className="w-full h-full object-cover" />
-                            ) : '▶️'}
+                            <SavedVideoThumb src={item.entity.thumbnailUrl} />
                           </div>
                           <div>
                             <p className="font-semibold text-[var(--foreground)]">{item.entity.title || 'فيديو'}</p>
