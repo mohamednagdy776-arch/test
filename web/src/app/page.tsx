@@ -131,9 +131,15 @@ function Counter({ to, suffix = '', prefix = '' }: { to: number; suffix?: string
 
 /* Shared section eyebrow — Panda css() rule + StyleX gold underline. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
+  // The eyebrow label text used C.gold (#B8892A) directly as a foreground
+  // color over the parchment/card section backgrounds it sits on -- only
+  // ~2.75:1 contrast (fails WCAG AA, reads as "blends into the background"),
+  // unlike every other title in this file which uses C.forest for readable
+  // text and reserves gold for decoration/accents (icons, underlines,
+  // borders) (#392). The underline bars stay gold since they're decorative.
   return (
     <div className="mb-3">
-      <p className="text-sm font-bold uppercase tracking-[0.2em]" style={{ color: C.gold }}>
+      <p className="text-sm font-bold uppercase tracking-[0.2em]" style={{ color: C.forest }}>
         <span className={eyebrowRule} />
         {children}
         <span className={eyebrowRule} />

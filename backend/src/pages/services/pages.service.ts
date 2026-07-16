@@ -56,8 +56,9 @@ export class PagesService {
     return withCounts.map((p) => ({ ...p, ownerId: p.createdBy?.id ?? null }));
   }
 
-  async findAll(page: number, limit: number) {
+  async findAll(page: number, limit: number, category?: string) {
     const [rows, total] = await this.pagesRepo.findAndCount({
+      where: category ? { category } : {},
       skip: (page - 1) * limit,
       take: limit,
       order: { createdAt: 'DESC' },

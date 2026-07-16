@@ -31,7 +31,7 @@ interface PageCardProps {
 
 function PageCard({ page, isFollowing, onFollow, onUnfollow, isFollowingLoading }: PageCardProps) {
   return (
-    <div className="rounded-xl bg-[var(--card)] shadow-sm hover:shadow-md transition-shadow border border-[var(--border)] overflow-hidden">
+    <div className="flex h-full flex-col rounded-xl bg-[var(--card)] shadow-sm hover:shadow-md transition-shadow border border-[var(--border)] overflow-hidden">
       <div className="relative h-24 bg-gradient-to-br from-blue-500/20 to-blue-600/5">
         {page.coverPhoto ? (
           <img src={resolveMediaUrl(page.coverPhoto) ?? ''} alt="" className="absolute inset-0 w-full h-full object-cover" />
@@ -40,7 +40,7 @@ function PageCard({ page, isFollowing, onFollow, onUnfollow, isFollowingLoading 
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
       </div>
-      <div className="p-4">
+      <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
           <div className="min-w-0 flex-1">
             <h3 className="font-semibold text-[var(--foreground)] truncate">{page.name}</h3>
@@ -63,7 +63,7 @@ function PageCard({ page, isFollowing, onFollow, onUnfollow, isFollowingLoading 
           </svg>
           <span>{page.followerCount || 0} متابع</span>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 mt-auto">
           {isFollowing ? (
             <button
               onClick={() => onUnfollow(page.id)}
@@ -273,17 +273,19 @@ export const PagesList = () => {
               <div className="space-y-3">
                 {((suggestedData?.data as any[]) || []).slice(0, 5).map((p: any) => (
                   <div key={p.id} className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/5 shrink-0 flex items-center justify-center overflow-hidden">
-                      {p.coverPhoto ? (
-                        <img src={resolveMediaUrl(p.coverPhoto) ?? ''} alt="" className="w-full h-full object-cover rounded-lg" />
-                      ) : (
-                        <span className="text-lg font-bold text-blue-600">{p.name?.[0]}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-[var(--foreground)] truncate">{p.name}</p>
-                      <p className="text-xs text-[var(--muted-foreground)]">{p.followerCount || 0} متابع</p>
-                    </div>
+                    <Link href={`/pages/${p.id}`} className="flex flex-1 min-w-0 items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/5 shrink-0 flex items-center justify-center overflow-hidden">
+                        {p.coverPhoto ? (
+                          <img src={resolveMediaUrl(p.coverPhoto) ?? ''} alt="" className="w-full h-full object-cover rounded-lg" />
+                        ) : (
+                          <span className="text-lg font-bold text-blue-600">{p.name?.[0]}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-[var(--foreground)] truncate">{p.name}</p>
+                        <p className="text-xs text-[var(--muted-foreground)]">{p.followerCount || 0} متابع</p>
+                      </div>
+                    </Link>
                     <button
                       onClick={() => handleFollow(p.id)}
                       disabled={followPage.isPending || followingPageIds.has(p.id)}

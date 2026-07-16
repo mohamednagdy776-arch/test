@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 import { Story, StoryView, StoryHighlight, StoryReaction, SavedPost, PostReport, HiddenPost } from '../entities/story.entity';
 import { Post } from '../entities/post.entity';
 import { User } from '../../auth/entities/user.entity';
+import { Follow } from '../../follows/entities/follow.entity';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { SettingsService } from '../../settings/services/settings.service';
 import { LinkPreviewService } from '../../link-preview/link-preview.service';
@@ -19,6 +20,7 @@ export class StoriesService {
     @InjectRepository(PostReport) private reportRepo: Repository<PostReport>,
     @InjectRepository(HiddenPost) private hiddenRepo: Repository<HiddenPost>,
     @InjectRepository(Post) private postRepo: Repository<Post>,
+    @InjectRepository(Follow) private followsRepo: Repository<Follow>,
     private notifications: NotificationsService,
     private settingsService: SettingsService,
     private linkPreview: LinkPreviewService,
@@ -75,18 +77,51 @@ export class StoriesService {
       acc[story.userId].push(story);
       return acc;
     }, {});
-    return Object.entries(grouped).map(([_, userStories]) => ({
-      user: userStories[0].user,
-      stories: userStories,
-    }));
+
+    // Anyone could view anyone else's stories regardless of whether they
+    // followed the author -- zero relationship filtering at all (#423). This
+    // app has no separate public/private-account flag on User, so the rule
+    // matches how "follow" is already used elsewhere for followed-content
+    // feeds (e.g. videos.service.ts's followed-videos query): a story is
+    // visible to its own author plus anyone who follows them (one-way follow
+    // is enough, matching a friendship's implicit follow-both-ways too since
+    // acceptRequest() auto-creates Follow rows for accepted friends).
+    const authorIds = Object.keys(grouped).filter((id) => id !== userId);
+    let followedAuthorIds = new Set<string>();
+    if (authorIds.length > 0) {
+      const follows = await this.followsRepo.find({
+        where: { followerId: userId, followingId: In(authorIds) },
+        select: { followingId: true },
+      });
+      followedAuthorIds = new Set(follows.map((f) => f.followingId));
+    }
+
+    return Object.entries(grouped)
+      .filter(([authorId]) => authorId === userId || followedAuthorIds.has(authorId))
+      .map(([_, userStories]) => ({
+        user: userStories[0].user,
+        stories: userStories,
+      }));
   }
 
-  async getStoryById(storyId: string) {
+  async getStoryById(storyId: string, viewerId: string) {
     const story = await this.storyRepo.findOne({
       where: { id: storyId },
       relations: ['user', 'user.profile'],
     });
     if (!story) throw new NotFoundException('Story not found');
+    // Same follower-only visibility rule as getAllStories() (#423) -- this is
+    // the direct-by-id entry point (story-reaction notifications link here,
+    // #363), so without this check it bypassed the feed's access control
+    // entirely via a direct URL.
+    if (story.userId !== viewerId) {
+      const isFollowing = await this.followsRepo.findOne({
+        where: { followerId: viewerId, followingId: story.userId },
+      });
+      if (!isFollowing) {
+        throw new ForbiddenException('You do not have access to this story');
+      }
+    }
     return story;
   }
 

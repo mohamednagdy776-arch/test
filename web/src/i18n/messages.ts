@@ -37,8 +37,13 @@ const ar: Dict = {
   'nav.communities': 'المجتمعات',
   'nav.pages': 'الصفحات',
   'nav.memories': 'الذكريات',
-  'nav.watch': 'Watch',
+  'nav.watch': 'فيديوهات',
   'nav.reels': 'ريلز',
+  // The mobile bottom nav only fits 5 tabs (Home/Matching/Chat/Search/Profile)
+  // and had no way to reach anything else -- Interests and Pages (and every
+  // other Sidebar item) were completely unreachable below the lg breakpoint
+  // (#431). This opens a sheet listing the rest.
+  'nav.more': 'المزيد',
   'nav.childPrediction': 'توقع شكل طفلك',
   'nav.childPredictionShort': 'التوقع',
   'nav.labPortal': 'بوابة المختبرات',
@@ -207,6 +212,31 @@ const ar: Dict = {
   'post.time.hoursAgo': '{hours} س',
   'post.time.minutesAgo': '{mins} د',
   'post.time.now': 'الآن',
+  // reel.* -- added for #433/#434/#435/#436/#437 (Reels comment/share/menu/profile-link)
+  'reel.comment.defaultUser': 'مستخدم',
+  'reel.comment.empty': 'لا توجد تعليقات بعد — كن أول من يعلق',
+  'reel.comment.error': 'تعذّر إرسال التعليق',
+  'reel.comment.placeholder': 'اكتب تعليقاً',
+  'reel.comment.send': 'إرسال',
+  'reel.comment.title': 'التعليقات',
+  'reel.menu.aria': 'خيارات إضافية',
+  'reel.menu.copyLink': 'نسخ الرابط',
+  'reel.menu.linkCopied': 'تم نسخ الرابط',
+  'reel.menu.report': 'إبلاغ',
+  'reel.report.cancel': 'إلغاء',
+  'reel.report.detailsPlaceholder': 'اكتب التفاصيل هنا (اختياري)',
+  'reel.report.error': 'تعذّر إرسال البلاغ',
+  'reel.report.reason.harassment': 'تحرّش أو إساءة',
+  'reel.report.reason.inappropriate': 'محتوى غير لائق',
+  'reel.report.reason.other': 'سبب آخر',
+  'reel.report.reason.scam': 'احتيال أو معلومات مضللة',
+  'reel.report.reason.spam': 'محتوى مزعج / غير مرغوب',
+  'reel.report.submit': 'إرسال البلاغ',
+  'reel.report.success': 'تم استلام بلاغك، وسيقوم فريقنا بمراجعته',
+  'reel.report.title': 'الإبلاغ عن الريل',
+  'reel.share.copied': 'تم نسخ الرابط',
+  'reel.share.error': 'تعذّر المشاركة، حاول مجدداً',
+  'reel.share.label': 'مشاركة',
   // privacy.* -- added for #234/#183/#66 (i18n coverage expansion)
   'privacy.export.cta': 'تصدير',
   'privacy.export.desc': 'ملف JSON يحتوي على ملفك الشخصي، منشوراتك، وإعداداتك',
@@ -301,8 +331,18 @@ const ar: Dict = {
   'settings.email.subtitle': 'عملية آمنة تتطلب التحقق من هويتك',
   'settings.email.title': 'تغيير البريد الإلكتروني',
   'settings.eyebrow': 'حسابك',
+  // The backend only ever throws the English literal "Incorrect password" for
+  // this specific action (auth.service.ts deleteAccount) and the frontend
+  // surfaced it verbatim in the Arabic UI (#432) -- no error-code convention
+  // exists anywhere else in this backend, so pattern-matching that known
+  // string client-side and swapping in a translated message is the lowest-risk
+  // fix rather than introducing a new error-code contract for one endpoint.
+  'settings.security.incorrectPassword': 'كلمة المرور غير صحيحة',
   'settings.subtitle': 'إدارة حسابك وتخصيص تجربتك في طيبت',
   'settings.title': 'الإعدادات',
+  // legal.* -- added so /terms and /privacy can offer a way back into an
+  // in-progress registration instead of only "back to home" (#389)
+  'legal.backToRegistration': 'العودة لإكمال التسجيل',
   // chat.* -- wave 2, added for #234/#183/#66
   'chat.deepLinkError': 'تعذّر فتح المحادثة. يرجى المحاولة مجدداً',
   'chat.list.empty': 'لا توجد محادثات بعد',
@@ -491,6 +531,11 @@ const ar: Dict = {
   'notifications.tabLikes': 'الإعجابات',
   'notifications.tabMentions': 'الإشارات',
   'notifications.tabUnread': 'غير مقروء',
+  // notifications action buttons -- #401/#404
+  'notifications.accept': 'قبول',
+  'notifications.reject': 'رفض',
+  'notifications.accepted': 'تم القبول',
+  'notifications.rejected': 'تم الرفض',
   // profileEdit.* -- wave 2, added for #234/#183/#66
   'profileEdit.error.genderRequired': 'يرجى اختيار الجنس',
   'profileEdit.error.invalidAge': 'يرجى إدخال عمر صحيح (18-99)',
@@ -696,6 +741,14 @@ const ar: Dict = {
   'settings.account.section.notifications.desc': 'ضبط تفضيلات الإشعارات',
   'settings.account.section.profile.title': 'الملف الشخصي',
   'settings.account.section.profile.desc': 'تعديل صورتك وبياناتك الشخصية',
+  // storyViewer.* -- added for #415 (delete story option)
+  'storyViewer.menu.delete': 'حذف القصة',
+  'storyViewer.deleteConfirm.title': 'حذف القصة',
+  'storyViewer.deleteConfirm.message': 'هل أنت متأكد من حذف هذه القصة؟ لا يمكن التراجع عن هذا الإجراء.',
+  'storyViewer.deleteConfirm.cancel': 'إلغاء',
+  'storyViewer.deleteConfirm.confirm': 'حذف',
+  'storyViewer.deleteSuccess': 'تم حذف القصة',
+  'storyViewer.deleteError': 'تعذّر حذف القصة',
 };
 
 const en: Dict = {
@@ -720,6 +773,7 @@ const en: Dict = {
   'nav.memories': 'Memories',
   'nav.watch': 'Watch',
   'nav.reels': 'Reels',
+  'nav.more': 'More',
   'nav.childPrediction': 'Child Prediction',
   'nav.childPredictionShort': 'Prediction',
   'nav.labPortal': 'Lab Portal',
@@ -886,6 +940,31 @@ const en: Dict = {
   'post.time.hoursAgo': '{hours}h',
   'post.time.minutesAgo': '{mins}m',
   'post.time.now': 'Now',
+  // reel.* -- added for #433/#434/#435/#436/#437 (Reels comment/share/menu/profile-link)
+  'reel.comment.defaultUser': 'User',
+  'reel.comment.empty': 'No comments yet — be the first to comment',
+  'reel.comment.error': 'Couldn\'t post comment',
+  'reel.comment.placeholder': 'Write a comment',
+  'reel.comment.send': 'Send',
+  'reel.comment.title': 'Comments',
+  'reel.menu.aria': 'More options',
+  'reel.menu.copyLink': 'Copy Link',
+  'reel.menu.linkCopied': 'Link copied',
+  'reel.menu.report': 'Report',
+  'reel.report.cancel': 'Cancel',
+  'reel.report.detailsPlaceholder': 'Add details (optional)',
+  'reel.report.error': 'Couldn\'t send report',
+  'reel.report.reason.harassment': 'Harassment or abuse',
+  'reel.report.reason.inappropriate': 'Inappropriate content',
+  'reel.report.reason.other': 'Other reason',
+  'reel.report.reason.scam': 'Scam or misleading information',
+  'reel.report.reason.spam': 'Spam / unwanted content',
+  'reel.report.submit': 'Submit Report',
+  'reel.report.success': 'Your report has been received and will be reviewed',
+  'reel.report.title': 'Report Reel',
+  'reel.share.copied': 'Link copied',
+  'reel.share.error': 'Couldn\'t share, try again',
+  'reel.share.label': 'Share',
   // privacy.* -- added for #234/#183/#66 (i18n coverage expansion)
   'privacy.export.cta': 'Export',
   'privacy.export.desc': 'A JSON file containing your profile, posts, and settings',
@@ -980,8 +1059,10 @@ const en: Dict = {
   'settings.email.subtitle': 'A secure process that requires identity verification',
   'settings.email.title': 'Change Email',
   'settings.eyebrow': 'Your account',
+  'settings.security.incorrectPassword': 'Incorrect password',
   'settings.subtitle': 'Manage your account and customize your Tayyibt experience',
   'settings.title': 'Settings',
+  'legal.backToRegistration': 'Back to registration',
   // chat.* -- wave 2, added for #234/#183/#66
   'chat.deepLinkError': 'Couldn\'t open the conversation. Please try again',
   'chat.list.empty': 'No conversations yet',
@@ -1170,6 +1251,11 @@ const en: Dict = {
   'notifications.tabLikes': 'Likes',
   'notifications.tabMentions': 'Mentions',
   'notifications.tabUnread': 'Unread',
+  // notifications action buttons -- #401/#404
+  'notifications.accept': 'Accept',
+  'notifications.reject': 'Reject',
+  'notifications.accepted': 'Accepted',
+  'notifications.rejected': 'Rejected',
   // profileEdit.* -- wave 2, added for #234/#183/#66
   'profileEdit.error.genderRequired': 'Please select a gender',
   'profileEdit.error.invalidAge': 'Please enter a valid age (18-99)',
@@ -1365,6 +1451,14 @@ const en: Dict = {
   'settings.account.section.notifications.desc': 'Set your notification preferences',
   'settings.account.section.profile.title': 'Profile',
   'settings.account.section.profile.desc': 'Edit your photo and personal information',
+  // storyViewer.* -- added for #415 (delete story option)
+  'storyViewer.menu.delete': 'Delete Story',
+  'storyViewer.deleteConfirm.title': 'Delete Story',
+  'storyViewer.deleteConfirm.message': 'Are you sure you want to delete this story? This action cannot be undone.',
+  'storyViewer.deleteConfirm.cancel': 'Cancel',
+  'storyViewer.deleteConfirm.confirm': 'Delete',
+  'storyViewer.deleteSuccess': 'Story deleted',
+  'storyViewer.deleteError': "Couldn't delete the story",
 };
 
 // Urdu, Turkish, Indonesian, Malay, French — the other locales the language

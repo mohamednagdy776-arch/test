@@ -341,9 +341,11 @@ export const RegisterForm = () => {
           className="w-5 h-5 mt-0.5 rounded-lg border-[#D1D5DB] text-[#10B981] focus:ring-[#10B981] focus:ring-offset-0" />
         <span className="text-sm text-[#6B7280]">
           أوافق على{' '}
-          <Link href="/terms" className="text-[#10B981] hover:text-[#059669] font-medium transition-colors">الشروط والأحكام</Link>
+          {/* ?from=register lets /terms and /privacy show a way back into this
+              in-progress signup instead of only "back to home" (#389). */}
+          <Link href="/terms?from=register" className="text-[#10B981] hover:text-[#059669] font-medium transition-colors">الشروط والأحكام</Link>
           {' '}و{' '}
-          <Link href="/privacy" className="text-[#10B981] hover:text-[#059669] font-medium transition-colors">سياسة الخصوصية</Link>
+          <Link href="/privacy?from=register" className="text-[#10B981] hover:text-[#059669] font-medium transition-colors">سياسة الخصوصية</Link>
         </span>
       </label>
       <button type="submit" disabled={loading}

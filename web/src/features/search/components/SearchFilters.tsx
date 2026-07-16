@@ -131,8 +131,14 @@ export const SearchFilters = ({ filters, onChange, onReset, onSearch, activeTab 
 
   const postsFields = (
     <>
+      {/* No path in this app lets a user create a post whose postType actually
+          becomes 'video' -- PostComposer never sends postType:'video' (only
+          poll/link are set explicitly; a post with an attached video file
+          still defaults to postType TEXT), so this option could never match
+          anything in search results (#393). Video content is reachable via
+          the separate Watch/Reels features instead. */}
       {sel('postType', 'نوع المنشور', [
-        ['text', 'نصي'], ['image', 'صورة'], ['video', 'فيديو'],
+        ['text', 'نصي'], ['image', 'صورة'],
       ])}
       {dateInp('postDateFrom', 'من تاريخ')}
       {dateInp('postDateTo', 'إلى تاريخ')}

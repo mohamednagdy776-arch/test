@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from './entities/post.entity';
 import { Story, StoryView, StoryHighlight, StoryReaction, SavedPost, PostReport, HiddenPost } from './entities/story.entity';
+import { Follow } from '../follows/entities/follow.entity';
 import { PostsService } from './services/posts.service';
 import { FeedService } from './services/feed.service';
 import { StoriesService } from './services/stories.service';
@@ -15,7 +16,7 @@ import { SettingsModule } from '../settings/settings.module';
 import { LinkPreviewModule } from '../link-preview/link-preview.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, StoryReaction, SavedPost, PostReport, HiddenPost]), NotificationsModule, SettingsModule, LinkPreviewModule],
+  imports: [TypeOrmModule.forFeature([Post, Story, StoryView, StoryHighlight, StoryReaction, SavedPost, PostReport, HiddenPost, Follow]), NotificationsModule, SettingsModule, LinkPreviewModule],
   providers: [PostsService, FeedService, StoriesService],
   controllers: [PostsController, AdminPostsController, FeedController, StoriesController, UploadController],
   exports: [PostsService, StoriesService],

@@ -63,8 +63,9 @@ export class StoriesController {
   @Get('stories/:id')
   async getStory(@CurrentUser() user: User, @Param('id') storyId: string) {
     // Story-reaction notifications link here directly -- there was previously
-    // no way to open a single story by id at all (#363).
-    const story = await this.storiesService.getStoryById(storyId);
+    // no way to open a single story by id at all (#363). Enforces the same
+    // followers-only visibility as GET /stories (#423).
+    const story = await this.storiesService.getStoryById(storyId, user.id);
     return ok(story, 'Story retrieved');
   }
 

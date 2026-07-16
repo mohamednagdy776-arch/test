@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
 import { Modal } from '@/components/ui/Modal';
+import { useT } from '@/i18n/I18nProvider';
 import QRCode from 'react-qr-code';
 
 interface Session {
@@ -22,6 +23,7 @@ interface Session {
 }
 
 export default function SecurityPage() {
+  const { t } = useT();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
   const [revoking, setRevoking] = useState<string | null>(null);
@@ -196,7 +198,19 @@ export default function SecurityPage() {
       // `alerts` list -- an error pushed there was invisible while the modal
       // stayed open, so a wrong password looked like a silent no-op (#286).
       // Show it inside the modal itself instead.
-      setDeleteError(err?.response?.data?.message || 'فشل حذف الحساب، حاول مرة أخرى');
+      const backendMessage = err?.response?.data?.message;
+      // The backend throws a hardcoded English literal for this one case
+      // (auth.service.ts deleteAccount -> 'Incorrect password') and no
+      // machine-readable error-code convention exists anywhere else in this
+      // backend to key off instead, so surfacing raw backend text showed
+      // untranslated English in the Arabic UI (#432). Pattern-match the known
+      // string and swap in a translated message; anything else still falls
+      // back to showing the backend's message as before.
+      setDeleteError(
+        backendMessage === 'Incorrect password'
+          ? t('settings.security.incorrectPassword')
+          : backendMessage || 'فشل حذف الحساب، حاول مرة أخرى',
+      );
     } finally {
       setDeleteLoading(false);
     }

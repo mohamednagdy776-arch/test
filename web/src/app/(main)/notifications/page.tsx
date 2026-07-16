@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Bell, Checks } from '@phosphor-icons/react';
 import { useT } from '@/i18n/I18nProvider';
 
-type Tab = 'all' | 'unread' | 'mentions' | 'likes' | 'comments';
+type Tab = 'all' | 'unread' | 'likes' | 'comments';
 
 export default function NotificationsPage() {
   const { t } = useT();
@@ -17,7 +17,7 @@ export default function NotificationsPage() {
   // Load-more pagination: bump the page size on demand instead of being stuck
   // on the first 20 with no way to see older notifications (#451).
   const [limit, setLimit] = useState(20);
-  const serverType = activeTab === 'likes' ? 'like' : activeTab === 'comments' ? 'comment' : activeTab === 'mentions' ? 'mention' : undefined;
+  const serverType = activeTab === 'likes' ? 'like' : activeTab === 'comments' ? 'comment' : undefined;
   const { data, isLoading } = useNotifications(1, limit, serverType);
   const { data: unreadData } = useUnreadCount();
   const markAsRead = useMarkAsRead();
@@ -37,7 +37,6 @@ export default function NotificationsPage() {
     { id: 'unread', label: t('notifications.tabUnread'), count: unreadCount },
     { id: 'likes', label: t('notifications.tabLikes') },
     { id: 'comments', label: t('notifications.tabComments') },
-    { id: 'mentions', label: t('notifications.tabMentions') },
   ];
 
   return (

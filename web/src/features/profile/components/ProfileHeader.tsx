@@ -11,6 +11,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { resolveMediaUrl } from '@/lib/media';
 import { useT } from '@/i18n/I18nProvider';
+import { useStories } from '@/features/posts/hooks';
 
 interface FriendshipStatus {
   status: 'none' | 'pending' | 'accepted' | 'declined' | 'blocked';
@@ -68,6 +69,15 @@ export const ProfileHeader = ({
   // an instant, irreversible unfriend with no confirmation prompt at all (#331).
   const [showUnfriendConfirm, setShowUnfriendConfirm] = useState(false);
   const [showBlockConfirm, setShowBlockConfirm] = useState(false);
+
+  // Story ring around the avatar when this profile's owner has an active
+  // (non-expired, <24h) story (#424) -- reuses the exact same query the
+  // dashboard's story rail (PostFeed.tsx's StoriesBar) already uses, so the
+  // two surfaces never disagree about who currently has a story.
+  const { data: activeStoriesData } = useStories();
+  const hasActiveStory = !!profile?.userId && (activeStoriesData?.data || []).some(
+    (group: any) => group.user?.id === profile.userId,
+  );
 
   useEffect(() => {
     if (!lightboxImage) return;
@@ -267,8 +277,15 @@ export const ProfileHeader = ({
             column got squeezed to almost nothing (#312). Stack vertically
             below sm, row layout from sm up. */}
         <div className="flex flex-col sm:flex-row sm:items-start gap-5 -mt-14 relative">
-          {/* Avatar with enhanced styling */}
-          <div className="relative shrink-0 group">
+          {/* Avatar with enhanced styling. When the profile owner has an
+              active story, a gradient ring (matching the dashboard story
+              rail's ring, #424) wraps the existing card-colored ring so it
+              reads the same way an Instagram-style "has story" indicator
+              does -- gradient ring, gap, then the avatar. */}
+          <div
+            className={`relative shrink-0 group rounded-full ${hasActiveStory ? 'p-[3px]' : ''}`}
+            style={hasActiveStory ? { background: 'linear-gradient(135deg, var(--primary), var(--secondary), var(--accent))' } : undefined}
+          >
             <div
               className={`relative h-28 w-28 rounded-full overflow-hidden bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center ring-4 ring-[var(--card)] shadow-glow-lg transition-all duration-300 hover:scale-105 hover:shadow-glow-primary ${mediaUrl(profile.avatarUrl) || isSelf ? 'cursor-pointer' : ''}`}
               onClick={() => {
@@ -284,6 +301,14 @@ export const ProfileHeader = ({
                 </span>
               )}
             </div>
+            {/* Siblings of the inner circle, not children of it -- the inner
+                circle has overflow-hidden (for the round crop), which would
+                clip these edge-straddling buttons if they were nested inside
+                it. They stay anchored to the outer wrapper's edge, which only
+                differs from the inner circle's edge by the 3px story-ring
+                padding on profiles with an active story (#424) -- a
+                negligible visual offset, and safer than clipping the buttons
+                entirely. */}
             {isSelf && (
               <>
                 <button

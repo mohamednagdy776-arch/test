@@ -35,16 +35,22 @@ const FAQS = [
 
 export default function FaqPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#F0FDF4] to-white py-12 px-4">
-      <article className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-sm" dir="rtl">
-        <Link href="/settings/help" className="text-sm text-emerald-600 hover:underline">← العودة للمساعدة</Link>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900">الأسئلة الشائعة</h1>
-        <p className="mt-1 text-sm text-gray-500">إجابات سريعة على أكثر الأسئلة تكراراً</p>
+    // This route (and /guide) lives outside the (main) route group, but
+    // ThemeProvider is actually mounted app-wide in web/src/store/providers.tsx
+    // (it sets data-theme on <html>), so every route already has access to the
+    // theme CSS variables -- this page just needed to use them instead of
+    // hardcoded light-only Tailwind colors, which always rendered light
+    // regardless of the user's chosen theme (#394).
+    <main className="min-h-screen py-12 px-4" style={{ background: 'var(--background)' }}>
+      <article className="mx-auto max-w-3xl rounded-3xl p-8 shadow-sm" style={{ background: 'var(--card)' }} dir="rtl">
+        <Link href="/settings/help" className="text-sm hover:underline" style={{ color: 'var(--primary)' }}>← العودة للمساعدة</Link>
+        <h1 className="mt-4 text-3xl font-bold" style={{ color: 'var(--foreground)' }}>الأسئلة الشائعة</h1>
+        <p className="mt-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>إجابات سريعة على أكثر الأسئلة تكراراً</p>
 
-        <section className="mt-8 space-y-6 text-gray-700 leading-relaxed">
+        <section className="mt-8 space-y-6 leading-relaxed" style={{ color: 'var(--card-foreground)' }}>
           {FAQS.map((item) => (
             <div key={item.q}>
-              <h2 className="text-lg font-semibold text-gray-900">{item.q}</h2>
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>{item.q}</h2>
               <p className="mt-1">{item.a}</p>
             </div>
           ))}

@@ -7,7 +7,31 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { PlayCircle, Fire, Users, Clock, Plus } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { resolveMediaUrl } from '@/lib/media';
+
+// Suggested/grid video thumbnails had no error fallback -- a broken or
+// unresolved thumbnail URL just rendered the raw `alt` text in place of the
+// image (#396). Falls back to the same PlayCircle placeholder already used
+// for videos with no thumbnail at all.
+function VideoThumb({ src, alt }: { src?: string | null; alt: string }) {
+  const [errored, setErrored] = useState(false);
+
+  if (!src || errored) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <PlayCircle size={40} className="opacity-30" style={{ color: 'var(--muted-foreground)' }} />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full h-full object-cover"
+      onError={() => setErrored(true)}
+    />
+  );
+}
 
 function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
   const [isHovered, setIsHovered] = useState(false);
@@ -40,13 +64,12 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
     >
       {/* Thumbnail */}
       <div className="relative aspect-video" style={{ backgroundColor: 'var(--muted)' }}>
-        {video.thumbnail ? (
-          <img src={resolveMediaUrl(video.thumbnail) ?? ''} alt={video.title} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <PlayCircle size={40} className="opacity-30" style={{ color: 'var(--muted-foreground)' }} />
-          </div>
-        )}
+        {/* .thumbnailUrl is already a full, resolved CDN URL from the backend
+            (see the #274 note in watch/[id]/page.tsx) -- resolveMediaUrl()
+            re-anchors relative paths onto the API origin, not the CDN, so
+            running the raw `.thumbnail` key through it here produced a
+            broken URL that always fell through to onError (#396). */}
+        <VideoThumb src={video.thumbnailUrl} alt={video.title} />
 
         <div
           className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded text-[11px] font-medium text-white"
@@ -80,7 +103,11 @@ function VideoCard({ video, onPlay }: { video: any; onPlay?: () => void }) {
           horizontally-scrolling row (#75). */}
       <div className="p-3 flex-1 flex flex-col">
         <div className="flex gap-3">
-          <Avatar src={video.user?.avatar} name={video.user?.name || 'م'} size="md" />
+          {/* The API returns the uploader's avatar as `user.avatarUrl` (see
+              VideosService.format() in the backend) -- `user.avatar` doesn't
+              exist on the response, so this always fell back to the default
+              initials avatar even when the uploader had a real photo (#426). */}
+          <Avatar src={video.user?.avatarUrl} name={video.user?.name || 'م'} size="md" />
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm line-clamp-2 mb-0.5" style={{ color: 'var(--foreground)' }}>
               {video.title}

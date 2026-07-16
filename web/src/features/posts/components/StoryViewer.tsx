@@ -3,13 +3,14 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { useViewStory, useStoryViewers, useReactToStory } from '../hooks';
+import { useViewStory, useStoryViewers, useReactToStory, useDeleteStory } from '../hooks';
 import { cn, displayName } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
 import { useToast } from '@/components/ui/Toast';
 import { apiClient } from '@/lib/api-client';
 import { chatApi } from '@/features/chat/api';
 import { savedPostsApi } from '@/features/memories/api';
+import { useT } from '@/i18n/I18nProvider';
 
 const QUICK_REACTIONS = ['❤️', '😍', '😂', '😮', '😢', '👏', '🔥'];
 
@@ -19,7 +20,7 @@ function resolveMedia(url?: string): string | undefined {
 
 interface StoryItem {
   id: string;
-  user: { id: string; username?: string; profile?: { fullName?: string }; email?: string };
+  user: { id: string; username?: string; profile?: { fullName?: string; avatarUrl?: string }; email?: string };
   mediaUrl?: string;
   mediaType?: string;
   text?: string;
@@ -30,7 +31,7 @@ interface StoryItem {
 }
 
 interface StoryGroup {
-  user: { id: string; username?: string; profile?: { fullName?: string }; email?: string };
+  user: { id: string; username?: string; profile?: { fullName?: string; avatarUrl?: string }; email?: string };
   stories: StoryItem[];
 }
 
@@ -41,12 +42,14 @@ interface StoryViewerProps {
 }
 
 export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerProps) {
+  const { t } = useT();
   const [userIndex, setUserIndex] = useState(initialUserIndex);
   const [storyIndex, setStoryIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [showViewers, setShowViewers] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [replyText, setReplyText] = useState('');
   const [replyFocused, setReplyFocused] = useState(false);
   const [sendingReply, setSendingReply] = useState(false);
@@ -56,6 +59,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   const viewStory = useViewStory();
   const { data: viewersData } = useStoryViewers(currentStory?.id || '');
   const reactToStory = useReactToStory();
+  const deleteStory = useDeleteStory();
   const { showToast } = useToast() as any;
   const viewers = viewersData?.data || [];
 
@@ -148,8 +152,25 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   }, [currentStory?.id]);
 
   useEffect(() => {
-    setIsPaused(showViewers || showMenu || replyFocused);
-  }, [showViewers, showMenu, replyFocused]);
+    setIsPaused(showViewers || showMenu || showDeleteConfirm || replyFocused);
+  }, [showViewers, showMenu, showDeleteConfirm, replyFocused]);
+
+  // Delete the current story (owner-only, #415). Closes the whole viewer on
+  // success since the story it was showing no longer exists.
+  const handleDeleteStory = () => {
+    if (!currentStory?.id) return;
+    deleteStory.mutate(currentStory.id, {
+      onSuccess: () => {
+        showToast(t('storyViewer.deleteSuccess'), 'success');
+        setShowDeleteConfirm(false);
+        onClose();
+      },
+      onError: () => {
+        showToast(t('storyViewer.deleteError'), 'error');
+        setShowDeleteConfirm(false);
+      },
+    });
+  };
 
   // Clear any half-typed reply when moving to a different person's stories.
   useEffect(() => { setReplyText(''); }, [userIndex]);
@@ -188,6 +209,7 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
   }, [onClose, goNext, goPrev]);
 
   const userName = displayName(currentUser?.user);
+  const authorAvatar = resolveMedia(currentUser?.user?.profile?.avatarUrl);
   const minutesAgo = Math.floor((Date.now() - new Date(currentStory?.createdAt).getTime()) / 60000);
   const timeLabel =
     minutesAgo < 1    ? 'الآن'
@@ -335,10 +357,17 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
               href={profileHref}
               onClick={onClose}
               aria-label={`عرض الملف الشخصي لـ ${userName}`}
-              className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ring-2 ring-white/70 hover:ring-white transition-all"
+              className="h-9 w-9 rounded-full overflow-hidden flex items-center justify-center text-sm font-bold text-white flex-shrink-0 ring-2 ring-white/70 hover:ring-white transition-all"
               style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}
             >
-              {userName.charAt(0)}
+              {/* Real profile picture, falling back to the name initial only
+                  when no picture exists (#422) -- this used to always render
+                  the initial, ignoring the author's actual avatar. */}
+              {authorAvatar ? (
+                <img src={authorAvatar} alt={userName} className="h-full w-full object-cover" />
+              ) : (
+                userName.charAt(0)
+              )}
             </Link>
             <div className="flex-1 min-w-0">
               <Link
@@ -407,6 +436,19 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                     </svg>
                     إضافة للمحفوظات
                   </button>
+                  {/* Delete Story — owner-only (#415). Requires confirmation
+                      since deletion is irreversible. */}
+                  {isOwnStory && (
+                    <button
+                      onClick={() => { setShowDeleteConfirm(true); setShowMenu(false); }}
+                      className="w-full px-4 py-2.5 text-right text-sm text-red-400 hover:bg-white/10 flex items-center gap-2.5 transition-colors"
+                    >
+                      <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                      </svg>
+                      {t('storyViewer.menu.delete')}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -508,6 +550,33 @@ export function StoryViewer({ stories, initialUserIndex, onClose }: StoryViewerP
                   </div>
                 ))
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation (#415) — z-40 so it sits above the viewers sheet
+          (z-30) and the 3-dot menu (z-30 within the header). */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center p-4" dir="rtl">
+          <div className="absolute inset-0 bg-black/60" onClick={() => setShowDeleteConfirm(false)} />
+          <div className="relative w-full max-w-xs bg-[#1a2a3a] rounded-2xl border border-white/10 shadow-2xl p-5">
+            <h3 className="text-sm font-bold text-white mb-2">{t('storyViewer.deleteConfirm.title')}</h3>
+            <p className="text-sm text-white/60 mb-5">{t('storyViewer.deleteConfirm.message')}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 rounded-xl border border-white/15 px-4 py-2.5 text-sm font-semibold text-white/80 hover:bg-white/10 transition-colors"
+              >
+                {t('storyViewer.deleteConfirm.cancel')}
+              </button>
+              <button
+                onClick={handleDeleteStory}
+                disabled={deleteStory.isPending}
+                className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+              >
+                {t('storyViewer.deleteConfirm.confirm')}
+              </button>
             </div>
           </div>
         </div>

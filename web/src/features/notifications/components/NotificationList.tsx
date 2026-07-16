@@ -1,11 +1,15 @@
 'use client';
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
+import { useT } from '@/i18n/I18nProvider';
+import { apiClient } from '@/lib/api-client';
+import { usePhotoAccessRequests, useRespondToPhotoAccessRequest } from '@/features/settings/hooks';
 import {
   UserPlus, CheckCircle, Heart, ChatCircle, Tag, ShareNetwork,
-  Megaphone, Cake, UsersThree, Bell, X, UserCircle,
+  Megaphone, Cake, UsersThree, Bell, X, UserCircle, Image as ImageIcon, Shield,
 } from '@phosphor-icons/react';
 
 interface Notification {
@@ -39,6 +43,10 @@ const TYPE_CONFIG: Record<string, { icon: React.ElementType; bg: string; fg: str
   mention:         { icon: Megaphone,    bg: 'bg-yellow-100', fg: 'text-yellow-600' },
   birthday:        { icon: Cake,         bg: 'bg-pink-100',   fg: 'text-pink-500'   },
   group_invite:    { icon: UsersThree,   bg: 'bg-teal-100',   fg: 'text-teal-600'   },
+  // #401/#404 -- these two types previously had no icon config and, more
+  // importantly, no Accept/Reject actions rendered anywhere below.
+  photo_access_request: { icon: ImageIcon, bg: 'bg-indigo-100', fg: 'text-indigo-600' },
+  family_invite:         { icon: Shield,    bg: 'bg-amber-100',  fg: 'text-amber-600'  },
 };
 const DEFAULT_TYPE = { icon: Bell, bg: 'bg-[var(--muted)]', fg: 'text-[var(--muted-foreground)]' };
 
@@ -49,6 +57,50 @@ function NotifIcon({ type }: { type: string }) {
   return (
     <div className={cn('h-9 w-9 rounded-full flex items-center justify-center shrink-0', cfg.bg)}>
       <Icon size={18} weight={isDefault ? 'regular' : 'fill'} className={cfg.fg} />
+    </div>
+  );
+}
+
+// #401/#404 -- shared Accept/Reject row for notification types that need a
+// user decision (photo-view requests, guardian invitations). Once actioned,
+// swaps to a small "Accepted"/"Rejected" label instead of round-tripping a
+// page refresh to reflect the new state.
+function NotificationActions({
+  status,
+  pending,
+  onAccept,
+  onReject,
+  t,
+}: {
+  status?: 'accepted' | 'rejected';
+  pending: boolean;
+  onAccept: () => void;
+  onReject: () => void;
+  t: (key: string) => string;
+}) {
+  if (status) {
+    return (
+      <p className="text-xs mt-2 font-medium text-[var(--muted-foreground)]">
+        {status === 'accepted' ? t('notifications.accepted') : t('notifications.rejected')}
+      </p>
+    );
+  }
+  return (
+    <div className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+      <button
+        onClick={onAccept}
+        disabled={pending}
+        className="px-3 py-1.5 rounded-lg bg-[var(--primary)] text-[var(--card)] text-xs font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+      >
+        {t('notifications.accept')}
+      </button>
+      <button
+        onClick={onReject}
+        disabled={pending}
+        className="px-3 py-1.5 rounded-lg border border-[var(--border)] text-xs font-semibold text-[var(--muted-foreground)] hover:bg-[var(--muted)] transition-colors disabled:opacity-50"
+      >
+        {t('notifications.reject')}
+      </button>
     </div>
   );
 }
@@ -111,9 +163,52 @@ function groupByDate(notifications: Notification[]) {
 
 export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead, onDelete }: NotificationListProps) {
   const router = useRouter();
+  const { t } = useT();
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  // #401/#404 -- tracks per-notification Accept/Reject outcome so the row can
+  // update in place instead of requiring a page refresh.
+  const [actioned, setActioned] = React.useState<Record<string, 'accepted' | 'rejected'>>({});
   const unreadCount = notifications.filter((n) => !n.readStatus).length;
   const groups = groupByDate(notifications);
+
+  // Photo-access-request notifications only carry the requester's user id
+  // (entityId/fromUser.id), not the PhotoAccessRequest id the respond
+  // endpoint (PATCH /photo-requests/:id) actually needs, so the pending list
+  // has to be cross-referenced by requester id here.
+  const { data: photoRequestsData } = usePhotoAccessRequests();
+  const pendingPhotoRequests = ((photoRequestsData?.data as any[]) || []) as any[];
+  const respondPhoto = useRespondToPhotoAccessRequest();
+
+  // Guardian invitations carry the FamilyRelationship id directly as
+  // entityId, matching /family/invitation/:id/accept and
+  // /family/relationship/:id (used as "reject" -- there's no dedicated
+  // reject endpoint, same pattern the family page already uses).
+  const acceptFamilyInvite = useMutation({
+    mutationFn: (relationshipId: string) =>
+      apiClient.patch(`/family/invitation/${relationshipId}/accept`).then((r) => r.data),
+  });
+  const rejectFamilyInvite = useMutation({
+    mutationFn: (relationshipId: string) =>
+      apiClient.delete(`/family/relationship/${relationshipId}`).then((r) => r.data),
+  });
+
+  const handlePhotoDecision = (n: Notification, approve: boolean) => {
+    const requesterId = n.entityId || n.fromUser?.id;
+    const req = pendingPhotoRequests.find((r) => r.user?.id === requesterId);
+    if (!req) return;
+    respondPhoto.mutate(
+      { requestId: req.id, approve },
+      { onSuccess: () => setActioned((s) => ({ ...s, [n.id]: approve ? 'accepted' : 'rejected' })) },
+    );
+  };
+
+  const handleFamilyDecision = (n: Notification, approve: boolean) => {
+    if (!n.entityId) return;
+    const mutation = approve ? acceptFamilyInvite : rejectFamilyInvite;
+    mutation.mutate(n.entityId, {
+      onSuccess: () => setActioned((s) => ({ ...s, [n.id]: approve ? 'accepted' : 'rejected' })),
+    });
+  };
 
   const handleClick = (n: Notification) => {
     if (!n.readStatus) onMarkAsRead(n.id);
@@ -198,6 +293,24 @@ export function NotificationList({ notifications, onMarkAsRead, onMarkAllAsRead,
                       )}
                     </p>
                     <p className="text-[11px] text-[var(--muted-foreground)] mt-0.5">{timeAgo(n.createdAt)}</p>
+                    {n.type === 'photo_access_request' && (
+                      <NotificationActions
+                        status={actioned[n.id]}
+                        pending={respondPhoto.isPending}
+                        onAccept={() => handlePhotoDecision(n, true)}
+                        onReject={() => handlePhotoDecision(n, false)}
+                        t={t}
+                      />
+                    )}
+                    {n.type === 'family_invite' && (
+                      <NotificationActions
+                        status={actioned[n.id]}
+                        pending={acceptFamilyInvite.isPending || rejectFamilyInvite.isPending}
+                        onAccept={() => handleFamilyDecision(n, true)}
+                        onReject={() => handleFamilyDecision(n, false)}
+                        t={t}
+                      />
+                    )}
                   </div>
 
                   {/* Delete */}

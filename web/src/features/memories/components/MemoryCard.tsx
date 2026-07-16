@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import { formatDistanceToNow } from '@/lib/utils';
 import { resolveMediaUrl } from '@/lib/media';
@@ -9,23 +12,45 @@ interface MemoryCardProps {
 }
 
 export function MemoryCard({ memory, onClick }: MemoryCardProps) {
+  const [mediaErrored, setMediaErrored] = useState(false);
+  const resolvedSrc = resolveMediaUrl(memory.mediaUrl);
+  const showPlaceholder = mediaErrored || !resolvedSrc;
+
   return (
-    <div 
+    <div
       className="relative rounded-lg overflow-hidden cursor-pointer group"
       onClick={onClick}
     >
-      <div className="aspect-square relative">
-        {memory.mediaType === 'image' ? (
+      <div className="aspect-square relative bg-[var(--muted)]">
+        {showPlaceholder ? (
+          // No fallback existed at all -- a failed/missing media URL (or a
+          // video whose element errors, e.g. an unsupported codec) rendered
+          // a blank box instead of a placeholder (#420).
+          <div className="w-full h-full flex items-center justify-center text-3xl">
+            {memory.mediaType === 'video' ? '🎬' : '🖼️'}
+          </div>
+        ) : memory.mediaType === 'image' ? (
           <Image
-            src={resolveMediaUrl(memory.mediaUrl) ?? ''}
+            src={resolvedSrc ?? ''}
             alt={memory.title}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={() => setMediaErrored(true)}
           />
         ) : (
+          // This endpoint has no separate poster/thumbnail field -- only the
+          // raw `mediaUrl` -- so videos are pointed at a <video> element
+          // rather than <Image>, which can't decode a video file at all.
+          // `preload="metadata"` + `muted`/`playsInline` make the browser
+          // actually paint the first frame as a static thumbnail instead of
+          // leaving the box blank until playback starts (#420).
           <video
-            src={resolveMediaUrl(memory.mediaUrl) ?? ''}
+            src={resolvedSrc ?? ''}
+            preload="metadata"
+            muted
+            playsInline
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={() => setMediaErrored(true)}
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />

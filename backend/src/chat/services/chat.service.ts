@@ -458,7 +458,16 @@ export class ChatService {
     // initiator is a friend but NOT a matched user. An accepted match already
     // represents mutual consent, so the target's "friends only" privacy
     // setting must not block a matched pair from opening a conversation.
-    if (!isMatched) {
+    // Also skip it for context === 'story_reply' (#419): the relationship
+    // gate above already special-cases that context to bypass the "who can
+    // message you" setting entirely (replying to a story you can already see
+    // shouldn't additionally require being matched/friends, #104) -- but this
+    // second, unconditional call re-ran the exact same privacy check
+    // regardless of context, silently re-imposing the gate the block above
+    // had just waived and making every story reply to a non-friend (the
+    // common case, since the default "who can message you" setting is
+    // 'friends') fail with a generic ForbiddenException.
+    if (!isMatched && context !== 'story_reply') {
       await this.assertCanMessage(userId, targetUserId);
     }
 

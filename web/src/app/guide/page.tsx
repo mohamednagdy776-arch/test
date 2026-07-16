@@ -31,16 +31,19 @@ const STEPS = [
 
 export default function GuidePage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#F0FDF4] to-white py-12 px-4">
-      <article className="mx-auto max-w-3xl rounded-3xl bg-white p-8 shadow-sm" dir="rtl">
-        <Link href="/settings/help" className="text-sm text-emerald-600 hover:underline">← العودة للمساعدة</Link>
-        <h1 className="mt-4 text-3xl font-bold text-gray-900">كيفية استخدام طيبت</h1>
-        <p className="mt-1 text-sm text-gray-500">دليل سريع للبدء</p>
+    // See faq/page.tsx: ThemeProvider is global (mounted in
+    // web/src/store/providers.tsx), this page just needed to use the theme
+    // CSS variables instead of hardcoded light colors (#395).
+    <main className="min-h-screen py-12 px-4" style={{ background: 'var(--background)' }}>
+      <article className="mx-auto max-w-3xl rounded-3xl p-8 shadow-sm" style={{ background: 'var(--card)' }} dir="rtl">
+        <Link href="/settings/help" className="text-sm hover:underline" style={{ color: 'var(--primary)' }}>← العودة للمساعدة</Link>
+        <h1 className="mt-4 text-3xl font-bold" style={{ color: 'var(--foreground)' }}>كيفية استخدام طيبت</h1>
+        <p className="mt-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>دليل سريع للبدء</p>
 
-        <section className="mt-8 space-y-6 text-gray-700 leading-relaxed">
+        <section className="mt-8 space-y-6 leading-relaxed" style={{ color: 'var(--card-foreground)' }}>
           {STEPS.map((step) => (
             <div key={step.title}>
-              <h2 className="text-lg font-semibold text-gray-900">{step.title}</h2>
+              <h2 className="text-lg font-semibold" style={{ color: 'var(--foreground)' }}>{step.title}</h2>
               <p className="mt-1">{step.body}</p>
             </div>
           ))}

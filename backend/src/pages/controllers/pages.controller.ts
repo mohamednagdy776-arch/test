@@ -105,9 +105,13 @@ export class PagesController {
     return ok(page, 'Page updated');
   }
 
+  // `category` isn't a PaginationDto field, so it has to be bound with its
+  // own @Query() decorator -- the global ValidationPipe's whitelist:true
+  // silently strips any query param not declared on the DTO, and even if it
+  // got through, findAll() below never accepted or filtered on it (#408).
   @Get()
-  async findAll(@Query() query: PaginationDto) {
-    const { data, total } = await this.pagesService.findAll(query.page!, query.limit!);
+  async findAll(@Query() query: PaginationDto, @Query('category') category?: string) {
+    const { data, total } = await this.pagesService.findAll(query.page!, query.limit!, category);
     return paginated(data, total, query.page!, query.limit!);
   }
 

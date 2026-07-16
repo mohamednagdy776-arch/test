@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useVideo, useVideoComments, useAddVideoComment, useUpdateVideoComment, useDeleteVideoComment, useVideoReactions, useReactToVideo, useRecommendedVideos } from '@/features/videos/hooks';
@@ -366,7 +367,19 @@ function CommentsSection({ videoId }: { videoId: string }) {
               <Avatar src={c.user?.avatarUrl} name={c.user?.name} size="sm" />
               <div className="flex-1 rounded-2xl bg-[var(--muted)] border border-[var(--border)] px-4 py-3">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-xs font-semibold text-[var(--foreground)] mb-1">{c.user?.name ?? 'مستخدم'}</p>
+                  {/* Commenter name was plain text with no way to reach their
+                      profile -- matches the `/${username}` link pattern used
+                      for post comments in PostCard (#439). */}
+                  {c.user?.id ? (
+                    <Link
+                      href={c.user?.username ? `/${c.user.username}` : `/profile/${c.user.id}`}
+                      className="text-xs font-semibold text-[var(--foreground)] mb-1 hover:underline"
+                    >
+                      {c.user?.name ?? 'مستخدم'}
+                    </Link>
+                  ) : (
+                    <p className="text-xs font-semibold text-[var(--foreground)] mb-1">{c.user?.name ?? 'مستخدم'}</p>
+                  )}
                   {/* No edit/delete existed for video comments at all (#303). */}
                   {c.user?.id === myUserId && editingId !== c.id && (
                     <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
@@ -402,6 +415,27 @@ function CommentsSection({ videoId }: { videoId: string }) {
   );
 }
 
+// Suggested-video thumbnails had no error fallback -- a broken/unresolved
+// thumbnail URL just rendered the raw `alt` text instead of a placeholder
+// (#396). Mirrors the 🎬 fallback already used here for videos with no
+// thumbnailUrl at all.
+function SidebarThumb({ src, alt }: { src?: string | null; alt: string }) {
+  const [errored, setErrored] = useState(false);
+
+  if (!src || errored) {
+    return <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>;
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full h-full object-cover"
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
 function RecommendedSidebar({ currentId }: { currentId: string }) {
   const router = useRouter();
   const { data, isLoading } = useRecommendedVideos();
@@ -427,12 +461,7 @@ function RecommendedSidebar({ currentId }: { currentId: string }) {
           className="flex gap-3 cursor-pointer rounded-xl p-2 hover:bg-[var(--muted)] transition-colors"
         >
           <div className="w-28 h-16 shrink-0 rounded-lg bg-[var(--muted)] overflow-hidden">
-            {/* Same wrong-field bug as the main player above (#274). */}
-            {v.thumbnailUrl ? (
-              <img src={v.thumbnailUrl} alt={v.title} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-xl">🎬</div>
-            )}
+            <SidebarThumb src={v.thumbnailUrl} alt={v.title} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold text-[var(--foreground)] line-clamp-2">{v.title}</p>

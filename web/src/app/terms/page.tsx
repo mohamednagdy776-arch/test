@@ -1,6 +1,8 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import { BackToMainLink } from '@/components/layout/BackToMainLink';
+import { BackToRegisterLink } from '@/components/layout/BackToRegisterLink';
 
 export const metadata: Metadata = {
   title: 'شروط الخدمة | Terms of Service — Tayyibt',
@@ -12,6 +14,9 @@ export default function TermsPage() {
     <main className="min-h-screen py-12 px-4" style={{ background: 'var(--background)' }}>
       <article className="mx-auto max-w-3xl rounded-3xl p-8 shadow-sm" style={{ background: 'var(--card)' }} dir="rtl">
         <BackToMainLink />
+        <Suspense fallback={null}>
+          <BackToRegisterLink />
+        </Suspense>
         <h1 className="mt-4 text-3xl font-bold" style={{ color: 'var(--foreground)' }}>شروط الخدمة</h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--muted-foreground)' }}>Terms of Service · آخر تحديث: يونيو 2026</p>
 
