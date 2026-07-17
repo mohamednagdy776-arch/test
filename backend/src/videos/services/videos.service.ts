@@ -97,6 +97,10 @@ export class VideosService {
       // has the stored `thumbnail` key/path, so cards never showed a preview
       // (#74/#76).
       thumbnailUrl: v.thumbnail ? this.cdnService.getThumbnailUrl(v.thumbnail) : null,
+      // Same gap for playback -- the reels/video players read `videoUrl`,
+      // but only the raw `url` key/path was ever spread in, so no reel or
+      // video ever actually played (#433).
+      videoUrl: v.url ? this.cdnService.getVideoUrl(v.url) : null,
       viewCount: v.views ?? 0,
       viewsCount: v.views ?? 0,
       likeCount,
