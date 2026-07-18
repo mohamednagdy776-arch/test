@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import {
   User, ShieldCheck, Lock, Bell, Palette, Globe, SealCheck,
-  Question, Bug, Fingerprint, CaretLeft, IdentificationCard, Envelope, Gear,
+  Question, Bug, Fingerprint, CaretLeft, IdentificationCard, Envelope, Gear, Heart,
 } from '@phosphor-icons/react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { useT } from '@/i18n/I18nProvider';
@@ -48,6 +48,14 @@ const sections = [
     href: '/settings/verification',
     accent: '#B8892A',
     bg: 'color-mix(in srgb, #B8892A 10%, transparent)',
+  },
+  {
+    titleKey: 'settings.section.extendedProfile.title',
+    icon: Heart,
+    descriptionKey: 'settings.section.extendedProfile.description',
+    href: '/settings/extended-profile',
+    accent: '#e11d48',
+    bg: 'color-mix(in srgb, #e11d48 8%, transparent)',
   },
   {
     titleKey: 'settings.section.privacy.title',

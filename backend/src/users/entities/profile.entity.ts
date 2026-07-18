@@ -140,6 +140,35 @@ export class Profile {
   @Column({ name: 'incognito', default: false })
   incognito: boolean;
 
+  // Extended profile — deeper self-description used both for display and as
+  // additional matching signals (interests/skills feed the AI service's
+  // existing "interests" scoring bucket, see MatchingService#profileToAiFields).
+  @Column({ name: 'health_status', nullable: true })
+  healthStatus: string;
+
+  @Column({ name: 'employment_type', nullable: true })
+  employmentType: string;
+
+  // Where the user wants to settle long-term -- distinct from
+  // `preferredCountry`, which describes what they want in a partner.
+  @Column({ name: 'settle_country', nullable: true })
+  settleCountry: string;
+
+  @Column({ name: 'quran_memorization', nullable: true })
+  quranMemorization: string;
+
+  @Column({ name: 'mosque_attendance', nullable: true })
+  mosqueAttendance: string;
+
+  @Column({ name: 'insurance_type', nullable: true })
+  insuranceType: string;
+
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  interests: string[];
+
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  skills: string[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

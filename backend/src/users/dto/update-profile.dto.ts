@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Max, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Max, MaxLength, Min, ValidateIf, ValidateNested } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class UpdateProfileDto {
@@ -44,6 +44,16 @@ export class UpdateProfileDto {
   @IsOptional() @IsString() preferredCountry?: string;
   @IsOptional() @IsBoolean() relocateWilling?: boolean;
   @IsOptional() @IsBoolean() wantsChildren?: boolean;
+
+  // Extended profile
+  @IsOptional() @IsEnum(['healthy', 'has_condition']) healthStatus?: string;
+  @IsOptional() @IsEnum(['employee', 'business_owner', 'retired', 'other']) employmentType?: string;
+  @IsOptional() @IsString() @MaxLength(100) settleCountry?: string;
+  @IsOptional() @IsEnum(['none', 'juz_amma', 'several_juz', 'half_or_more', 'complete']) quranMemorization?: string;
+  @IsOptional() @IsEnum(['rarely', 'friday_only', 'weekly', 'daily']) mosqueAttendance?: string;
+  @IsOptional() @IsEnum(['life', 'health', 'none']) insuranceType?: string;
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) @MaxLength(60, { each: true }) interests?: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) @MaxLength(60, { each: true }) skills?: string[];
 }
 
 export class ProfileWorkDto {

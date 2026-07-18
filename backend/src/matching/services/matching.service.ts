@@ -197,6 +197,13 @@ export class MatchingService {
       wantsChildren: profile.wantsChildren,
       relocateWilling: profile.relocateWilling,
       preferredCountry: profile.preferredCountry,
+      settleCountry: profile.settleCountry,
+      quranMemorization: profile.quranMemorization,
+      // The AI service's `interests` field already drives extract_interests_score
+      // (WEIGHT_INTERESTS) but nothing ever populated it, so that bucket was
+      // always neutral (0.5) for every pair. Extended-profile interests/skills
+      // (see Profile#interests/#skills) are the first real signal for it.
+      interests: [...(profile.interests ?? []), ...(profile.skills ?? [])],
     };
   }
 
@@ -319,6 +326,9 @@ export class MatchingService {
       wantsChildren: profile.wantsChildren,
       relocateWilling: profile.relocateWilling,
       preferredCountry: profile.preferredCountry,
+      settleCountry: profile.settleCountry,
+      quranMemorization: profile.quranMemorization,
+      interests: [...(profile.interests ?? []), ...(profile.skills ?? [])],
       createdAt: profile.createdAt,
     };
   }
@@ -331,12 +341,13 @@ export class MatchingService {
       user_id: profile.userId,
       sect: profile.sect || null,
       prayer_level: this.parsePrayerLevel(profile.prayerLevel),
-      quran_memorization: null, // Not available in profile, default to null
+      quran_memorization: this.parseQuranMemorization(profile.quranMemorization),
       religious_commitment: this.parseReligiousCommitment(profile.religiousCommitment),
       cultural_level: this.parseCulturalLevel(profile.culturalLevel),
       lifestyle_type: profile.lifestyle || null,
-      future_goals: null, // Not available in profile, default to null
-      interests: [], // Not available in profile, default to empty array
+      future_goals: profile.settleCountry || null,
+      // interests already carries skills merged in too, see #profileToAiFields.
+      interests: profile.interests ?? [],
       age: profile.age || null,
       marital_status: profile.maritalStatus || null,
       children_count: profile.childrenCount ?? 0,
@@ -353,6 +364,15 @@ export class MatchingService {
     if (!value) return null;
     const levelMap: Record<string, number> = {
       'never': 0, 'rarely': 1, 'sometimes': 2, 'often': 3, 'daily': 4, 'always': 5,
+    };
+    return levelMap[value.toLowerCase()] ?? null;
+  }
+
+  // ai-service's schema types quran_memorization as an int 0-5, not our enum string.
+  private parseQuranMemorization(value: string | null | undefined): number | null {
+    if (!value) return null;
+    const levelMap: Record<string, number> = {
+      none: 0, juz_amma: 1, several_juz: 2, half_or_more: 4, complete: 5,
     };
     return levelMap[value.toLowerCase()] ?? null;
   }

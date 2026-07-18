@@ -55,3 +55,24 @@ export const financialLevelLabel = makeLabeler({
 export const culturalLevelLabel = makeLabeler({
   low: 'منخفض', medium: 'متوسط', high: 'مرتفع',
 });
+
+export const healthStatusLabel = makeLabeler({
+  healthy: 'سليم', has_condition: 'يعاني من حالة صحية',
+});
+
+export const employmentTypeLabel = makeLabeler({
+  employee: 'موظف', business_owner: 'صاحب عمل', retired: 'متقاعد', other: 'أخرى',
+});
+
+export const quranMemorizationLabel = makeLabeler({
+  none: 'لا يوجد حفظ', juz_amma: 'جزء عمّ', several_juz: 'عدة أجزاء',
+  half_or_more: 'نصف القرآن أو أكثر', complete: 'القرآن كاملاً',
+});
+
+export const mosqueAttendanceLabel = makeLabeler({
+  rarely: 'نادراً', friday_only: 'الجمعة فقط', weekly: 'أسبوعياً', daily: 'يومياً',
+});
+
+export const insuranceTypeLabel = makeLabeler({
+  life: 'تأمين على الحياة', health: 'تأمين صحي', none: 'لا يوجد تأمين',
+});

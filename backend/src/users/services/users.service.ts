@@ -362,6 +362,14 @@ export class UsersService {
       isIdentityVerified: profile.isIdentityVerified ?? false,
       photoVisibility: profile.photoVisibility ?? 'public',
       incognito: profile.incognito ?? false,
+      healthStatus: profile.healthStatus ?? null,
+      employmentType: profile.employmentType ?? null,
+      settleCountry: profile.settleCountry ?? null,
+      quranMemorization: profile.quranMemorization ?? null,
+      mosqueAttendance: profile.mosqueAttendance ?? null,
+      insuranceType: profile.insuranceType ?? null,
+      interests: profile.interests ?? [],
+      skills: profile.skills ?? [],
       createdAt: profile.createdAt,
       // Never returned, so the Security page's post-activation check (which
       // reads this on every fresh load to decide whether to show "Enable
