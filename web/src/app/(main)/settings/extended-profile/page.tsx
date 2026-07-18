@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useMyProfile, useUpdateProfile } from '@/features/profile/hooks';
 import { INTEREST_GROUPS, SKILL_GROUPS, TagGroup } from '@/features/profile/extended-taxonomy';
@@ -9,6 +9,10 @@ import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { useT } from '@/i18n/I18nProvider';
+import { Plus, X } from '@phosphor-icons/react';
+
+const MAX_TAG_LENGTH = 60;
+const MAX_TAGS = 50;
 
 interface EnumField {
   key: 'healthStatus' | 'employmentType' | 'quranMemorization' | 'mosqueAttendance' | 'insuranceType';
@@ -67,6 +71,25 @@ const ENUM_FIELDS: EnumField[] = [
   },
 ];
 
+function TagChip({ tag, active, onClick, removable }: { tag: string; active: boolean; onClick: () => void; removable?: boolean }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-sm border transition-colors"
+      style={{
+        borderColor: active ? 'var(--ring)' : 'var(--border)',
+        background: active ? 'color-mix(in srgb, var(--accent) 15%, var(--card))' : 'var(--card)',
+        color: active ? 'var(--accent)' : 'var(--muted-foreground)',
+        fontWeight: active ? 600 : 400,
+      }}
+    >
+      {tag}
+      {removable && <X size={12} weight="bold" />}
+    </button>
+  );
+}
+
 function TagPicker({ groups, selected, onToggle }: { groups: TagGroup[]; selected: string[]; onToggle: (tag: string) => void }) {
   return (
     <div className="space-y-5">
@@ -74,28 +97,74 @@ function TagPicker({ groups, selected, onToggle }: { groups: TagGroup[]; selecte
         <div key={group.label}>
           <h4 className="text-sm font-semibold mb-2" style={{ color: 'var(--foreground)' }}>{group.label}</h4>
           <div className="flex flex-wrap gap-2">
-            {group.options.map((tag) => {
-              const active = selected.includes(tag);
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => onToggle(tag)}
-                  className="px-3 py-1.5 rounded-full text-sm border transition-colors"
-                  style={{
-                    borderColor: active ? 'var(--ring)' : 'var(--border)',
-                    background: active ? 'color-mix(in srgb, var(--accent) 15%, var(--card))' : 'var(--card)',
-                    color: active ? 'var(--accent)' : 'var(--muted-foreground)',
-                    fontWeight: active ? 600 : 400,
-                  }}
-                >
-                  {tag}
-                </button>
-              );
-            })}
+            {group.options.map((tag) => (
+              <TagChip key={tag} tag={tag} active={selected.includes(tag)} onClick={() => onToggle(tag)} />
+            ))}
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+// Free-text additions (#profile-freeform): the curated taxonomy can't cover
+// every hobby/skill a user might have, so let them type their own instead of
+// being limited to the predefined chip lists.
+function CustomTagSection({
+  label, customTags, onAdd, onRemove, disabled,
+}: {
+  label: string; customTags: string[]; onAdd: (tag: string) => void; onRemove: (tag: string) => void; disabled: boolean;
+}) {
+  const [draft, setDraft] = useState('');
+  const { showToast } = useToast();
+
+  const submit = () => {
+    const value = draft.trim();
+    if (!value) return;
+    if (value.length > MAX_TAG_LENGTH) {
+      showToast(`الحد الأقصى ${MAX_TAG_LENGTH} حرفاً`, 'error');
+      return;
+    }
+    if (disabled) {
+      showToast(`لا يمكن إضافة أكثر من ${MAX_TAGS} عنصراً`, 'error');
+      return;
+    }
+    onAdd(value);
+    setDraft('');
+  };
+
+  return (
+    <div>
+      <h4 className="text-sm font-semibold mb-2" style={{ color: 'var(--foreground)' }}>{label}</h4>
+      {customTags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-3">
+          {customTags.map((tag) => (
+            <TagChip key={tag} tag={tag} active removable onClick={() => onRemove(tag)} />
+          ))}
+        </div>
+      )}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submit(); } }}
+          placeholder="اكتب ما يميّزك ولم تجده في القائمة..."
+          maxLength={MAX_TAG_LENGTH}
+          disabled={disabled}
+          className="flex-1 px-4 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all disabled:opacity-50"
+          style={{ borderColor: 'var(--border)', background: 'var(--card)', color: 'var(--foreground)' }}
+        />
+        <button
+          type="button"
+          onClick={submit}
+          disabled={disabled || !draft.trim()}
+          className="shrink-0 flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-40"
+          style={{ background: 'var(--accent)', color: 'var(--accent-foreground)' }}
+        >
+          <Plus size={16} weight="bold" /> إضافة
+        </button>
+      </div>
     </div>
   );
 }
@@ -130,6 +199,16 @@ export default function ExtendedProfilePage() {
   const toggleTag = (list: string[], setList: (v: string[]) => void, tag: string) => {
     setList(list.includes(tag) ? list.filter((t) => t !== tag) : [...list, tag]);
   };
+
+  const addCustomTag = (list: string[], setList: (v: string[]) => void, tag: string) => {
+    if (list.includes(tag)) return;
+    setList([...list, tag]);
+  };
+
+  const knownInterestTags = useMemo(() => new Set(INTEREST_GROUPS.flatMap((g) => g.options)), []);
+  const knownSkillTags = useMemo(() => new Set(SKILL_GROUPS.flatMap((g) => g.options)), []);
+  const customInterests = interests.filter((tag) => !knownInterestTags.has(tag));
+  const customSkills = skills.filter((tag) => !knownSkillTags.has(tag));
 
   const handleSave = async () => {
     try {
@@ -218,20 +297,38 @@ export default function ExtendedProfilePage() {
         <Card variant="default" className="bg-[var(--card)] border-[var(--border)]/50">
           <CardHeader>
             <CardTitle style={{ color: 'var(--foreground)' }}>الاهتمامات والهوايات</CardTitle>
-            <CardDescription>اختر كل ما ينطبق عليك</CardDescription>
+            <CardDescription>اختر كل ما ينطبق عليك، أو أضف ما تريد بنفسك</CardDescription>
           </CardHeader>
           <CardContent>
-            <TagPicker groups={INTEREST_GROUPS} selected={interests} onToggle={(tag) => toggleTag(interests, setInterests, tag)} />
+            <div className="space-y-5">
+              <CustomTagSection
+                label="إضافاتك الخاصة"
+                customTags={customInterests}
+                onAdd={(tag) => addCustomTag(interests, setInterests, tag)}
+                onRemove={(tag) => toggleTag(interests, setInterests, tag)}
+                disabled={interests.length >= MAX_TAGS}
+              />
+              <TagPicker groups={INTEREST_GROUPS} selected={interests} onToggle={(tag) => toggleTag(interests, setInterests, tag)} />
+            </div>
           </CardContent>
         </Card>
 
         <Card variant="default" className="bg-[var(--card)] border-[var(--border)]/50">
           <CardHeader>
             <CardTitle style={{ color: 'var(--foreground)' }}>المهارات</CardTitle>
-            <CardDescription>اختر كل ما ينطبق عليك</CardDescription>
+            <CardDescription>اختر كل ما ينطبق عليك، أو أضف ما تريد بنفسك</CardDescription>
           </CardHeader>
           <CardContent>
-            <TagPicker groups={SKILL_GROUPS} selected={skills} onToggle={(tag) => toggleTag(skills, setSkills, tag)} />
+            <div className="space-y-5">
+              <CustomTagSection
+                label="إضافاتك الخاصة"
+                customTags={customSkills}
+                onAdd={(tag) => addCustomTag(skills, setSkills, tag)}
+                onRemove={(tag) => toggleTag(skills, setSkills, tag)}
+                disabled={skills.length >= MAX_TAGS}
+              />
+              <TagPicker groups={SKILL_GROUPS} selected={skills} onToggle={(tag) => toggleTag(skills, setSkills, tag)} />
+            </div>
           </CardContent>
         </Card>
 
