@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { authApi } from '../api';
@@ -113,11 +113,25 @@ interface FormData {
   gender: string;
 }
 
+// Fields safe to persist across a /terms or /privacy detour (#389) --
+// password/confirm are deliberately excluded from the draft.
+const DRAFT_KEY = 'register-draft';
+type DraftFields = Omit<FormData, 'password' | 'confirm'>;
+
+function loadDraft(): Partial<DraftFields> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const raw = sessionStorage.getItem(DRAFT_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
 export const RegisterForm = () => {
   const [form, setForm] = useState<FormData>({
     email: '', phone: '', password: '', confirm: '',
     firstName: '', lastName: '', username: '',
-    dateOfBirth: '', gender: ''
+    dateOfBirth: '', gender: '',
+    ...loadDraft(),
   });
   const [phoneCountryCode, setPhoneCountryCode] = useState('+966');
   const [showPassword, setShowPassword] = useState(false);
@@ -126,6 +140,13 @@ export const RegisterForm = () => {
   const [loading, setLoading] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const { password, confirm, ...draft } = form;
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); } catch { /* storage unavailable */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.email, form.phone, form.firstName, form.lastName, form.username, form.dateOfBirth, form.gender]);
+
   // Capture ?ref=<code> from a shared affiliate link so a successful
   // registration can be credited to the referrer (#107).
   const searchParams = useSearchParams();
@@ -207,6 +228,7 @@ export const RegisterForm = () => {
       // Tokens are set as HttpOnly cookies by the backend — nothing to store
       // client-side (avoids XSS token theft from localStorage).
       await authApi.register(payload);
+      try { sessionStorage.removeItem(DRAFT_KEY); } catch { /* storage unavailable */ }
       setShowUpsell(true);
     } catch (err: any) {
       setError(formatAuthError(err));
