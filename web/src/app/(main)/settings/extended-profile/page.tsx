@@ -133,8 +133,14 @@ export default function ExtendedProfilePage() {
 
   const handleSave = async () => {
     try {
+      // @IsOptional() on the backend DTO only skips null/undefined, not ''
+      // (an empty-string enum value still runs @IsEnum and 400s) -- drop
+      // unset selects before sending, same pattern as RegisterForm's payload.
+      const enumPayload = Object.fromEntries(
+        Object.entries(enumValues).filter(([, v]) => v !== '')
+      );
       await updateProfile.mutateAsync({
-        ...enumValues,
+        ...enumPayload,
         settleCountry: settleCountry.trim(),
         interests,
         skills,
