@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/routes.dart';
 import '../state/auth_notifier.dart';
 import '../providers/auth_providers.dart';
@@ -44,18 +45,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     ref.listen(authNotifierProvider, (_, next) {
       if (next is AuthSuccess) {
-        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+        context.go(AppRoutes.dashboard);
       }
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: const BackButton(color: Colors.black87),
-        title: const Text('Create Account', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600)),
-      ),
+      // backgroundColor/appBar styling inherited from AppTheme.lightTheme.
+      appBar: AppBar(title: const Text('Create Account')),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -135,12 +131,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
                 ElevatedButton(
                   onPressed: authState is AuthLoading ? null : _submit,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1a56db),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
                   child: authState is AuthLoading
                       ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : const Text('Create Account', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
