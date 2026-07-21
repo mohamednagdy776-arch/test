@@ -81,11 +81,16 @@ nul
 *.sqlite3
 *.db
 
-# Model files (trained ML artifacts). NOTE: this must not swallow the
-# ai-service Python package `app/models/` — without it the service crashes with
-# `ModuleNotFoundError: No module named 'app.models'` once only tracked files
-# ship (git archive). Re-include that source package explicitly.
-models/
+# Model files (trained ML artifacts). Scoped to ai-service only -- a bare
+# `models/` previously matched ANY directory named `models` repo-wide,
+# including every Flutter feature's `data/models/` (a standard
+# clean-architecture folder name, see mobile/.claude/skills/mobile-flutter),
+# silently dropping those files from every commit with no warning. NOTE: this
+# must not swallow the ai-service Python package `app/models/` — without it
+# the service crashes with `ModuleNotFoundError: No module named 'app.models'`
+# once only tracked files ship (git archive). Re-include that source package
+# explicitly.
+ai-service/**/models/
 !ai-service/app/models/
 !ai-service/app/models/**
 *.h5
