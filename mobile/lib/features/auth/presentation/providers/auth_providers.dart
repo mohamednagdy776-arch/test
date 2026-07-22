@@ -6,6 +6,8 @@ import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../domain/use_cases/login_use_case.dart';
 import '../../domain/use_cases/register_use_case.dart';
+import '../../domain/use_cases/forgot_password_use_case.dart';
+import '../../domain/use_cases/reset_password_use_case.dart';
 import '../state/auth_notifier.dart';
 
 final _storageProvider = Provider((_) => const FlutterSecureStorage());
@@ -33,4 +35,12 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>(
 // Check if user is already logged in (for splash screen)
 final isLoggedInProvider = FutureProvider<bool>(
   (ref) => ref.read(authRepositoryProvider).isLoggedIn(),
+);
+
+final forgotPasswordUseCaseProvider = Provider(
+  (ref) => ForgotPasswordUseCase(ref.read(authRepositoryProvider)),
+);
+
+final resetPasswordUseCaseProvider = Provider(
+  (ref) => ResetPasswordUseCase(ref.read(authRepositoryProvider)),
 );

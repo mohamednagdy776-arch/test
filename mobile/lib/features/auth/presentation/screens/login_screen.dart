@@ -118,7 +118,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     return null;
                   },
                 ),
-                const SizedBox(height: 24),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => context.push(AppRoutes.forgotPassword),
+                    child: const Text('نسيت كلمة المرور؟'),
+                  ),
+                ),
+                const SizedBox(height: 8),
 
                 // Submit button (styled via AppTheme.lightTheme.elevatedButtonTheme)
                 ElevatedButton(

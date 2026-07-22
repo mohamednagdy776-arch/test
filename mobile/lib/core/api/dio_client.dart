@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../constants/app_constants.dart';
+import 'api_response.dart';
 
 class DioClient {
   static const _storage = FlutterSecureStorage();
@@ -48,7 +49,7 @@ class DioClient {
             '/auth/refresh',
             data: {'refreshToken': refreshToken},
           );
-          final tokens = refreshResponse.data['data'] as Map<String, dynamic>;
+          final tokens = ApiResponse.unwrap(refreshResponse);
           final newAccessToken = tokens['accessToken'] as String;
           final newRefreshToken = tokens['refreshToken'] as String;
           await _storage.write(key: 'access_token', value: newAccessToken);
