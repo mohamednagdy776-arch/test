@@ -8,11 +8,13 @@ import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/presentation/screens/extended_profile_screen.dart';
 
-// Routes not registered here yet (extended-profile, feed, matching, chat,
-// notifications) get added phase-by-phase as their screens are built --
-// AppRoutes already defines the path constants so later phases don't need to
-// touch this redirect-guard logic, just add a GoRoute + import.
+// Routes not registered here yet (feed, matching, chat, notifications) get
+// added phase-by-phase as their screens are built -- AppRoutes already
+// defines the path constants so later phases don't need to touch this
+// redirect-guard logic, just add a GoRoute + import.
 const _publicPaths = {
   AppRoutes.login,
   AppRoutes.register,
@@ -41,6 +43,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
       GoRoute(path: AppRoutes.resetPassword, builder: (context, state) => const ResetPasswordScreen()),
       GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const PlaceholderDashboard()),
+      GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: AppRoutes.extendedProfile, builder: (context, state) => const ExtendedProfileScreen()),
     ],
   );
 });

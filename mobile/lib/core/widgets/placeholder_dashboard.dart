@@ -16,6 +16,10 @@ class PlaceholderDashboard extends ConsumerWidget {
         title: const Text('Tayyibt'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () => context.push(AppRoutes.profile),
+          ),
+          IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
               await ref.read(authRepositoryProvider).logout();

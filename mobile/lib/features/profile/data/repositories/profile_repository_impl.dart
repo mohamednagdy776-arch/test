@@ -1,3 +1,4 @@
+import 'package:image_picker/image_picker.dart';
 import '../../domain/entities/profile.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../data_sources/profile_remote_data_source.dart';
@@ -22,6 +23,12 @@ class ProfileRepositoryImpl implements ProfileRepository {
   @override
   Future<Profile> getUserProfile(String userId) async {
     final data = await _remoteDataSource.getUserProfile(userId);
+    return Profile.fromJson(data);
+  }
+
+  @override
+  Future<Profile> uploadAvatar(XFile file) async {
+    final data = await _remoteDataSource.uploadAvatar(file);
     return Profile.fromJson(data);
   }
 }
