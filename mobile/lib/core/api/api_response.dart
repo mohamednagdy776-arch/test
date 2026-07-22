@@ -22,6 +22,16 @@ class PaginatedResult<T> {
   bool get hasMore => page < totalPages;
 }
 
+// Cursor-paginated endpoints (feed) use a different, unrelated envelope --
+// { data: [...], pagination: { cursor, hasMore } }, no success/message/meta.
+class CursorPage<T> {
+  final List<T> items;
+  final String? cursor;
+  final bool hasMore;
+
+  const CursorPage({required this.items, required this.cursor, required this.hasMore});
+}
+
 class ApiResponse {
   ApiResponse._();
 
@@ -53,6 +63,23 @@ class ApiResponse {
       page: meta['page'] as int? ?? 1,
       limit: meta['limit'] as int? ?? items.length,
       totalPages: meta['totalPages'] as int? ?? 1,
+    );
+  }
+
+  /// Unwraps a cursor-paginated response, e.g. `GET /feed`.
+  static CursorPage<T> unwrapCursorPage<T>(
+    Response response,
+    T Function(Map<String, dynamic>) fromJson,
+  ) {
+    final body = response.data as Map<String, dynamic>;
+    final items = (body['data'] as List<dynamic>)
+        .map((e) => fromJson(e as Map<String, dynamic>))
+        .toList();
+    final pagination = body['pagination'] as Map<String, dynamic>? ?? const {};
+    return CursorPage<T>(
+      items: items,
+      cursor: pagination['cursor'] as String?,
+      hasMore: pagination['hasMore'] as bool? ?? false,
     );
   }
 
