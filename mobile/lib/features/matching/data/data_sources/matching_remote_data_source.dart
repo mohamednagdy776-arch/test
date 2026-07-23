@@ -1,27 +1,41 @@
 import 'package:dio/dio.dart';
+import '../../../../core/api/api_response.dart';
 
 class MatchingRemoteDataSource {
   final Dio _dio;
+  const MatchingRemoteDataSource(this._dio);
 
-  MatchingRemoteDataSource(this._dio);
-
-  Future<List<dynamic>> getMatches({String? status}) async {
-    final response = await _dio.get('/matches', queryParameters: status != null ? {'status': status} : null);
-    return response.data['data'];
+  Future<PaginatedResult<Map<String, dynamic>>> getMatches({String? status, int page = 1, int limit = 20}) async {
+    final response = await _dio.get('/matches', queryParameters: {
+      if (status != null) 'status': status,
+      'page': page,
+      'limit': limit,
+    });
+    return ApiResponse.unwrapPaginated(response, (json) => json);
   }
 
-  Future<Map<String, dynamic>> getMatch(String id) async {
-    final response = await _dio.get('/matches/$id');
-    return response.data['data'];
+  Future<void> generateMatches() async {
+    await _dio.post('/matches/generate');
   }
 
-  Future<Map<String, dynamic>> acceptMatch(String id) async {
-    final response = await _dio.patch('/matches/$id/accept');
-    return response.data;
+  Future<Map<String, dynamic>> getMatchProfile(String userId) async {
+    final response = await _dio.get('/matches/profile/$userId');
+    return ApiResponse.unwrap(response);
   }
 
-  Future<Map<String, dynamic>> rejectMatch(String id) async {
-    final response = await _dio.patch('/matches/$id/reject');
-    return response.data;
+  Future<void> acceptMatch(String id) async {
+    await _dio.patch('/matches/$id/accept');
+  }
+
+  Future<void> rejectMatch(String id) async {
+    await _dio.patch('/matches/$id/reject');
+  }
+
+  Future<void> undoAccept(String id) async {
+    await _dio.patch('/matches/$id/undo-accept');
+  }
+
+  Future<void> undoReject(String id) async {
+    await _dio.patch('/matches/$id/undo-reject');
   }
 }

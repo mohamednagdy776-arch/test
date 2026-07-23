@@ -10,11 +10,14 @@ import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/extended_profile_screen.dart';
 import '../../features/posts/presentation/screens/feed_screen.dart';
+import '../../features/matching/presentation/screens/matches_screen.dart';
 
-// Routes not registered here yet (matching, chat, notifications) get added
-// phase-by-phase as their screens are built -- AppRoutes already defines the
-// path constants so later phases don't need to touch this redirect-guard
-// logic, just add a GoRoute + import.
+// Routes not registered here yet (chat, notifications) get added phase-by-
+// phase as their screens are built -- AppRoutes already defines the path
+// constants so later phases don't need to touch this redirect-guard logic,
+// just add a GoRoute + import. Match detail isn't a GoRoute at all (pushed
+// directly with the already-fetched Match instance, same pattern as
+// create_post_screen.dart) -- no re-fetch-by-id needed.
 const _publicPaths = {
   AppRoutes.login,
   AppRoutes.register,
@@ -45,6 +48,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const FeedScreen()),
       GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
       GoRoute(path: AppRoutes.extendedProfile, builder: (context, state) => const ExtendedProfileScreen()),
+      GoRoute(path: AppRoutes.matching, builder: (context, state) => const MatchesScreen()),
     ],
   );
 });
