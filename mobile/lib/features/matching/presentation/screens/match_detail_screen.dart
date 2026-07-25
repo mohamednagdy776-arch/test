@@ -5,6 +5,8 @@ import '../providers/matching_providers.dart';
 import '../state/matches_notifier.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/theme.dart';
+import '../../../chat/presentation/providers/chat_providers.dart';
+import '../../../chat/presentation/screens/chat_thread_screen.dart';
 
 const _breakdownLabels = {
   'religious': 'التوافق الديني',
@@ -78,9 +80,27 @@ class MatchDetailScreen extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 24),
+            if (match.status == AppConstants.matchAccepted) ...[
+              ElevatedButton.icon(
+                onPressed: () => _openChat(context, ref),
+                icon: const Icon(Icons.chat_bubble_outline),
+                label: const Text('مراسلة'),
+              ),
+              const SizedBox(height: 12),
+            ],
             _actions(context, notifier),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _openChat(BuildContext context, WidgetRef ref) async {
+    final conversation = await ref.read(getOrCreateConversationUseCaseProvider).call(match.otherUserId);
+    if (!context.mounted) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ChatThreadScreen(conversationId: conversation.id, title: conversation.displayName),
       ),
     );
   }

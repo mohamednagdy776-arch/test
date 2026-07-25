@@ -55,6 +55,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             onPressed: () => context.push(AppRoutes.matching),
           ),
           IconButton(
+            icon: const Icon(Icons.chat_bubble_outline),
+            onPressed: () => context.push(AppRoutes.chat),
+          ),
+          IconButton(
             icon: const Icon(Icons.person),
             onPressed: () => context.push(AppRoutes.profile),
           ),
