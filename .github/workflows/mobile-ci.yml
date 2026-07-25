@@ -45,8 +45,19 @@ jobs:
       - name: Test
         run: flutter test
 
+      # Baked with the live VPS API URL, not the default 10.0.2.2 (which only
+      # resolves inside the Android emulator) -- so the artifact below is
+      # directly sideloadable onto a real device for the Phase 10 manual
+      # verification pass.
       - name: Build debug APK
-        run: flutter build apk --debug
+        run: flutter build apk --debug --dart-define=API_URL=https://145-14-158-100.sslip.io/api/v1
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tayyibt-debug-apk
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
 
   mobile-ios:
     runs-on: macos-latest
