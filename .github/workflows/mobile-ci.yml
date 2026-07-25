@@ -1,0 +1,79 @@
+name: Mobile CI
+
+# Separate from ci.yml (Node-only) -- Flutter needs its own toolchain and
+# job matrix (Android on ubuntu-latest, iOS build-only on macos-latest per
+# the mobile build plan's locked decision: no Apple Developer account yet,
+# so no signing/TestFlight, build-only via --no-codesign).
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  mobile-android:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      # AGP 8.11.1 (bundled by `flutter create`'s Android scaffold) doesn't
+      # support the Gradle 9.x line that ships with newer JDKs -- Gradle
+      # 8.14 needs JDK 21, matching the local dev fix (setup-android-sdk.ps1
+      # / flutter config --jdk-dir).
+      - name: Setup JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      - name: Build debug APK
+        run: flutter build apk --debug
+
+  mobile-ios:
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+      # Build-only -- no APPLE_TEAM_ID / distribution cert / provisioning
+      # profile exist yet, so signing is out of scope until the user has an
+      # Apple Developer Program account.
+      - name: Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
