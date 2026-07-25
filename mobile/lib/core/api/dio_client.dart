@@ -44,7 +44,12 @@ class DioClient {
         }
 
         try {
-          final refreshDio = Dio(BaseOptions(baseUrl: AppConstants.apiBaseUrl));
+          // Shares the outer Dio's adapter (not just its own default) so a
+          // test can substitute a single mock adapter and see both the
+          // original request and the refresh call -- otherwise this refresh
+          // call would be unmockable and the retry logic untestable.
+          final refreshDio = Dio(BaseOptions(baseUrl: AppConstants.apiBaseUrl))
+            ..httpClientAdapter = dio.httpClientAdapter;
           final refreshResponse = await refreshDio.post(
             '/auth/refresh',
             data: {'refreshToken': refreshToken},
