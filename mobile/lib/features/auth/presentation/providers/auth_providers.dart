@@ -9,6 +9,7 @@ import '../../domain/use_cases/register_use_case.dart';
 import '../../domain/use_cases/forgot_password_use_case.dart';
 import '../../domain/use_cases/reset_password_use_case.dart';
 import '../state/auth_notifier.dart';
+import '../../../notifications/presentation/providers/notifications_providers.dart';
 
 final _storageProvider = Provider((_) => const FlutterSecureStorage());
 final _dioProvider = Provider((_) => DioClient.create());
@@ -29,6 +30,7 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>(
     loginUseCase: LoginUseCase(ref.read(authRepositoryProvider)),
     registerUseCase: RegisterUseCase(ref.read(authRepositoryProvider)),
     repository: ref.read(authRepositoryProvider),
+    onAuthenticated: () => ref.read(pushNotificationServiceProvider).registerCurrentDevice(),
   ),
 );
 

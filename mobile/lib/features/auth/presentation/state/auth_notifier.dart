@@ -20,11 +20,15 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final LoginUseCase loginUseCase;
   final RegisterUseCase registerUseCase;
   final AuthRepository repository;
+  // Fire-and-forget FCM device-token registration -- optional so tests can
+  // omit it without stubbing Firebase.
+  final void Function()? onAuthenticated;
 
   AuthNotifier({
     required this.loginUseCase,
     required this.registerUseCase,
     required this.repository,
+    this.onAuthenticated,
   }) : super(const AuthInitial());
 
   Future<void> login({required String email, required String password}) async {
@@ -32,6 +36,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await loginUseCase(email: email, password: password);
       state = const AuthSuccess();
+      onAuthenticated?.call();
     } on AuthFailure catch (e) {
       state = AuthError(e.message);
     } catch (_) {
@@ -48,6 +53,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await registerUseCase(email: email, phone: phone, password: password);
       state = const AuthSuccess();
+      onAuthenticated?.call();
     } on AuthFailure catch (e) {
       state = AuthError(e.message);
     } catch (_) {

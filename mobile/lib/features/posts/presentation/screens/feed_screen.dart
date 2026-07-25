@@ -10,6 +10,7 @@ import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/media.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 import '../../../../features/profile/presentation/providers/profile_providers.dart';
+import '../../../../features/notifications/presentation/providers/notifications_providers.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -45,6 +46,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   Widget build(BuildContext context) {
     final feed = ref.watch(feedProvider);
     final myProfile = ref.watch(myProfileProvider).valueOrNull;
+    final unreadCount = ref.watch(unreadCountProvider).valueOrNull ?? 0;
 
     return Scaffold(
       appBar: AppBar(
@@ -57,6 +59,17 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             onPressed: () => context.push(AppRoutes.chat),
+          ),
+          IconButton(
+            icon: Badge(
+              isLabelVisible: unreadCount > 0,
+              label: Text('$unreadCount'),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+            onPressed: () async {
+              await context.push(AppRoutes.notifications);
+              ref.invalidate(unreadCountProvider);
+            },
           ),
           IconButton(
             icon: const Icon(Icons.person),
