@@ -45,12 +45,14 @@ jobs:
       - name: Test
         run: flutter test
 
-      # Baked with the live VPS API URL, not the default 10.0.2.2 (which only
-      # resolves inside the Android emulator) -- so the artifact below is
-      # directly sideloadable onto a real device for the Phase 10 manual
-      # verification pass.
+      # Baked with the live VPS API/WS URLs, not the defaults (10.0.2.2,
+      # which only resolves inside the Android emulator) -- so the artifact
+      # below is directly sideloadable onto a real device for the Phase 10
+      # manual verification pass. WS_URL was missed in an earlier version of
+      # this step, leaving chat/socket features pointed at 10.0.2.2 on a
+      # real device even though the REST API URL was correct.
       - name: Build debug APK
-        run: flutter build apk --debug --dart-define=API_URL=https://145-14-158-100.sslip.io/api/v1
+        run: flutter build apk --debug --dart-define=API_URL=https://145-14-158-100.sslip.io/api/v1 --dart-define=WS_URL=https://145-14-158-100.sslip.io
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
