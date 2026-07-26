@@ -17,8 +17,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthTokens> register({required String email, required String phone, required String password}) async {
-    final tokens = await remoteDataSource.register(email: email, phone: phone, password: password);
+  Future<AuthTokens> register({
+    required String email,
+    required String phone,
+    required String password,
+    required String dateOfBirth,
+  }) async {
+    final tokens = await remoteDataSource.register(
+      email: email,
+      phone: phone,
+      password: password,
+      dateOfBirth: dateOfBirth,
+    );
     await _saveTokens(tokens);
     return tokens;
   }

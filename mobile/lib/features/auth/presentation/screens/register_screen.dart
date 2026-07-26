@@ -20,6 +20,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
   bool _obscure = true;
+  DateTime? _dateOfBirth;
+  String? _dateOfBirthError;
 
   @override
   void dispose() {
@@ -30,12 +32,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
+  // Backend requires dateOfBirth and rejects under-18 registrations
+  // (RegisterDto.dateOfBirth / IsAtLeast18Constraint) -- validated here too
+  // so the error surfaces next to the field instead of as a raw 400 after
+  // submit.
+  bool _isAtLeast18(DateTime dob) {
+    final now = DateTime.now();
+    var age = now.year - dob.year;
+    if (now.month < dob.month || (now.month == dob.month && now.day < dob.day)) age--;
+    return age >= 18;
+  }
+
+  Future<void> _pickDateOfBirth() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(now.year - 25, now.month, now.day),
+      firstDate: DateTime(now.year - 100),
+      lastDate: DateTime(now.year - 18, now.month, now.day),
+    );
+    if (picked != null) {
+      setState(() {
+        _dateOfBirth = picked;
+        _dateOfBirthError = null;
+      });
+    }
+  }
+
   void _submit() {
-    if (!_formKey.currentState!.validate()) return;
+    final dob = _dateOfBirth;
+    setState(() {
+      if (dob == null) {
+        _dateOfBirthError = 'Date of birth is required';
+      } else if (!_isAtLeast18(dob)) {
+        _dateOfBirthError = 'You must be at least 18 years old';
+      } else {
+        _dateOfBirthError = null;
+      }
+    });
+    if (!_formKey.currentState!.validate() || _dateOfBirthError != null) return;
+
     ref.read(authNotifierProvider.notifier).register(
       email: _emailCtrl.text.trim(),
       phone: _phoneCtrl.text.trim(),
       password: _passwordCtrl.text,
+      dateOfBirth: '${dob!.year.toString().padLeft(4, '0')}-${dob.month.toString().padLeft(2, '0')}-${dob.day.toString().padLeft(2, '0')}',
     );
   }
 
@@ -95,6 +136,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     if (v == null || v.isEmpty) return 'Phone is required';
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+
+                Text('Date of Birth', style: Theme.of(context).textTheme.labelMedium),
+                const SizedBox(height: 6),
+                InkWell(
+                  onTap: _pickDateOfBirth,
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      errorText: _dateOfBirthError,
+                      suffixIcon: const Icon(Icons.calendar_today, size: 18),
+                    ),
+                    child: Text(
+                      _dateOfBirth == null
+                          ? 'Select your date of birth'
+                          : '${_dateOfBirth!.year.toString().padLeft(4, '0')}-${_dateOfBirth!.month.toString().padLeft(2, '0')}-${_dateOfBirth!.day.toString().padLeft(2, '0')}',
+                      style: _dateOfBirth == null ? const TextStyle(color: Colors.grey) : null,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 16),
 

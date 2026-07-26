@@ -17,13 +17,27 @@ void main() {
 
   test('delegates to repository.register and returns the tokens', () async {
     const tokens = AuthTokens(accessToken: 'a', refreshToken: 'r');
-    when(() => repository.register(email: 'a@b.com', phone: '+201000000000', password: 'pw123456'))
-        .thenAnswer((_) async => tokens);
+    when(() => repository.register(
+          email: 'a@b.com',
+          phone: '+201000000000',
+          password: 'pw123456',
+          dateOfBirth: '1995-05-15',
+        )).thenAnswer((_) async => tokens);
 
-    final result = await useCase.call(email: 'a@b.com', phone: '+201000000000', password: 'pw123456');
+    final result = await useCase.call(
+      email: 'a@b.com',
+      phone: '+201000000000',
+      password: 'pw123456',
+      dateOfBirth: '1995-05-15',
+    );
 
     expect(result, tokens);
-    verify(() => repository.register(email: 'a@b.com', phone: '+201000000000', password: 'pw123456')).called(1);
+    verify(() => repository.register(
+          email: 'a@b.com',
+          phone: '+201000000000',
+          password: 'pw123456',
+          dateOfBirth: '1995-05-15',
+        )).called(1);
   });
 
   test('propagates repository failures', () async {
@@ -31,10 +45,11 @@ void main() {
           email: any(named: 'email'),
           phone: any(named: 'phone'),
           password: any(named: 'password'),
+          dateOfBirth: any(named: 'dateOfBirth'),
         )).thenThrow(Exception('email already registered'));
 
     expect(
-      () => useCase.call(email: 'a@b.com', phone: '+201000000000', password: 'pw123456'),
+      () => useCase.call(email: 'a@b.com', phone: '+201000000000', password: 'pw123456', dateOfBirth: '1995-05-15'),
       throwsException,
     );
   });

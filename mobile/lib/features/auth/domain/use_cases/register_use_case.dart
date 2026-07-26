@@ -9,7 +9,8 @@ class RegisterUseCase {
     required String email,
     required String phone,
     required String password,
+    required String dateOfBirth,
   }) {
-    return repository.register(email: email, phone: phone, password: password);
+    return repository.register(email: email, phone: phone, password: password, dateOfBirth: dateOfBirth);
   }
 }

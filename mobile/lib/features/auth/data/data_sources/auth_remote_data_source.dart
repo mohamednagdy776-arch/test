@@ -21,12 +21,14 @@ class AuthRemoteDataSource {
     required String email,
     required String phone,
     required String password,
+    required String dateOfBirth,
   }) async {
     try {
       final res = await dio.post('/auth/register', data: {
         'email': email,
         'phone': phone,
         'password': password,
+        'dateOfBirth': dateOfBirth,
       });
       return AuthTokensModel.fromJson(ApiResponse.unwrap(res));
     } on DioException catch (e) {
