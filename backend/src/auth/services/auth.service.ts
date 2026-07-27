@@ -397,11 +397,17 @@ export class AuthService {
    * Find the session for this refresh token and revoke it.
    * If the session was already revoked, it means the token is being reused —
    * a sign of theft — so revoke ALL sessions for that user.
+   *
+   * Scoped to `userId` (the refresh JWT's own `sub`, already verified by the
+   * caller) rather than scanning every session in the database — the
+   * unscoped version bcrypt-compared against every active (then every)
+   * session system-wide, which after enough accumulated sessions took long
+   * enough to 504 at nginx's 60s timeout, breaking token refresh for
+   * everyone, not just the affected user.
    */
-  async revokeTokenAndDetectReuse(refreshToken: string): Promise<void> {
-    // Find all active+inactive sessions and check against the hash
+  async revokeTokenAndDetectReuse(refreshToken: string, userId: string): Promise<void> {
     const sessions = await this.sessionsRepo.find({
-      where: { isActive: true },
+      where: { userId, isActive: true },
     });
 
     let matchedSession: Session | null = null;
@@ -414,8 +420,9 @@ export class AuthService {
     }
 
     if (!matchedSession) {
-      // Token not found in active sessions — check revoked sessions for theft detection
-      const allSessions = await this.sessionsRepo.find();
+      // Token not found in this user's active sessions — check their revoked
+      // sessions too for theft detection.
+      const allSessions = await this.sessionsRepo.find({ where: { userId } });
       for (const session of allSessions) {
         const match = await bcrypt.compare(refreshToken, session.refreshTokenHash);
         if (match) {
@@ -442,7 +449,7 @@ export class AuthService {
       if (payload.type !== 'refresh') throw new UnauthorizedException();
 
       // Detect token reuse before issuing new tokens (#497)
-      await this.revokeTokenAndDetectReuse(refreshToken);
+      await this.revokeTokenAndDetectReuse(refreshToken, payload.sub);
 
       const user = await this.usersRepo.findOne({ where: { id: payload.sub } });
       if (!user || user.isDeactivated) throw new UnauthorizedException();
