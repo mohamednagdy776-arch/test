@@ -53,6 +53,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         title: const Text('Tayyibt'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.search),
+            onPressed: () => context.push(AppRoutes.search),
+          ),
+          IconButton(
+            icon: const Icon(Icons.people_outline),
+            onPressed: () => context.push(AppRoutes.friends),
+          ),
+          IconButton(
+            icon: const Icon(Icons.groups_outlined),
+            onPressed: () => context.push(AppRoutes.groups),
+          ),
+          IconButton(
             icon: const Icon(Icons.favorite_border),
             onPressed: () => context.push(AppRoutes.matching),
           ),
