@@ -5,6 +5,7 @@ import '../entities/post.dart';
 abstract class PostsRepository {
   Future<CursorPage<Post>> getFeed({String? cursor, int limit = 10});
   Future<CursorPage<Post>> getRecentFeed({String? cursor, int limit = 10});
+  Future<Post> getPost(String postId);
   Future<Post> createPost({required String content, XFile? image});
   Future<void> deletePost(String postId);
   Future<void> savePost(String postId);

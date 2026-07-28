@@ -11,27 +11,44 @@ class PostsRepositoryImpl implements PostsRepository {
   @override
   Future<CursorPage<Post>> getFeed({String? cursor, int limit = 10}) async {
     final page = await _remoteDataSource.getFeed(cursor: cursor, limit: limit);
-    return CursorPage(items: page.items.map(Post.fromJson).toList(), cursor: page.cursor, hasMore: page.hasMore);
+    return CursorPage(
+        items: page.items.map(Post.fromJson).toList(),
+        cursor: page.cursor,
+        hasMore: page.hasMore);
   }
 
   @override
-  Future<CursorPage<Post>> getRecentFeed({String? cursor, int limit = 10}) async {
-    final page = await _remoteDataSource.getRecentFeed(cursor: cursor, limit: limit);
-    return CursorPage(items: page.items.map(Post.fromJson).toList(), cursor: page.cursor, hasMore: page.hasMore);
+  Future<CursorPage<Post>> getRecentFeed(
+      {String? cursor, int limit = 10}) async {
+    final page =
+        await _remoteDataSource.getRecentFeed(cursor: cursor, limit: limit);
+    return CursorPage(
+        items: page.items.map(Post.fromJson).toList(),
+        cursor: page.cursor,
+        hasMore: page.hasMore);
   }
 
   @override
-  Future<Post> createPost({required String content, XFile? image}) async {
-    final data = await _remoteDataSource.createPost(content: content, image: image);
+  Future<Post> getPost(String postId) async {
+    final data = await _remoteDataSource.getPost(postId);
     return Post.fromJson(data);
   }
 
   @override
-  Future<void> deletePost(String postId) => _remoteDataSource.deletePost(postId);
+  Future<Post> createPost({required String content, XFile? image}) async {
+    final data =
+        await _remoteDataSource.createPost(content: content, image: image);
+    return Post.fromJson(data);
+  }
+
+  @override
+  Future<void> deletePost(String postId) =>
+      _remoteDataSource.deletePost(postId);
 
   @override
   Future<void> savePost(String postId) => _remoteDataSource.savePost(postId);
 
   @override
-  Future<void> unsavePost(String postId) => _remoteDataSource.unsavePost(postId);
+  Future<void> unsavePost(String postId) =>
+      _remoteDataSource.unsavePost(postId);
 }
