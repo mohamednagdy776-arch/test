@@ -14,7 +14,9 @@ class AppRoutes {
   static const chat = '/chat';
   static const chatThread = '/chat/:conversationId';
   static const notifications = '/notifications';
-  static const groups = '/groups'; // backlog, kept for the existing stub entity
+  static const friends = '/friends';
+  static const search = '/search';
+  static const groups = '/groups';
 
   static String matchDetailPath(String id) => '/matching/$id';
   static String chatThreadPath(String conversationId) => '/chat/$conversationId';

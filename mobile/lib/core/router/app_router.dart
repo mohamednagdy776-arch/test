@@ -13,9 +13,12 @@ import '../../features/posts/presentation/screens/feed_screen.dart';
 import '../../features/matching/presentation/screens/matches_screen.dart';
 import '../../features/chat/presentation/screens/conversations_screen.dart';
 import '../../features/notifications/presentation/screens/notifications_screen.dart';
+import '../../features/friends/presentation/screens/friends_screen.dart';
+import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/groups/presentation/screens/groups_screen.dart';
 
-// Match detail and chat thread aren't GoRoutes at all (pushed directly with
-// the already-fetched Match/conversation id, same pattern as
+// Match detail, chat thread, and group detail aren't GoRoutes at all (pushed
+// directly with the already-fetched id, same pattern as
 // create_post_screen.dart) -- no re-fetch-by-id needed.
 const _publicPaths = {
   AppRoutes.login,
@@ -50,6 +53,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.matching, builder: (context, state) => const MatchesScreen()),
       GoRoute(path: AppRoutes.chat, builder: (context, state) => const ConversationsScreen()),
       GoRoute(path: AppRoutes.notifications, builder: (context, state) => const NotificationsScreen()),
+      GoRoute(path: AppRoutes.friends, builder: (context, state) => const FriendsScreen()),
+      GoRoute(path: AppRoutes.search, builder: (context, state) => const SearchScreen()),
+      GoRoute(path: AppRoutes.groups, builder: (context, state) => const GroupsScreen()),
     ],
   );
 });

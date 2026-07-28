@@ -167,7 +167,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       padding: const EdgeInsets.all(12),
       itemCount: users.length,
       separatorBuilder: (_, __) => const SizedBox(height: 8),
-      itemBuilder: (context, i) {
+      itemBuilder: (_, i) {
         final u = users[i];
         final avatarUrl = resolveMediaUrl(u.avatarUrl);
         return Card(
@@ -187,13 +187,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               onPressed: () async {
                 try {
                   await ref.read(respondToFriendRequestUseCaseProvider).send(u.id);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال طلب الصداقة')));
-                  }
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال طلب الصداقة')));
                 } catch (_) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذّر إرسال الطلب')));
-                  }
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذّر إرسال الطلب')));
                 }
               },
               child: const Text('إضافة'),
