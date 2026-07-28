@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../domain/entities/post.dart';
 import '../providers/posts_providers.dart';
 import 'create_post_screen.dart';
+import 'post_detail_screen.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/constants/routes.dart';
 import '../../../../core/utils/extensions.dart';
@@ -37,7 +38,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300) {
       ref.read(feedProvider.notifier).loadMore();
     }
   }
@@ -150,7 +152,8 @@ class _PostCard extends StatelessWidget {
   final bool isOwn;
   final VoidCallback onDelete;
 
-  const _PostCard({required this.post, required this.isOwn, required this.onDelete});
+  const _PostCard(
+      {required this.post, required this.isOwn, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -159,54 +162,68 @@ class _PostCard extends StatelessWidget {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                  child: avatarUrl == null
-                      ? Text(post.authorName.isNotEmpty ? post.authorName[0] : '?')
-                      : null,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(post.authorName, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      Text(post.createdAt.timeAgo, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-                    ],
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => PostDetailScreen(postId: post.id)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor:
+                        AppTheme.primaryColor.withValues(alpha: 0.1),
+                    backgroundImage:
+                        avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                    child: avatarUrl == null
+                        ? Text(post.authorName.isNotEmpty
+                            ? post.authorName[0]
+                            : '?')
+                        : null,
                   ),
-                ),
-                if (isOwn)
-                  PopupMenuButton<String>(
-                    onSelected: (v) {
-                      if (v == 'delete') onDelete();
-                    },
-                    itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'delete', child: Text('حذف')),
-                    ],
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(post.authorName,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w600)),
+                        Text(post.createdAt.timeAgo,
+                            style: const TextStyle(
+                                fontSize: 12, color: AppTheme.textSecondary)),
+                      ],
+                    ),
                   ),
-              ],
-            ),
-            if (post.content.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Text(post.content),
-            ],
-            if (mediaUrl != null) ...[
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(mediaUrl, fit: BoxFit.cover, width: double.infinity),
+                  if (isOwn)
+                    PopupMenuButton<String>(
+                      onSelected: (v) {
+                        if (v == 'delete') onDelete();
+                      },
+                      itemBuilder: (context) => const [
+                        PopupMenuItem(value: 'delete', child: Text('حذف')),
+                      ],
+                    ),
+                ],
               ),
+              if (post.content.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(post.content),
+              ],
+              if (mediaUrl != null) ...[
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(mediaUrl,
+                      fit: BoxFit.cover, width: double.infinity),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

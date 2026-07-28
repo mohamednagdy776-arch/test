@@ -6,7 +6,8 @@ class ReactionsRemoteDataSource {
   const ReactionsRemoteDataSource(this._dio);
 
   Future<String?> reactToPost(String postId, String type) async {
-    final response = await _dio.post('/posts/$postId/reactions', data: {'type': type});
+    final response =
+        await _dio.post('/posts/$postId/reactions', data: {'type': type});
     final data = ApiResponse.unwrap(response);
     return data['type'] as String?;
   }

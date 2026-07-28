@@ -2,8 +2,10 @@ import '../entities/comment.dart';
 
 abstract class CommentsRepository {
   Future<List<Comment>> getComments(String postId);
-  Future<Comment> addComment(String postId, {required String content, String? parentId});
-  Future<Comment> updateComment(String postId, String commentId, {required String content});
+  Future<Comment> addComment(String postId,
+      {required String content, String? parentId});
+  Future<Comment> updateComment(String postId, String commentId,
+      {required String content});
   Future<void> deleteComment(String postId, String commentId);
 
   /// Toggles the viewer's reaction on a comment; returns the new reaction

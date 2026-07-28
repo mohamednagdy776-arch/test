@@ -7,7 +7,8 @@ class ReactionsRepositoryImpl implements ReactionsRepository {
   const ReactionsRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<String?> reactToPost(String postId, String type) => _remoteDataSource.reactToPost(postId, type);
+  Future<String?> reactToPost(String postId, String type) =>
+      _remoteDataSource.reactToPost(postId, type);
 
   @override
   Future<ReactionSummary> getReactions(String postId) async {
@@ -22,5 +23,6 @@ class ReactionsRepositoryImpl implements ReactionsRepository {
   }
 
   @override
-  Future<Map<String, int>> getBreakdown(String postId) => _remoteDataSource.getBreakdown(postId);
+  Future<Map<String, int>> getBreakdown(String postId) =>
+      _remoteDataSource.getBreakdown(postId);
 }

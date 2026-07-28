@@ -6,7 +6,8 @@ class PostsRemoteDataSource {
   final Dio _dio;
   const PostsRemoteDataSource(this._dio);
 
-  Future<CursorPage<Map<String, dynamic>>> getFeed({String? cursor, int limit = 10}) async {
+  Future<CursorPage<Map<String, dynamic>>> getFeed(
+      {String? cursor, int limit = 10}) async {
     final response = await _dio.get('/feed', queryParameters: {
       if (cursor != null) 'cursor': cursor,
       'limit': limit,
@@ -14,7 +15,8 @@ class PostsRemoteDataSource {
     return ApiResponse.unwrapCursorPage(response, (json) => json);
   }
 
-  Future<CursorPage<Map<String, dynamic>>> getRecentFeed({String? cursor, int limit = 10}) async {
+  Future<CursorPage<Map<String, dynamic>>> getRecentFeed(
+      {String? cursor, int limit = 10}) async {
     final response = await _dio.get('/feed/recent', queryParameters: {
       if (cursor != null) 'cursor': cursor,
       'limit': limit,
@@ -26,7 +28,8 @@ class PostsRemoteDataSource {
   // then create the post with the returned URL -- matches
   // backend/src/posts/controllers/upload.controller.ts +
   // backend/src/posts/controllers/stories.controller.ts's createPost.
-  Future<Map<String, dynamic>> createPost({required String content, XFile? image}) async {
+  Future<Map<String, dynamic>> createPost(
+      {required String content, XFile? image}) async {
     String? mediaUrl;
     if (image != null) {
       final bytes = await image.readAsBytes();

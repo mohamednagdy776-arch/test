@@ -13,14 +13,18 @@ class CommentsRepositoryImpl implements CommentsRepository {
   }
 
   @override
-  Future<Comment> addComment(String postId, {required String content, String? parentId}) async {
-    final data = await _remoteDataSource.addComment(postId, content: content, parentId: parentId);
+  Future<Comment> addComment(String postId,
+      {required String content, String? parentId}) async {
+    final data = await _remoteDataSource.addComment(postId,
+        content: content, parentId: parentId);
     return Comment.fromJson(data);
   }
 
   @override
-  Future<Comment> updateComment(String postId, String commentId, {required String content}) async {
-    final data = await _remoteDataSource.updateComment(postId, commentId, content: content);
+  Future<Comment> updateComment(String postId, String commentId,
+      {required String content}) async {
+    final data = await _remoteDataSource.updateComment(postId, commentId,
+        content: content);
     return Comment.fromJson(data);
   }
 
@@ -29,7 +33,8 @@ class CommentsRepositoryImpl implements CommentsRepository {
       _remoteDataSource.deleteComment(postId, commentId);
 
   @override
-  Future<String?> reactToComment(String postId, String commentId, String type) =>
+  Future<String?> reactToComment(
+          String postId, String commentId, String type) =>
       _remoteDataSource.reactToComment(postId, commentId, type);
 
   @override

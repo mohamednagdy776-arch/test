@@ -5,5 +5,6 @@ class GetPostReactionsUseCase {
   final ReactionsRepository _repository;
   const GetPostReactionsUseCase(this._repository);
 
-  Future<ReactionSummary> call(String postId) => _repository.getReactions(postId);
+  Future<ReactionSummary> call(String postId) =>
+      _repository.getReactions(postId);
 }

@@ -12,7 +12,8 @@ class CommentsRemoteDataSource {
     return ApiResponse.unwrapList(response).cast<Map<String, dynamic>>();
   }
 
-  Future<Map<String, dynamic>> addComment(String postId, {required String content, String? parentId}) async {
+  Future<Map<String, dynamic>> addComment(String postId,
+      {required String content, String? parentId}) async {
     final response = await _dio.post('/posts/$postId/comments', data: {
       'content': content,
       if (parentId != null) 'parentId': parentId,
@@ -20,8 +21,10 @@ class CommentsRemoteDataSource {
     return ApiResponse.unwrap(response);
   }
 
-  Future<Map<String, dynamic>> updateComment(String postId, String commentId, {required String content}) async {
-    final response = await _dio.patch('/posts/$postId/comments/$commentId', data: {'content': content});
+  Future<Map<String, dynamic>> updateComment(String postId, String commentId,
+      {required String content}) async {
+    final response = await _dio.patch('/posts/$postId/comments/$commentId',
+        data: {'content': content});
     return ApiResponse.unwrap(response);
   }
 
@@ -29,8 +32,11 @@ class CommentsRemoteDataSource {
     await _dio.delete('/posts/$postId/comments/$commentId');
   }
 
-  Future<String?> reactToComment(String postId, String commentId, String type) async {
-    final response = await _dio.post('/posts/$postId/comments/$commentId/reactions', data: {'type': type});
+  Future<String?> reactToComment(
+      String postId, String commentId, String type) async {
+    final response = await _dio.post(
+        '/posts/$postId/comments/$commentId/reactions',
+        data: {'type': type});
     final data = ApiResponse.unwrap(response);
     return data['type'] as String?;
   }
@@ -40,8 +46,10 @@ class CommentsRemoteDataSource {
   // sibling endpoints (confirmed live). Paginated; only the first page is
   // fetched since this is unused in the current UI (see repository doc
   // comment).
-  Future<List<Map<String, dynamic>>> getReplies(String commentId, {int page = 1, int limit = 20}) async {
-    final response = await _dio.get('/comments/$commentId/replies', queryParameters: {'page': page, 'limit': limit});
+  Future<List<Map<String, dynamic>>> getReplies(String commentId,
+      {int page = 1, int limit = 20}) async {
+    final response = await _dio.get('/comments/$commentId/replies',
+        queryParameters: {'page': page, 'limit': limit});
     return ApiResponse.unwrapPaginated(response, (json) => json).items;
   }
 }

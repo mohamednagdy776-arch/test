@@ -18,14 +18,17 @@ class ReactionEntry {
   factory ReactionEntry.fromJson(Map<String, dynamic> json) {
     final user = json['user'] as Map<String, dynamic>?;
     final profile = user?['profile'] as Map<String, dynamic>?;
-    final firstLast = '${user?['firstName'] ?? ''} ${user?['lastName'] ?? ''}'.trim();
+    final firstLast =
+        '${user?['firstName'] ?? ''} ${user?['lastName'] ?? ''}'.trim();
     return ReactionEntry(
       id: json['id'] as String,
       type: json['type'] as String,
       userId: (json['userId'] as String?) ?? (user?['id'] as String?) ?? '',
       userName: (profile?['fullName'] as String?)?.trim().isNotEmpty == true
           ? profile!['fullName'] as String
-          : (firstLast.isNotEmpty ? firstLast : (user?['fullName'] as String? ?? 'مستخدم')),
+          : (firstLast.isNotEmpty
+              ? firstLast
+              : (user?['fullName'] as String? ?? 'مستخدم')),
       userAvatarUrl: profile?['avatarUrl'] as String?,
     );
   }

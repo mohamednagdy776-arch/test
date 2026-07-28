@@ -77,7 +77,8 @@ class Comment {
   factory Comment.fromJson(Map<String, dynamic> json) {
     final user = json['user'] as Map<String, dynamic>?;
     final profile = user?['profile'] as Map<String, dynamic>?;
-    final firstLast = '${user?['firstName'] ?? ''} ${user?['lastName'] ?? ''}'.trim();
+    final firstLast =
+        '${user?['firstName'] ?? ''} ${user?['lastName'] ?? ''}'.trim();
 
     return Comment(
       id: json['id'] as String,
@@ -85,12 +86,16 @@ class Comment {
       parentId: json['parentId'] as String?,
       depth: json['depth'] as int? ?? 0,
       isPinned: json['isPinned'] as bool? ?? false,
-      editedAt: json['editedAt'] != null ? DateTime.tryParse(json['editedAt'] as String) : null,
+      editedAt: json['editedAt'] != null
+          ? DateTime.tryParse(json['editedAt'] as String)
+          : null,
       createdAt: DateTime.parse(json['createdAt'] as String),
       authorId: user?['id'] as String? ?? '',
       authorName: (profile?['fullName'] as String?)?.trim().isNotEmpty == true
           ? profile!['fullName'] as String
-          : (firstLast.isNotEmpty ? firstLast : (user?['fullName'] as String? ?? 'مستخدم')),
+          : (firstLast.isNotEmpty
+              ? firstLast
+              : (user?['fullName'] as String? ?? 'مستخدم')),
       authorUsername: user?['username'] as String?,
       authorAvatarUrl: profile?['avatarUrl'] as String?,
       reactions: (json['reactions'] as List<dynamic>? ?? const [])
