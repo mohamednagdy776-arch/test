@@ -21,6 +21,12 @@ class PostsRepositoryImpl implements PostsRepository {
   }
 
   @override
+  Future<Post> getPost(String postId) async {
+    final data = await _remoteDataSource.getPost(postId);
+    return Post.fromJson(data);
+  }
+
+  @override
   Future<Post> createPost({required String content, XFile? image}) async {
     final data = await _remoteDataSource.createPost(content: content, image: image);
     return Post.fromJson(data);

@@ -45,6 +45,14 @@ class PostsRemoteDataSource {
     return ApiResponse.unwrap(response);
   }
 
+  // GET /posts/:id -- confirmed live to return the same shape as a feed
+  // item (single `data` object, `user` nested the same way), so Post.fromJson
+  // covers it without a dedicated single-post model.
+  Future<Map<String, dynamic>> getPost(String postId) async {
+    final response = await _dio.get('/posts/$postId');
+    return ApiResponse.unwrap(response);
+  }
+
   Future<void> deletePost(String postId) async {
     await _dio.delete('/posts/$postId');
   }
