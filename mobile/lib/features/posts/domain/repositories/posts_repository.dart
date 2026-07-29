@@ -10,4 +10,8 @@ abstract class PostsRepository {
   Future<void> deletePost(String postId);
   Future<void> savePost(String postId);
   Future<void> unsavePost(String postId);
+
+  /// Toggles isArchived <-> unarchived; returns the updated post.
+  Future<Post> archivePost(String postId);
+  Future<PaginatedResult<Post>> getArchivedPosts({int page = 1, int limit = 10});
 }

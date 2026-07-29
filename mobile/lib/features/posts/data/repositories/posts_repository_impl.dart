@@ -51,4 +51,22 @@ class PostsRepositoryImpl implements PostsRepository {
   @override
   Future<void> unsavePost(String postId) =>
       _remoteDataSource.unsavePost(postId);
+
+  @override
+  Future<Post> archivePost(String postId) async {
+    final data = await _remoteDataSource.archivePost(postId);
+    return Post.fromJson(data);
+  }
+
+  @override
+  Future<PaginatedResult<Post>> getArchivedPosts({int page = 1, int limit = 10}) async {
+    final result = await _remoteDataSource.getArchivedPosts(page: page, limit: limit);
+    return PaginatedResult<Post>(
+      items: result.items.map(Post.fromJson).toList(),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    );
+  }
 }

@@ -4,7 +4,7 @@ import '../../domain/entities/story.dart';
 import '../providers/posts_providers.dart';
 import '../screens/create_story_screen.dart';
 import '../screens/story_viewer_screen.dart';
-import '../screens/archived_stories_screen.dart';
+import '../screens/archive_screen.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/media.dart';
 
@@ -93,9 +93,9 @@ class _StoriesBarState extends ConsumerState<StoriesBar> {
           child: IconButton(
             icon: const Icon(Icons.archive_outlined,
                 size: 18, color: AppTheme.textSecondary),
-            tooltip: 'القصص المؤرشفة',
+            tooltip: 'الأرشيف',
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const ArchivedStoriesScreen()),
+              MaterialPageRoute(builder: (_) => const ArchiveScreen()),
             ),
           ),
         ),

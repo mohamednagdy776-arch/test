@@ -31,6 +31,8 @@ import '../../domain/use_cases/archive_story_use_case.dart';
 import '../../domain/use_cases/get_story_viewers_use_case.dart';
 import '../../domain/use_cases/upload_story_media_use_case.dart';
 import '../../domain/use_cases/get_archived_stories_use_case.dart';
+import '../../domain/use_cases/get_archived_posts_use_case.dart';
+import '../../domain/use_cases/archive_post_use_case.dart';
 import '../state/feed_notifier.dart';
 import '../state/feed_state.dart';
 import '../state/post_detail_notifier.dart';
@@ -149,6 +151,14 @@ final uploadStoryMediaUseCaseProvider = Provider((ref) {
 
 final getArchivedStoriesUseCaseProvider = Provider((ref) {
   return GetArchivedStoriesUseCase(ref.read(storiesRepositoryProvider));
+});
+
+final getArchivedPostsUseCaseProvider = Provider((ref) {
+  return GetArchivedPostsUseCase(ref.read(postsRepositoryProvider));
+});
+
+final archivePostUseCaseProvider = Provider((ref) {
+  return ArchivePostUseCase(ref.read(postsRepositoryProvider));
 });
 
 final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
