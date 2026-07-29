@@ -6,6 +6,7 @@ import '../providers/profile_providers.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/constants/routes.dart';
 import '../../../../core/utils/media.dart';
+import '../../../posts/presentation/screens/archive_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -99,9 +100,55 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 icon: const Icon(Icons.tune),
                 label: const Text('الملف الشخصي الموسّع'),
               ),
+              const SizedBox(height: 24),
+              _buildMenu(context),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Saved/Memories/Archive/Interests are all profile-adjacent, secondary
+  // surfaces on web (a saved/collections hub, an "on this day" feed, an
+  // archived-posts-and-stories hub, and marriage-intent interest signals) --
+  // none of them belong on the already-packed main feed AppBar, so they're
+  // grouped here instead, same placement web implies by nesting them under
+  // the profile area rather than the primary nav.
+  Widget _buildMenu(BuildContext context) {
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.bookmark_outline),
+            title: const Text('المحفوظات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.saved),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.access_time),
+            title: const Text('الذكريات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.memories),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.archive_outlined),
+            title: const Text('الأرشيف'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const ArchiveScreen()),
+            ),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.favorite_border),
+            title: const Text('الاهتمامات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.interests),
+          ),
+        ],
       ),
     );
   }

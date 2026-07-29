@@ -7,6 +7,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../../chat/presentation/screens/chat_thread_screen.dart';
+import '../../../interests/presentation/providers/interests_providers.dart';
 
 const _breakdownLabels = {
   'religious': 'التوافق الديني',
@@ -88,11 +89,38 @@ class MatchDetailScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
             ],
+            // "Send Salam" -- directed marriage-intent interest, distinct
+            // from accepting/rejecting the match itself (#754). Reachable
+            // here since this is the one screen with an authenticated
+            // other-user context; no general profile-view screen exists in
+            // mobile yet to hang this off of instead.
+            OutlinedButton.icon(
+              onPressed: () => _sendSalam(context, ref),
+              icon: const Icon(Icons.favorite_border),
+              label: const Text('أرسل السلام'),
+            ),
+            const SizedBox(height: 12),
             _actions(context, notifier),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _sendSalam(BuildContext context, WidgetRef ref) async {
+    try {
+      final result = await ref.read(sendInterestUseCaseProvider)(match.otherUserId);
+      if (!context.mounted) return;
+      final mutual = result['mutual'] == true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(mutual ? 'اهتمام متبادل! 🎉' : 'تم إرسال اهتمامك')),
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذّر إرسال الاهتمام')),
+      );
+    }
   }
 
   Future<void> _openChat(BuildContext context, WidgetRef ref) async {
