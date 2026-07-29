@@ -19,6 +19,9 @@ import '../../features/groups/presentation/screens/groups_screen.dart';
 import '../../features/videos/presentation/screens/reels_screen.dart';
 import '../../features/videos/presentation/screens/watch_screen.dart';
 import '../../features/videos/presentation/screens/video_upload_screen.dart';
+import '../../features/saved/presentation/screens/saved_screen.dart';
+import '../../features/memories/presentation/screens/memories_screen.dart';
+import '../../features/interests/presentation/screens/interests_screen.dart';
 
 // Match detail, chat thread, and group detail aren't GoRoutes at all (pushed
 // directly with the already-fetched id, same pattern as
@@ -66,6 +69,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // round trip; this GoRoute exists so /videos/upload is still directly
       // reachable/deep-linkable, defaulting to a Watch (non-reel) upload.
       GoRoute(path: AppRoutes.videoUpload, builder: (context, state) => const VideoUploadScreen(isReel: false)),
+      GoRoute(path: AppRoutes.saved, builder: (context, state) => const SavedScreen()),
+      GoRoute(path: AppRoutes.memories, builder: (context, state) => const MemoriesScreen()),
+      GoRoute(path: AppRoutes.interests, builder: (context, state) => const InterestsScreen()),
     ],
   );
 });

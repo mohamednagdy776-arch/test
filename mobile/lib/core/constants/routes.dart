@@ -20,6 +20,9 @@ class AppRoutes {
   static const reels = '/reels';
   static const watch = '/watch';
   static const videoUpload = '/videos/upload';
+  static const saved = '/saved';
+  static const memories = '/memories';
+  static const interests = '/interests';
 
   static String matchDetailPath(String id) => '/matching/$id';
   static String chatThreadPath(String conversationId) => '/chat/$conversationId';
