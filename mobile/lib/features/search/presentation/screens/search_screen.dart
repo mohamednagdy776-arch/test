@@ -9,6 +9,8 @@ import '../../../groups/presentation/screens/group_detail_screen.dart';
 import '../../../friends/presentation/providers/friends_providers.dart';
 import '../providers/search_providers.dart';
 import '../state/search_state.dart';
+import '../../domain/entities/saved_search.dart';
+import 'saved_searches_screen.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/media.dart';
 import '../../../../core/utils/extensions.dart';
@@ -17,9 +19,11 @@ import '../../../../core/utils/extensions.dart';
 // (query + tabs + results). Deliberately simplified for mobile v1: only
 // People/Groups/Posts tabs (Pages/Events aren't mobile features in this
 // phase -- out of scope); a compact People-only filter row (gender + age
-// range) instead of the full Advanced-Search panel per tab; and no saved
-// searches / local recent-search history (#757 on web, not part of this
-// phase's controller scope).
+// range) instead of the full Advanced-Search panel per tab.
+// Saved searches (#757, backend/src/saved-searches) are now wired in via
+// the two bookmark actions below -- no dedicated web page surfaces them
+// (only the controller exists), so this is a from-scratch mobile entry
+// point rather than a port of an existing web panel.
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -54,12 +58,80 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     ref.read(searchProvider.notifier).runSearch(gender: _gender);
   }
 
+  Future<void> _openSavedSearches() async {
+    final selected = await Navigator.of(context).push<SavedSearch>(
+      MaterialPageRoute(builder: (_) => const SavedSearchesScreen()),
+    );
+    if (selected == null) return;
+    final q = selected.filters['q'] as String? ?? '';
+    setState(() => _gender = selected.filters['gender'] as String?);
+    _controller.text = q;
+    ref.read(searchProvider.notifier).setQuery(q);
+    ref.read(searchProvider.notifier).runSearch(
+          gender: selected.filters['gender'] as String?,
+          minAge: selected.filters['minAge'] as int?,
+          maxAge: selected.filters['maxAge'] as int?,
+          country: selected.filters['country'] as String?,
+          city: selected.filters['city'] as String?,
+        );
+  }
+
+  Future<void> _saveCurrentSearch() async {
+    final controller = TextEditingController(text: ref.read(searchProvider).query);
+    final name = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('حفظ البحث'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'اسم البحث المحفوظ'),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(controller.text.trim()),
+            child: const Text('حفظ'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+    final state = ref.read(searchProvider);
+    try {
+      await ref.read(createSavedSearchUseCaseProvider)(name, {
+        'q': state.query,
+        if (_gender != null) 'gender': _gender,
+      });
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حفظ البحث')));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذّر حفظ البحث')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(searchProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('البحث')),
+      appBar: AppBar(
+        title: const Text('البحث'),
+        actions: [
+          if (state.hasSearched)
+            IconButton(
+              icon: const Icon(Icons.bookmark_add_outlined),
+              tooltip: 'حفظ هذا البحث',
+              onPressed: _saveCurrentSearch,
+            ),
+          IconButton(
+            icon: const Icon(Icons.bookmark_outline),
+            tooltip: 'عمليات البحث المحفوظة',
+            onPressed: _openSavedSearches,
+          ),
+        ],
+      ),
       body: Column(
         children: [
           Padding(
