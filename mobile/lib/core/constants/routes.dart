@@ -17,6 +17,9 @@ class AppRoutes {
   static const friends = '/friends';
   static const search = '/search';
   static const groups = '/groups';
+  static const reels = '/reels';
+  static const watch = '/watch';
+  static const videoUpload = '/videos/upload';
 
   static String matchDetailPath(String id) => '/matching/$id';
   static String chatThreadPath(String conversationId) => '/chat/$conversationId';
