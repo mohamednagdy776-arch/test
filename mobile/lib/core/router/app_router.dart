@@ -16,6 +16,9 @@ import '../../features/notifications/presentation/screens/notifications_screen.d
 import '../../features/friends/presentation/screens/friends_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/groups/presentation/screens/groups_screen.dart';
+import '../../features/videos/presentation/screens/reels_screen.dart';
+import '../../features/videos/presentation/screens/watch_screen.dart';
+import '../../features/videos/presentation/screens/video_upload_screen.dart';
 
 // Match detail, chat thread, and group detail aren't GoRoutes at all (pushed
 // directly with the already-fetched id, same pattern as
@@ -56,6 +59,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.friends, builder: (context, state) => const FriendsScreen()),
       GoRoute(path: AppRoutes.search, builder: (context, state) => const SearchScreen()),
       GoRoute(path: AppRoutes.groups, builder: (context, state) => const GroupsScreen()),
+      GoRoute(path: AppRoutes.reels, builder: (context, state) => const ReelsScreen()),
+      GoRoute(path: AppRoutes.watch, builder: (context, state) => const WatchScreen()),
+      // Reels/Watch's own upload buttons push VideoUploadScreen directly
+      // (Navigator.push) so they can pass isReel without a query-param
+      // round trip; this GoRoute exists so /videos/upload is still directly
+      // reachable/deep-linkable, defaulting to a Watch (non-reel) upload.
+      GoRoute(path: AppRoutes.videoUpload, builder: (context, state) => const VideoUploadScreen(isReel: false)),
     ],
   );
 });

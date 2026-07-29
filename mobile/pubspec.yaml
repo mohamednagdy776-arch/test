@@ -24,6 +24,10 @@ dependencies:
   intl: any
   image_picker: ^1.0.0
   google_fonts: ^6.1.0
+  # Reels/Watch/story-video playback -- the official Flutter plugin, no
+  # dependency existed for video playback before this phase (image_picker
+  # already covers picking a video file, just not playing one back).
+  video_player: ^2.9.0
 
 dev_dependencies:
   flutter_test:

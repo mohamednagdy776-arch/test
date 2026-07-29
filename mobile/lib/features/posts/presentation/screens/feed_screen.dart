@@ -5,6 +5,7 @@ import '../../domain/entities/post.dart';
 import '../providers/posts_providers.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
+import '../widgets/stories_bar.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/constants/routes.dart';
 import '../../../../core/utils/extensions.dart';
@@ -67,6 +68,16 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             onPressed: () => context.push(AppRoutes.groups),
           ),
           IconButton(
+            icon: const Icon(Icons.smart_display_outlined),
+            tooltip: 'المشاهدة',
+            onPressed: () => context.push(AppRoutes.watch),
+          ),
+          IconButton(
+            icon: const Icon(Icons.play_circle_outline),
+            tooltip: 'ريلز',
+            onPressed: () => context.push(AppRoutes.reels),
+          ),
+          IconButton(
             icon: const Icon(Icons.favorite_border),
             onPressed: () => context.push(AppRoutes.matching),
           ),
@@ -113,13 +124,22 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   Widget _buildBody(feed, String? myUserId) {
     if (feed.isLoading && feed.items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const Column(children: [
+        Padding(padding: EdgeInsets.all(12), child: StoriesBar()),
+        Expanded(child: Center(child: CircularProgressIndicator())),
+      ]);
     }
     if (feed.error != null && feed.items.isEmpty) {
-      return Center(child: Text(feed.error!));
+      return Column(children: [
+        const Padding(padding: EdgeInsets.all(12), child: StoriesBar()),
+        Expanded(child: Center(child: Text(feed.error!))),
+      ]);
     }
     if (feed.items.isEmpty) {
-      return const Center(child: Text('لا توجد منشورات بعد'));
+      return const Column(children: [
+        Padding(padding: EdgeInsets.all(12), child: StoriesBar()),
+        Expanded(child: Center(child: Text('لا توجد منشورات بعد'))),
+      ]);
     }
 
     return RefreshIndicator(
@@ -127,15 +147,19 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       child: ListView.builder(
         controller: _scrollController,
         padding: const EdgeInsets.all(12),
-        itemCount: feed.items.length + (feed.hasMore ? 1 : 0),
+        // +1 for the leading StoriesBar header item, on top of the feed items
+        // and the trailing loader.
+        itemCount: (1 + feed.items.length + (feed.hasMore ? 1 : 0)) as int,
         itemBuilder: (context, index) {
-          if (index >= feed.items.length) {
+          if (index == 0) return const StoriesBar();
+          final itemIndex = index - 1;
+          if (itemIndex >= feed.items.length) {
             return const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
               child: Center(child: CircularProgressIndicator()),
             );
           }
-          final post = feed.items[index];
+          final post = feed.items[itemIndex];
           return _PostCard(
             post: post,
             isOwn: post.userId == myUserId,
