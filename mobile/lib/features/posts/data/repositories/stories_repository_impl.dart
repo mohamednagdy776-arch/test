@@ -1,4 +1,5 @@
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/api/api_response.dart';
 import '../../domain/entities/story.dart';
 import '../../domain/repositories/stories_repository.dart';
 import '../data_sources/stories_remote_data_source.dart';
@@ -11,6 +12,18 @@ class StoriesRepositoryImpl implements StoriesRepository {
   Future<List<StoryGroup>> getStories() async {
     final data = await _remoteDataSource.getStories();
     return data.map(StoryGroup.fromJson).toList();
+  }
+
+  @override
+  Future<PaginatedResult<Story>> getArchivedStories({int page = 1, int limit = 10}) async {
+    final result = await _remoteDataSource.getArchivedStories(page: page, limit: limit);
+    return PaginatedResult<Story>(
+      items: result.items.map(Story.fromJson).toList(),
+      total: result.total,
+      page: result.page,
+      limit: result.limit,
+      totalPages: result.totalPages,
+    );
   }
 
   @override

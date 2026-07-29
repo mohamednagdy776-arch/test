@@ -73,4 +73,13 @@ class StoriesRemoteDataSource {
   Future<void> reactToStory(String storyId, String emoji) async {
     await _dio.post('/stories/$storyId/reactions', data: {'emoji': emoji});
   }
+
+  // Own archived stories only (paginated -- confirmed via curl: standard
+  // { data, meta } envelope, unlike GET /stories's plain array).
+  Future<PaginatedResult<Map<String, dynamic>>> getArchivedStories(
+      {int page = 1, int limit = 10}) async {
+    final response = await _dio.get('/stories/archived',
+        queryParameters: {'page': page, 'limit': limit});
+    return ApiResponse.unwrapPaginated(response, (json) => json);
+  }
 }

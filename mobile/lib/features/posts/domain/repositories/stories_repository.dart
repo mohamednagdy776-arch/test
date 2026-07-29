@@ -1,8 +1,11 @@
 import 'package:image_picker/image_picker.dart';
+import '../../../../core/api/api_response.dart';
 import '../entities/story.dart';
 
 abstract class StoriesRepository {
   Future<List<StoryGroup>> getStories();
+
+  Future<PaginatedResult<Story>> getArchivedStories({int page = 1, int limit = 10});
 
   /// Uploads a raw image/video file and returns its resolvable media URL.
   Future<String> uploadMedia(XFile file);
