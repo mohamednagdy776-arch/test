@@ -97,7 +97,7 @@ class _AddStoryButton extends StatelessWidget {
             Container(
               height: 60,
               width: 60,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppTheme.backgroundColor,
               ),
@@ -151,14 +151,14 @@ class _StoryRing extends StatelessWidget {
               height: 60,
               width: 60,
               padding: const EdgeInsets.all(2.5),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
+                gradient: LinearGradient(
                   colors: [AppTheme.primaryColor, AppTheme.secondaryColor, AppTheme.accentColor],
                 ),
               ),
               child: Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppTheme.surfaceColor,
                 ),

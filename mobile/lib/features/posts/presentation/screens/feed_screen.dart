@@ -149,7 +149,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         padding: const EdgeInsets.all(12),
         // +1 for the leading StoriesBar header item, on top of the feed items
         // and the trailing loader.
-        itemCount: 1 + feed.items.length + (feed.hasMore ? 1 : 0),
+        itemCount: (1 + feed.items.length + (feed.hasMore ? 1 : 0)) as int,
         itemBuilder: (context, index) {
           if (index == 0) return const StoriesBar();
           final itemIndex = index - 1;
