@@ -23,6 +23,8 @@ class AppRoutes {
   static const saved = '/saved';
   static const memories = '/memories';
   static const interests = '/interests';
+  static const events = '/events';
+  static const pages = '/pages';
 
   static String matchDetailPath(String id) => '/matching/$id';
   static String chatThreadPath(String conversationId) => '/chat/$conversationId';
