@@ -109,10 +109,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  // Saved/Memories/Archive/Interests are all profile-adjacent, secondary
-  // surfaces on web (a saved/collections hub, an "on this day" feed, an
-  // archived-posts-and-stories hub, and marriage-intent interest signals) --
-  // none of them belong on the already-packed main feed AppBar, so they're
+  // Saved/Memories/Archive/Interests/Events/Pages are all profile-adjacent,
+  // secondary surfaces on web (a saved/collections hub, an "on this day"
+  // feed, an archived-posts-and-stories hub, marriage-intent interest
+  // signals, a community events hub, and a pages/organizations hub) -- none
+  // of them belong on the already-packed main feed AppBar, so they're
   // grouped here instead, same placement web implies by nesting them under
   // the profile area rather than the primary nav.
   Widget _buildMenu(BuildContext context) {
@@ -147,6 +148,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: const Text('الاهتمامات'),
             trailing: const Icon(Icons.chevron_left),
             onTap: () => context.push(AppRoutes.interests),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.event_outlined),
+            title: const Text('الأحداث'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.events),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.flag_outlined),
+            title: const Text('الصفحات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.pages),
           ),
         ],
       ),

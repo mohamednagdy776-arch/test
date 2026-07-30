@@ -22,6 +22,8 @@ import '../../features/videos/presentation/screens/video_upload_screen.dart';
 import '../../features/saved/presentation/screens/saved_screen.dart';
 import '../../features/memories/presentation/screens/memories_screen.dart';
 import '../../features/interests/presentation/screens/interests_screen.dart';
+import '../../features/events/presentation/screens/events_screen.dart';
+import '../../features/pages/presentation/screens/pages_screen.dart';
 
 // Match detail, chat thread, and group detail aren't GoRoutes at all (pushed
 // directly with the already-fetched id, same pattern as
@@ -72,6 +74,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.saved, builder: (context, state) => const SavedScreen()),
       GoRoute(path: AppRoutes.memories, builder: (context, state) => const MemoriesScreen()),
       GoRoute(path: AppRoutes.interests, builder: (context, state) => const InterestsScreen()),
+      GoRoute(path: AppRoutes.events, builder: (context, state) => const EventsScreen()),
+      GoRoute(path: AppRoutes.pages, builder: (context, state) => const PagesScreen()),
     ],
   );
 });
