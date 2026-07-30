@@ -32,6 +32,7 @@ import '../../features/settings/presentation/screens/privacy_settings_screen.dar
 import '../../features/settings/presentation/screens/appearance_settings_screen.dart';
 import '../../features/settings/presentation/screens/notifications_settings_screen.dart';
 import '../../features/settings/presentation/screens/consent_settings_screen.dart';
+import '../../features/settings/presentation/screens/verification_settings_screen.dart';
 
 // Match detail, chat thread, and group detail aren't GoRoutes at all (pushed
 // directly with the already-fetched id, same pattern as
@@ -92,6 +93,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.settingsAppearance, builder: (context, state) => const AppearanceSettingsScreen()),
       GoRoute(path: AppRoutes.settingsNotifications, builder: (context, state) => const NotificationsSettingsScreen()),
       GoRoute(path: AppRoutes.settingsConsent, builder: (context, state) => const ConsentSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsVerification, builder: (context, state) => const VerificationSettingsScreen()),
     ],
   );
 });
