@@ -75,6 +75,16 @@ class SettingsRemoteDataSource {
   }
 
   // ---- Security / sessions / 2FA (auth.controller.ts) ----
+  // Lightweight identity + 2FA-enabled flag -- {id, email, accountType,
+  // twoFactorEnabled}. Used instead of the full profile fetch (GET /users/me)
+  // because that endpoint returns a null `id` for a brand-new account with no
+  // profile row yet, which would crash Profile.fromJson's non-nullable id.
+  Future<bool> getTwoFactorEnabled() async {
+    final response = await _dio.get('/auth/me');
+    final data = ApiResponse.unwrap(response);
+    return data['twoFactorEnabled'] as bool? ?? false;
+  }
+
   Future<List<dynamic>> getSessions() async {
     final response = await _dio.get('/auth/sessions');
     return ApiResponse.unwrapList(response);

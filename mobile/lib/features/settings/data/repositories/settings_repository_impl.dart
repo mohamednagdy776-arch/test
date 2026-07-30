@@ -76,6 +76,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
   }
 
   @override
+  Future<bool> getTwoFactorEnabled() => _remote.getTwoFactorEnabled();
+
+  @override
   Future<List<UserSession>> getSessions() async {
     final items = await _remote.getSessions();
     return items.map((e) => UserSession.fromJson(e as Map<String, dynamic>)).toList();

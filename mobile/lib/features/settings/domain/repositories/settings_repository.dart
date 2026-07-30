@@ -34,6 +34,7 @@ abstract class SettingsRepository {
   Future<NewsletterSettings> updateNewsletterSettings(Map<String, dynamic> changes);
 
   // ---- Security / account (auth.controller.ts) ----
+  Future<bool> getTwoFactorEnabled();
   Future<List<UserSession>> getSessions();
   Future<void> revokeSession(String sessionId);
   Future<void> revokeAllSessions();

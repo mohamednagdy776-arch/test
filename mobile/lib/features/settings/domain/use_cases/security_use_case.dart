@@ -10,6 +10,8 @@ class SecurityUseCase {
   final SettingsRepository _repository;
   const SecurityUseCase(this._repository);
 
+  Future<bool> getTwoFactorEnabled() => _repository.getTwoFactorEnabled();
+
   Future<List<UserSession>> getSessions() => _repository.getSessions();
 
   Future<void> revokeSession(String sessionId) => _repository.revokeSession(sessionId);
