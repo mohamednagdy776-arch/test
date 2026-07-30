@@ -59,7 +59,14 @@ class EventsListNotifier extends StateNotifier<EventsListState> {
     } catch (_) {
       state = state.copyWith(error: 'تعذّر تحديث حالة الحضور');
     } finally {
-      state = state.copyWith(rsvpPendingIds: state.rsvpPendingIds.where((e) => e != eventId).toSet());
+      // copyWith's `error` param isn't a nullable-preserving sentinel (matches
+      // every other state class here) -- pass state.error through explicitly
+      // or this finally-block copyWith would silently wipe the error the
+      // catch block just set.
+      state = state.copyWith(
+        error: state.error,
+        rsvpPendingIds: state.rsvpPendingIds.where((e) => e != eventId).toSet(),
+      );
     }
   }
 
