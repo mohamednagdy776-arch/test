@@ -24,6 +24,18 @@ import '../../features/memories/presentation/screens/memories_screen.dart';
 import '../../features/interests/presentation/screens/interests_screen.dart';
 import '../../features/events/presentation/screens/events_screen.dart';
 import '../../features/pages/presentation/screens/pages_screen.dart';
+import '../../features/settings/presentation/screens/settings_screen.dart';
+import '../../features/settings/presentation/screens/account_settings_screen.dart';
+import '../../features/settings/presentation/screens/security_settings_screen.dart';
+import '../../features/settings/presentation/screens/email_settings_screen.dart';
+import '../../features/settings/presentation/screens/privacy_settings_screen.dart';
+import '../../features/settings/presentation/screens/appearance_settings_screen.dart';
+import '../../features/settings/presentation/screens/notifications_settings_screen.dart';
+import '../../features/settings/presentation/screens/consent_settings_screen.dart';
+import '../../features/settings/presentation/screens/verification_settings_screen.dart';
+import '../../features/settings/presentation/screens/report_settings_screen.dart';
+import '../../features/settings/presentation/screens/help_settings_screen.dart';
+import '../../features/settings/presentation/screens/language_settings_screen.dart';
 
 // Match detail, chat thread, and group detail aren't GoRoutes at all (pushed
 // directly with the already-fetched id, same pattern as
@@ -76,6 +88,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.interests, builder: (context, state) => const InterestsScreen()),
       GoRoute(path: AppRoutes.events, builder: (context, state) => const EventsScreen()),
       GoRoute(path: AppRoutes.pages, builder: (context, state) => const PagesScreen()),
+      GoRoute(path: AppRoutes.settings, builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: AppRoutes.settingsAccount, builder: (context, state) => const AccountSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsSecurity, builder: (context, state) => const SecuritySettingsScreen()),
+      GoRoute(path: AppRoutes.settingsEmail, builder: (context, state) => const EmailSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsPrivacy, builder: (context, state) => const PrivacySettingsScreen()),
+      GoRoute(path: AppRoutes.settingsAppearance, builder: (context, state) => const AppearanceSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsNotifications, builder: (context, state) => const NotificationsSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsConsent, builder: (context, state) => const ConsentSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsVerification, builder: (context, state) => const VerificationSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsReport, builder: (context, state) => const ReportSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsHelp, builder: (context, state) => const HelpSettingsScreen()),
+      GoRoute(path: AppRoutes.settingsLanguage, builder: (context, state) => const LanguageSettingsScreen()),
     ],
   );
 });

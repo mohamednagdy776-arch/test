@@ -25,6 +25,18 @@ class AppRoutes {
   static const interests = '/interests';
   static const events = '/events';
   static const pages = '/pages';
+  static const settings = '/settings';
+  static const settingsAccount = '/settings/account';
+  static const settingsEmail = '/settings/email';
+  static const settingsSecurity = '/settings/security';
+  static const settingsVerification = '/settings/verification';
+  static const settingsPrivacy = '/settings/privacy';
+  static const settingsNotifications = '/settings/notifications';
+  static const settingsAppearance = '/settings/appearance';
+  static const settingsLanguage = '/settings/language';
+  static const settingsConsent = '/settings/consent';
+  static const settingsHelp = '/settings/help';
+  static const settingsReport = '/settings/report';
 
   static String matchDetailPath(String id) => '/matching/$id';
   static String chatThreadPath(String conversationId) => '/chat/$conversationId';

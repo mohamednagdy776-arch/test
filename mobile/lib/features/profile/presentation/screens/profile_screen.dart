@@ -163,6 +163,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             trailing: const Icon(Icons.chevron_left),
             onTap: () => context.push(AppRoutes.pages),
           ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.settings_outlined),
+            title: const Text('الإعدادات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.settings),
+          ),
         ],
       ),
     );
