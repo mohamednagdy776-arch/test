@@ -4,16 +4,16 @@ import '../../../posts/domain/entities/post.dart';
 import '../entities/page.dart';
 
 abstract class PagesRepository {
-  Future<PaginatedResult<Page>> getPages({int page = 1, int limit = 20, String? category});
-  Future<List<Page>> getMyPages();
-  Future<List<Page>> getCreatedPages();
-  Future<List<Page>> searchPages(String query);
-  Future<List<Page>> getSuggestedPages({int limit = 5});
+  Future<PaginatedResult<CommunityPage>> getPages({int page = 1, int limit = 20, String? category});
+  Future<List<CommunityPage>> getMyPages();
+  Future<List<CommunityPage>> getCreatedPages();
+  Future<List<CommunityPage>> searchPages(String query);
+  Future<List<CommunityPage>> getSuggestedPages({int limit = 5});
 
-  Future<Page> getPage(String id);
-  Future<Page> getPageByUsername(String username);
+  Future<CommunityPage> getPage(String id);
+  Future<CommunityPage> getPageByUsername(String username);
 
-  Future<Page> createPage({
+  Future<CommunityPage> createPage({
     required String name,
     String? description,
     String? category,
@@ -26,7 +26,7 @@ abstract class PagesRepository {
     XFile? coverPhoto,
   });
 
-  Future<Page> updatePage(
+  Future<CommunityPage> updatePage(
     String id, {
     String? name,
     String? description,
@@ -40,9 +40,9 @@ abstract class PagesRepository {
     XFile? coverPhoto,
   });
 
-  Future<Page> follow(String id);
+  Future<CommunityPage> follow(String id);
   Future<void> unfollow(String id);
-  Future<Page> like(String id);
+  Future<CommunityPage> like(String id);
   Future<void> unlike(String id);
 
   Future<PaginatedResult<Post>> getPagePosts(String id, {int page = 1, int limit = 20});

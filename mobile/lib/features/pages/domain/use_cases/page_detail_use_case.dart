@@ -5,5 +5,5 @@ class PageDetailUseCase {
   final PagesRepository _repository;
   const PageDetailUseCase(this._repository);
 
-  Future<Page> call(String id) => _repository.getPage(id);
+  Future<CommunityPage> call(String id) => _repository.getPage(id);
 }

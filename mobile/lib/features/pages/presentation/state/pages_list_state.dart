@@ -1,11 +1,11 @@
 import '../../domain/entities/page.dart';
 
 class PagesListState {
-  final List<Page> myPages; // followed pages (GET /pages/my)
-  final List<Page> createdPages;
-  final List<Page> discoverPages;
-  final List<Page> suggested;
-  final List<Page> searchResults;
+  final List<CommunityPage> myPages; // followed pages (GET /pages/my)
+  final List<CommunityPage> createdPages;
+  final List<CommunityPage> discoverPages;
+  final List<CommunityPage> suggested;
+  final List<CommunityPage> searchResults;
   final String searchQuery;
   final String? category;
   final int discoverPage;
@@ -38,11 +38,11 @@ class PagesListState {
   bool isFollowing(String pageId) => myPages.any((p) => p.id == pageId);
 
   PagesListState copyWith({
-    List<Page>? myPages,
-    List<Page>? createdPages,
-    List<Page>? discoverPages,
-    List<Page>? suggested,
-    List<Page>? searchResults,
+    List<CommunityPage>? myPages,
+    List<CommunityPage>? createdPages,
+    List<CommunityPage>? discoverPages,
+    List<CommunityPage>? suggested,
+    List<CommunityPage>? searchResults,
     String? searchQuery,
     String? category,
     bool clearCategory = false,

@@ -40,7 +40,7 @@ class _PageDetailScreenState extends ConsumerState<PageDetailScreen> {
     super.dispose();
   }
 
-  Future<void> _showEditDialog(Page page) async {
+  Future<void> _showEditDialog(CommunityPage page) async {
     final nameController = TextEditingController(text: page.name);
     final descController = TextEditingController(text: page.description ?? '');
     String? category = page.category;
@@ -207,7 +207,7 @@ class _PageDetailScreenState extends ConsumerState<PageDetailScreen> {
 }
 
 class _PageHero extends StatelessWidget {
-  final Page page;
+  final CommunityPage page;
   const _PageHero({required this.page});
 
   @override
@@ -295,7 +295,7 @@ class _Composer extends StatelessWidget {
 
 class _PagePostCard extends StatelessWidget {
   final Post post;
-  final Page page;
+  final CommunityPage page;
   const _PagePostCard({required this.post, required this.page});
 
   @override

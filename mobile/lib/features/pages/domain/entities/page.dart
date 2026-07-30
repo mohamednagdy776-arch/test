@@ -6,7 +6,7 @@
 // /pages/username/:username (findOne()); /pages and /pages/search also add
 // an `ownerId` (createdBy?.id) that findOne doesn't. Every extra field is
 // therefore nullable and simply absent outside its originating endpoint.
-class Page {
+class CommunityPage {
   final String id;
   final String username;
   final String name;
@@ -27,7 +27,7 @@ class Page {
   final bool? isOwner;
   final String? ownerId;
 
-  const Page({
+  const CommunityPage({
     required this.id,
     required this.username,
     required this.name,
@@ -49,8 +49,8 @@ class Page {
     this.ownerId,
   });
 
-  factory Page.fromJson(Map<String, dynamic> json) {
-    return Page(
+  factory CommunityPage.fromJson(Map<String, dynamic> json) {
+    return CommunityPage(
       id: json['id'] as String,
       username: json['username'] as String,
       name: json['name'] as String,

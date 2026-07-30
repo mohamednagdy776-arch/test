@@ -309,7 +309,7 @@ class _PagesScreenState extends ConsumerState<PagesScreen> {
     );
   }
 
-  Widget _pageList(List<Page> pages, PagesListState state, {String emptyText = 'لا توجد صفحات'}) {
+  Widget _pageList(List<CommunityPage> pages, PagesListState state, {String emptyText = 'لا توجد صفحات'}) {
     if (pages.isEmpty) {
       return ListView(
         children: [
@@ -333,7 +333,7 @@ class _PagesScreenState extends ConsumerState<PagesScreen> {
 }
 
 class _PageCard extends StatelessWidget {
-  final Page page;
+  final CommunityPage page;
   final bool isFollowing;
   final bool isPending;
   final VoidCallback onTap;

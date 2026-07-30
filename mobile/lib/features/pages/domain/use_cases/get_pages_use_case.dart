@@ -8,14 +8,14 @@ class GetPagesUseCase {
   final PagesRepository _repository;
   const GetPagesUseCase(this._repository);
 
-  Future<PaginatedResult<Page>> discover({int page = 1, int limit = 20, String? category}) =>
+  Future<PaginatedResult<CommunityPage>> discover({int page = 1, int limit = 20, String? category}) =>
       _repository.getPages(page: page, limit: limit, category: category);
 
-  Future<List<Page>> myPages() => _repository.getMyPages();
+  Future<List<CommunityPage>> myPages() => _repository.getMyPages();
 
-  Future<List<Page>> createdPages() => _repository.getCreatedPages();
+  Future<List<CommunityPage>> createdPages() => _repository.getCreatedPages();
 
-  Future<List<Page>> search(String query) => _repository.searchPages(query);
+  Future<List<CommunityPage>> search(String query) => _repository.searchPages(query);
 
-  Future<List<Page>> suggested({int limit = 5}) => _repository.getSuggestedPages(limit: limit);
+  Future<List<CommunityPage>> suggested({int limit = 5}) => _repository.getSuggestedPages(limit: limit);
 }

@@ -2,7 +2,7 @@ import '../../domain/entities/page.dart';
 import '../../../posts/domain/entities/post.dart';
 
 class PageDetailState {
-  final Page? page;
+  final CommunityPage? page;
   final List<Post> posts;
   final int postsPage;
   final bool hasMorePosts;
@@ -29,7 +29,7 @@ class PageDetailState {
   });
 
   PageDetailState copyWith({
-    Page? page,
+    CommunityPage? page,
     List<Post>? posts,
     int? postsPage,
     bool? hasMorePosts,

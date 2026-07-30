@@ -10,10 +10,10 @@ class PagesRepositoryImpl implements PagesRepository {
   const PagesRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<PaginatedResult<Page>> getPages({int page = 1, int limit = 20, String? category}) async {
+  Future<PaginatedResult<CommunityPage>> getPages({int page = 1, int limit = 20, String? category}) async {
     final page0 = await _remoteDataSource.getPages(page: page, limit: limit, category: category);
     return PaginatedResult(
-      items: page0.items.map(Page.fromJson).toList(),
+      items: page0.items.map(CommunityPage.fromJson).toList(),
       total: page0.total,
       page: page0.page,
       limit: page0.limit,
@@ -22,43 +22,43 @@ class PagesRepositoryImpl implements PagesRepository {
   }
 
   @override
-  Future<List<Page>> getMyPages() async {
+  Future<List<CommunityPage>> getMyPages() async {
     final data = await _remoteDataSource.getMyPages();
-    return data.map((e) => Page.fromJson(e as Map<String, dynamic>)).toList();
+    return data.map((e) => CommunityPage.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
-  Future<List<Page>> getCreatedPages() async {
+  Future<List<CommunityPage>> getCreatedPages() async {
     final data = await _remoteDataSource.getCreatedPages();
-    return data.map((e) => Page.fromJson(e as Map<String, dynamic>)).toList();
+    return data.map((e) => CommunityPage.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
-  Future<List<Page>> searchPages(String query) async {
+  Future<List<CommunityPage>> searchPages(String query) async {
     final data = await _remoteDataSource.searchPages(query);
-    return data.map((e) => Page.fromJson(e as Map<String, dynamic>)).toList();
+    return data.map((e) => CommunityPage.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
-  Future<List<Page>> getSuggestedPages({int limit = 5}) async {
+  Future<List<CommunityPage>> getSuggestedPages({int limit = 5}) async {
     final data = await _remoteDataSource.getSuggestedPages(limit: limit);
-    return data.map((e) => Page.fromJson(e as Map<String, dynamic>)).toList();
+    return data.map((e) => CommunityPage.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override
-  Future<Page> getPage(String id) async {
+  Future<CommunityPage> getPage(String id) async {
     final data = await _remoteDataSource.getPage(id);
-    return Page.fromJson(data);
+    return CommunityPage.fromJson(data);
   }
 
   @override
-  Future<Page> getPageByUsername(String username) async {
+  Future<CommunityPage> getPageByUsername(String username) async {
     final data = await _remoteDataSource.getPageByUsername(username);
-    return Page.fromJson(data);
+    return CommunityPage.fromJson(data);
   }
 
   @override
-  Future<Page> createPage({
+  Future<CommunityPage> createPage({
     required String name,
     String? description,
     String? category,
@@ -82,11 +82,11 @@ class PagesRepositoryImpl implements PagesRepository {
       profilePhoto: profilePhoto,
       coverPhoto: coverPhoto,
     );
-    return Page.fromJson(data);
+    return CommunityPage.fromJson(data);
   }
 
   @override
-  Future<Page> updatePage(
+  Future<CommunityPage> updatePage(
     String id, {
     String? name,
     String? description,
@@ -112,22 +112,22 @@ class PagesRepositoryImpl implements PagesRepository {
       profilePhoto: profilePhoto,
       coverPhoto: coverPhoto,
     );
-    return Page.fromJson(data);
+    return CommunityPage.fromJson(data);
   }
 
   @override
-  Future<Page> follow(String id) async {
+  Future<CommunityPage> follow(String id) async {
     final data = await _remoteDataSource.follow(id);
-    return Page.fromJson(data);
+    return CommunityPage.fromJson(data);
   }
 
   @override
   Future<void> unfollow(String id) => _remoteDataSource.unfollow(id);
 
   @override
-  Future<Page> like(String id) async {
+  Future<CommunityPage> like(String id) async {
     final data = await _remoteDataSource.like(id);
-    return Page.fromJson(data);
+    return CommunityPage.fromJson(data);
   }
 
   @override

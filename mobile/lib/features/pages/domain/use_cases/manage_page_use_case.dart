@@ -6,7 +6,7 @@ class ManagePageUseCase {
   final PagesRepository _repository;
   const ManagePageUseCase(this._repository);
 
-  Future<Page> create({
+  Future<CommunityPage> create({
     required String name,
     String? description,
     String? category,
@@ -31,7 +31,7 @@ class ManagePageUseCase {
         coverPhoto: coverPhoto,
       );
 
-  Future<Page> update(
+  Future<CommunityPage> update(
     String id, {
     String? name,
     String? description,
@@ -58,8 +58,8 @@ class ManagePageUseCase {
         coverPhoto: coverPhoto,
       );
 
-  Future<Page> follow(String id) => _repository.follow(id);
+  Future<CommunityPage> follow(String id) => _repository.follow(id);
   Future<void> unfollow(String id) => _repository.unfollow(id);
-  Future<Page> like(String id) => _repository.like(id);
+  Future<CommunityPage> like(String id) => _repository.like(id);
   Future<void> unlike(String id) => _repository.unlike(id);
 }
