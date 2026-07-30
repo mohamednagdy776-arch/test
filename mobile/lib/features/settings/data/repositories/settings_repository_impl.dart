@@ -108,13 +108,14 @@ class SettingsRepositoryImpl implements SettingsRepository {
       _remote.requestEmailChange(newEmail, currentPassword);
 
   @override
-  Future<({List<ConsentRequestItem> incoming, List<ConsentRequestItem> outgoing})> getMyConsents() async {
-    final data = await _remote.getMyConsents();
-    final incomingRaw = (data['incoming'] ?? data['received']) as List<dynamic>? ?? const [];
-    final outgoingRaw = (data['outgoing'] ?? data['sent']) as List<dynamic>? ?? const [];
+  Future<({List<ConsentRequestItem> incoming, List<ConsentRequestItem> outgoing})> getMyConsents(
+    String currentUserId,
+  ) async {
+    final rows = await _remote.getMyConsents();
+    final all = rows.map((e) => ConsentRequestItem.fromJson(e as Map<String, dynamic>)).toList();
     return (
-      incoming: incomingRaw.map((e) => ConsentRequestItem.fromJson(e as Map<String, dynamic>)).toList(),
-      outgoing: outgoingRaw.map((e) => ConsentRequestItem.fromJson(e as Map<String, dynamic>)).toList(),
+      incoming: all.where((r) => r.targetUserId == currentUserId).toList(),
+      outgoing: all.where((r) => r.requesterUserId == currentUserId).toList(),
     );
   }
 

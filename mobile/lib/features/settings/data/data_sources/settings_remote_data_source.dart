@@ -115,9 +115,18 @@ class SettingsRemoteDataSource {
   }
 
   // ---- Consent ----
-  Future<Map<String, dynamic>> getMyConsents() async {
+  // NOT wrapped in the usual {success, data, message} envelope -- confirmed
+  // live via curl: consent.controller.ts's getMyConsents/respond/revoke
+  // return the service result directly (no ok() call), unlike every other
+  // controller in this backend. The body is also a flat array of every
+  // consent request involving the caller (as either requester or target),
+  // not the {incoming, outgoing} shape web's ConsentManagementPage expects --
+  // web's incoming/outgoing fallback chain (`data?.incoming ?? data?.received
+  // ?? []`) never matches a bare array, so its lists are always empty in
+  // production. Split client-side instead (see SettingsRepositoryImpl).
+  Future<List<dynamic>> getMyConsents() async {
     final response = await _dio.get('/consent/my');
-    return ApiResponse.unwrap(response);
+    return response.data as List<dynamic>;
   }
 
   Future<void> respondToConsent(String id, bool accept) async {

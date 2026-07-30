@@ -32,6 +32,10 @@ class Profile {
   final List<String> interests;
   final List<String> skills;
 
+  // Photo privacy (settings/privacy page's "خصوصية الصور" card, #752/#757).
+  final String photoVisibility;
+  final bool incognito;
+
   const Profile({
     required this.id,
     this.userId,
@@ -62,6 +66,8 @@ class Profile {
     this.insuranceType,
     this.interests = const [],
     this.skills = const [],
+    this.photoVisibility = 'public',
+    this.incognito = false,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
@@ -95,6 +101,8 @@ class Profile {
       insuranceType: json['insuranceType'] as String?,
       interests: (json['interests'] as List<dynamic>?)?.cast<String>() ?? const [],
       skills: (json['skills'] as List<dynamic>?)?.cast<String>() ?? const [],
+      photoVisibility: json['photoVisibility'] as String? ?? 'public',
+      incognito: json['incognito'] as bool? ?? false,
     );
   }
 }

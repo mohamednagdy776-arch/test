@@ -10,7 +10,18 @@ import '../../domain/use_cases/email_use_case.dart';
 import '../../domain/use_cases/consent_use_case.dart';
 import '../../domain/use_cases/verification_use_case.dart';
 import '../../domain/use_cases/report_use_case.dart';
+import '../state/security_notifier.dart';
+import '../state/security_state.dart';
+import '../state/privacy_notifier.dart';
+import '../state/privacy_state.dart';
+import '../state/appearance_notifier.dart';
+import '../state/appearance_state.dart';
+import '../state/notifications_settings_notifier.dart';
+import '../state/notifications_settings_state.dart';
+import '../state/consent_notifier.dart';
+import '../state/consent_state.dart';
 import '../../../../core/api/dio_client.dart';
+import '../../../profile/presentation/providers/profile_providers.dart';
 
 final settingsRemoteDataSourceProvider = Provider((ref) {
   return SettingsRemoteDataSource(DioClient.create());
@@ -50,4 +61,25 @@ final verificationUseCaseProvider = Provider((ref) {
 
 final reportUseCaseProvider = Provider((ref) {
   return ReportUseCase(ref.read(settingsRepositoryProvider));
+});
+
+final securityProvider = StateNotifierProvider<SecurityNotifier, SecurityState>((ref) {
+  return SecurityNotifier(ref.read(securityUseCaseProvider));
+});
+
+final privacyProvider = StateNotifierProvider<PrivacyNotifier, PrivacyState>((ref) {
+  return PrivacyNotifier(ref.read(privacyUseCaseProvider));
+});
+
+final appearanceProvider = StateNotifierProvider<AppearanceNotifier, AppearanceState>((ref) {
+  return AppearanceNotifier(ref.read(appearanceUseCaseProvider));
+});
+
+final notificationsSettingsProvider =
+    StateNotifierProvider<NotificationsSettingsNotifier, NotificationsSettingsState>((ref) {
+  return NotificationsSettingsNotifier(ref.read(notificationsSettingsUseCaseProvider));
+});
+
+final consentProvider = StateNotifierProvider<ConsentNotifier, ConsentState>((ref) {
+  return ConsentNotifier(ref.read(consentUseCaseProvider), ref.read(getMyProfileUseCaseProvider));
 });

@@ -47,7 +47,10 @@ abstract class SettingsRepository {
   Future<void> requestEmailChange(String newEmail, String currentPassword);
 
   // ---- Consent (consent.controller.ts) ----
-  Future<({List<ConsentRequestItem> incoming, List<ConsentRequestItem> outgoing})> getMyConsents();
+  // Backend returns a flat array (every request where the caller is either
+  // requester or target); split into incoming/outgoing client-side using the
+  // caller's own id (confirmed live via curl -- see remote data source).
+  Future<({List<ConsentRequestItem> incoming, List<ConsentRequestItem> outgoing})> getMyConsents(String currentUserId);
   Future<void> respondToConsent(String id, bool accept);
   Future<void> revokeConsent(String id);
 
