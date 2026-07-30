@@ -45,6 +45,7 @@ abstract class SettingsRepository {
   Future<void> deleteAccount(String password);
 
   // ---- Email (auth.controller.ts) ----
+  Future<String> getCurrentEmail();
   Future<void> requestEmailChange(String newEmail, String currentPassword);
 
   // ---- Consent (consent.controller.ts) ----

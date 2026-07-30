@@ -107,6 +107,9 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<void> deleteAccount(String password) => _remote.deleteAccount(password);
 
   @override
+  Future<String> getCurrentEmail() => _remote.getCurrentEmail();
+
+  @override
   Future<void> requestEmailChange(String newEmail, String currentPassword) =>
       _remote.requestEmailChange(newEmail, currentPassword);
 

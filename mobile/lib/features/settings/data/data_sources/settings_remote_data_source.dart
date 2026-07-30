@@ -80,9 +80,18 @@ class SettingsRemoteDataSource {
   // because that endpoint returns a null `id` for a brand-new account with no
   // profile row yet, which would crash Profile.fromJson's non-nullable id.
   Future<bool> getTwoFactorEnabled() async {
-    final response = await _dio.get('/auth/me');
-    final data = ApiResponse.unwrap(response);
+    final data = await _getAuthMe();
     return data['twoFactorEnabled'] as bool? ?? false;
+  }
+
+  Future<String> getCurrentEmail() async {
+    final data = await _getAuthMe();
+    return data['email'] as String? ?? '';
+  }
+
+  Future<Map<String, dynamic>> _getAuthMe() async {
+    final response = await _dio.get('/auth/me');
+    return ApiResponse.unwrap(response);
   }
 
   Future<List<dynamic>> getSessions() async {
