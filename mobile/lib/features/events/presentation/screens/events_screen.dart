@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../domain/entities/event.dart';
 import '../providers/events_providers.dart';
+import '../state/events_list_state.dart';
 import 'event_detail_screen.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/media.dart';
