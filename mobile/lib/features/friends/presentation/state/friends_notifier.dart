@@ -85,7 +85,14 @@ class FriendsNotifier extends StateNotifier<FriendsState> {
     } catch (_) {
       state = state.copyWith(error: 'تعذّر تنفيذ الإجراء');
     } finally {
-      state = state.copyWith(pendingIds: state.pendingIds.where((e) => e != id).toSet());
+      // copyWith's `error` param isn't a nullable-preserving sentinel (matches
+      // every other state class here) -- pass state.error through explicitly
+      // or this finally-block copyWith would silently wipe the error the
+      // catch block just set.
+      state = state.copyWith(
+        error: state.error,
+        pendingIds: state.pendingIds.where((e) => e != id).toSet(),
+      );
     }
   }
 }

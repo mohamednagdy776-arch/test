@@ -62,6 +62,24 @@ void main() {
     expect(notifier.state.pendingIds, isEmpty);
   });
 
+  test('join sets an error and clears the pending id when the repository throws', () async {
+    when(() => repository.joinGroup('g1')).thenThrow(Exception('boom'));
+
+    await notifier.join('g1');
+
+    expect(notifier.state.error, isNotNull);
+    expect(notifier.state.pendingIds, isEmpty);
+  });
+
+  test('leave sets an error and clears the pending id when the repository throws', () async {
+    when(() => repository.leaveGroup('g1')).thenThrow(Exception('boom'));
+
+    await notifier.leave('g1');
+
+    expect(notifier.state.error, isNotNull);
+    expect(notifier.state.pendingIds, isEmpty);
+  });
+
   test('create returns false and sets an error on failure', () async {
     when(() => repository.createGroup(name: 'x', description: null, privacy: 'public', category: null))
         .thenThrow(Exception('boom'));
