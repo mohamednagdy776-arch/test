@@ -9,6 +9,7 @@ import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/media.dart';
 import '../../../../features/chat/presentation/providers/chat_providers.dart';
 import '../../../../features/chat/presentation/screens/chat_thread_screen.dart';
+import '../../../../features/profile/presentation/screens/public_profile_screen.dart';
 
 // Mirrors web/src/app/(main)/friends/page.tsx's three main tabs. The web page
 // also has "Lists" (friend lists) and a birthdays strip -- both call
@@ -28,6 +29,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
   void initState() {
     super.initState();
     Future.microtask(() => ref.read(friendsProvider.notifier).loadAll());
+  }
+
+  void _openProfile(String userId, String name, String? avatarUrl) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => PublicProfileScreen(userId: userId, initialName: name, initialAvatarUrl: avatarUrl),
+    ));
   }
 
   Future<void> _openChat(String userId) async {
@@ -124,7 +131,10 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
                 PopupMenuItem(value: 'block', child: Text('حظر')),
               ],
             ),
-            onTap: () => _openChat(f.id),
+            // Tapping the card itself opens the profile (mirrors web's
+            // FriendsTab, which links the whole card to the friend's
+            // profile) -- messaging stays reachable via the popup menu.
+            onTap: () => _openProfile(f.id, f.fullName, f.avatarUrl),
           ),
         );
       },
@@ -146,6 +156,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
           child: ListTile(
             leading: _Avatar(name: r.user.fullName, avatarUrl: r.user.avatarUrl),
             title: Text(r.user.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),
+            onTap: () => _openProfile(r.user.id, r.user.fullName, r.user.avatarUrl),
             trailing: busy
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : Row(
@@ -183,6 +194,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
             leading: _Avatar(name: s.user.fullName, avatarUrl: s.user.avatarUrl),
             title: Text(s.user.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: s.mutual > 0 ? Text('${s.mutual} أصدقاء مشتركون') : null,
+            onTap: () => _openProfile(s.user.id, s.user.fullName, s.user.avatarUrl),
             trailing: busy
                 ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                 : TextButton(

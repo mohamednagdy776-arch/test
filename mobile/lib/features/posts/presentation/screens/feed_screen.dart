@@ -13,6 +13,7 @@ import '../../../../core/utils/media.dart';
 import '../../../../features/auth/presentation/providers/auth_providers.dart';
 import '../../../../features/profile/presentation/providers/profile_providers.dart';
 import '../../../../features/notifications/presentation/providers/notifications_providers.dart';
+import '../../../../features/profile/presentation/screens/public_profile_screen.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -197,32 +198,46 @@ class _PostCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundColor:
-                        AppTheme.primaryColor.withValues(alpha: 0.1),
-                    backgroundImage:
-                        avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                    child: avatarUrl == null
-                        ? Text(post.authorName.isNotEmpty
-                            ? post.authorName[0]
-                            : '?')
-                        : null,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  // Its own tap target (opens the author's profile), nested
+                  // inside the card's outer InkWell (opens the post) -- the
+                  // inner GestureDetector wins the tap for this region.
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => PublicProfileScreen(
+                        userId: post.userId,
+                        initialName: post.authorName,
+                        initialAvatarUrl: post.authorAvatarUrl,
+                      ),
+                    )),
+                    child: Row(
                       children: [
-                        Text(post.authorName,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w600)),
-                        Text(post.createdAt.timeAgo,
-                            style: const TextStyle(
-                                fontSize: 12, color: AppTheme.textSecondary)),
+                        CircleAvatar(
+                          radius: 18,
+                          backgroundColor:
+                              AppTheme.primaryColor.withValues(alpha: 0.1),
+                          backgroundImage:
+                              avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                          child: avatarUrl == null
+                              ? Text(post.authorName.isNotEmpty
+                                  ? post.authorName[0]
+                                  : '?')
+                              : null,
+                        ),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(post.authorName,
+                                style: const TextStyle(fontWeight: FontWeight.w600)),
+                            Text(post.createdAt.timeAgo,
+                                style: const TextStyle(
+                                    fontSize: 12, color: AppTheme.textSecondary)),
+                          ],
+                        ),
                       ],
                     ),
                   ),
+                  const Spacer(),
                   if (isOwn)
                     PopupMenuButton<String>(
                       onSelected: (v) {

@@ -7,6 +7,7 @@ import '../../../groups/domain/entities/group.dart';
 import '../../../posts/domain/entities/post.dart';
 import '../../../groups/presentation/screens/group_detail_screen.dart';
 import '../../../friends/presentation/providers/friends_providers.dart';
+import '../../../profile/presentation/screens/public_profile_screen.dart';
 import '../providers/search_providers.dart';
 import '../state/search_state.dart';
 import '../../domain/entities/saved_search.dart';
@@ -244,6 +245,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         final avatarUrl = resolveMediaUrl(u.avatarUrl);
         return Card(
           child: ListTile(
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => PublicProfileScreen(userId: u.id, initialName: u.fullName, initialAvatarUrl: u.avatarUrl),
+            )),
             leading: CircleAvatar(
               backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
               backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,

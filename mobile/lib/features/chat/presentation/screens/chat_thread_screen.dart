@@ -5,10 +5,12 @@ import '../providers/chat_providers.dart';
 import '../state/chat_thread_notifier.dart';
 import '../state/chat_thread_state.dart';
 import '../../../../core/constants/theme.dart';
+import '../../../../core/utils/media.dart';
 import '../../../../features/profile/presentation/providers/profile_providers.dart';
 import '../../../calls/domain/entities/call_peer.dart';
 import '../../../calls/presentation/providers/call_providers.dart';
 import '../../../calls/presentation/util/call_permissions.dart';
+import '../../../profile/presentation/screens/public_profile_screen.dart';
 
 class ChatThreadScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -89,7 +91,38 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        // Tapping the thread title/avatar opens the other user's full
+        // profile (mirrors web's ChatWindow.tsx header, which links the
+        // peer's name to their profile) -- group chats (otherUserId null)
+        // have no single "other user" to link to, so stay plain text there.
+        title: widget.otherUserId == null
+            ? Text(widget.title)
+            : InkWell(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => PublicProfileScreen(
+                    userId: widget.otherUserId!,
+                    initialName: widget.title,
+                    initialAvatarUrl: widget.otherUserAvatar,
+                  ),
+                )),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                      backgroundImage: resolveMediaUrl(widget.otherUserAvatar) != null
+                          ? NetworkImage(resolveMediaUrl(widget.otherUserAvatar)!)
+                          : null,
+                      child: resolveMediaUrl(widget.otherUserAvatar) == null
+                          ? Text(widget.title.isNotEmpty ? widget.title[0] : '؟', style: const TextStyle(fontSize: 13))
+                          : null,
+                    ),
+                    const SizedBox(width: 8),
+                    Flexible(child: Text(widget.title, overflow: TextOverflow.ellipsis)),
+                  ],
+                ),
+              ),
         // Call entry points -- matches web's ChatWindow.tsx placing voice +
         // video icons in the thread header.
         actions: widget.otherUserId == null

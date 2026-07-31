@@ -7,6 +7,7 @@ import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/media.dart';
 import '../../../posts/domain/entities/post.dart';
+import '../../../profile/presentation/screens/public_profile_screen.dart';
 
 // Mirrors web/src/app/(main)/groups/[id]/page.tsx's member-facing surface:
 // hero info, join/leave, member list, posts feed + a simple composer.
@@ -194,18 +195,23 @@ class _MembersRow extends StatelessWidget {
         separatorBuilder: (_, __) => const SizedBox(width: 10),
         itemBuilder: (context, i) {
           final m = members[i];
-          return Column(
-            children: [
-              CircleAvatar(
-                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                child: Text(m.fullName.isNotEmpty ? m.fullName[0] : '؟'),
-              ),
-              const SizedBox(height: 4),
-              SizedBox(
-                width: 56,
-                child: Text(m.fullName, style: const TextStyle(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
-              ),
-            ],
+          return InkWell(
+            onTap: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => PublicProfileScreen(userId: m.id, initialName: m.fullName),
+            )),
+            child: Column(
+              children: [
+                CircleAvatar(
+                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                  child: Text(m.fullName.isNotEmpty ? m.fullName[0] : '؟'),
+                ),
+                const SizedBox(height: 4),
+                SizedBox(
+                  width: 56,
+                  child: Text(m.fullName, style: const TextStyle(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -227,25 +233,34 @@ class _GroupPostCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-                  backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-                  child: avatarUrl == null ? Text(post.authorName.isNotEmpty ? post.authorName[0] : '؟') : null,
+            InkWell(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => PublicProfileScreen(
+                  userId: post.userId,
+                  initialName: post.authorName,
+                  initialAvatarUrl: post.authorAvatarUrl,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(post.authorName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                      Text(post.createdAt.timeAgo, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
-                    ],
+              )),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                    child: avatarUrl == null ? Text(post.authorName.isNotEmpty ? post.authorName[0] : '؟') : null,
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(post.authorName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                        Text(post.createdAt.timeAgo, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
             if (post.content.isNotEmpty) ...[
               const SizedBox(height: 8),
