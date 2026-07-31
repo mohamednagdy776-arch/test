@@ -27,6 +27,9 @@ class AppRoutes {
   static const pages = '/pages';
   static const premium = '/upgrade';
   static const affiliates = '/affiliates';
+  static const childPrediction = '/child-prediction';
+  static const family = '/family';
+  static const labPortal = '/lab-portal';
   static const settings = '/settings';
   static const settingsAccount = '/settings/account';
   static const settingsEmail = '/settings/email';
