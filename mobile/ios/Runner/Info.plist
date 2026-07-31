@@ -26,6 +26,11 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<!-- 1:1 voice/video calling (flutter_webrtc) -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>يحتاج تطبيق طيّبت إلى الوصول إلى الميكروفون لإجراء المكالمات الصوتية والمرئية.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>يحتاج تطبيق طيّبت إلى الوصول إلى الكاميرا لإجراء مكالمات الفيديو.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

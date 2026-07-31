@@ -128,7 +128,12 @@ class MatchDetailScreen extends ConsumerWidget {
     if (!context.mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => ChatThreadScreen(conversationId: conversation.id, title: conversation.displayName),
+        builder: (_) => ChatThreadScreen(
+          conversationId: conversation.id,
+          title: conversation.displayName,
+          otherUserId: match.otherUserId,
+          otherUserAvatar: match.otherUserAvatar,
+        ),
       ),
     );
   }

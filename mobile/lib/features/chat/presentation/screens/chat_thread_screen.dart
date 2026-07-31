@@ -6,11 +6,24 @@ import '../state/chat_thread_notifier.dart';
 import '../state/chat_thread_state.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../features/profile/presentation/providers/profile_providers.dart';
+import '../../../calls/domain/entities/call_peer.dart';
+import '../../../calls/presentation/providers/call_providers.dart';
+import '../../../calls/presentation/util/call_permissions.dart';
 
 class ChatThreadScreen extends ConsumerStatefulWidget {
   final String conversationId;
   final String title;
-  const ChatThreadScreen({super.key, required this.conversationId, required this.title});
+  // Needed to start a call from this thread (call:initiate's calleeId) --
+  // null for group chats, where 1:1 calling doesn't apply.
+  final String? otherUserId;
+  final String? otherUserAvatar;
+  const ChatThreadScreen({
+    super.key,
+    required this.conversationId,
+    required this.title,
+    this.otherUserId,
+    this.otherUserAvatar,
+  });
 
   @override
   ConsumerState<ChatThreadScreen> createState() => _ChatThreadScreenState();
@@ -33,6 +46,29 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     super.dispose();
   }
 
+  Future<void> _startCall(CallType type, String? myName, String? myAvatar) async {
+    final calleeId = widget.otherUserId;
+    if (calleeId == null) return;
+    final granted = await requestCallPermissions(type);
+    if (!granted) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يجب السماح بالوصول إلى الميكروفون لإجراء المكالمة')),
+        );
+      }
+      return;
+    }
+    await ref.read(callNotifierProvider.notifier).startCall(
+          conversationId: widget.conversationId,
+          calleeId: calleeId,
+          peerName: widget.title,
+          peerAvatar: widget.otherUserAvatar,
+          myName: myName,
+          myAvatar: myAvatar,
+          callType: type,
+        );
+  }
+
   void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -46,12 +82,31 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(chatThreadProvider(widget.conversationId));
     final notifier = ref.read(chatThreadProvider(widget.conversationId).notifier);
-    final myUserId = ref.watch(myProfileProvider).valueOrNull?.userId;
+    final myProfile = ref.watch(myProfileProvider).valueOrNull;
+    final myUserId = myProfile?.userId;
 
     ref.listen(chatThreadProvider(widget.conversationId), (_, __) => _scrollToBottom());
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(
+        title: Text(widget.title),
+        // Call entry points -- matches web's ChatWindow.tsx placing voice +
+        // video icons in the thread header.
+        actions: widget.otherUserId == null
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.call),
+                  tooltip: 'مكالمة صوتية',
+                  onPressed: () => _startCall(CallType.audio, myProfile?.fullName, myProfile?.avatarUrl),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.videocam),
+                  tooltip: 'مكالمة فيديو',
+                  onPressed: () => _startCall(CallType.video, myProfile?.fullName, myProfile?.avatarUrl),
+                ),
+              ],
+      ),
       body: Column(
         children: [
           Expanded(child: _buildMessages(state, myUserId)),
