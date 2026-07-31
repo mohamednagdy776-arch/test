@@ -5,6 +5,7 @@ import '../../domain/entities/event.dart';
 import '../providers/events_providers.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/media.dart';
+import '../../../profile/presentation/screens/public_profile_screen.dart';
 
 // Mirrors web/src/app/(main)/events/[id]/page.tsx: hero (cover photo or
 // gradient placeholder + date badge), info card (date/location), description,
@@ -293,6 +294,9 @@ class _AttendeesSection extends StatelessWidget {
           )
         else
           ...attendees.map((a) => ListTile(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => PublicProfileScreen(userId: a.id, initialName: a.fullName),
+                )),
                 leading: CircleAvatar(
                   backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                   child: Text(a.fullName.isNotEmpty ? a.fullName[0] : '؟'),
