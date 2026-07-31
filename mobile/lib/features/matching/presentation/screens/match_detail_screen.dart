@@ -8,6 +8,7 @@ import '../../../../core/constants/theme.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../../chat/presentation/screens/chat_thread_screen.dart';
 import '../../../interests/presentation/providers/interests_providers.dart';
+import '../../../profile/presentation/screens/public_profile_screen.dart';
 
 const _breakdownLabels = {
   'religious': 'التوافق الديني',
@@ -27,7 +28,22 @@ class MatchDetailScreen extends ConsumerWidget {
     final notifier = ref.read(matchesProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: Text(match.otherUserName ?? 'التفاصيل')),
+      appBar: AppBar(
+        title: Text(match.otherUserName ?? 'التفاصيل'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person_outline),
+            tooltip: 'عرض الملف الشخصي الكامل',
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(
+              builder: (_) => PublicProfileScreen(
+                userId: match.otherUserId,
+                initialName: match.otherUserName,
+                initialAvatarUrl: match.otherUserAvatar,
+              ),
+            )),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -90,10 +106,11 @@ class MatchDetailScreen extends ConsumerWidget {
               const SizedBox(height: 12),
             ],
             // "Send Salam" -- directed marriage-intent interest, distinct
-            // from accepting/rejecting the match itself (#754). Reachable
-            // here since this is the one screen with an authenticated
-            // other-user context; no general profile-view screen exists in
-            // mobile yet to hang this off of instead.
+            // from accepting/rejecting the match itself (#754). Kept here too
+            // (in addition to the AppBar's "عرض الملف الشخصي" -> full profile,
+            // which also has its own Send Salam action as of Phase 20) since
+            // it's a one-tap action worth surfacing directly on the match
+            // card without an extra navigation hop.
             OutlinedButton.icon(
               onPressed: () => _sendSalam(context, ref),
               icon: const Icon(Icons.favorite_border),

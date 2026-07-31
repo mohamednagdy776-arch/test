@@ -6,6 +6,7 @@ import 'chat_thread_screen.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/media.dart';
+import '../../../profile/presentation/screens/public_profile_screen.dart';
 
 class ConversationsScreen extends ConsumerWidget {
   const ConversationsScreen({super.key});
@@ -55,11 +56,29 @@ class _ConversationTile extends StatelessWidget {
           ),
         ),
       ),
-      leading: CircleAvatar(
-        backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-        backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-        child: avatarUrl == null ? Text(conversation.displayName.isNotEmpty ? conversation.displayName[0] : '?') : null,
-      ),
+      // The avatar is its own tap target (opens the profile) nested inside
+      // the row's onTap (opens the thread) -- Flutter's gesture arena gives
+      // the inner GestureDetector priority for taps within its bounds.
+      leading: conversation.otherUserId == null
+          ? CircleAvatar(
+              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl == null ? Text(conversation.displayName.isNotEmpty ? conversation.displayName[0] : '?') : null,
+            )
+          : GestureDetector(
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => PublicProfileScreen(
+                  userId: conversation.otherUserId!,
+                  initialName: conversation.displayName,
+                  initialAvatarUrl: conversation.otherUserAvatar,
+                ),
+              )),
+              child: CircleAvatar(
+                backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+                child: avatarUrl == null ? Text(conversation.displayName.isNotEmpty ? conversation.displayName[0] : '?') : null,
+              ),
+            ),
       title: Text(conversation.displayName, style: const TextStyle(fontWeight: FontWeight.w600)),
       subtitle: Text(
         conversation.lastMessageContent ?? 'ابدأ المحادثة',

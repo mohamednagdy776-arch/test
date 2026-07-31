@@ -5,14 +5,14 @@ import '../providers/interests_providers.dart';
 import '../state/interests_state.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/media.dart';
+import '../../../profile/presentation/screens/public_profile_screen.dart';
 
 // Matches web/src/app/(main)/interests/page.tsx's three tabs: received,
-// sent, and "who viewed my profile" (GET /users/me/profile-views). Rows are
-// display-only here -- there's no general "view another user's profile"
-// screen anywhere in the mobile app yet to link to (out of scope for this
-// phase; web's PersonCard links to /:username, but the reachable
-// send/withdraw interest action for mobile v1 lives on MatchDetailScreen,
-// which already has an authenticated other-user context to act on).
+// sent, and "who viewed my profile" (GET /users/me/profile-views). Rows now
+// link out to PublicProfileScreen (mirrors web's PersonCard linking to
+// /:username) -- a prior phase note here said no such screen existed yet;
+// it does now (Phase 20), so the send/withdraw interest action for THESE
+// rows can also happen from the profile itself, not only MatchDetailScreen.
 class InterestsScreen extends ConsumerStatefulWidget {
   const InterestsScreen({super.key});
 
@@ -84,6 +84,15 @@ class _InterestsScreenState extends ConsumerState<InterestsScreen> {
           final avatarUrl = resolveMediaUrl(user.avatarUrl);
           return Card(
             child: ListTile(
+              onTap: user.id.isEmpty
+                  ? null
+                  : () => Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => PublicProfileScreen(
+                          userId: user.id,
+                          initialName: user.displayName,
+                          initialAvatarUrl: user.avatarUrl,
+                        ),
+                      )),
               leading: CircleAvatar(
                 backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
                 backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
