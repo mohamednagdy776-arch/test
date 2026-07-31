@@ -3,6 +3,7 @@ import '../../domain/entities/comment.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/media.dart';
+import '../../../profile/presentation/screens/public_profile_screen.dart';
 import 'reaction_picker.dart';
 
 // Renders one root comment plus its direct replies. The backend caps
@@ -52,14 +53,17 @@ class CommentTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: isReply ? 14 : 16,
-            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-            backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
-            child: avatarUrl == null
-                ? Text(
-                    comment.authorName.isNotEmpty ? comment.authorName[0] : '؟')
-                : null,
+          GestureDetector(
+            onTap: comment.authorId.isEmpty ? null : () => _openProfile(context),
+            child: CircleAvatar(
+              radius: isReply ? 14 : 16,
+              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+              backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl == null
+                  ? Text(
+                      comment.authorName.isNotEmpty ? comment.authorName[0] : '؟')
+                  : null,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -80,11 +84,14 @@ class CommentTile extends StatelessWidget {
                       Row(
                         children: [
                           Flexible(
-                            child: Text(
-                              comment.authorName,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w700, fontSize: 12),
-                              overflow: TextOverflow.ellipsis,
+                            child: GestureDetector(
+                              onTap: comment.authorId.isEmpty ? null : () => _openProfile(context),
+                              child: Text(
+                                comment.authorName,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w700, fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -159,6 +166,16 @@ class CommentTile extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void _openProfile(BuildContext context) {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => PublicProfileScreen(
+        userId: comment.authorId,
+        initialName: comment.authorName,
+        initialAvatarUrl: comment.authorAvatarUrl,
+      ),
+    ));
   }
 
   void _showEditDialog(BuildContext context) {
