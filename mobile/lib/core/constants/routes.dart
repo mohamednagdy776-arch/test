@@ -25,6 +25,8 @@ class AppRoutes {
   static const interests = '/interests';
   static const events = '/events';
   static const pages = '/pages';
+  static const premium = '/upgrade';
+  static const affiliates = '/affiliates';
   static const settings = '/settings';
   static const settingsAccount = '/settings/account';
   static const settingsEmail = '/settings/email';

@@ -101,9 +101,55 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 label: const Text('الملف الشخصي الموسّع'),
               ),
               const SizedBox(height: 24),
+              _buildPremiumBanner(context),
+              const SizedBox(height: 16),
               _buildMenu(context),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  // Web gives premium/upgrade its own standout treatment -- a gold gradient
+  // card in the sidebar plus a Crown CTA in the navbar (Sidebar.tsx,
+  // Navbar.tsx) -- distinct from the plain nav-item styling every other
+  // secondary feature gets there (including /affiliates, which web lists as
+  // an ordinary sidebar/bottom-nav item). Mirrored here as a standout gold
+  // banner above the menu card, using AppTheme.accentColor (the same
+  // "antique gold" #B8892A web's CSS var(--accent) resolves to in the
+  // luxury/Emerald Sanctum theme this app hardcodes).
+  Widget _buildPremiumBanner(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => context.push(AppRoutes.premium),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppTheme.accentColor, AppTheme.primaryColor],
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+          ),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.workspace_premium, color: Colors.white),
+            SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('الترقية المميزة', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  SizedBox(height: 2),
+                  Text('ميزات حصرية للتوافق المتقدم والبحث الذكي', style: TextStyle(color: Colors.white70, fontSize: 11)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_left, color: Colors.white),
+          ],
         ),
       ),
     );
@@ -162,6 +208,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             title: const Text('الصفحات'),
             trailing: const Icon(Icons.chevron_left),
             onTap: () => context.push(AppRoutes.pages),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.share_outlined),
+            title: const Text('برنامج الإحالة'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.affiliates),
           ),
           const Divider(height: 1),
           ListTile(

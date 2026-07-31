@@ -22,12 +22,14 @@ class AuthRepositoryImpl implements AuthRepository {
     required String phone,
     required String password,
     required String dateOfBirth,
+    String? referralCode,
   }) async {
     final tokens = await remoteDataSource.register(
       email: email,
       phone: phone,
       password: password,
       dateOfBirth: dateOfBirth,
+      referralCode: referralCode,
     );
     await _saveTokens(tokens);
     return tokens;

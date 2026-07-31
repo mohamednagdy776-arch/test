@@ -49,10 +49,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String phone,
     required String password,
     required String dateOfBirth,
+    String? referralCode,
   }) async {
     state = const AuthLoading();
     try {
-      await registerUseCase(email: email, phone: phone, password: password, dateOfBirth: dateOfBirth);
+      await registerUseCase(
+        email: email,
+        phone: phone,
+        password: password,
+        dateOfBirth: dateOfBirth,
+        referralCode: referralCode,
+      );
       state = const AuthSuccess();
       onAuthenticated?.call();
     } on AuthFailure catch (e) {

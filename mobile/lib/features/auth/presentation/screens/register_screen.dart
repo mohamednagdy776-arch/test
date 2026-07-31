@@ -19,6 +19,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _confirmCtrl = TextEditingController();
+  final _referralCodeCtrl = TextEditingController();
   bool _obscure = true;
   DateTime? _dateOfBirth;
   String? _dateOfBirthError;
@@ -29,6 +30,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     _phoneCtrl.dispose();
     _passwordCtrl.dispose();
     _confirmCtrl.dispose();
+    _referralCodeCtrl.dispose();
     super.dispose();
   }
 
@@ -72,11 +74,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
     if (!_formKey.currentState!.validate() || _dateOfBirthError != null) return;
 
+    final referralCode = _referralCodeCtrl.text.trim();
     ref.read(authNotifierProvider.notifier).register(
       email: _emailCtrl.text.trim(),
       phone: _phoneCtrl.text.trim(),
       password: _passwordCtrl.text,
       dateOfBirth: '${dob!.year.toString().padLeft(4, '0')}-${dob.month.toString().padLeft(2, '0')}-${dob.day.toString().padLeft(2, '0')}',
+      referralCode: referralCode.isEmpty ? null : referralCode,
     );
   }
 
@@ -186,6 +190,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     if (v != _passwordCtrl.text) return 'Passwords do not match';
                     return null;
                   },
+                ),
+                const SizedBox(height: 16),
+
+                // Optional -- web threads this from a `?ref=` query param on
+                // its shared referral links (RegisterDto.referralCode /
+                // affiliates.service.ts's attributeReferral, #107). No
+                // app-link deep-linking is configured yet in this app (same
+                // gap noted in auth_remote_data_source.dart for the
+                // password-reset token), so there's no link to auto-fill
+                // this from -- the referrer shares the code as text and the
+                // new user pastes it in manually.
+                AuthTextField(
+                  controller: _referralCodeCtrl,
+                  label: 'Referral Code (optional)',
+                  hint: 'e.g. AHMED2026',
                 ),
                 const SizedBox(height: 24),
 
