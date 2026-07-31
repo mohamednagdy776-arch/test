@@ -64,6 +64,7 @@ void main() {
     await _pump(tester, repository);
     await _fillRequiredFields(tester);
 
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Create Account'));
     await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
     await tester.pumpAndSettle();
 
@@ -91,11 +92,13 @@ void main() {
     // Opens the Material date picker; the dialog's own `lastDate` already
     // excludes under-18 dates, so accepting the pre-filled initialDate (25
     // years ago) is a legitimate value without needing to navigate the grid.
+    await tester.ensureVisible(find.text('Select your date of birth'));
     await tester.tap(find.text('Select your date of birth'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Create Account'));
     await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
     await tester.pumpAndSettle();
 
@@ -125,11 +128,13 @@ void main() {
     await _fillRequiredFields(tester);
     await tester.enterText(find.byType(TextFormField).last, 'AHMED2026');
 
+    await tester.ensureVisible(find.text('Select your date of birth'));
     await tester.tap(find.text('Select your date of birth'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
 
+    await tester.ensureVisible(find.widgetWithText(ElevatedButton, 'Create Account'));
     await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
     await tester.pumpAndSettle();
 

@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/extensions.dart';
+import '../../domain/entities/affiliate.dart';
 import '../providers/affiliates_providers.dart';
+import '../state/affiliates_state.dart';
 
 // Mirrors web/src/app/(main)/affiliates/page.tsx (join CTA -> dashboard once
 // joined, referral code + history, "how it works"). Two deliberate omissions
@@ -105,20 +107,20 @@ class _AffiliatesScreenState extends ConsumerState<AffiliatesScreen> {
     );
   }
 
-  Widget _buildJoinCard(dynamic state) {
+  Widget _buildJoinCard(AffiliatesState state) {
     return Column(
       children: [
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(color: AppTheme.primaryColor, borderRadius: BorderRadius.circular(20)),
-          child: Column(
+          child: const Column(
             children: [
-              const Text('🤝', style: TextStyle(fontSize: 40)),
-              const SizedBox(height: 12),
-              const Text('انضم لبرنامج الإحالة', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text(
+              Text('🤝', style: TextStyle(fontSize: 40)),
+              SizedBox(height: 12),
+              Text('انضم لبرنامج الإحالة', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+              SizedBox(height: 8),
+              Text(
                 'ساعد الآخرين في إيجاد شريك الحياة واكسب عمولات على كل إحالة ناجحة',
                 textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white70, fontSize: 13),
@@ -138,8 +140,8 @@ class _AffiliatesScreenState extends ConsumerState<AffiliatesScreen> {
     );
   }
 
-  List<Widget> _buildDashboard(dynamic state) {
-    final affiliate = state.affiliate;
+  List<Widget> _buildDashboard(AffiliatesState state) {
+    final affiliate = state.affiliate as Affiliate;
     return [
       Container(
         width: double.infinity,
@@ -191,7 +193,7 @@ class _AffiliatesScreenState extends ConsumerState<AffiliatesScreen> {
                   ),
                   const SizedBox(width: 12),
                   FilledButton(
-                    onPressed: () => _copy(affiliate.referralCode as String, 'الكود'),
+                    onPressed: () => _copy(affiliate.referralCode, 'الكود'),
                     child: const Text('نسخ'),
                   ),
                 ],
@@ -203,12 +205,12 @@ class _AffiliatesScreenState extends ConsumerState<AffiliatesScreen> {
       const SizedBox(height: 16),
       _buildReferralHistory(state),
       const SizedBox(height: 16),
-      Card(
+      const Card(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text('كيف يعمل البرنامج؟', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text('١. شارك كود الإحالة مع الأهل والأصدقاء'),
@@ -225,8 +227,8 @@ class _AffiliatesScreenState extends ConsumerState<AffiliatesScreen> {
     ];
   }
 
-  Widget _buildReferralHistory(dynamic state) {
-    final referrals = state.referrals as List;
+  Widget _buildReferralHistory(AffiliatesState state) {
+    final referrals = state.referrals;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -246,7 +248,7 @@ class _AffiliatesScreenState extends ConsumerState<AffiliatesScreen> {
                     leading: const CircleAvatar(child: Icon(Icons.person_outline)),
                     title: Text('كود: ${r.referralCodeUsed}'),
                     subtitle: Text(r.createdAt.timeAgo),
-                    trailing: _statusBadge(r.status as String),
+                    trailing: _statusBadge(r.status),
                   )),
           ],
         ),

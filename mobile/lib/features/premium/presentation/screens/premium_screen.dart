@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/theme.dart';
 import '../providers/premium_providers.dart';
+import '../state/premium_state.dart';
 
 class _PlanInfo {
   final String id;
@@ -131,7 +132,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
                       ),
                       child: Text(state.error!, style: const TextStyle(color: AppTheme.dangerColor)),
                     ),
-                  ..._plans.map((plan) => _buildPlanCard(context, state, plan)),
+                  ..._plans.map((plan) => _buildPlanCard(state, plan)),
                   if (state.active?.isActive == true && state.activePlan != 'free') ...[
                     const SizedBox(height: 8),
                     Center(
@@ -159,7 +160,7 @@ class _PremiumScreenState extends ConsumerState<PremiumScreen> {
     );
   }
 
-  Widget _buildPlanCard(BuildContext context, dynamic state, _PlanInfo plan) {
+  Widget _buildPlanCard(PremiumState state, _PlanInfo plan) {
     final isCurrent = state.activePlan == plan.id;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),

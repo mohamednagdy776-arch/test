@@ -126,29 +126,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [AppTheme.accentColor, AppTheme.primaryColor],
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
           ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.all(Radius.circular(16)),
         ),
-        child: Row(
+        child: const Row(
           children: [
-            const Icon(Icons.workspace_premium, color: Colors.white),
-            const SizedBox(width: 12),
+            Icon(Icons.workspace_premium, color: Colors.white),
+            SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   Text('الترقية المميزة', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                   SizedBox(height: 2),
                   Text('ميزات حصرية للتوافق المتقدم والبحث الذكي', style: TextStyle(color: Colors.white70, fontSize: 11)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_left, color: Colors.white),
+            Icon(Icons.chevron_left, color: Colors.white),
           ],
         ),
       ),
