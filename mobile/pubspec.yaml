@@ -28,6 +28,13 @@ dependencies:
   # dependency existed for video playback before this phase (image_picker
   # already covers picking a video file, just not playing one back).
   video_player: ^2.9.0
+  # 1:1 voice/video calling (this phase) -- the standard, actively-maintained
+  # Flutter WebRTC plugin. No other way to do real getUserMedia/RTCPeerConnection
+  # in Flutter; mirrors web's browser-native WebRTC APIs used in
+  # web/src/features/call/CallProvider.tsx.
+  flutter_webrtc: ^0.11.0
+  # Runtime mic/camera permission prompts before starting/accepting a call.
+  permission_handler: ^11.3.0
 
 dev_dependencies:
   flutter_test:
