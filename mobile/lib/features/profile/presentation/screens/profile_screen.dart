@@ -216,6 +216,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             trailing: const Icon(Icons.chevron_left),
             onTap: () => context.push(AppRoutes.affiliates),
           ),
+          // Family (guardian/ward oversight), child-prediction, and
+          // lab-portal all sit at the same ordinary nav tier on web itself
+          // (Sidebar.tsx/BottomNav.tsx list all three alongside e.g. Family
+          // with no special marketing treatment -- only premium/upgrade gets
+          // that gold-banner standout treatment there), so they're added
+          // here as plain menu rows too, matching Phases 14-17's placement
+          // convention for every other secondary feature.
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.shield_outlined),
+            title: const Text('الأسرة'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.family),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.child_care_outlined),
+            title: const Text('توقّع شكل الطفل'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.childPrediction),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.science_outlined),
+            title: const Text('بوابة المختبرات'),
+            trailing: const Icon(Icons.chevron_left),
+            onTap: () => context.push(AppRoutes.labPortal),
+          ),
           const Divider(height: 1),
           ListTile(
             leading: const Icon(Icons.settings_outlined),

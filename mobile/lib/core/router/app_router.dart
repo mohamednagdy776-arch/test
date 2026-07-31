@@ -38,6 +38,9 @@ import '../../features/settings/presentation/screens/help_settings_screen.dart';
 import '../../features/settings/presentation/screens/language_settings_screen.dart';
 import '../../features/premium/presentation/screens/premium_screen.dart';
 import '../../features/affiliates/presentation/screens/affiliates_screen.dart';
+import '../../features/child_prediction/presentation/screens/child_prediction_screen.dart';
+import '../../features/family/presentation/screens/family_screen.dart';
+import '../../features/lab_portal/presentation/screens/lab_portal_screen.dart';
 
 // Match detail, chat thread, and group detail aren't GoRoutes at all (pushed
 // directly with the already-fetched id, same pattern as
@@ -104,6 +107,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.settingsLanguage, builder: (context, state) => const LanguageSettingsScreen()),
       GoRoute(path: AppRoutes.premium, builder: (context, state) => const PremiumScreen()),
       GoRoute(path: AppRoutes.affiliates, builder: (context, state) => const AffiliatesScreen()),
+      GoRoute(path: AppRoutes.childPrediction, builder: (context, state) => const ChildPredictionScreen()),
+      GoRoute(path: AppRoutes.family, builder: (context, state) => const FamilyScreen()),
+      GoRoute(path: AppRoutes.labPortal, builder: (context, state) => const LabPortalScreen()),
     ],
   );
 });
