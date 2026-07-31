@@ -10,7 +10,14 @@ class RegisterUseCase {
     required String phone,
     required String password,
     required String dateOfBirth,
+    String? referralCode,
   }) {
-    return repository.register(email: email, phone: phone, password: password, dateOfBirth: dateOfBirth);
+    return repository.register(
+      email: email,
+      phone: phone,
+      password: password,
+      dateOfBirth: dateOfBirth,
+      referralCode: referralCode,
+    );
   }
 }

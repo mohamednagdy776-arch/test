@@ -73,6 +73,7 @@ void main() {
           phone: any(named: 'phone'),
           password: any(named: 'password'),
           dateOfBirth: any(named: 'dateOfBirth'),
+          referralCode: any(named: 'referralCode'),
         ));
   });
 
@@ -82,6 +83,7 @@ void main() {
           phone: '+201234567890',
           password: 'password123',
           dateOfBirth: any(named: 'dateOfBirth'),
+          referralCode: null,
         )).thenAnswer((_) async => const AuthTokens(accessToken: 'a', refreshToken: 'r'));
     await _pump(tester, repository);
     await _fillRequiredFields(tester);
@@ -102,8 +104,41 @@ void main() {
           phone: '+201234567890',
           password: 'password123',
           dateOfBirth: captureAny(named: 'dateOfBirth'),
+          referralCode: null,
         )).captured;
     expect(captured.single, matches(RegExp(r'^\d{4}-\d{2}-\d{2}$')));
     expect(find.text('dashboard'), findsOneWidget);
+  });
+
+  // #107: a referral code typed into the optional field must reach
+  // repository.register (no deep-link auto-fill exists, so this manual path
+  // is the only way a mobile registration gets attributed).
+  testWidgets('typing a referral code sends it to register', (tester) async {
+    when(() => repository.register(
+          email: 'a@b.com',
+          phone: '+201234567890',
+          password: 'password123',
+          dateOfBirth: any(named: 'dateOfBirth'),
+          referralCode: 'AHMED2026',
+        )).thenAnswer((_) async => const AuthTokens(accessToken: 'a', refreshToken: 'r'));
+    await _pump(tester, repository);
+    await _fillRequiredFields(tester);
+    await tester.enterText(find.byType(TextFormField).last, 'AHMED2026');
+
+    await tester.tap(find.text('Select your date of birth'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('OK'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+    await tester.pumpAndSettle();
+
+    verify(() => repository.register(
+          email: 'a@b.com',
+          phone: '+201234567890',
+          password: 'password123',
+          dateOfBirth: any(named: 'dateOfBirth'),
+          referralCode: 'AHMED2026',
+        )).called(1);
   });
 }

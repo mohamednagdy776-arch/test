@@ -7,6 +7,7 @@ abstract class AuthRepository {
     required String phone,
     required String password,
     required String dateOfBirth,
+    String? referralCode,
   });
   Future<void> forgotPassword({required String email});
   Future<void> resetPassword({required String token, required String password});

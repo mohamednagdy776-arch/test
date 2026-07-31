@@ -22,6 +22,7 @@ void main() {
           phone: '+201000000000',
           password: 'pw123456',
           dateOfBirth: '1995-05-15',
+          referralCode: null,
         )).thenAnswer((_) async => tokens);
 
     final result = await useCase.call(
@@ -37,6 +38,37 @@ void main() {
           phone: '+201000000000',
           password: 'pw123456',
           dateOfBirth: '1995-05-15',
+          referralCode: null,
+        )).called(1);
+  });
+
+  // #107: referral codes from a shared affiliate link must actually reach
+  // the repository so registration attribution works end-to-end.
+  test('forwards a referral code to repository.register', () async {
+    const tokens = AuthTokens(accessToken: 'a', refreshToken: 'r');
+    when(() => repository.register(
+          email: 'a@b.com',
+          phone: '+201000000000',
+          password: 'pw123456',
+          dateOfBirth: '1995-05-15',
+          referralCode: 'AHMED2026',
+        )).thenAnswer((_) async => tokens);
+
+    final result = await useCase.call(
+      email: 'a@b.com',
+      phone: '+201000000000',
+      password: 'pw123456',
+      dateOfBirth: '1995-05-15',
+      referralCode: 'AHMED2026',
+    );
+
+    expect(result, tokens);
+    verify(() => repository.register(
+          email: 'a@b.com',
+          phone: '+201000000000',
+          password: 'pw123456',
+          dateOfBirth: '1995-05-15',
+          referralCode: 'AHMED2026',
         )).called(1);
   });
 
@@ -46,6 +78,7 @@ void main() {
           phone: any(named: 'phone'),
           password: any(named: 'password'),
           dateOfBirth: any(named: 'dateOfBirth'),
+          referralCode: any(named: 'referralCode'),
         )).thenThrow(Exception('email already registered'));
 
     expect(

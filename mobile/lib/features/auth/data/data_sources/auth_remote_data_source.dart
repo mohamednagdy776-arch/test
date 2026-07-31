@@ -22,6 +22,7 @@ class AuthRemoteDataSource {
     required String phone,
     required String password,
     required String dateOfBirth,
+    String? referralCode,
   }) async {
     try {
       final res = await dio.post('/auth/register', data: {
@@ -29,6 +30,11 @@ class AuthRemoteDataSource {
         'phone': phone,
         'password': password,
         'dateOfBirth': dateOfBirth,
+        // RegisterDto.referralCode is @IsOptional -- that only skips
+        // null/undefined, not '', so an empty field must never be sent
+        // (confirmed passes validation live either way, but there's no
+        // reason to attempt attribution with a blank code).
+        if (referralCode != null && referralCode.isNotEmpty) 'referralCode': referralCode,
       });
       return AuthTokensModel.fromJson(ApiResponse.unwrap(res));
     } on DioException catch (e) {
