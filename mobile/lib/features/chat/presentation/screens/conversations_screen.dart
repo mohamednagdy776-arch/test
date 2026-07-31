@@ -47,7 +47,12 @@ class _ConversationTile extends StatelessWidget {
     return ListTile(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ChatThreadScreen(conversationId: conversation.id, title: conversation.displayName),
+          builder: (_) => ChatThreadScreen(
+            conversationId: conversation.id,
+            title: conversation.displayName,
+            otherUserId: conversation.otherUserId,
+            otherUserAvatar: conversation.otherUserAvatar,
+          ),
         ),
       ),
       leading: CircleAvatar(

@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/constants/theme.dart';
 import 'core/router/app_router.dart';
+import 'features/calls/presentation/widgets/call_overlay.dart';
 
 void main() {
   runApp(const ProviderScope(child: TayyibtApp()));
@@ -28,6 +29,11 @@ class TayyibtApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: router,
+      // An incoming call must be able to interrupt ANY screen, so the
+      // overlay/listener is mounted here at the app root (wrapping every
+      // routed page) rather than inside any individual screen -- mirrors
+      // web's <CallProvider> wrapping the whole app.
+      builder: (context, child) => CallOverlayHost(child: child ?? const SizedBox.shrink()),
     );
   }
 }

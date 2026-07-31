@@ -35,7 +35,12 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen> {
       final conversation = await ref.read(getOrCreateConversationUseCaseProvider).call(userId);
       if (!mounted) return;
       Navigator.of(context).push(MaterialPageRoute(
-        builder: (_) => ChatThreadScreen(conversationId: conversation.id, title: conversation.displayName),
+        builder: (_) => ChatThreadScreen(
+          conversationId: conversation.id,
+          title: conversation.displayName,
+          otherUserId: conversation.otherUserId ?? userId,
+          otherUserAvatar: conversation.otherUserAvatar,
+        ),
       ));
     } catch (_) {
       if (!mounted) return;

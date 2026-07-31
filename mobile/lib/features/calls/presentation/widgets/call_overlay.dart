@@ -8,6 +8,7 @@ import '../../domain/entities/call_peer.dart';
 import '../providers/call_providers.dart';
 import '../state/call_notifier.dart';
 import '../state/call_state.dart';
+import '../util/call_permissions.dart';
 
 const Map<CallPhase, String> _kStatusText = {
   CallPhase.idle: '',
@@ -344,6 +345,20 @@ class _CardOverlay extends StatelessWidget {
     );
   }
 
+  Future<void> _acceptCall(BuildContext context) async {
+    final granted = await requestCallPermissions(isVideo ? CallType.video : CallType.audio);
+    if (!granted) {
+      notifier.rejectCall();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('يجب السماح بالوصول إلى الميكروفون لإجراء المكالمة')),
+        );
+      }
+      return;
+    }
+    await notifier.acceptCall();
+  }
+
   Widget _controls(BuildContext context, CallPhase phase) {
     if (phase == CallPhase.incoming) {
       return Row(
@@ -355,7 +370,7 @@ class _CardOverlay extends StatelessWidget {
             icon: isVideo ? Icons.videocam : Icons.call,
             color: AppTheme.successColor,
             label: 'قبول',
-            onPressed: () => notifier.acceptCall(),
+            onPressed: () => _acceptCall(context),
           ),
         ],
       );
