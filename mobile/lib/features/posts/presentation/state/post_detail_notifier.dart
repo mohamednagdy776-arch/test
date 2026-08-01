@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../domain/entities/post.dart';
 import '../../domain/use_cases/get_post_use_case.dart';
 import '../../domain/use_cases/get_comments_use_case.dart';
 import '../../domain/use_cases/add_comment_use_case.dart';
@@ -7,6 +8,7 @@ import '../../domain/use_cases/delete_comment_use_case.dart';
 import '../../domain/use_cases/react_to_comment_use_case.dart';
 import '../../domain/use_cases/get_post_reactions_use_case.dart';
 import '../../domain/use_cases/toggle_post_reaction_use_case.dart';
+import '../../domain/use_cases/vote_poll_use_case.dart';
 import 'post_detail_state.dart';
 
 class PostDetailNotifier extends StateNotifier<PostDetailState> {
@@ -19,6 +21,7 @@ class PostDetailNotifier extends StateNotifier<PostDetailState> {
   final ReactToCommentUseCase _reactToComment;
   final GetPostReactionsUseCase _getReactions;
   final TogglePostReactionUseCase _toggleReaction;
+  final VotePollUseCase _votePoll;
 
   // No auto-load-on-construct -- callers trigger load() from initState, same
   // convention as FeedNotifier/GroupDetailNotifier.
@@ -32,6 +35,7 @@ class PostDetailNotifier extends StateNotifier<PostDetailState> {
     this._reactToComment,
     this._getReactions,
     this._toggleReaction,
+    this._votePoll,
   ) : super(const PostDetailState());
 
   Future<void> load() async {
@@ -120,5 +124,30 @@ class PostDetailNotifier extends StateNotifier<PostDetailState> {
     } catch (_) {
       state = state.copyWith(reactions: previous, error: 'تعذّر إضافة التفاعل');
     }
+  }
+
+  // POST /posts/:id/poll/:optionIndex/vote's response is curl-verified to
+  // always carry a correctly-stripped pollOptions + myVote regardless of
+  // ownership (unlike GET /posts/:id -- see poll_option.dart's PollOption doc
+  // comment), so patching the in-memory post from this response directly is
+  // safe and avoids a full reload's owner-view quirk.
+  Future<void> votePoll(int optionIndex) async {
+    final current = state.post;
+    if (current == null) return;
+    try {
+      final result = await _votePoll(postId, optionIndex);
+      state = state.copyWith(
+        post: current.copyWith(pollOptions: result.pollOptions, myVote: result.myVote),
+      );
+    } catch (_) {
+      state = state.copyWith(error: 'تعذّر التصويت');
+    }
+  }
+
+  // Called after a successful edit (Edit pushes its own screen and returns
+  // the updated Post) -- avoids a network round-trip since the edit response
+  // already is the fresh post.
+  void setPost(Post post) {
+    state = state.copyWith(post: post);
   }
 }

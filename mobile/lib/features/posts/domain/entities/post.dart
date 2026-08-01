@@ -4,6 +4,13 @@
 // dedicated formatter the way profile/video entities are). No comment/
 // reaction count fields exist in this payload (view + create only is the
 // locked v1 scope, so this doesn't need to model reactions/comments at all).
+//
+// Phase 23 extends this with the composer/menu fields (bgColor, feeling,
+// location, audience, pollOptions/myVote, editedAt) confirmed live against
+// POST /posts and GET /posts/:id -- all present on the same flat object, no
+// separate formatter for these either.
+import 'poll_option.dart';
+
 class Post {
   final String id;
   final String userId;
@@ -14,6 +21,18 @@ class Post {
   final String postType;
   final bool isPinned;
   final bool isArchived;
+  final String audience;
+  final String? bgColor;
+  final String? feeling;
+  final String? location;
+  final DateTime? editedAt;
+  final List<PollOption>? pollOptions;
+  // Only ever populated by a non-owner GET /posts/:id or a feed listing (both
+  // go through the backend's sanitizePolls()); the owner's own GET /posts/:id
+  // never carries this field at all (see poll_option.dart's PollOption doc
+  // comment) -- callers needing the owner's own vote must fall back to
+  // scanning pollOptions[i].voterIds themselves.
+  final int? myVote;
   final DateTime createdAt;
 
   // Flattened from the nested user/user.profile objects for display --
@@ -32,6 +51,13 @@ class Post {
     this.postType = 'text',
     this.isPinned = false,
     this.isArchived = false,
+    this.audience = 'friends',
+    this.bgColor,
+    this.feeling,
+    this.location,
+    this.editedAt,
+    this.pollOptions,
+    this.myVote,
     required this.createdAt,
     required this.authorName,
     this.authorUsername,
@@ -53,12 +79,50 @@ class Post {
       postType: json['postType'] as String? ?? 'text',
       isPinned: json['isPinned'] as bool? ?? false,
       isArchived: json['isArchived'] as bool? ?? false,
+      audience: json['audience'] as String? ?? 'friends',
+      bgColor: json['bgColor'] as String?,
+      feeling: json['feeling'] as String?,
+      location: json['location'] as String?,
+      editedAt: json['editedAt'] != null ? DateTime.tryParse(json['editedAt'] as String) : null,
+      pollOptions: (json['pollOptions'] as List<dynamic>?)
+          ?.map((e) => PollOption.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      myVote: json['myVote'] as int?,
       createdAt: DateTime.parse(json['createdAt'] as String),
       authorName: (profile?['fullName'] as String?)?.trim().isNotEmpty == true
           ? profile!['fullName'] as String
           : (firstLast.isNotEmpty ? firstLast : (user?['fullName'] as String? ?? 'مستخدم')),
       authorUsername: user?['username'] as String?,
       authorAvatarUrl: profile?['avatarUrl'] as String?,
+    );
+  }
+
+  Post copyWith({
+    List<PollOption>? pollOptions,
+    int? myVote,
+    bool? isArchived,
+  }) {
+    return Post(
+      id: id,
+      userId: userId,
+      content: content,
+      mediaUrl: mediaUrl,
+      mediaUrls: mediaUrls,
+      mediaType: mediaType,
+      postType: postType,
+      isPinned: isPinned,
+      isArchived: isArchived ?? this.isArchived,
+      audience: audience,
+      bgColor: bgColor,
+      feeling: feeling,
+      location: location,
+      editedAt: editedAt,
+      pollOptions: pollOptions ?? this.pollOptions,
+      myVote: myVote ?? this.myVote,
+      createdAt: createdAt,
+      authorName: authorName,
+      authorUsername: authorUsername,
+      authorAvatarUrl: authorAvatarUrl,
     );
   }
 }

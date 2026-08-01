@@ -63,4 +63,18 @@ class FeedNotifier extends StateNotifier<FeedState> {
       state = state.copyWith(items: previous, error: 'تعذّر حذف المنشور');
     }
   }
+
+  // Archive/hide (Phase 23) run their own network call inside PostMenuButton
+  // (which already knows it succeeded before calling back here), so these are
+  // plain local-list updates -- no optimistic-then-rollback dance needed,
+  // unlike delete() above.
+  void removeLocally(String postId) {
+    state = state.copyWith(items: state.items.where((p) => p.id != postId).toList());
+  }
+
+  void updateItem(Post updated) {
+    state = state.copyWith(
+      items: state.items.map((p) => p.id == updated.id ? updated : p).toList(),
+    );
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/api/api_response.dart';
 import '../../domain/entities/post.dart';
+import '../../domain/entities/poll_option.dart';
+import '../../domain/entities/poll_voter.dart';
 import '../../domain/repositories/posts_repository.dart';
 import '../data_sources/posts_remote_data_source.dart';
 
@@ -35,9 +37,30 @@ class PostsRepositoryImpl implements PostsRepository {
   }
 
   @override
-  Future<Post> createPost({required String content, XFile? image}) async {
-    final data =
-        await _remoteDataSource.createPost(content: content, image: image);
+  Future<Post> createPost({
+    required String content,
+    XFile? image,
+    String? bgColor,
+    String? feeling,
+    String? location,
+    String? audience,
+    List<PollOption>? pollOptions,
+  }) async {
+    final data = await _remoteDataSource.createPost(
+      content: content,
+      image: image,
+      bgColor: bgColor,
+      feeling: feeling,
+      location: location,
+      audience: audience,
+      pollOptions: pollOptions,
+    );
+    return Post.fromJson(data);
+  }
+
+  @override
+  Future<Post> updatePost(String postId, {required String content}) async {
+    final data = await _remoteDataSource.updatePost(postId, content: content);
     return Post.fromJson(data);
   }
 
@@ -69,4 +92,16 @@ class PostsRepositoryImpl implements PostsRepository {
       totalPages: result.totalPages,
     );
   }
+
+  @override
+  Future<void> hidePost(String postId, {required String hideType, int? snoozeDays}) =>
+      _remoteDataSource.hidePost(postId, hideType: hideType, snoozeDays: snoozeDays);
+
+  @override
+  Future<PollVoteResult> votePoll(String postId, int optionIndex) =>
+      _remoteDataSource.votePoll(postId, optionIndex);
+
+  @override
+  Future<List<PollVoterOption>> getPollVoters(String postId) =>
+      _remoteDataSource.getPollVoters(postId);
 }
