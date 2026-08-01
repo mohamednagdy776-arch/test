@@ -29,6 +29,13 @@ class NotificationsScreen extends ConsumerStatefulWidget {
   ConsumerState<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
+const _tabLabels = <NotificationTab, String>{
+  NotificationTab.all: 'الكل',
+  NotificationTab.unread: 'غير مقروء',
+  NotificationTab.likes: 'إعجابات',
+  NotificationTab.comments: 'تعليقات',
+};
+
 class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   @override
   void initState() {
@@ -59,7 +66,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           ),
         ],
       ),
-      body: _buildBody(state),
+      body: Column(
+        children: [
+          _TabBar(activeTab: state.activeTab),
+          Expanded(child: _buildBody(state)),
+        ],
+      ),
     );
   }
 
@@ -70,16 +82,33 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     if (state.error != null && state.items.isEmpty) {
       return Center(child: Text(state.error!));
     }
-    if (state.items.isEmpty) {
+    final filtered = state.filteredItems;
+    if (filtered.isEmpty) {
       return const Center(child: Text('لا توجد إشعارات'));
     }
 
     return RefreshIndicator(
       onRefresh: () => ref.read(notificationsProvider.notifier).load(),
       child: ListView.separated(
-        itemCount: state.items.length,
+        itemCount: filtered.length + (state.hasMore ? 1 : 0),
         separatorBuilder: (_, __) => const Divider(height: 1),
-        itemBuilder: (context, index) => _NotificationTile(notification: state.items[index]),
+        itemBuilder: (context, index) {
+          if (index >= filtered.length) {
+            return _LoadMoreButton(isLoadingMore: state.isLoadingMore);
+          }
+          return Dismissible(
+            key: ValueKey(filtered[index].id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: Colors.red.withValues(alpha: 0.85),
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: const Icon(Icons.delete_outline, color: Colors.white),
+            ),
+            onDismissed: (_) => ref.read(notificationsProvider.notifier).delete(filtered[index].id),
+            child: _NotificationTile(notification: filtered[index]),
+          );
+        },
       ),
     );
   }
@@ -89,6 +118,55 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
       context: context,
       isScrollControlled: true,
       builder: (_) => const _PreferencesSheet(),
+    );
+  }
+}
+
+class _TabBar extends ConsumerWidget {
+  final NotificationTab activeTab;
+  const _TabBar({required this.activeTab});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadAsync = ref.watch(unreadCountProvider);
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        children: NotificationTab.values.map((tab) {
+          final isActive = tab == activeTab;
+          final count = tab == NotificationTab.unread ? unreadAsync.valueOrNull ?? 0 : null;
+          return Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: ChoiceChip(
+              label: Text(count != null && count > 0 ? '${_tabLabels[tab]} ($count)' : _tabLabels[tab]!),
+              selected: isActive,
+              onSelected: (_) => ref.read(notificationsProvider.notifier).setTab(tab),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _LoadMoreButton extends ConsumerWidget {
+  final bool isLoadingMore;
+  const _LoadMoreButton({required this.isLoadingMore});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Center(
+        child: isLoadingMore
+            ? const CircularProgressIndicator()
+            : TextButton(
+                onPressed: () => ref.read(notificationsProvider.notifier).loadMore(),
+                child: const Text('عرض المزيد'),
+              ),
+      ),
     );
   }
 }

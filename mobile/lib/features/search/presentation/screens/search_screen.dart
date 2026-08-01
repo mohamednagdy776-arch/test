@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/search_suggestion.dart';
 import '../../domain/entities/search_user.dart';
+import '../../domain/entities/search_page_result.dart';
+import '../../../events/domain/entities/event.dart';
 import '../../../groups/domain/entities/group.dart';
 import '../../../posts/domain/entities/post.dart';
 import '../../../groups/presentation/screens/group_detail_screen.dart';
+import '../../../events/presentation/screens/event_detail_screen.dart';
+import '../../../pages/presentation/screens/page_detail_screen.dart';
 import '../../../friends/presentation/providers/friends_providers.dart';
 import '../../../profile/presentation/screens/public_profile_screen.dart';
 import '../providers/search_providers.dart';
@@ -17,10 +21,12 @@ import '../../../../core/utils/media.dart';
 import '../../../../core/utils/extensions.dart';
 
 // Mirrors web/src/features/search/components/SearchPage.tsx's core flow
-// (query + tabs + results). Deliberately simplified for mobile v1: only
-// People/Groups/Posts tabs (Pages/Events aren't mobile features in this
-// phase -- out of scope); a compact People-only filter row (gender + age
-// range) instead of the full Advanced-Search panel per tab.
+// (query + tabs + results): People/Groups/Pages/Events/Posts, each its own
+// `category` value on the shared GET /search endpoint (backend/src/search/
+// controllers/search.controller.ts) -- same single endpoint every tab here
+// already used, just widened to the two categories web also supports. A
+// compact People-only filter row (gender + age range) stands in for the full
+// Advanced-Search panel per tab.
 // Saved searches (#757, backend/src/saved-searches) are now wired in via
 // the two bookmark actions below -- no dedicated web page surfaces them
 // (only the controller exists), so this is a from-scratch mobile entry
@@ -158,14 +164,19 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                SegmentedButton<SearchTab>(
-                  segments: const [
-                    ButtonSegment(value: SearchTab.people, label: Text('الأشخاص')),
-                    ButtonSegment(value: SearchTab.groups, label: Text('المجتمعات')),
-                    ButtonSegment(value: SearchTab.posts, label: Text('المنشورات')),
-                  ],
-                  selected: {state.tab},
-                  onSelectionChanged: (s) => ref.read(searchProvider.notifier).setTab(s.first),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SegmentedButton<SearchTab>(
+                    segments: const [
+                      ButtonSegment(value: SearchTab.people, label: Text('الأشخاص')),
+                      ButtonSegment(value: SearchTab.groups, label: Text('المجتمعات')),
+                      ButtonSegment(value: SearchTab.pages, label: Text('الصفحات')),
+                      ButtonSegment(value: SearchTab.events, label: Text('الفعاليات')),
+                      ButtonSegment(value: SearchTab.posts, label: Text('المنشورات')),
+                    ],
+                    selected: {state.tab},
+                    onSelectionChanged: (s) => ref.read(searchProvider.notifier).setTab(s.first),
+                  ),
                 ),
                 if (state.tab == SearchTab.people) ...[
                   const SizedBox(height: 8),
@@ -221,7 +232,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return const Center(child: CircularProgressIndicator());
     }
     if (!state.hasSearched) {
-      return const Center(child: Text('ابحث عن أشخاص أو مجتمعات أو منشورات', style: TextStyle(color: AppTheme.textSecondary)));
+      return const Center(child: Text('ابحث عن أشخاص أو مجتمعات أو صفحات أو فعاليات أو منشورات', style: TextStyle(color: AppTheme.textSecondary)));
     }
 
     switch (state.tab) {
@@ -229,6 +240,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         return _buildPeopleResults(state.results.users);
       case SearchTab.groups:
         return _buildGroupResults(state.results.groups);
+      case SearchTab.pages:
+        return _buildPageResults(state.results.pages);
+      case SearchTab.events:
+        return _buildEventResults(state.results.events);
       case SearchTab.posts:
         return _buildPostResults(state.results.posts);
     }
@@ -303,6 +318,63 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
+  Widget _buildPageResults(List<SearchPageResult> pages) {
+    if (pages.isEmpty) return const _NoResults();
+    return ListView.separated(
+      padding: const EdgeInsets.all(12),
+      itemCount: pages.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, i) {
+        final p = pages[i];
+        return Card(
+          child: ListTile(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => PageDetailScreen(pageId: p.id)),
+            ),
+            leading: CircleAvatar(
+              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+              child: Text(p.name.isNotEmpty ? p.name[0] : '؟'),
+            ),
+            title: Text(p.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text([
+              if (p.category != null) p.category!,
+              if (p.description != null) p.description!,
+            ].join(' · ')),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildEventResults(List<Event> events) {
+    if (events.isEmpty) return const _NoResults();
+    return ListView.separated(
+      padding: const EdgeInsets.all(12),
+      itemCount: events.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 8),
+      itemBuilder: (context, i) {
+        final e = events[i];
+        return Card(
+          child: ListTile(
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => EventDetailScreen(eventId: e.id)),
+            ),
+            leading: const CircleAvatar(
+              backgroundColor: AppTheme.primaryColor,
+              foregroundColor: Colors.white,
+              child: Icon(Icons.event_outlined, size: 18),
+            ),
+            title: Text(e.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text([
+              '${e.startDate.toLocal()}'.substring(0, 16),
+              if (e.location != null) e.location!,
+            ].join(' · ')),
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildPostResults(List<Post> posts) {
     if (posts.isEmpty) return const _NoResults();
     return ListView.separated(
@@ -331,6 +403,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 }
 
+const _suggestionIcons = <String, IconData>{
+  'user': Icons.person_outline,
+  'group': Icons.groups_outlined,
+  'page': Icons.article_outlined,
+  'event': Icons.event_outlined,
+};
+
 class _SuggestionsList extends StatelessWidget {
   final List<SearchSuggestion> suggestions;
   final void Function(SearchSuggestion) onTap;
@@ -343,7 +422,7 @@ class _SuggestionsList extends StatelessWidget {
       itemBuilder: (context, i) {
         final s = suggestions[i];
         return ListTile(
-          leading: Icon(s.type == 'user' ? Icons.person_outline : Icons.groups_outlined),
+          leading: Icon(_suggestionIcons[s.type] ?? Icons.search),
           title: Text(s.name),
           subtitle: s.subtext != null ? Text(s.subtext!) : null,
           onTap: () => onTap(s),

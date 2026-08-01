@@ -1,7 +1,7 @@
 import '../../domain/entities/search_results.dart';
 import '../../domain/entities/search_suggestion.dart';
 
-enum SearchTab { people, groups, posts }
+enum SearchTab { people, groups, pages, events, posts }
 
 class SearchState {
   final String query;

@@ -7,6 +7,7 @@ abstract class NotificationsRepository {
   Future<int> getUnreadCount();
   Future<void> markAsRead(String id);
   Future<void> markAllRead();
+  Future<void> deleteNotification(String id);
   Future<void> registerDeviceToken(String token, String platform);
   Future<NotificationPreferences> getPreferences();
   Future<NotificationPreferences> updatePreferences(Map<String, bool> changes);

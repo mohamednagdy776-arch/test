@@ -30,6 +30,9 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   Future<void> markAllRead() => _remoteDataSource.markAllRead();
 
   @override
+  Future<void> deleteNotification(String id) => _remoteDataSource.deleteNotification(id);
+
+  @override
   Future<void> registerDeviceToken(String token, String platform) {
     return _remoteDataSource.registerDeviceToken(token, platform);
   }
