@@ -11,9 +11,11 @@ import 'package:tayyibt/features/posts/domain/use_cases/delete_comment_use_case.
 import 'package:tayyibt/features/posts/domain/use_cases/get_comments_use_case.dart';
 import 'package:tayyibt/features/posts/domain/use_cases/get_post_reactions_use_case.dart';
 import 'package:tayyibt/features/posts/domain/use_cases/get_post_use_case.dart';
+import 'package:tayyibt/features/posts/domain/entities/poll_option.dart';
 import 'package:tayyibt/features/posts/domain/use_cases/react_to_comment_use_case.dart';
 import 'package:tayyibt/features/posts/domain/use_cases/toggle_post_reaction_use_case.dart';
 import 'package:tayyibt/features/posts/domain/use_cases/update_comment_use_case.dart';
+import 'package:tayyibt/features/posts/domain/use_cases/vote_poll_use_case.dart';
 import 'package:tayyibt/features/posts/presentation/state/post_detail_notifier.dart';
 
 class MockPostsRepository extends Mock implements PostsRepository {}
@@ -57,6 +59,7 @@ void main() {
       ReactToCommentUseCase(commentsRepository),
       GetPostReactionsUseCase(reactionsRepository),
       TogglePostReactionUseCase(reactionsRepository),
+      VotePollUseCase(postsRepository),
     );
   });
 
@@ -165,5 +168,83 @@ void main() {
 
     expect(notifier.state.error, isNotNull);
     expect(notifier.state.reactions.total, 0);
+  });
+
+  test('votePoll patches pollOptions and myVote from the vote response, not a reload', () async {
+    when(() => postsRepository.getPost('p1')).thenAnswer(
+      (_) async => Post(
+        id: 'p1',
+        userId: 'u1',
+        content: 'poll post',
+        createdAt: DateTime(2026, 1, 1),
+        authorName: 'Amina',
+        pollOptions: const [PollOption(text: 'A', votes: 0), PollOption(text: 'B', votes: 0)],
+      ),
+    );
+    when(() => commentsRepository.getComments('p1')).thenAnswer((_) async => []);
+    when(() => reactionsRepository.getReactions('p1')).thenAnswer((_) async => const ReactionSummary());
+    when(() => postsRepository.votePoll('p1', 1)).thenAnswer(
+      (_) async => const PollVoteResult(
+        pollOptions: [PollOption(text: 'A', votes: 0), PollOption(text: 'B', votes: 1)],
+        myVote: 1,
+      ),
+    );
+
+    await notifier.load();
+    await notifier.votePoll(1);
+
+    expect(notifier.state.post?.myVote, 1);
+    expect(notifier.state.post?.pollOptions?[1].votes, 1);
+    // getPost is only ever called once (from load()) -- votePoll patches the
+    // existing post from its own response instead of re-fetching it.
+    verify(() => postsRepository.getPost('p1')).called(1);
+  });
+
+  test('votePoll is a no-op when no post has loaded yet', () async {
+    await notifier.votePoll(0);
+
+    verifyNever(() => postsRepository.votePoll(any(), any()));
+    expect(notifier.state.post, isNull);
+  });
+
+  test('votePoll sets an error when the repository throws, keeping the previous post', () async {
+    final original = Post(
+      id: 'p1',
+      userId: 'u1',
+      content: 'poll post',
+      createdAt: DateTime(2026, 1, 1),
+      authorName: 'Amina',
+      pollOptions: const [PollOption(text: 'A', votes: 0), PollOption(text: 'B', votes: 0)],
+    );
+    when(() => postsRepository.getPost('p1')).thenAnswer((_) async => original);
+    when(() => commentsRepository.getComments('p1')).thenAnswer((_) async => []);
+    when(() => reactionsRepository.getReactions('p1')).thenAnswer((_) async => const ReactionSummary());
+    when(() => postsRepository.votePoll('p1', 0)).thenThrow(Exception('network error'));
+
+    await notifier.load();
+    await notifier.votePoll(0);
+
+    expect(notifier.state.error, isNotNull);
+    expect(notifier.state.post?.pollOptions?[0].votes, 0);
+  });
+
+  test('setPost replaces the in-memory post directly (used after a successful edit)', () async {
+    when(() => postsRepository.getPost('p1')).thenAnswer((_) async => _post());
+    when(() => commentsRepository.getComments('p1')).thenAnswer((_) async => []);
+    when(() => reactionsRepository.getReactions('p1')).thenAnswer((_) async => const ReactionSummary());
+
+    await notifier.load();
+    notifier.setPost(_post().copyWith());
+    final edited = Post(
+      id: 'p1',
+      userId: 'u1',
+      content: 'edited content',
+      createdAt: DateTime(2026, 1, 1),
+      authorName: 'Amina',
+    );
+
+    notifier.setPost(edited);
+
+    expect(notifier.state.post?.content, 'edited content');
   });
 }

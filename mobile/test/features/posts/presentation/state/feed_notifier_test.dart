@@ -93,4 +93,34 @@ void main() {
     expect(notifier.state.items.map((p) => p.id), ['1', '2']);
     expect(notifier.state.error, isNotNull);
   });
+
+  test('removeLocally drops a post from the list without any network call', () async {
+    when(() => repository.getFeed(cursor: null, limit: 10)).thenAnswer(
+      (_) async => CursorPage(items: [_post('1'), _post('2')], cursor: null, hasMore: false),
+    );
+
+    await notifier.loadInitial();
+    notifier.removeLocally('1');
+
+    expect(notifier.state.items.map((p) => p.id), ['2']);
+    verifyNever(() => repository.deletePost(any()));
+  });
+
+  test('updateItem replaces the matching post in place, leaving others untouched', () async {
+    when(() => repository.getFeed(cursor: null, limit: 10)).thenAnswer(
+      (_) async => CursorPage(items: [_post('1'), _post('2')], cursor: null, hasMore: false),
+    );
+
+    await notifier.loadInitial();
+    final edited = Post(
+      id: '2',
+      userId: 'u1',
+      content: 'edited content 2',
+      createdAt: DateTime(2026, 1, 1),
+      authorName: 'Test',
+    );
+    notifier.updateItem(edited);
+
+    expect(notifier.state.items.map((p) => p.content), ['content 1', 'edited content 2']);
+  });
 }
