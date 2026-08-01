@@ -136,4 +136,22 @@ class VideosRemoteDataSource {
   Future<void> deleteComment(String videoId, String commentId) async {
     await _dio.delete('/videos/$videoId/comments/$commentId');
   }
+
+  // Generic content-report endpoint (backend/src/reports/controllers/
+  // reports-public.controller.ts) -- POST /reports { entityType, entityId,
+  // reason, details? }, curl-confirmed live (`data: null` on success, same
+  // as deleteComment above). This is NOT the same mechanism as settings'
+  // ReportUseCase (POST /support/report, a general "report a problem to
+  // support" form with a completely different payload shape) -- that one
+  // reports a bug/complaint, this one reports a specific piece of content,
+  // matching what web's ReelMenu/ReportReelModal and the watch/[id] player's
+  // report button both call.
+  Future<void> reportVideo(String videoId, String reason, {String? details}) async {
+    await _dio.post('/reports', data: {
+      'entityType': 'video',
+      'entityId': videoId,
+      'reason': reason,
+      if (details != null && details.isNotEmpty) 'details': details,
+    });
+  }
 }

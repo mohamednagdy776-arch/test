@@ -1,10 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:tayyibt/core/api/api_response.dart';
+import 'package:tayyibt/features/saved/domain/repositories/saved_repository.dart';
+import 'package:tayyibt/features/saved/domain/use_cases/check_saved_use_case.dart';
+import 'package:tayyibt/features/saved/domain/use_cases/save_item_use_case.dart';
 import 'package:tayyibt/features/videos/domain/entities/video.dart';
 import 'package:tayyibt/features/videos/domain/entities/video_comment.dart';
 import 'package:tayyibt/features/videos/domain/repositories/videos_repository.dart';
 import 'package:tayyibt/features/videos/domain/use_cases/add_video_comment_use_case.dart';
 import 'package:tayyibt/features/videos/domain/use_cases/delete_video_comment_use_case.dart';
+import 'package:tayyibt/features/videos/domain/use_cases/get_recommended_videos_use_case.dart';
 import 'package:tayyibt/features/videos/domain/use_cases/get_video_comments_use_case.dart';
 import 'package:tayyibt/features/videos/domain/use_cases/get_video_reactions_use_case.dart';
 import 'package:tayyibt/features/videos/domain/use_cases/get_video_use_case.dart';
@@ -15,9 +20,11 @@ import 'package:tayyibt/features/videos/presentation/state/video_detail_notifier
 
 class MockVideosRepository extends Mock implements VideosRepository {}
 
-Video _video({bool isLiked = false, int likeCount = 0}) {
+class MockSavedRepository extends Mock implements SavedRepository {}
+
+Video _video({bool isLiked = false, int likeCount = 0, String id = 'v1'}) {
   return Video(
-    id: 'v1',
+    id: id,
     title: 'a video',
     createdAt: DateTime(2026, 1, 1),
     authorId: 'u1',
@@ -31,12 +38,18 @@ VideoComment _comment(String id) {
   return VideoComment(id: id, content: 'comment $id', createdAt: DateTime(2026, 1, 1), authorName: 'Sara');
 }
 
+PaginatedResult<Video> _page(List<Video> items) {
+  return PaginatedResult<Video>(items: items, total: items.length, page: 1, limit: 20, totalPages: 1);
+}
+
 void main() {
   late MockVideosRepository repository;
+  late MockSavedRepository savedRepository;
   late VideoDetailNotifier notifier;
 
   setUp(() {
     repository = MockVideosRepository();
+    savedRepository = MockSavedRepository();
     notifier = VideoDetailNotifier(
       'v1',
       GetVideoUseCase(repository),
@@ -47,7 +60,16 @@ void main() {
       AddVideoCommentUseCase(repository),
       UpdateVideoCommentUseCase(repository),
       DeleteVideoCommentUseCase(repository),
+      GetRecommendedVideosUseCase(repository),
+      CheckSavedUseCase(savedRepository),
+      SaveItemUseCase(savedRepository),
     );
+    // Neutral defaults for the "best-effort extras" load() also fires, so
+    // tests that don't care about save/recommended state don't need to stub
+    // them individually.
+    when(() => savedRepository.checkSaved('video', 'v1')).thenAnswer((_) async => false);
+    when(() => repository.getRecommended(page: any(named: 'page'), limit: any(named: 'limit')))
+        .thenAnswer((_) async => _page(const []));
   });
 
   test('load populates video, comments, and reactions', () async {
@@ -71,6 +93,65 @@ void main() {
 
     expect(notifier.state.error, isNotNull);
     expect(notifier.state.video, isNull);
+  });
+
+  test('load also populates isSaved and the recommended list, excluding this video', () async {
+    when(() => repository.getVideo('v1')).thenAnswer((_) async => _video());
+    when(() => repository.getComments('v1')).thenAnswer((_) async => []);
+    when(() => repository.getReactions('v1')).thenAnswer((_) async => const VideoReactions());
+    when(() => savedRepository.checkSaved('video', 'v1')).thenAnswer((_) async => true);
+    when(() => repository.getRecommended(page: any(named: 'page'), limit: any(named: 'limit')))
+        .thenAnswer((_) async => _page([_video(id: 'v1'), _video(id: 'v2'), _video(id: 'v3')]));
+
+    await notifier.load();
+
+    expect(notifier.state.isSaved, isTrue);
+    expect(notifier.state.recommended.map((v) => v.id), ['v2', 'v3']);
+  });
+
+  test('load tolerates isSaved/recommended failures without clearing the video', () async {
+    when(() => repository.getVideo('v1')).thenAnswer((_) async => _video());
+    when(() => repository.getComments('v1')).thenAnswer((_) async => []);
+    when(() => repository.getReactions('v1')).thenAnswer((_) async => const VideoReactions());
+    when(() => savedRepository.checkSaved('video', 'v1')).thenThrow(Exception('network error'));
+    when(() => repository.getRecommended(page: any(named: 'page'), limit: any(named: 'limit')))
+        .thenThrow(Exception('network error'));
+
+    await notifier.load();
+
+    expect(notifier.state.video?.id, 'v1');
+    expect(notifier.state.isSaved, isFalse);
+    expect(notifier.state.recommended, isEmpty);
+  });
+
+  test('toggleSave saves then marks isSaved, and is a no-op once already saved', () async {
+    when(() => repository.getVideo('v1')).thenAnswer((_) async => _video());
+    when(() => repository.getComments('v1')).thenAnswer((_) async => []);
+    when(() => repository.getReactions('v1')).thenAnswer((_) async => const VideoReactions());
+    await notifier.load();
+
+    when(() => savedRepository.save('video', 'v1', collectionId: null)).thenAnswer((_) async {});
+
+    await notifier.toggleSave();
+    expect(notifier.state.isSaved, isTrue);
+    expect(notifier.state.isSavePending, isFalse);
+
+    await notifier.toggleSave();
+    verify(() => savedRepository.save('video', 'v1', collectionId: null)).called(1);
+  });
+
+  test('toggleSave treats an "already saved" failure as success, matching web', () async {
+    when(() => repository.getVideo('v1')).thenAnswer((_) async => _video());
+    when(() => repository.getComments('v1')).thenAnswer((_) async => []);
+    when(() => repository.getReactions('v1')).thenAnswer((_) async => const VideoReactions());
+    await notifier.load();
+
+    when(() => savedRepository.save('video', 'v1', collectionId: null)).thenThrow(Exception('Already saved'));
+
+    await notifier.toggleSave();
+
+    expect(notifier.state.isSaved, isTrue);
+    expect(notifier.state.isSavePending, isFalse);
   });
 
   test('toggleLike optimistically flips then confirms with the repository', () async {
