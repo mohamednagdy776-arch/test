@@ -9,6 +9,7 @@
 // lockouts during manual QA (see memory tayyibt-qa-test-accounts.md), and
 // this job would run that risk on every single push. Boot + pure client-side
 // navigation is enough to prove the app actually renders on a device.
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -30,6 +31,10 @@ void main() {
     await tester.tap(find.text('Register'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Create Account'), findsOneWidget);
+    // 'Create Account' appears twice on this screen (AppBar title AND the
+    // submit button label, confirmed live on a real emulator run -- a
+    // findsOneWidget assertion here fails even on a correct render). Anchor
+    // to the AppBar title specifically to disambiguate.
+    expect(find.widgetWithText(AppBar, 'Create Account'), findsOneWidget);
   });
 }
