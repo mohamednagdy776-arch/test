@@ -32,7 +32,15 @@ dependencies:
   # Flutter WebRTC plugin. No other way to do real getUserMedia/RTCPeerConnection
   # in Flutter; mirrors web's browser-native WebRTC APIs used in
   # web/src/features/call/CallProvider.tsx.
-  flutter_webrtc: ^0.11.0
+  # Pinned >=1.0.0 (not ^0.11.0) -- 0.11.7's Android source unconditionally
+  # imports the legacy v1-embedding `PluginRegistry.Registrar` class, which
+  # this Flutter engine no longer ships (confirmed via a real CI run:
+  # "cannot find symbol: class Registrar" in FlutterWebRTCPlugin.java,
+  # mobile-ci run 30632725256). 1.x dropped the v1-embedding code path; the
+  # Dart-facing API used here (RTCPeerConnection/MediaStream/RTCIceCandidate/
+  # RTCSessionDescription/navigator.mediaDevices/RTCVideoRenderer) is
+  # unchanged across the bump.
+  flutter_webrtc: ^1.0.0
   # Runtime mic/camera permission prompts before starting/accepting a call.
   permission_handler: ^11.3.0
 

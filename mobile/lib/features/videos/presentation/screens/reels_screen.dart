@@ -9,10 +9,17 @@ import '../../../../core/utils/media.dart';
 
 // TikTok-style vertical swipeable feed, matching web/src/app/(main)/reels/
 // page.tsx: GET /reels, one video per full-screen page, autoplay the active
-// page and pause the rest, like/comment/share/mute overlay buttons. Unlike
-// the web version (which only fakes the like with local state -- it never
-// calls the like API at all), this wires the real POST/DELETE
-// videos/:id/like endpoints since they're already built out for Watch.
+// page and pause the rest, like/comment/mute overlay buttons. Unlike the web
+// version (which only fakes the like with local state -- it never calls the
+// like API at all), this wires the real POST/DELETE videos/:id/like
+// endpoints since they're already built out for Watch.
+//
+// Known gap vs. web (full parity audit, item 5): no share button. Web's
+// share uses navigator.share()/clipboard, both browser APIs with no
+// equivalent already in use anywhere in this app -- doing it properly here
+// would mean pulling in a brand-new native plugin (e.g. share_plus) with its
+// own iOS/Android wiring, which is more than a spot-check fix. Left as a
+// follow-up.
 class ReelsScreen extends ConsumerStatefulWidget {
   const ReelsScreen({super.key});
 

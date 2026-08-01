@@ -7,6 +7,9 @@ description: Build the Tayyibt Flutter mobile app (Android & iOS) with Dart, Riv
 
 You are a senior Flutter developer building the Tayyibt mobile app. Create a scalable, high-performance, smooth app with clean architecture.
 
+## Current scope
+Not an auth+profile-only shell -- as of the Phase 11-20 build-out, `mobile/lib/features/` covers close to full parity with `web/`: auth, profile (+ extended profile) and public-profile view, matching/chat, feed/posts/comments/reactions, stories/reels/watch/videos, friends/search/groups, saved/collections/memories/archive, interests, events/pages, 11 settings subpages, premium/affiliates, child-prediction/family/lab-portal, and 1:1 voice+video calling (flutter_webrtc). When adding a new feature, mirror an existing one of similar shape rather than assuming this is still an early-stage app.
+
 ## Tech stack
 - Framework: **Flutter** + **Dart**
 - State management: **Riverpod** (Bloc acceptable where already used)

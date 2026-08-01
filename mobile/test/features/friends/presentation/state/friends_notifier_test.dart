@@ -115,6 +115,15 @@ void main() {
     verify(() => repository.sendRequest('u9')).called(1);
   });
 
+  test('sendRequest sets an error and clears the pending id when the repository throws', () async {
+    when(() => repository.sendRequest('u9')).thenThrow(Exception('boom'));
+
+    await notifier.sendRequest('u9');
+
+    expect(notifier.state.error, isNotNull);
+    expect(notifier.state.pendingIds, isEmpty);
+  });
+
   test('block removes the user from the friends list', () async {
     when(() => repository.getFriends(page: 1, limit: 20)).thenAnswer(
       (_) async => PaginatedResult(items: [_user('1'), _user('2')], total: 2, page: 1, limit: 20, totalPages: 1),
