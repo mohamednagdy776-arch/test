@@ -43,6 +43,12 @@ dependencies:
   flutter_webrtc: ^1.0.0
   # Runtime mic/camera permission prompts before starting/accepting a call.
   permission_handler: ^11.3.0
+  # Native OS share sheet for the post-card "Share" menu item (this phase) --
+  # web's own Share button opens an in-app modal (repost-to-feed / send-to-
+  # friend-in-chat, see PostCard.tsx's ShareModal), which isn't a mobile-
+  # native pattern; share_plus gives the equivalent "get this content out of
+  # the app" affordance the OS way, sharing the post's content + permalink.
+  share_plus: ^10.1.4
 
 dev_dependencies:
   flutter_test:

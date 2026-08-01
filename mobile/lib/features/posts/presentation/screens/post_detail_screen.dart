@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/entities/comment.dart';
+import '../../domain/entities/poll_option.dart';
+import '../../domain/entities/poll_voter.dart';
 import '../../domain/entities/post.dart';
 import '../providers/posts_providers.dart';
 import '../widgets/reaction_picker.dart';
 import '../widgets/comment_tile.dart';
+import '../widgets/post_menu_button.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/media.dart';
@@ -61,7 +64,26 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
     final isPostOwner = myUserId != null && state.post?.userId == myUserId;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('المنشور')),
+      appBar: AppBar(
+        title: const Text('المنشور'),
+        actions: state.post == null
+            ? null
+            : [
+                PostMenuButton(
+                  post: state.post!,
+                  isOwn: isPostOwner,
+                  onDelete: () async {
+                    await ref.read(deletePostUseCaseProvider)(state.post!.id);
+                    if (context.mounted) Navigator.of(context).pop();
+                  },
+                  onArchived: notifier.refresh,
+                  onHidden: () {
+                    if (context.mounted) Navigator.of(context).pop();
+                  },
+                  onEdited: notifier.setPost,
+                ),
+              ],
+      ),
       body: state.isLoading && state.post == null
           ? const Center(child: CircularProgressIndicator())
           : state.post == null
@@ -71,7 +93,12 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
                   child: ListView(
                     padding: const EdgeInsets.all(12),
                     children: [
-                      _PostBody(post: state.post!),
+                      _PostBody(
+                        post: state.post!,
+                        myUserId: myUserId,
+                        isOwner: isPostOwner,
+                        onVote: notifier.votePoll,
+                      ),
                       const SizedBox(height: 10),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 6),
@@ -138,7 +165,16 @@ class _PostDetailScreenState extends ConsumerState<PostDetailScreen> {
 
 class _PostBody extends StatelessWidget {
   final Post post;
-  const _PostBody({required this.post});
+  final String? myUserId;
+  final bool isOwner;
+  final ValueChanged<int> onVote;
+
+  const _PostBody({
+    required this.post,
+    required this.myUserId,
+    required this.isOwner,
+    required this.onVote,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -199,9 +235,207 @@ class _PostBody extends StatelessWidget {
                     fit: BoxFit.cover, width: double.infinity),
               ),
             ],
+            if (post.pollOptions != null) ...[
+              const SizedBox(height: 10),
+              _PollView(post: post, myUserId: myUserId, isOwner: isOwner, onVote: onVote),
+            ],
           ],
         ),
       ),
+    );
+  }
+}
+
+// Poll voting + owner-only voter breakdown -- mirrors web's PollDisplay +
+// PollVotersModal (web/src/features/posts/components/PostCard.tsx). Tapping
+// an un-voted option votes/re-votes (backend allows changing an existing
+// vote to a different option); the already-picked option is disabled.
+class _PollView extends StatelessWidget {
+  final Post post;
+  final String? myUserId;
+  final bool isOwner;
+  final ValueChanged<int> onVote;
+
+  const _PollView({
+    required this.post,
+    required this.myUserId,
+    required this.isOwner,
+    required this.onVote,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final options = post.pollOptions!;
+    final totalVotes = options.fold<int>(0, (sum, o) => sum + o.votes);
+
+    // GET /posts/:id skips sanitizePolls() for the post's own author
+    // (curl-verified live -- see poll_option.dart's PollOption doc comment),
+    // so the owner's initial load never gets a top-level `myVote` at all,
+    // only raw per-option `voterIds`. Fall back to scanning those for the
+    // owner's own id so the "already voted" state is still correct on first
+    // load, not just after this session's own vote action refreshes
+    // `myVote` directly from the vote response.
+    int? myVote = post.myVote;
+    if (myVote == null && isOwner && myUserId != null) {
+      final idx = options.indexWhere((o) => o.voterIds?.contains(myUserId) ?? false);
+      if (idx >= 0) myVote = idx;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < options.length; i++) ...[
+          _PollOptionBar(
+            option: options[i],
+            percentage: totalVotes > 0 ? ((options[i].votes / totalVotes) * 100).round() : 0,
+            voted: myVote == i,
+            onTap: myVote == i ? null : () => onVote(i),
+          ),
+          const SizedBox(height: 6),
+        ],
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('$totalVotes صوت', style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+            if (isOwner && totalVotes > 0) ...[
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => showDialog(context: context, builder: (_) => _PollVotersDialog(postId: post.id)),
+                child: const Text('عرض المصوّتين',
+                    style: TextStyle(fontSize: 12, color: AppTheme.primaryColor, fontWeight: FontWeight.w600)),
+              ),
+            ],
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PollOptionBar extends StatelessWidget {
+  final PollOption option;
+  final int percentage;
+  final bool voted;
+  final VoidCallback? onTap;
+
+  const _PollOptionBar({
+    required this.option,
+    required this.percentage,
+    required this.voted,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: voted ? AppTheme.primaryColor : const Color(0xFFE7DFC9)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            FractionallySizedBox(
+              widthFactor: percentage / 100,
+              child: Container(
+                height: 40,
+                color: voted
+                    ? AppTheme.primaryColor.withValues(alpha: 0.18)
+                    : AppTheme.textSecondary.withValues(alpha: 0.08),
+              ),
+            ),
+            Container(
+              height: 40,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              alignment: Alignment.centerRight,
+              child: Row(
+                children: [
+                  Expanded(child: Text(option.text)),
+                  Text('$percentage% (${option.votes})',
+                      style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PollVotersDialog extends ConsumerWidget {
+  final String postId;
+  const _PollVotersDialog({required this.postId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return AlertDialog(
+      title: const Text('من صوّت؟'),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: FutureBuilder<List<PollVoterOption>>(
+          future: ref.read(getPollVotersUseCaseProvider)(postId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+            if (snapshot.hasError) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 12),
+                child: Text('تعذّر تحميل قائمة المصوّتين'),
+              );
+            }
+            final options = snapshot.data ?? const [];
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final opt in options) ...[
+                    Text('${opt.text} (${opt.votes})',
+                        style: const TextStyle(fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 4),
+                    if (opt.voters.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Text('لا يوجد مصوّتون', style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                      )
+                    else
+                      ...opt.voters.map((v) => Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 3),
+                            child: Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 12,
+                                  backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+                                  backgroundImage:
+                                      resolveMediaUrl(v.avatarUrl) != null ? NetworkImage(resolveMediaUrl(v.avatarUrl)!) : null,
+                                  child: resolveMediaUrl(v.avatarUrl) == null
+                                      ? Text(v.name.isNotEmpty ? v.name[0] : '؟', style: const TextStyle(fontSize: 10))
+                                      : null,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(v.name),
+                              ],
+                            ),
+                          )),
+                    const SizedBox(height: 8),
+                  ],
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('إغلاق')),
+      ],
     );
   }
 }

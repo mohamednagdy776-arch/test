@@ -33,6 +33,10 @@ import '../../domain/use_cases/upload_story_media_use_case.dart';
 import '../../domain/use_cases/get_archived_stories_use_case.dart';
 import '../../domain/use_cases/get_archived_posts_use_case.dart';
 import '../../domain/use_cases/archive_post_use_case.dart';
+import '../../domain/use_cases/update_post_use_case.dart';
+import '../../domain/use_cases/hide_post_use_case.dart';
+import '../../domain/use_cases/vote_poll_use_case.dart';
+import '../../domain/use_cases/get_poll_voters_use_case.dart';
 import '../state/feed_notifier.dart';
 import '../state/feed_state.dart';
 import '../state/post_detail_notifier.dart';
@@ -161,6 +165,22 @@ final archivePostUseCaseProvider = Provider((ref) {
   return ArchivePostUseCase(ref.read(postsRepositoryProvider));
 });
 
+final updatePostUseCaseProvider = Provider((ref) {
+  return UpdatePostUseCase(ref.read(postsRepositoryProvider));
+});
+
+final hidePostUseCaseProvider = Provider((ref) {
+  return HidePostUseCase(ref.read(postsRepositoryProvider));
+});
+
+final votePollUseCaseProvider = Provider((ref) {
+  return VotePollUseCase(ref.read(postsRepositoryProvider));
+});
+
+final getPollVotersUseCaseProvider = Provider((ref) {
+  return GetPollVotersUseCase(ref.read(postsRepositoryProvider));
+});
+
 final feedProvider = StateNotifierProvider<FeedNotifier, FeedState>((ref) {
   return FeedNotifier(
       ref.read(getFeedUseCaseProvider), ref.read(deletePostUseCaseProvider));
@@ -191,5 +211,6 @@ final postDetailProvider =
     ref.read(reactToCommentUseCaseProvider),
     ref.read(getPostReactionsUseCaseProvider),
     ref.read(togglePostReactionUseCaseProvider),
+    ref.read(votePollUseCaseProvider),
   );
 });

@@ -6,6 +6,7 @@ import '../providers/posts_providers.dart';
 import 'create_post_screen.dart';
 import 'post_detail_screen.dart';
 import '../widgets/stories_bar.dart';
+import '../widgets/post_menu_button.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/constants/routes.dart';
 import '../../../../core/utils/extensions.dart';
@@ -165,6 +166,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             post: post,
             isOwn: post.userId == myUserId,
             onDelete: () => ref.read(feedProvider.notifier).delete(post.id),
+            onArchived: () => ref.read(feedProvider.notifier).removeLocally(post.id),
+            onHidden: () => ref.read(feedProvider.notifier).removeLocally(post.id),
+            onEdited: (updated) => ref.read(feedProvider.notifier).updateItem(updated),
           );
         },
       ),
@@ -176,9 +180,18 @@ class _PostCard extends StatelessWidget {
   final Post post;
   final bool isOwn;
   final VoidCallback onDelete;
+  final VoidCallback onArchived;
+  final VoidCallback onHidden;
+  final ValueChanged<Post> onEdited;
 
-  const _PostCard(
-      {required this.post, required this.isOwn, required this.onDelete});
+  const _PostCard({
+    required this.post,
+    required this.isOwn,
+    required this.onDelete,
+    required this.onArchived,
+    required this.onHidden,
+    required this.onEdited,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -238,15 +251,14 @@ class _PostCard extends StatelessWidget {
                     ),
                   ),
                   const Spacer(),
-                  if (isOwn)
-                    PopupMenuButton<String>(
-                      onSelected: (v) {
-                        if (v == 'delete') onDelete();
-                      },
-                      itemBuilder: (context) => const [
-                        PopupMenuItem(value: 'delete', child: Text('حذف')),
-                      ],
-                    ),
+                  PostMenuButton(
+                    post: post,
+                    isOwn: isOwn,
+                    onDelete: () async => onDelete(),
+                    onArchived: onArchived,
+                    onHidden: onHidden,
+                    onEdited: onEdited,
+                  ),
                 ],
               ),
               if (post.content.isNotEmpty) ...[
