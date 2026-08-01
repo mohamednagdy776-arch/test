@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:tayyibt/features/events/domain/entities/event.dart';
+import 'package:tayyibt/features/search/domain/entities/search_page_result.dart';
 import 'package:tayyibt/features/search/domain/entities/search_results.dart';
 import 'package:tayyibt/features/search/domain/entities/search_user.dart';
 import 'package:tayyibt/features/search/domain/repositories/search_repository.dart';
@@ -107,5 +109,85 @@ void main() {
 
     expect(notifier.state.query, '');
     expect(notifier.state.hasSearched, isFalse);
+  });
+
+  test('setTab(pages) searches with category=pages and populates page results', () async {
+    notifier.setQuery('a');
+    when(() => repository.search(
+          q: 'a',
+          category: any(named: 'category'),
+          gender: null,
+          minAge: null,
+          maxAge: null,
+          country: null,
+          city: null,
+        )).thenAnswer((_) async => const SearchResults());
+    await notifier.runSearch();
+
+    when(() => repository.search(
+          q: 'a',
+          category: 'pages',
+          gender: null,
+          minAge: null,
+          maxAge: null,
+          country: null,
+          city: null,
+        )).thenAnswer((_) async => const SearchResults(
+          pages: [SearchPageResult(id: 'p1', name: 'Test Page', category: 'Education')],
+        ));
+
+    await notifier.setTab(SearchTab.pages);
+
+    expect(notifier.state.tab, SearchTab.pages);
+    expect(notifier.state.results.pages.single.id, 'p1');
+    verify(() => repository.search(
+          q: 'a',
+          category: 'pages',
+          gender: null,
+          minAge: null,
+          maxAge: null,
+          country: null,
+          city: null,
+        )).called(1);
+  });
+
+  test('setTab(events) searches with category=events and populates event results', () async {
+    notifier.setQuery('a');
+    when(() => repository.search(
+          q: 'a',
+          category: any(named: 'category'),
+          gender: null,
+          minAge: null,
+          maxAge: null,
+          country: null,
+          city: null,
+        )).thenAnswer((_) async => const SearchResults());
+    await notifier.runSearch();
+
+    when(() => repository.search(
+          q: 'a',
+          category: 'events',
+          gender: null,
+          minAge: null,
+          maxAge: null,
+          country: null,
+          city: null,
+        )).thenAnswer((_) async => SearchResults(
+          events: [Event(id: 'e1', title: 'Test Event', startDate: DateTime(2026, 12, 1))],
+        ));
+
+    await notifier.setTab(SearchTab.events);
+
+    expect(notifier.state.tab, SearchTab.events);
+    expect(notifier.state.results.events.single.id, 'e1');
+    verify(() => repository.search(
+          q: 'a',
+          category: 'events',
+          gender: null,
+          minAge: null,
+          maxAge: null,
+          country: null,
+          city: null,
+        )).called(1);
   });
 }

@@ -13,6 +13,8 @@ class SearchNotifier extends StateNotifier<SearchState> {
   static const _categoryForTab = {
     SearchTab.people: 'users',
     SearchTab.groups: 'groups',
+    SearchTab.pages: 'pages',
+    SearchTab.events: 'events',
     SearchTab.posts: 'posts',
   };
 

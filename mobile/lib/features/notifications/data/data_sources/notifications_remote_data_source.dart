@@ -28,6 +28,10 @@ class NotificationsRemoteDataSource {
     await _dio.patch('/notifications/read-all');
   }
 
+  Future<void> deleteNotification(String id) async {
+    await _dio.delete('/notifications/$id');
+  }
+
   Future<void> registerDeviceToken(String token, String platform) async {
     await _dio.post('/notifications/device-token', data: {'token': token, 'platform': platform});
   }

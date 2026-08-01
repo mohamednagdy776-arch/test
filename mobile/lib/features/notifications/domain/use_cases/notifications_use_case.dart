@@ -20,6 +20,8 @@ class NotificationsUseCase {
 
   Future<void> markAllRead() => _repository.markAllRead();
 
+  Future<void> deleteNotification(String id) => _repository.deleteNotification(id);
+
   Future<NotificationPreferences> getPreferences() => _repository.getPreferences();
 
   Future<NotificationPreferences> updatePreferences(Map<String, bool> changes) {
