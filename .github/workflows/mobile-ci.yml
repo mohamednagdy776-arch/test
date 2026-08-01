@@ -141,3 +141,23 @@ jobs:
       # Apple Developer Program account.
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
+
+      # Separate from the device-arch build above -- this targets the iOS
+      # Simulator SDK specifically so it can be sideloaded into a free online
+      # simulator (Appetize.io etc) with NO Apple Developer account needed:
+      # simulator .app bundles are never code-signed at all (unlike a real
+      # -device .ipa, which Appetize doesn't even accept). Baked with the
+      # live VPS API/WS URLs, matching the Android debug APK.
+      - name: Build iOS Simulator app
+        run: flutter build ios --debug --simulator --dart-define=API_URL=https://145-14-158-100.sslip.io/api/v1 --dart-define=WS_URL=https://145-14-158-100.sslip.io
+
+      # Appetize requires the .app directory zipped (or tar.gz), not raw.
+      - name: Zip iOS Simulator app
+        run: cd build/ios/iphonesimulator && zip -r Runner.app.zip Runner.app
+
+      - name: Upload iOS Simulator app
+        uses: actions/upload-artifact@v4
+        with:
+          name: tayyibt-ios-simulator-app
+          path: mobile/build/ios/iphonesimulator/Runner.app.zip
+          retention-days: 14
