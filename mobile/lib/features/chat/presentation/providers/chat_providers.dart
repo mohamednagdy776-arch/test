@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/data_sources/chat_remote_data_source.dart';
+import '../../data/data_sources/chat_translation_client.dart';
 import '../../data/repositories/chat_repository_impl.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/repositories/chat_repository.dart';
@@ -31,17 +32,32 @@ final chatThreadUseCaseProvider = Provider((ref) {
   return ChatThreadUseCase(ref.read(chatRepositoryProvider));
 });
 
+// Phase 22: per-message translate toggle -- hits Google's free public
+// endpoint directly (see ChatTranslationClient's doc comment), not our
+// backend, so it gets its own tiny provider instead of chatRepositoryProvider.
+final chatTranslationClientProvider = Provider((ref) {
+  return ChatTranslationClient();
+});
+
 final conversationsProvider = FutureProvider<List<Conversation>>((ref) {
   return ref.read(getConversationsUseCaseProvider).call();
 });
 
-final chatThreadProvider = StateNotifierProvider.family<ChatThreadNotifier, ChatThreadState, String>(
-  (ref, conversationId) {
+// Keyed by conversationId AND the other participant's user id -- the latter
+// is needed for presence ('getPresence'/'presence') and read-receipt
+// ('messageSeen') socket events, which are scoped per-user, not just per
+// conversation (mirrors web/ChatWindow.tsx's `match.user2Id` usage). A record
+// is a perfectly valid, hashable Riverpod family argument.
+typedef ChatThreadKey = ({String conversationId, String? otherUserId});
+
+final chatThreadProvider = StateNotifierProvider.family<ChatThreadNotifier, ChatThreadState, ChatThreadKey>(
+  (ref, key) {
     final myUserId = ref.read(myProfileProvider).value?.userId ?? '';
     return ChatThreadNotifier(
       ref.read(chatThreadUseCaseProvider),
-      conversationId: conversationId,
+      conversationId: key.conversationId,
       myUserId: myUserId,
+      otherUserId: key.otherUserId,
     );
   },
 );
