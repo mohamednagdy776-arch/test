@@ -37,4 +37,52 @@ void main() {
     // to the AppBar title specifically to disambiguate.
     expect(find.widgetWithText(AppBar, 'Create Account'), findsOneWidget);
   });
+
+  testWidgets('login shows field-level validation errors on empty submit', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: TayyibtApp()));
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Sign In'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Email is required'), findsOneWidget);
+    expect(find.text('Password is required'), findsOneWidget);
+  });
+
+  testWidgets('register shows field-level validation errors on empty submit', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: TayyibtApp()));
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    await tester.tap(find.text('Register'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Email is required'), findsOneWidget);
+    expect(find.text('Phone is required'), findsOneWidget);
+    expect(find.text('Date of birth is required'), findsOneWidget);
+    expect(find.text('Minimum 8 characters'), findsOneWidget);
+  });
+
+  testWidgets('forgot-password screen navigates and validates + renders RTL', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: TayyibtApp()));
+    await tester.pumpAndSettle(const Duration(seconds: 5));
+
+    // Login screen's link -- has a trailing Arabic '؟', distinct from the
+    // forgot-password screen's own AppBar title text below (no '؟').
+    await tester.tap(find.text('نسيت كلمة المرور؟'));
+    await tester.pumpAndSettle();
+
+    final titleFinder = find.text('نسيت كلمة المرور');
+    expect(titleFinder, findsOneWidget);
+    // App-wide mandatory RTL (locale('ar')) -- verify a real device actually
+    // resolves Directionality.rtl for this screen, not just the code intent.
+    expect(Directionality.of(tester.element(titleFinder)), TextDirection.rtl);
+
+    await tester.tap(find.widgetWithText(ElevatedButton, 'إرسال'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Email is required'), findsOneWidget);
+  });
 }
