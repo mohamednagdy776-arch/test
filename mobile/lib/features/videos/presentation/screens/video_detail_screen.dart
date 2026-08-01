@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
+import '../../domain/entities/video.dart';
 import '../../domain/entities/video_comment.dart';
 import '../providers/videos_providers.dart';
 import '../state/video_detail_state.dart';
+import '../widgets/report_video_dialog.dart';
+import '../widgets/video_card.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/media.dart';
 import '../../../../core/utils/extensions.dart';
@@ -14,6 +19,18 @@ import '../../../../features/posts/presentation/widgets/reaction_picker.dart';
 // page.tsx: reused for both a Watch video and a Reel (a reel id IS a video
 // row -- same GET videos/:id endpoint), pushed directly with an already-
 // known id (no GoRoute), same precedent as Phase 12's post_detail_screen.
+//
+// Phase 25 closes the remaining parity gaps here: Share (share_plus, same
+// permalink pattern as reels), Save (reuses the Saved feature's own use
+// cases, curl-confirmed entityType: 'video'), Report (new generic POST
+// /reports plumbing shared with reels via report_video_dialog.dart), and a
+// Recommended section (reuses GetRecommendedVideosUseCase, already powering
+// the Watch screen's tab, filtered to exclude this video). Tags display was
+// audited too but is a dead end: web's own `video.tags` UI branch
+// (watch/[id]/page.tsx) never has anything to render -- curl-confirmed the
+// live GET /videos/:id response has no `tags` field at all, and grepping
+// backend/src/videos turns up no tags column/DTO field anywhere, so there's
+// no data source to wire up on mobile either.
 class VideoDetailScreen extends ConsumerStatefulWidget {
   final String videoId;
   const VideoDetailScreen({super.key, required this.videoId});
@@ -50,6 +67,16 @@ class _VideoDetailScreenState extends ConsumerState<VideoDetailScreen> {
     _controller?.dispose();
     _commentCtrl.dispose();
     super.dispose();
+  }
+
+  // Share (Phase 25) -- web's own handleShare (watch/[id]/page.tsx) uses
+  // navigator.share({ title, url }) with url = window.location.href (i.e.
+  // `/watch/${video.id}`, the page it's already on) and a clipboard
+  // fallback; share_plus is the native-app equivalent of that browser API.
+  Future<void> _share(Video video) async {
+    final origin = AppConstants.apiBaseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
+    final url = '$origin/watch/${video.id}';
+    await Share.share('${video.title}\n\n$url');
   }
 
   @override
@@ -109,9 +136,70 @@ class _VideoDetailScreenState extends ConsumerState<VideoDetailScreen> {
                 total: state.reactions.total,
                 onSelect: (type) => ref.read(videoDetailProvider(widget.videoId).notifier).react(type),
               ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => _share(video),
+                      icon: const Icon(Icons.share_outlined, size: 18),
+                      label: const Text('مشاركة'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: state.isSaved || state.isSavePending
+                          ? null
+                          : () => ref.read(videoDetailProvider(widget.videoId).notifier).toggleSave(),
+                      icon: state.isSavePending
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Icon(state.isSaved ? Icons.bookmark : Icons.bookmark_border, size: 18),
+                      label: Text(state.isSaved ? 'محفوظ' : 'حفظ'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => showReportVideoDialog(context, video.id),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.dangerColor,
+                        side: const BorderSide(color: AppTheme.dangerColor),
+                      ),
+                      icon: const Icon(Icons.flag_outlined, size: 18),
+                      label: const Text('إبلاغ'),
+                    ),
+                  ),
+                ],
+              ),
               if ((video.description ?? '').isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text(video.description!),
+              ],
+              if (state.recommended.isNotEmpty) ...[
+                const Divider(height: 32),
+                const Text('فيديوهات مقترحة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 170,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: state.recommended.length,
+                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    itemBuilder: (context, i) {
+                      final rec = state.recommended[i];
+                      return SizedBox(
+                        width: 220,
+                        child: VideoCard(
+                          video: rec,
+                          onTap: () => Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(builder: (_) => VideoDetailScreen(videoId: rec.id)),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
               const Divider(height: 32),
               Text('التعليقات (${state.comments.length})', style: const TextStyle(fontWeight: FontWeight.bold)),

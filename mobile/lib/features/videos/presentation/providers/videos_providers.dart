@@ -18,6 +18,7 @@ import '../../domain/use_cases/get_video_comments_use_case.dart';
 import '../../domain/use_cases/add_video_comment_use_case.dart';
 import '../../domain/use_cases/update_video_comment_use_case.dart';
 import '../../domain/use_cases/delete_video_comment_use_case.dart';
+import '../../domain/use_cases/report_video_use_case.dart';
 import '../state/reels_notifier.dart';
 import '../state/reels_state.dart';
 import '../state/watch_notifier.dart';
@@ -25,6 +26,10 @@ import '../state/watch_state.dart';
 import '../state/video_detail_notifier.dart';
 import '../state/video_detail_state.dart';
 import '../../../../core/api/dio_client.dart';
+// Save (Phase 25) reuses the Saved/Collections feature's own use cases
+// (built Phase 14, already reused this way by posts in Phase 23) instead of
+// duplicating save/check logic inside the videos feature.
+import '../../../saved/presentation/providers/saved_providers.dart';
 
 final videosRemoteDataSourceProvider = Provider((ref) {
   return VideosRemoteDataSource(DioClient.create());
@@ -98,6 +103,10 @@ final deleteVideoCommentUseCaseProvider = Provider((ref) {
   return DeleteVideoCommentUseCase(ref.read(videosRepositoryProvider));
 });
 
+final reportVideoUseCaseProvider = Provider((ref) {
+  return ReportVideoUseCase(ref.read(videosRepositoryProvider));
+});
+
 final reelsProvider = StateNotifierProvider<ReelsNotifier, ReelsState>((ref) {
   return ReelsNotifier(
     ref.read(getReelsUseCaseProvider),
@@ -126,5 +135,8 @@ final videoDetailProvider = StateNotifierProvider.family<VideoDetailNotifier,
     ref.read(addVideoCommentUseCaseProvider),
     ref.read(updateVideoCommentUseCaseProvider),
     ref.read(deleteVideoCommentUseCaseProvider),
+    ref.read(getRecommendedVideosUseCaseProvider),
+    ref.read(checkSavedUseCaseProvider),
+    ref.read(saveItemUseCaseProvider),
   );
 });

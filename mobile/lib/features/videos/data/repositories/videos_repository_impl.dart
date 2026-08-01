@@ -119,4 +119,8 @@ class VideosRepositoryImpl implements VideosRepository {
   @override
   Future<void> deleteComment(String videoId, String commentId) =>
       _remoteDataSource.deleteComment(videoId, commentId);
+
+  @override
+  Future<void> reportVideo(String videoId, String reason, {String? details}) =>
+      _remoteDataSource.reportVideo(videoId, reason, details: details);
 }

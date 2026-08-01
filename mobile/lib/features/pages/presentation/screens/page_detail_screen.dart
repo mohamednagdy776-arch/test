@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../domain/entities/page.dart';
 import '../providers/pages_providers.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/extensions.dart';
 import '../../../../core/utils/media.dart';
@@ -17,6 +19,12 @@ const _pageCategories = ['دراسة', 'صحة', 'رياضة', 'تكنولوجي
 // is @Roles('admin')-gated server-side -- curl-confirmed 403 for the actual
 // owner, so it's dead/broken on web too) and PATCH :id/verify (admin-only,
 // no owner-facing UI for it on web either).
+//
+// Share (Phase 25) -- web's own handler is `window.location.href` (i.e.
+// `/pages/${id}`, confirmed via useParams().id in pages/[id]/page.tsx) with
+// a navigator.share()/clipboard fallback; share_plus is the native-app
+// equivalent, same pattern already used for posts (Phase 23) and reels/watch
+// videos (Phase 25).
 class PageDetailScreen extends ConsumerStatefulWidget {
   final String pageId;
   const PageDetailScreen({super.key, required this.pageId});
@@ -114,6 +122,12 @@ class _PageDetailScreenState extends ConsumerState<PageDetailScreen> {
     }
   }
 
+  Future<void> _share(CommunityPage page) async {
+    final origin = AppConstants.apiBaseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
+    final url = '$origin/pages/${page.id}';
+    await Share.share('${page.name}\n\n$url');
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(pageDetailProvider(widget.pageId));
@@ -124,6 +138,7 @@ class _PageDetailScreenState extends ConsumerState<PageDetailScreen> {
       appBar: AppBar(
         title: Text(page?.name ?? 'الصفحة'),
         actions: [
+          if (page != null) IconButton(icon: const Icon(Icons.share_outlined), onPressed: () => _share(page)),
           if (page?.isOwner == true)
             IconButton(icon: const Icon(Icons.edit_outlined), onPressed: () => _showEditDialog(page!)),
         ],

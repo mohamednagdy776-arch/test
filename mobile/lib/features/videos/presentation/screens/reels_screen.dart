@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import '../../domain/entities/video.dart';
 import '../../domain/entities/video_comment.dart';
 import '../providers/videos_providers.dart';
+import '../widgets/report_video_dialog.dart';
 import 'video_upload_screen.dart';
 import '../../../../core/utils/media.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/constants/theme.dart';
 
 // TikTok-style vertical swipeable feed, matching web/src/app/(main)/reels/
 // page.tsx: GET /reels, one video per full-screen page, autoplay the active
@@ -14,12 +19,18 @@ import '../../../../core/utils/media.dart';
 // like API at all), this wires the real POST/DELETE videos/:id/like
 // endpoints since they're already built out for Watch.
 //
-// Known gap vs. web (full parity audit, item 5): no share button. Web's
-// share uses navigator.share()/clipboard, both browser APIs with no
-// equivalent already in use anywhere in this app -- doing it properly here
-// would mean pulling in a brand-new native plugin (e.g. share_plus) with its
-// own iOS/Android wiring, which is more than a spot-check fix. Left as a
-// follow-up.
+// Share + dots-menu (Phase 25): web's ReelCard.handleShare uses
+// navigator.share()/clipboard.writeText -- a REAL share, not a no-op --
+// against `${origin}/watch/${reel.id}` (there's no /reels/:id page; a reel
+// id IS a video row, so /watch/:id already plays it, same fallback pattern
+// web itself uses). share_plus (added in Phase 23 for posts) gives the
+// native-app equivalent of that browser API. The dots-menu mirrors web's
+// ReelMenu exactly: Report (POST /reports, entityType: 'video') + copy-link
+// (same permalink, clipboard instead of a toast-less browser API).
+String _videoPermalink(String videoId) {
+  final origin = AppConstants.apiBaseUrl.replaceFirst(RegExp(r'/api/v1/?$'), '');
+  return '$origin/watch/$videoId';
+}
 class ReelsScreen extends ConsumerStatefulWidget {
   const ReelsScreen({super.key});
 
@@ -259,6 +270,14 @@ class _ReelCardState extends ConsumerState<_ReelCard> {
               ),
               const SizedBox(height: 18),
               _ActionButton(
+                icon: Icons.share_outlined,
+                label: 'مشاركة',
+                onTap: () => _share(video),
+              ),
+              const SizedBox(height: 18),
+              _ReelMenuButton(video: video),
+              const SizedBox(height: 18),
+              _ActionButton(
                 icon: _muted ? Icons.volume_off : Icons.volume_up,
                 label: '',
                 onTap: () {
@@ -271,6 +290,13 @@ class _ReelCardState extends ConsumerState<_ReelCard> {
         ),
       ],
     );
+  }
+
+  Future<void> _share(Video video) async {
+    final url = _videoPermalink(video.id);
+    final caption = (video.description ?? '').trim();
+    final text = caption.isNotEmpty ? '$caption\n\n$url' : url;
+    await Share.share(text);
   }
 
   void _showComments(BuildContext context, String videoId) {
@@ -308,6 +334,64 @@ class _ActionButton extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// Three-dot "more options" button, mirroring web's ReelMenu (Report +
+// copy-link). Wrapped in the same black-circle backdrop the other
+// _ActionButton icons use so it reads as part of the same action column,
+// even though PopupMenuButton itself is a different widget underneath.
+class _ReelMenuButton extends ConsumerWidget {
+  final Video video;
+  const _ReelMenuButton({required this.video});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: const BoxDecoration(color: Colors.black38, shape: BoxShape.circle),
+      child: PopupMenuButton<String>(
+        padding: EdgeInsets.zero,
+        icon: const Icon(Icons.more_vert, color: Colors.white),
+        onSelected: (value) => _handle(context, value),
+        itemBuilder: (context) => const [
+          PopupMenuItem(
+            value: 'report',
+            child: ListTile(
+              leading: Icon(Icons.flag_outlined, color: AppTheme.dangerColor),
+              title: Text('الإبلاغ', style: TextStyle(color: AppTheme.dangerColor)),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+          PopupMenuItem(
+            value: 'copy_link',
+            child: ListTile(
+              leading: Icon(Icons.link),
+              title: Text('نسخ الرابط'),
+              contentPadding: EdgeInsets.zero,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handle(BuildContext context, String value) async {
+    switch (value) {
+      case 'report':
+        await showReportVideoDialog(context, video.id);
+        break;
+      case 'copy_link':
+        await _copyLink(context);
+        break;
+    }
+  }
+
+  Future<void> _copyLink(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    await Clipboard.setData(ClipboardData(text: _videoPermalink(video.id)));
+    messenger.showSnackBar(const SnackBar(content: Text('تم نسخ الرابط')));
   }
 }
 

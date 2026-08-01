@@ -34,4 +34,8 @@ abstract class VideosRepository {
   Future<VideoComment> addComment(String videoId, String content);
   Future<VideoComment> updateComment(String videoId, String commentId, String content);
   Future<void> deleteComment(String videoId, String commentId);
+
+  /// Generic content report (POST /reports, entityType: 'video') -- same
+  /// endpoint web's reels menu and watch player both use.
+  Future<void> reportVideo(String videoId, String reason, {String? details});
 }
