@@ -66,4 +66,54 @@ class AuthRemoteDataSource {
       throw AuthFailure(msg.toString());
     }
   }
+
+  // Verifies a freshly-registered account's email with the 64-hex token from
+  // the emailed link (backend/src/auth/dto/verify-email.dto.ts). Same
+  // no-deep-link-yet situation as resetPassword above -- the user pastes the
+  // token manually (see confirm_email_verification_screen.dart).
+  //
+  // NOTE: AuthService.register() currently hardcodes isVerified: true and
+  // login()'s verification check is commented out server-side, so this
+  // endpoint currently has no gating effect on login -- confirmed live
+  // 2026-08-02. Built anyway so it's ready once that's re-enabled; the
+  // request/response contract itself works today (curl-verified), only the
+  // "blocks login" behavior is dormant.
+  Future<void> verifyEmail({required String token}) async {
+    try {
+      await dio.post('/auth/verify-email', data: {'token': token});
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? 'Verification failed';
+      throw AuthFailure(msg.toString());
+    }
+  }
+
+  // Always succeeds server-side shape-wise regardless of account state, but
+  // unlike forgotPassword the inner data.message DOES differ by whether the
+  // account exists / is already verified (curl-verified live) -- a backend
+  // quirk, not replicated here. The UI shows its own generic copy instead of
+  // relaying the raw message, so this call's return value is intentionally
+  // discarded by callers.
+  Future<void> resendVerification({required String email}) async {
+    try {
+      await dio.post('/auth/resend-verification', data: {'email': email});
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? 'Request failed';
+      throw AuthFailure(msg.toString());
+    }
+  }
+
+  // Confirms a pending email-change request (backend/src/auth/dto/change-email.dto.ts's
+  // ConfirmEmailChangeDto) using the 64-hex token emailed to the NEW address
+  // -- also a randomBytes(32) hex token, same shape as the others. Public
+  // endpoint (no auth guard): the confirming device/session isn't
+  // necessarily logged in, and a successful confirm invalidates all
+  // sessions server-side anyway.
+  Future<void> confirmEmailChange({required String token}) async {
+    try {
+      await dio.post('/auth/change-email/confirm', data: {'token': token});
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? 'Confirmation failed';
+      throw AuthFailure(msg.toString());
+    }
+  }
 }
