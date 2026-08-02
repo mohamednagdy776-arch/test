@@ -3,6 +3,7 @@ import '../../domain/use_cases/get_friends_use_case.dart';
 import '../../domain/use_cases/get_friend_requests_use_case.dart';
 import '../../domain/use_cases/respond_to_friend_request_use_case.dart';
 import '../../domain/use_cases/friend_relations_use_case.dart';
+import '../../domain/use_cases/friend_lists_use_case.dart';
 import 'friends_state.dart';
 
 class FriendsNotifier extends StateNotifier<FriendsState> {
@@ -10,10 +11,11 @@ class FriendsNotifier extends StateNotifier<FriendsState> {
   final GetFriendRequestsUseCase _getRequests;
   final RespondToFriendRequestUseCase _respond;
   final FriendRelationsUseCase _relations;
+  final FriendListsUseCase _lists;
 
   // No auto-load-on-construct -- callers trigger loadAll() from initState,
   // same lesson as MatchesNotifier/FeedNotifier.
-  FriendsNotifier(this._getFriends, this._getRequests, this._respond, this._relations)
+  FriendsNotifier(this._getFriends, this._getRequests, this._respond, this._relations, this._lists)
       : super(const FriendsState());
 
   Future<void> loadAll() async {
@@ -22,14 +24,50 @@ class FriendsNotifier extends StateNotifier<FriendsState> {
       final friendsPage = await _getFriends();
       final incoming = await _getRequests.incoming();
       final suggestions = await _getRequests.suggestions();
+      final birthdays = await _lists.birthdays();
+      final friendLists = await _lists.lists();
       state = state.copyWith(
         friends: friendsPage.items,
         incomingRequests: incoming,
         suggestions: suggestions,
+        birthdays: birthdays,
+        friendLists: friendLists,
         isLoading: false,
       );
     } catch (_) {
       state = state.copyWith(isLoading: false, error: 'تعذّر تحميل الأصدقاء');
+    }
+  }
+
+  Future<void> createList(String name) async {
+    state = state.copyWith(listActionPending: true, error: state.error);
+    try {
+      await _lists.create(name);
+      final friendLists = await _lists.lists();
+      state = state.copyWith(friendLists: friendLists, listActionPending: false, error: null);
+    } catch (_) {
+      state = state.copyWith(listActionPending: false, error: 'تعذّر إنشاء القائمة');
+    }
+  }
+
+  Future<void> updateList(String listId, {String? name, List<String>? memberIds}) async {
+    state = state.copyWith(listActionPending: true, error: state.error);
+    try {
+      await _lists.update(listId, name: name, memberIds: memberIds);
+      final friendLists = await _lists.lists();
+      state = state.copyWith(friendLists: friendLists, listActionPending: false, error: null);
+    } catch (_) {
+      state = state.copyWith(listActionPending: false, error: 'تعذّر تحديث القائمة');
+    }
+  }
+
+  Future<void> deleteList(String listId) async {
+    final previous = state.friendLists;
+    state = state.copyWith(friendLists: previous.where((l) => l.id != listId).toList(), error: state.error);
+    try {
+      await _lists.delete(listId);
+    } catch (_) {
+      state = state.copyWith(friendLists: previous, error: 'تعذّر حذف القائمة');
     }
   }
 

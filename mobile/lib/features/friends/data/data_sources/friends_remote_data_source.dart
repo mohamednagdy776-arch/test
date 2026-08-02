@@ -65,4 +65,31 @@ class FriendsRemoteDataSource {
   Future<void> unblock(String userId) async {
     await _dio.delete('/friends/block/$userId');
   }
+
+  Future<List<dynamic>> getBirthdays() async {
+    final response = await _dio.get('/friends/birthdays');
+    return ApiResponse.unwrapList(response);
+  }
+
+  Future<List<dynamic>> getFriendLists() async {
+    final response = await _dio.get('/friends/lists');
+    return ApiResponse.unwrapList(response);
+  }
+
+  Future<Map<String, dynamic>> createFriendList(String name) async {
+    final response = await _dio.post('/friends/lists', data: {'name': name});
+    return ApiResponse.unwrap(response);
+  }
+
+  Future<Map<String, dynamic>> updateFriendList(String listId, {String? name, List<String>? memberIds}) async {
+    final response = await _dio.patch('/friends/lists/$listId', data: {
+      if (name != null) 'name': name,
+      if (memberIds != null) 'memberIds': memberIds,
+    });
+    return ApiResponse.unwrap(response);
+  }
+
+  Future<void> deleteFriendList(String listId) async {
+    await _dio.delete('/friends/lists/$listId');
+  }
 }

@@ -6,6 +6,7 @@ import '../../domain/use_cases/get_friends_use_case.dart';
 import '../../domain/use_cases/get_friend_requests_use_case.dart';
 import '../../domain/use_cases/respond_to_friend_request_use_case.dart';
 import '../../domain/use_cases/friend_relations_use_case.dart';
+import '../../domain/use_cases/friend_lists_use_case.dart';
 import '../state/friends_notifier.dart';
 import '../state/friends_state.dart';
 import '../../../../core/api/dio_client.dart';
@@ -34,11 +35,16 @@ final friendRelationsUseCaseProvider = Provider((ref) {
   return FriendRelationsUseCase(ref.read(friendsRepositoryProvider));
 });
 
+final friendListsUseCaseProvider = Provider((ref) {
+  return FriendListsUseCase(ref.read(friendsRepositoryProvider));
+});
+
 final friendsProvider = StateNotifierProvider<FriendsNotifier, FriendsState>((ref) {
   return FriendsNotifier(
     ref.read(getFriendsUseCaseProvider),
     ref.read(getFriendRequestsUseCaseProvider),
     ref.read(respondToFriendRequestUseCaseProvider),
     ref.read(friendRelationsUseCaseProvider),
+    ref.read(friendListsUseCaseProvider),
   );
 });

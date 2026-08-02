@@ -3,6 +3,8 @@ import '../../domain/entities/friend_user.dart';
 import '../../domain/entities/friend_request.dart';
 import '../../domain/entities/friend_suggestion.dart';
 import '../../domain/entities/friendship_status.dart';
+import '../../domain/entities/friend_birthday.dart';
+import '../../domain/entities/friend_list.dart';
 import '../../domain/repositories/friends_repository.dart';
 import '../data_sources/friends_remote_data_source.dart';
 
@@ -76,4 +78,31 @@ class FriendsRepositoryImpl implements FriendsRepository {
 
   @override
   Future<void> unblock(String userId) => _remoteDataSource.unblock(userId);
+
+  @override
+  Future<List<FriendBirthday>> getBirthdays() async {
+    final data = await _remoteDataSource.getBirthdays();
+    return data.map((e) => FriendBirthday.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<List<FriendListEntity>> getFriendLists() async {
+    final data = await _remoteDataSource.getFriendLists();
+    return data.map((e) => FriendListEntity.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  @override
+  Future<FriendListEntity> createFriendList(String name) async {
+    final data = await _remoteDataSource.createFriendList(name);
+    return FriendListEntity.fromJson(data);
+  }
+
+  @override
+  Future<FriendListEntity> updateFriendList(String listId, {String? name, List<String>? memberIds}) async {
+    final data = await _remoteDataSource.updateFriendList(listId, name: name, memberIds: memberIds);
+    return FriendListEntity.fromJson(data);
+  }
+
+  @override
+  Future<void> deleteFriendList(String listId) => _remoteDataSource.deleteFriendList(listId);
 }
