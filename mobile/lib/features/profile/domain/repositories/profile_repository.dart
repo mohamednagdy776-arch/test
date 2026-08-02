@@ -5,6 +5,7 @@ import '../entities/public_profile.dart';
 import '../entities/follow_summary.dart';
 import '../entities/profile_media_item.dart';
 import '../entities/report_reason.dart';
+import '../entities/activity_log_entry.dart';
 import '../../../friends/domain/entities/friend_user.dart';
 import '../../../posts/domain/entities/post.dart';
 
@@ -26,4 +27,8 @@ abstract class ProfileRepository {
   Future<FollowCounts> getFollowCounts(String userId);
   Future<void> reportUser(String userId, String reason, String? details);
   Future<List<ReportReason>> getReportReasons();
+
+  // Only ever call this with the CURRENT user's own id -- the backend 403s
+  // any other id (curl-verified live).
+  Future<ActivityLogResult> getActivityLog(String userId, {String? year, String? type, int page = 1, int limit = 20});
 }

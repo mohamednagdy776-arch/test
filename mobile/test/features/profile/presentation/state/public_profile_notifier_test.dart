@@ -12,6 +12,7 @@ import 'package:tayyibt/features/interests/domain/repositories/interests_reposit
 import 'package:tayyibt/features/interests/domain/use_cases/get_sent_interests_use_case.dart';
 import 'package:tayyibt/features/interests/domain/use_cases/send_interest_use_case.dart';
 import 'package:tayyibt/features/posts/domain/entities/post.dart';
+import 'package:tayyibt/features/profile/domain/entities/activity_log_entry.dart';
 import 'package:tayyibt/features/profile/domain/entities/follow_summary.dart';
 import 'package:tayyibt/features/profile/domain/entities/public_profile.dart';
 import 'package:tayyibt/features/profile/domain/repositories/profile_repository.dart';
@@ -217,5 +218,68 @@ void main() {
     expect(notifier.state.reportPending, isFalse);
     expect(notifier.state.error, isNull);
     verify(() => profileRepository.reportUser(_otherUserId, 'harassment', 'details')).called(1);
+  });
+
+  // The backend 403s GET /users/:id/activity for any id other than the
+  // caller's own (curl-verified live against the VPS) -- so viewing someone
+  // ELSE's profile must never call it at all, matching web's renderTab()
+  // (`isSelf && profileUserId ? <ActivityLogViewer/> : placeholder(...)`).
+  test('setTab(activity) never calls the activity endpoint for another user\'s profile', () async {
+    when(() => profileRepository.getPublicProfile(_otherUserId)).thenAnswer((_) async => _profile(isSelf: false));
+    when(() => profileRepository.getUserPosts(_otherUserId, page: 1, limit: 10)).thenAnswer(
+      (_) async => const PaginatedResult<Post>(items: [], total: 0, page: 1, limit: 10, totalPages: 0),
+    );
+    await notifier.load();
+
+    notifier.setTab(PublicProfileTab.activity);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(notifier.state.activeTab, PublicProfileTab.activity);
+    expect(notifier.state.activityLog, isNull);
+    verifyNever(() => profileRepository.getActivityLog(any(), year: any(named: 'year'), type: any(named: 'type')));
+  });
+
+  test('setTab(activity) fetches the activity log when isSelf is true', () async {
+    when(() => profileRepository.getPublicProfile(_otherUserId)).thenAnswer((_) async => _profile(isSelf: true));
+    when(() => profileRepository.getUserPosts(_otherUserId, page: 1, limit: 10)).thenAnswer(
+      (_) async => const PaginatedResult<Post>(items: [], total: 0, page: 1, limit: 10, totalPages: 0),
+    );
+    when(() => profileRepository.getActivityLog(_otherUserId, year: '', type: '')).thenAnswer(
+      (_) async => ActivityLogResult(
+        items: [ActivityLogEntry(type: 'friend_add', description: 'أصبح صديقاً جديداً', createdAt: DateTime(2026, 1, 1))],
+      ),
+    );
+    await notifier.load();
+
+    notifier.setTab(PublicProfileTab.activity);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(notifier.state.activeTab, PublicProfileTab.activity);
+    expect(notifier.state.activityLog?.items.single.type, 'friend_add');
+    expect(notifier.state.activityLoading, isFalse);
+    verify(() => profileRepository.getActivityLog(_otherUserId, year: '', type: '')).called(1);
+  });
+
+  test('setActivityFilters force-refetches with the new filters', () async {
+    when(() => profileRepository.getPublicProfile(_otherUserId)).thenAnswer((_) async => _profile(isSelf: true));
+    when(() => profileRepository.getUserPosts(_otherUserId, page: 1, limit: 10)).thenAnswer(
+      (_) async => const PaginatedResult<Post>(items: [], total: 0, page: 1, limit: 10, totalPages: 0),
+    );
+    when(() => profileRepository.getActivityLog(_otherUserId, year: '', type: '')).thenAnswer(
+      (_) async => const ActivityLogResult(items: []),
+    );
+    await notifier.load();
+    notifier.setTab(PublicProfileTab.activity);
+    await Future<void>.delayed(Duration.zero);
+
+    when(() => profileRepository.getActivityLog(_otherUserId, year: '2026', type: 'photo')).thenAnswer(
+      (_) async => const ActivityLogResult(items: [], availableYears: [2026]),
+    );
+
+    await notifier.setActivityFilters(year: '2026', type: 'photo');
+
+    expect(notifier.state.activityYear, '2026');
+    expect(notifier.state.activityType, 'photo');
+    verify(() => profileRepository.getActivityLog(_otherUserId, year: '2026', type: 'photo')).called(1);
   });
 }

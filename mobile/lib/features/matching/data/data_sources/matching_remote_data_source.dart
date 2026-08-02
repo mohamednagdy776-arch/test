@@ -5,11 +5,28 @@ class MatchingRemoteDataSource {
   final Dio _dio;
   const MatchingRemoteDataSource(this._dio);
 
-  Future<PaginatedResult<Map<String, dynamic>>> getMatches({String? status, int page = 1, int limit = 20}) async {
+  // minAge/maxAge/location/religiousCommitment are all real server-side
+  // filters (curl-verified live against /matches) -- backend/src/matching/
+  // controllers/matching.controller.ts's getMatches() forwards them straight
+  // into the query, unlike the web page's own religiousCommitment param which
+  // used to be silently dropped before it was wired up server-side (#257).
+  Future<PaginatedResult<Map<String, dynamic>>> getMatches({
+    String? status,
+    int page = 1,
+    int limit = 20,
+    int? minAge,
+    int? maxAge,
+    String? location,
+    String? religiousCommitment,
+  }) async {
     final response = await _dio.get('/matches', queryParameters: {
       if (status != null) 'status': status,
       'page': page,
       'limit': limit,
+      if (minAge != null) 'minAge': minAge,
+      if (maxAge != null) 'maxAge': maxAge,
+      if (location != null && location.isNotEmpty) 'location': location,
+      if (religiousCommitment != null && religiousCommitment.isNotEmpty) 'religiousCommitment': religiousCommitment,
     });
     return ApiResponse.unwrapPaginated(response, (json) => json);
   }

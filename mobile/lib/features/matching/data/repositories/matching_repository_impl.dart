@@ -9,8 +9,24 @@ class MatchingRepositoryImpl implements MatchingRepository {
   const MatchingRepositoryImpl(this._remoteDataSource);
 
   @override
-  Future<PaginatedResult<Match>> getMatches({String? status, int page = 1, int limit = 20}) async {
-    final page0 = await _remoteDataSource.getMatches(status: status, page: page, limit: limit);
+  Future<PaginatedResult<Match>> getMatches({
+    String? status,
+    int page = 1,
+    int limit = 20,
+    int? minAge,
+    int? maxAge,
+    String? location,
+    String? religiousCommitment,
+  }) async {
+    final page0 = await _remoteDataSource.getMatches(
+      status: status,
+      page: page,
+      limit: limit,
+      minAge: minAge,
+      maxAge: maxAge,
+      location: location,
+      religiousCommitment: religiousCommitment,
+    );
     return PaginatedResult(
       items: page0.items.map(Match.fromJson).toList(),
       total: page0.total,

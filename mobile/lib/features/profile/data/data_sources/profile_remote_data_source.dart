@@ -96,4 +96,18 @@ class ProfileRemoteDataSource {
     final response = await _dio.get('/reports/reasons');
     return ApiResponse.unwrapList(response).cast<Map<String, dynamic>>();
   }
+
+  // GET /users/:id/activity -- private to its owner (server 403s any other
+  // id, curl-verified live), so callers must only ever pass the current
+  // user's own id. Empty year/type are omitted rather than sent as '' -- an
+  // empty `type` fails the backend's enum validation with a 400 (#832).
+  Future<Map<String, dynamic>> getActivityLog(String userId, {String? year, String? type, int page = 1, int limit = 20}) async {
+    final response = await _dio.get('/users/$userId/activity', queryParameters: {
+      'page': page,
+      'limit': limit,
+      if (year != null && year.isNotEmpty) 'year': year,
+      if (type != null && type.isNotEmpty) 'type': type,
+    });
+    return ApiResponse.unwrap(response);
+  }
 }

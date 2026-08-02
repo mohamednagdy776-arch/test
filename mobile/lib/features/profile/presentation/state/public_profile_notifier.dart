@@ -124,7 +124,37 @@ class PublicProfileNotifier extends StateNotifier<PublicProfileState> {
         break;
       case PublicProfileTab.about:
         break; // Rendered straight from the already-loaded profile.
+      case PublicProfileTab.activity:
+        await _loadActivity();
+        break;
     }
+  }
+
+  // Never fetched for another user's profile -- the backend 403s any id
+  // other than the caller's own (curl-verified live), same reasoning as
+  // web's renderTab() skipping ActivityLogViewer entirely when !isSelf.
+  Future<void> _loadActivity({bool force = false}) async {
+    if (state.profile?.isSelf != true) return;
+    if (!force && (state.activityLog != null || state.activityLoading)) return;
+    state = state.copyWith(activityLoading: true, error: state.error);
+    try {
+      final result = await _content.activity(userId, year: state.activityYear, type: state.activityType);
+      state = state.copyWith(activityLog: result, activityLoading: false, error: state.error);
+    } catch (_) {
+      state = state.copyWith(activityLoading: false, error: state.error);
+    }
+  }
+
+  // Called from the tab's year/type dropdowns -- always force-refetches
+  // (unlike loadTab's lazy once-only loads for posts/friends/photos/videos)
+  // since a filter change must overwrite the previously cached result.
+  Future<void> setActivityFilters({String? year, String? type}) {
+    state = state.copyWith(
+      activityYear: year ?? state.activityYear,
+      activityType: type ?? state.activityType,
+      error: state.error,
+    );
+    return _loadActivity(force: true);
   }
 
   Future<void> sendFriendRequest() => _friendAction(() => _friendRequests.send(userId));
