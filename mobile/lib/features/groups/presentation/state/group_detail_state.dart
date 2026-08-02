@@ -9,6 +9,15 @@ class GroupDetailState {
   final bool isLoading;
   final bool isJoining;
   final bool isPosting;
+  // Owner/admin-gated moderation actions (Phase 26) -- one flag per action,
+  // mirroring web's one-mutation-hook-per-action pattern (each disables all
+  // buttons of its own kind while in flight, not just the one clicked).
+  final bool isSavingDetails;
+  final bool isDeleting;
+  final bool isInviting;
+  final bool isBanning;
+  final bool isApproving;
+  final bool isRejecting;
   final String? error;
 
   const GroupDetailState({
@@ -18,6 +27,12 @@ class GroupDetailState {
     this.isLoading = false,
     this.isJoining = false,
     this.isPosting = false,
+    this.isSavingDetails = false,
+    this.isDeleting = false,
+    this.isInviting = false,
+    this.isBanning = false,
+    this.isApproving = false,
+    this.isRejecting = false,
     this.error,
   });
 
@@ -28,6 +43,12 @@ class GroupDetailState {
     bool? isLoading,
     bool? isJoining,
     bool? isPosting,
+    bool? isSavingDetails,
+    bool? isDeleting,
+    bool? isInviting,
+    bool? isBanning,
+    bool? isApproving,
+    bool? isRejecting,
     String? error,
   }) {
     return GroupDetailState(
@@ -37,6 +58,12 @@ class GroupDetailState {
       isLoading: isLoading ?? this.isLoading,
       isJoining: isJoining ?? this.isJoining,
       isPosting: isPosting ?? this.isPosting,
+      isSavingDetails: isSavingDetails ?? this.isSavingDetails,
+      isDeleting: isDeleting ?? this.isDeleting,
+      isInviting: isInviting ?? this.isInviting,
+      isBanning: isBanning ?? this.isBanning,
+      isApproving: isApproving ?? this.isApproving,
+      isRejecting: isRejecting ?? this.isRejecting,
       error: error,
     );
   }
