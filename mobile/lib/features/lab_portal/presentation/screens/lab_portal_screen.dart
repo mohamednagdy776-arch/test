@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/constants/theme.dart';
 import '../../domain/entities/lab.dart';
 import '../../domain/entities/lab_referral_code.dart';
@@ -15,16 +16,15 @@ import '../providers/lab_portal_providers.dart';
 // lab_token login, entirely outside this app's regular JWT session -- not
 // something a dating-app end user would ever sign into.
 //
-// Deliberate simplification: web renders the code as a scannable QR
-// (react-qr-code) inside a modal, in addition to the raw text. No QR
-// rendering package exists in this app yet, and it isn't functionally
-// required -- the lab-staff scan screen (web/src/app/lab/scan/page.tsx) has
-// an equally-supported manual code-entry fallback next to its camera
-// scanner, and LabPortalService.validateReferralCode() only ever compares
-// the code string, not a QR payload. Showing the code as large, bold,
-// selectable/copyable monospace text (same treatment this app's affiliates
-// screen already uses for its own referral code) achieves the same
-// functional outcome without a new dependency.
+// Phase 30: web renders the code as a scannable QR (react-qr-code,
+// `<QRCode value={code.code} size={200} />`) inside a modal, in addition to
+// the raw text -- confirmed live in page.tsx. A prior phase skipped this
+// (no QR package existed yet) in favor of large selectable monospace text;
+// this phase adds qr_flutter and renders an actual QrImageView the
+// lab-staff scanner (web/src/app/lab/scan/page.tsx's camera scanner) can
+// read directly, on top of keeping the same selectable text below it (that
+// scan screen also supports manual code entry as a fallback, so the text
+// stays useful too, not replaced).
 class LabPortalScreen extends ConsumerStatefulWidget {
   const LabPortalScreen({super.key});
 
@@ -73,10 +73,30 @@ class _LabPortalScreenState extends ConsumerState<LabPortalScreen> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: const Color(0xFFD9CFB8)),
               ),
-              child: SelectableText(
-                code.code,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, letterSpacing: 3, fontFamily: 'monospace'),
+              child: Column(
+                children: [
+                  // Same size web uses (page.tsx: `<QRCode value={code.code}
+                  // size={200} />`) so a lab-staff camera scanner gets an
+                  // equally scannable target on either platform.
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: QrImageView(
+                      data: code.code,
+                      size: 200,
+                      semanticsLabel: 'رمز الاستجابة السريعة لكود الإحالة',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SelectableText(
+                    code.code,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, letterSpacing: 3, fontFamily: 'monospace'),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 8),

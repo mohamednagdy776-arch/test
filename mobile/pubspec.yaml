@@ -55,6 +55,26 @@ dependencies:
   # single static link; now needed for real functionality instead of
   # reference-only text.
   url_launcher: ^6.3.0
+  # Phase 30: opens the wa.me / t.me deep-link share URLs from
+  # child_prediction_screen.dart (same URL scheme as web's
+  # child-prediction/page.tsx) and saves the generated prediction image to
+  # the device photo gallery. `gal` chosen over the legacy
+  # `image_gallery_saver` (unmaintained, last published years ago, no
+  # AndroidX/edge-to-edge support) and over `image_gallery_saver_plus` (a
+  # community fork of the same abandoned plugin) -- `gal` is a from-scratch,
+  # actively-maintained plugin (natsuk4ze/gal) with a simpler
+  # Gal.putImageBytes() API and built-in permission handling, purpose-built
+  # for exactly this "save bytes already in memory to the gallery" use case.
+  gal: ^2.3.3
+  # Phase 30: renders the lab-portal referral code as an actual scannable QR
+  # image (lab_portal_screen.dart), matching web's lab-portal/page.tsx which
+  # renders `<QRCode value={code.code} size={200} />` via react-qr-code in a
+  # modal. Previously skipped (see this app's own prior-phase note in
+  # lab_portal_screen.dart) since the lab-staff scan screen
+  # (web/src/app/lab/scan/page.tsx) has a manual-entry fallback and doesn't
+  # strictly require it -- but a QR image is strictly more useful than plain
+  # text for a human staff member scanning it, so this phase adds it.
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
