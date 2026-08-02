@@ -67,6 +67,9 @@ class GroupsRepositoryImpl implements GroupsRepository {
   }
 
   @override
+  Future<void> deleteGroup(String id) => _remoteDataSource.deleteGroup(id);
+
+  @override
   Future<Group> joinGroup(String id) async {
     final data = await _remoteDataSource.joinGroup(id);
     return Group.fromJson(data);
@@ -74,6 +77,21 @@ class GroupsRepositoryImpl implements GroupsRepository {
 
   @override
   Future<void> leaveGroup(String id) => _remoteDataSource.leaveGroup(id);
+
+  @override
+  Future<void> inviteMember(String groupId, String userId) => _remoteDataSource.inviteMember(groupId, userId);
+
+  @override
+  Future<void> banMember(String groupId, String userId) => _remoteDataSource.banMember(groupId, userId);
+
+  @override
+  Future<void> unbanMember(String groupId, String userId) => _remoteDataSource.unbanMember(groupId, userId);
+
+  @override
+  Future<void> approveJoinRequest(String groupId, String userId) => _remoteDataSource.approveJoinRequest(groupId, userId);
+
+  @override
+  Future<void> rejectJoinRequest(String groupId, String userId) => _remoteDataSource.rejectJoinRequest(groupId, userId);
 
   @override
   Future<GroupMembersPage> getMembers(String id, {int page = 1, int limit = 50}) async {
