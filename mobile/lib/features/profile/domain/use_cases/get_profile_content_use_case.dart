@@ -2,6 +2,7 @@ import '../../../../core/api/api_response.dart';
 import '../../../friends/domain/entities/friend_user.dart';
 import '../../../posts/domain/entities/post.dart';
 import '../entities/profile_media_item.dart';
+import '../entities/activity_log_entry.dart';
 import '../repositories/profile_repository.dart';
 
 // Bundles the profile screen's tab-content reads (posts/friends/photos/
@@ -24,4 +25,9 @@ class GetProfileContentUseCase {
 
   Future<List<ProfileVideoItem>> videos(String userId, {int page = 1, int limit = 20}) =>
       _repository.getUserVideos(userId, page: page, limit: limit);
+
+  // Only ever call with the current user's own id -- see ActivityLogEntry's
+  // doc comment (backend 403s for any other id).
+  Future<ActivityLogResult> activity(String userId, {String? year, String? type}) =>
+      _repository.getActivityLog(userId, year: year, type: type);
 }

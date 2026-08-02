@@ -8,6 +8,9 @@ import 'package:tayyibt/features/friends/domain/use_cases/get_friends_use_case.d
 import 'package:tayyibt/features/friends/domain/use_cases/get_friend_requests_use_case.dart';
 import 'package:tayyibt/features/friends/domain/use_cases/respond_to_friend_request_use_case.dart';
 import 'package:tayyibt/features/friends/domain/use_cases/friend_relations_use_case.dart';
+import 'package:tayyibt/features/friends/domain/use_cases/friend_lists_use_case.dart';
+import 'package:tayyibt/features/friends/domain/entities/friend_birthday.dart';
+import 'package:tayyibt/features/friends/domain/entities/friend_list.dart';
 import 'package:tayyibt/features/friends/presentation/state/friends_notifier.dart';
 
 class MockFriendsRepository extends Mock implements FriendsRepository {}
@@ -27,11 +30,16 @@ void main() {
 
   setUp(() {
     repository = MockFriendsRepository();
+    // Default happy-path stubs for loadAll()'s birthdays/lists reads so
+    // tests that don't care about them don't need to stub every call.
+    when(() => repository.getBirthdays()).thenAnswer((_) async => []);
+    when(() => repository.getFriendLists()).thenAnswer((_) async => []);
     notifier = FriendsNotifier(
       GetFriendsUseCase(repository),
       GetFriendRequestsUseCase(repository),
       RespondToFriendRequestUseCase(repository),
       FriendRelationsUseCase(repository),
+      FriendListsUseCase(repository),
     );
   });
 
@@ -47,6 +55,25 @@ void main() {
     expect(notifier.state.friends.map((f) => f.id), ['1', '2']);
     expect(notifier.state.incomingRequests.map((r) => r.id), ['r1']);
     expect(notifier.state.isLoading, isFalse);
+  });
+
+  test('loadAll also populates birthdays and friend lists', () async {
+    when(() => repository.getFriends(page: 1, limit: 20)).thenAnswer(
+      (_) async => const PaginatedResult(items: [], total: 0, page: 1, limit: 20, totalPages: 0),
+    );
+    when(() => repository.getIncomingRequests()).thenAnswer((_) async => []);
+    when(() => repository.getSuggestions(limit: 10)).thenAnswer((_) async => []);
+    when(() => repository.getBirthdays()).thenAnswer(
+      (_) async => [FriendBirthday(id: 'f1', name: 'Sara', date: DateTime(2026, 8, 4), daysUntil: 2)],
+    );
+    when(() => repository.getFriendLists()).thenAnswer(
+      (_) async => const [FriendListEntity(id: 'l1', name: 'Work')],
+    );
+
+    await notifier.loadAll();
+
+    expect(notifier.state.birthdays.single.name, 'Sara');
+    expect(notifier.state.friendLists.single.name, 'Work');
   });
 
   test('loadAll sets an error when the repository throws', () async {
@@ -101,6 +128,62 @@ void main() {
     await notifier.unfriend('1');
 
     expect(notifier.state.friends.map((f) => f.id), ['1', '2']);
+    expect(notifier.state.error, isNotNull);
+  });
+
+  test('createList adds the new list and clears the input on success', () async {
+    when(() => repository.createFriendList('Work')).thenAnswer(
+      (_) async => const FriendListEntity(id: 'l1', name: 'Work'),
+    );
+    when(() => repository.getFriendLists()).thenAnswer(
+      (_) async => const [FriendListEntity(id: 'l1', name: 'Work')],
+    );
+
+    await notifier.createList('Work');
+
+    expect(notifier.state.friendLists.single.name, 'Work');
+    expect(notifier.state.listActionPending, isFalse);
+    expect(notifier.state.error, isNull);
+    verify(() => repository.createFriendList('Work')).called(1);
+  });
+
+  test('createList sets an error and clears pending on failure', () async {
+    when(() => repository.createFriendList('Work')).thenThrow(Exception('boom'));
+
+    await notifier.createList('Work');
+
+    expect(notifier.state.error, isNotNull);
+    expect(notifier.state.listActionPending, isFalse);
+  });
+
+  test('updateList renames the list and refreshes members', () async {
+    when(() => repository.updateFriendList('l1', name: 'Renamed', memberIds: ['u1']))
+        .thenAnswer((_) async => const FriendListEntity(id: 'l1', name: 'Renamed', memberIds: ['u1']));
+    when(() => repository.getFriendLists()).thenAnswer(
+      (_) async => const [FriendListEntity(id: 'l1', name: 'Renamed', memberIds: ['u1'])],
+    );
+
+    await notifier.updateList('l1', name: 'Renamed', memberIds: ['u1']);
+
+    expect(notifier.state.friendLists.single.name, 'Renamed');
+    verify(() => repository.updateFriendList('l1', name: 'Renamed', memberIds: ['u1'])).called(1);
+  });
+
+  test('deleteList optimistically removes the list and restores on failure', () async {
+    when(() => repository.getFriends(page: 1, limit: 20)).thenAnswer(
+      (_) async => const PaginatedResult(items: [], total: 0, page: 1, limit: 20, totalPages: 0),
+    );
+    when(() => repository.getIncomingRequests()).thenAnswer((_) async => []);
+    when(() => repository.getSuggestions(limit: 10)).thenAnswer((_) async => []);
+    when(() => repository.getFriendLists()).thenAnswer(
+      (_) async => const [FriendListEntity(id: 'l1', name: 'Work')],
+    );
+    await notifier.loadAll();
+    when(() => repository.deleteFriendList('l1')).thenThrow(Exception('boom'));
+
+    await notifier.deleteList('l1');
+
+    expect(notifier.state.friendLists.single.id, 'l1');
     expect(notifier.state.error, isNotNull);
   });
 

@@ -15,14 +15,16 @@ import '../../../posts/presentation/screens/post_detail_screen.dart';
 import '../../../videos/presentation/screens/video_detail_screen.dart';
 import '../../../chat/presentation/providers/chat_providers.dart';
 import '../../../chat/presentation/screens/chat_thread_screen.dart';
+import '../../domain/entities/activity_log_entry.dart';
 
 // Mirrors web's ProfileView.tsx (the shared component both /[username] and
 // /profile/[id] ultimately reduce to for the richer, authenticated
 // in-app view -- friendshipStatus embedded in the profile response, Send
 // Salam, follow section, report modal, locked-photos request banner). The
-// web page also has an Activity tab, but that's private-to-owner only and
-// no ActivityLog feature exists anywhere else in the mobile app yet, so it's
-// left out here entirely (same as the rest of the app's scope boundary).
+// web page also has an Activity tab: the tab itself is always shown, but its
+// content is private-to-owner (server 403s any other id) -- web's own
+// renderTab() only calls ActivityLogViewer when `isSelf`, otherwise shows a
+// placeholder ("النشاط غير متاح"). Mirrored the same way below.
 //
 // Pushed directly with a known userId (Navigator.push, no GoRoute) --
 // established precedent from match/group/chat/video/post detail screens.
@@ -84,6 +86,7 @@ class _PublicProfileScreenState extends ConsumerState<PublicProfileScreen> {
                           ButtonSegment(value: PublicProfileTab.friends, label: Text('الأصدقاء')),
                           ButtonSegment(value: PublicProfileTab.photos, label: Text('الصور')),
                           ButtonSegment(value: PublicProfileTab.videos, label: Text('الفيديوهات')),
+                          ButtonSegment(value: PublicProfileTab.activity, label: Text('النشاط')),
                         ],
                         selected: {state.activeTab},
                         onSelectionChanged: (s) => notifier.setTab(s.first),
@@ -499,6 +502,8 @@ class _TabContent extends StatelessWidget {
         return _PhotosTab(state: state);
       case PublicProfileTab.videos:
         return _VideosTab(state: state);
+      case PublicProfileTab.activity:
+        return _ActivityTab(userId: userId, state: state);
     }
   }
 }
@@ -718,6 +723,123 @@ class _VideosTab extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+// Mirrors web's ActivityLogViewer -- year/type filter dropdowns above a list
+// of activity rows. Only ever rendered for isSelf (see build()'s early
+// placeholder return); year options come from the backend's `availableYears`
+// (computed off the real merged activity set, not a hardcoded range, #117).
+class _ActivityTab extends ConsumerWidget {
+  final String userId;
+  final PublicProfileState state;
+  const _ActivityTab({required this.userId, required this.state});
+
+  static const _typeIcons = {
+    'post': '✍️',
+    'like': '❤️',
+    'comment': '💬',
+    'tag': '🏷️',
+    'friend_add': '👋',
+    'photo': '📷',
+    'video': '🎬',
+  };
+
+  static const _typeLabels = {
+    '': 'كل الأنشطة',
+    'post': 'منشورات',
+    'like': 'إعجابات',
+    'comment': 'تعليقات',
+    'tag': 'وسوم',
+    'friend_add': 'إضافة أصدقاء',
+    'photo': 'صور',
+    'video': 'فيديوهات',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Activity log is private to its owner -- the server 403s any other id
+    // (curl-verified live), so other users' profiles get a placeholder
+    // instead of ever calling the endpoint (mirrors web's renderTab()).
+    if (state.profile?.isSelf != true) {
+      return const _EmptyTab(text: 'النشاط غير متاح لهذا الملف');
+    }
+
+    final result = state.activityLog;
+    final notifier = ref.read(publicProfileProvider(userId).notifier);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                initialValue: state.activityYear,
+                decoration: const InputDecoration(labelText: 'السنة', isDense: true),
+                items: [
+                  const DropdownMenuItem(value: '', child: Text('كل السنوات')),
+                  for (final y in result?.availableYears ?? const <int>[])
+                    DropdownMenuItem(value: '$y', child: Text('$y')),
+                ],
+                onChanged: (v) => notifier.setActivityFilters(year: v ?? ''),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                initialValue: state.activityType,
+                decoration: const InputDecoration(labelText: 'النوع', isDense: true),
+                items: [
+                  for (final entry in _typeLabels.entries)
+                    DropdownMenuItem(value: entry.key, child: Text(entry.value)),
+                ],
+                onChanged: (v) => notifier.setActivityFilters(type: v ?? ''),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (state.activityLoading)
+          const Padding(padding: EdgeInsets.all(24), child: Center(child: CircularProgressIndicator()))
+        else if (result == null || result.items.isEmpty)
+          const _EmptyTab(text: 'لا يوجد نشاط')
+        else
+          for (final activity in result.items) _ActivityRow(activity: activity),
+      ],
+    );
+  }
+}
+
+class _ActivityRow extends StatelessWidget {
+  final ActivityLogEntry activity;
+  const _ActivityRow({required this.activity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_ActivityTab._typeIcons[activity.type] ?? '📌', style: const TextStyle(fontSize: 18)),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(activity.description, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  const SizedBox(height: 4),
+                  Text(activity.createdAt.timeAgo, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

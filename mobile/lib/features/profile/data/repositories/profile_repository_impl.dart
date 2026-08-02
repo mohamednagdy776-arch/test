@@ -5,6 +5,7 @@ import '../../domain/entities/public_profile.dart';
 import '../../domain/entities/follow_summary.dart';
 import '../../domain/entities/profile_media_item.dart';
 import '../../domain/entities/report_reason.dart';
+import '../../domain/entities/activity_log_entry.dart';
 import '../../domain/repositories/profile_repository.dart';
 import '../../../friends/domain/entities/friend_user.dart';
 import '../../../posts/domain/entities/post.dart';
@@ -96,5 +97,11 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<List<ReportReason>> getReportReasons() async {
     final rows = await _remoteDataSource.getReportReasons();
     return rows.map(ReportReason.fromJson).toList();
+  }
+
+  @override
+  Future<ActivityLogResult> getActivityLog(String userId, {String? year, String? type, int page = 1, int limit = 20}) async {
+    final data = await _remoteDataSource.getActivityLog(userId, year: year, type: type, page: page, limit: limit);
+    return ActivityLogResult.fromJson(data);
   }
 }
