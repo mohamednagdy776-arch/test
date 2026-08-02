@@ -125,6 +125,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: const Text('نسيت كلمة المرور؟'),
                   ),
                 ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton(
+                    onPressed: () => context.push(AppRoutes.verifyEmail),
+                    child: const Text('لم يصلك رابط تفعيل الحساب؟'),
+                  ),
+                ),
                 const SizedBox(height: 8),
 
                 // Submit button (styled via AppTheme.lightTheme.elevatedButtonTheme)
