@@ -46,6 +46,21 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> verifyEmail({required String token}) {
+    return remoteDataSource.verifyEmail(token: token);
+  }
+
+  @override
+  Future<void> resendVerification({required String email}) {
+    return remoteDataSource.resendVerification(email: email);
+  }
+
+  @override
+  Future<void> confirmEmailChange({required String token}) {
+    return remoteDataSource.confirmEmailChange(token: token);
+  }
+
+  @override
   Future<void> logout() async {
     await storage.delete(key: 'access_token');
     await storage.delete(key: 'refresh_token');

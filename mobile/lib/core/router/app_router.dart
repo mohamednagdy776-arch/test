@@ -6,6 +6,9 @@ import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/reset_password_screen.dart';
+import '../../features/auth/presentation/screens/verify_email_screen.dart';
+import '../../features/auth/presentation/screens/confirm_email_verification_screen.dart';
+import '../../features/auth/presentation/screens/confirm_email_change_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/extended_profile_screen.dart';
@@ -50,6 +53,18 @@ const _publicPaths = {
   AppRoutes.register,
   AppRoutes.forgotPassword,
   AppRoutes.resetPassword,
+  AppRoutes.verifyEmail,
+  AppRoutes.verifyEmailConfirm,
+};
+
+// Reachable regardless of auth state, unlike the logged-out-only
+// _publicPaths above. change-email/confirm is normally started by an
+// already-logged-in user (from settings' "change email" form) but ends by
+// invalidating their session server-side -- so the confirm screen itself
+// must not bounce a still-logged-in user to /dashboard, nor a
+// just-invalidated one to /login.
+const _neutralPaths = {
+  AppRoutes.verifyEmailChange,
 };
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -58,6 +73,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) async {
       final path = state.matchedLocation;
       if (path == AppRoutes.splash) return null; // SplashScreen resolves + redirects itself
+      if (_neutralPaths.contains(path)) return null;
 
       final isLoggedIn = await ref.read(authRepositoryProvider).isLoggedIn();
       final isPublic = _publicPaths.contains(path);
@@ -72,6 +88,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.register, builder: (context, state) => const RegisterScreen()),
       GoRoute(path: AppRoutes.forgotPassword, builder: (context, state) => const ForgotPasswordScreen()),
       GoRoute(path: AppRoutes.resetPassword, builder: (context, state) => const ResetPasswordScreen()),
+      GoRoute(path: AppRoutes.verifyEmail, builder: (context, state) => const VerifyEmailScreen()),
+      GoRoute(path: AppRoutes.verifyEmailConfirm, builder: (context, state) => const ConfirmEmailVerificationScreen()),
+      GoRoute(path: AppRoutes.verifyEmailChange, builder: (context, state) => const ConfirmEmailChangeScreen()),
       GoRoute(path: AppRoutes.dashboard, builder: (context, state) => const FeedScreen()),
       GoRoute(path: AppRoutes.profile, builder: (context, state) => const ProfileScreen()),
       GoRoute(path: AppRoutes.extendedProfile, builder: (context, state) => const ExtendedProfileScreen()),

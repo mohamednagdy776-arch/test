@@ -8,6 +8,9 @@ import '../../domain/use_cases/login_use_case.dart';
 import '../../domain/use_cases/register_use_case.dart';
 import '../../domain/use_cases/forgot_password_use_case.dart';
 import '../../domain/use_cases/reset_password_use_case.dart';
+import '../../domain/use_cases/verify_email_use_case.dart';
+import '../../domain/use_cases/resend_verification_use_case.dart';
+import '../../domain/use_cases/confirm_email_change_use_case.dart';
 import '../state/auth_notifier.dart';
 import '../../../notifications/presentation/providers/notifications_providers.dart';
 
@@ -45,4 +48,16 @@ final forgotPasswordUseCaseProvider = Provider(
 
 final resetPasswordUseCaseProvider = Provider(
   (ref) => ResetPasswordUseCase(ref.read(authRepositoryProvider)),
+);
+
+final verifyEmailUseCaseProvider = Provider(
+  (ref) => VerifyEmailUseCase(ref.read(authRepositoryProvider)),
+);
+
+final resendVerificationUseCaseProvider = Provider(
+  (ref) => ResendVerificationUseCase(ref.read(authRepositoryProvider)),
+);
+
+final confirmEmailChangeUseCaseProvider = Provider(
+  (ref) => ConfirmEmailChangeUseCase(ref.read(authRepositoryProvider)),
 );

@@ -4,6 +4,9 @@ class AppRoutes {
   static const register = '/register';
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
+  static const verifyEmail = '/verify-email';
+  static const verifyEmailConfirm = '/verify-email/enter-code';
+  static const verifyEmailChange = '/verify-email-change';
   static const dashboard = '/dashboard';
   static const profile = '/profile';
   static const extendedProfile = '/profile/extended';
