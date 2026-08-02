@@ -2,12 +2,24 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gal/gal.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/theme.dart';
 import '../../../../core/utils/media.dart';
 import '../../domain/entities/child_prediction_result.dart';
 import '../providers/child_prediction_providers.dart';
 import '../state/child_prediction_state.dart';
+
+// Brand colors for the WhatsApp/Telegram share buttons below -- deliberately
+// NOT AppTheme constants: these are fixed third-party brand identities (same
+// hex values web/src/app/(main)/child-prediction/page.tsx hardcodes inline
+// for its own wa.me/t.me share buttons, `#25D366`/`#229ED9`), not part of
+// this app's own design system.
+const _kWhatsAppGreen = Color(0xFF25D366);
+const _kTelegramBlue = Color(0xFF229ED9);
+
+const _kShareText = 'شاهد كيف سيبدو طفلي 👶💕 جرّب الآن على طيبت';
 
 // Mirrors web/src/app/(main)/child-prediction/page.tsx's "fusion chamber"
 // redesign: two parent upload slots either side of a central heart/orb, a
@@ -16,21 +28,21 @@ import '../state/child_prediction_state.dart';
 // slow, 3-4 minute pipeline -- confirmed live at ~3m46s for one call -- so a
 // plain spinner would read as broken/hung), then a gold-framed result reveal.
 //
-// Two deliberate simplifications from web, both flagged here and in the
-// phase report:
-// 1. No WhatsApp/Telegram deep-link share buttons and no "download to
-//    device" button. Web opens wa.me/t.me URLs and an <a download> browser
-//    action; neither has a mobile equivalent without a new package
-//    (url_launcher for the deep links, path_provider/gallery-saver for a
-//    real file save) -- this app has deliberately avoided adding
-//    url_launcher for even simpler single-link cases before (see
-//    settings/help_settings_screen.dart's own note). "Copy link" (the
-//    server-persisted, shareable mediaUrl, same one web's share buttons
-//    point at) covers the same underlying need -- share it manually to
-//    WhatsApp/Telegram/anywhere -- without a new dependency.
-// 2. No drag-and-drop (mobile has no drag target); tapping a slot opens the
+// One deliberate simplification from web, flagged here and in the phase
+// report:
+// 1. No drag-and-drop (mobile has no drag target); tapping a slot opens the
 //    gallery picker directly, same convention as every other image_picker
 //    use in this app (create_post_screen, avatar upload, ...).
+//
+// Phase 30 adds the two pieces that WERE simplified away before: WhatsApp/
+// Telegram share buttons (url_launcher opening the same wa.me/t.me URLs web
+// uses, see _shareWhatsApp/_shareTelegram below) and a real "save to device"
+// button (gal's Gal.putImageBytes writing the already-in-memory base64
+// bytes straight to the photo gallery, see _download below) -- both were
+// previously blocked only by url_launcher/a gallery-save package not being
+// dependencies yet; url_launcher was added in Phase 29 for an unrelated
+// mailto link, and this phase adds gal for the gallery save. "Copy link"
+// stays alongside the new share buttons as an extra affordance.
 class ChildPredictionScreen extends ConsumerStatefulWidget {
   const ChildPredictionScreen({super.key});
 
@@ -108,6 +120,64 @@ class _ChildPredictionScreenState extends ConsumerState<ChildPredictionScreen> {
     await Clipboard.setData(ClipboardData(text: full));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم نسخ رابط الصورة')));
+  }
+
+  // Saves the already-decoded prediction image bytes straight to the
+  // device's photo gallery -- no re-fetch, the bytes are already held in
+  // memory (state.result.imageBase64, decoded once in _resultReveal).
+  // Mirrors web's <a download> button in page.tsx.
+  Future<void> _download(Uint8List bytes) async {
+    try {
+      await Gal.putImageBytes(
+        bytes,
+        name: 'tayyibt_child_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم حفظ الصورة في المعرض')));
+    } on GalException catch (e) {
+      if (!mounted) return;
+      final message = e.type == GalExceptionType.accessDenied
+          ? 'يرجى منح إذن الوصول إلى الصور من إعدادات الجهاز'
+          : 'تعذر حفظ الصورة';
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذر حفظ الصورة')));
+    }
+  }
+
+  // Mirrors page.tsx's `https://wa.me/?text=...` share link exactly (same
+  // scheme, same shareText). Only offered once a mediaUrl exists -- same
+  // guard _copyLink already uses -- since without the server-persisted
+  // permalink there's nothing meaningful to share (the best-effort
+  // persistence step can fail, see ChildPredictionResult's docs).
+  Future<void> _shareWhatsApp(String mediaUrl) async {
+    final full = resolveMediaUrl(mediaUrl) ?? mediaUrl;
+    final uri = Uri.parse('https://wa.me/?text=${Uri.encodeComponent('$_kShareText: $full')}');
+    await _launchShare(uri, 'واتساب');
+  }
+
+  // Mirrors page.tsx's `https://t.me/share/url?url=...&text=...` share link.
+  Future<void> _shareTelegram(String mediaUrl) async {
+    final full = resolveMediaUrl(mediaUrl) ?? mediaUrl;
+    final uri = Uri.parse(
+      'https://t.me/share/url?url=${Uri.encodeComponent(full)}&text=${Uri.encodeComponent('$_kShareText!')}',
+    );
+    await _launchShare(uri, 'تليجرام');
+  }
+
+  // Same launchUrl try/catch + bool-result convention as
+  // settings/help_settings_screen.dart's _emailSupport.
+  Future<void> _launchShare(Uri uri, String appName) async {
+    var launched = false;
+    try {
+      launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      launched = false;
+    }
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تعذر فتح $appName')));
+    }
   }
 
   String _fmt(int seconds) => '${seconds ~/ 60}:${(seconds % 60).toString().padLeft(2, '0')}';
@@ -406,15 +476,14 @@ class _ChildPredictionScreenState extends ConsumerState<ChildPredictionScreen> {
         const SizedBox(height: 16),
         Row(
           children: [
-            if (result.mediaUrl != null)
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _copyLink(result.mediaUrl!),
-                  icon: const Icon(Icons.link),
-                  label: const Text('نسخ الرابط'),
-                ),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _download(bytes),
+                icon: const Icon(Icons.download_outlined),
+                label: const Text('تنزيل'),
               ),
-            if (result.mediaUrl != null) const SizedBox(width: 12),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: FilledButton.icon(
                 onPressed: _reset,
@@ -424,6 +493,39 @@ class _ChildPredictionScreenState extends ConsumerState<ChildPredictionScreen> {
             ),
           ],
         ),
+        if (result.mediaUrl != null) ...[
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => _copyLink(result.mediaUrl!),
+              icon: const Icon(Icons.link),
+              label: const Text('نسخ الرابط'),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(backgroundColor: _kWhatsAppGreen),
+                  onPressed: () => _shareWhatsApp(result.mediaUrl!),
+                  icon: const Icon(Icons.chat, size: 18),
+                  label: const Text('واتساب'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(backgroundColor: _kTelegramBlue),
+                  onPressed: () => _shareTelegram(result.mediaUrl!),
+                  icon: const Icon(Icons.send, size: 18),
+                  label: const Text('تليجرام'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }
