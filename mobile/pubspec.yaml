@@ -49,6 +49,12 @@ dependencies:
   # native pattern; share_plus gives the equivalent "get this content out of
   # the app" affordance the OS way, sharing the post's content + permalink.
   share_plus: ^10.1.4
+  # Opens the OS mail client for the support email row in
+  # help_settings_screen.dart (Phase 29) via a mailto: URI. Not present
+  # before this phase -- Phase 28 deliberately skipped adding it for a
+  # single static link; now needed for real functionality instead of
+  # reference-only text.
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
