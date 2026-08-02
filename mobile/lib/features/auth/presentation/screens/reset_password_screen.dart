@@ -4,10 +4,25 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/routes.dart';
 import '../providers/auth_providers.dart';
 import '../widgets/auth_text_field.dart';
+import '../widgets/password_strength_meter.dart';
 
 // Matches backend/src/auth/dto/reset-password.dto.ts's PASSWORD_REGEX.
 final _passwordRegex = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$');
 final _tokenRegex = RegExp(r'^[0-9a-f]{64}$');
+
+// This screen requires the reset token to be pasted in by hand (see the
+// field below) because the app has no deep-link infrastructure at all:
+// checked mobile/pubspec.yaml (no app_links/uni_links), app_router.dart (no
+// deep-link handling), AndroidManifest.xml (no <intent-filter> with a VIEW
+// action/data scheme), and ios/Runner/Info.plist + .entitlements (no
+// CFBundleURLTypes, no associated domains) -- confirmed empty 2026-08-02.
+// Wiring up real "tap the emailed link, land straight in the app" auto-
+// consumption needs platform configuration this Flutter-only phase can't
+// provide on its own: an Android intent-filter (android:autoVerify) plus an
+// assetlinks.json hosted at the domain, and iOS associated domains plus an
+// apple-app-site-association file hosted at the domain. That's
+// infrastructure/hosting work, not something to fake here with a partial
+// workaround -- so the manual-paste flow stays the real, supported path.
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -111,7 +126,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                     }
                     return null;
                   },
+                  onChanged: (_) => setState(() {}),
                 ),
+                PasswordStrengthMeter(password: _passwordCtrl.text),
                 const SizedBox(height: 16),
 
                 AuthTextField(
