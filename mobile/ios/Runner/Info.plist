@@ -31,6 +31,9 @@
 	<string>يحتاج تطبيق طيّبت إلى الوصول إلى الميكروفون لإجراء المكالمات الصوتية والمرئية.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>يحتاج تطبيق طيّبت إلى الوصول إلى الكاميرا لإجراء مكالمات الفيديو.</string>
+	<!-- Save-to-gallery (gal package) for the child-prediction download button -->
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>يحتاج تطبيق طيّبت إلى إذن الوصول للصور لحفظ صورة توقع الطفل في معرض صورك.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
