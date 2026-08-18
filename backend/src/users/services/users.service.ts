@@ -276,6 +276,13 @@ export class UsersService {
       (formatted as any).avatarUrl = null;
       (formatted as any).coverUrl = null;
     }
+    // Intimacy fields are self-disclosure for marriage compatibility, not
+    // public browsing data — only the owner or a confirmed mutual match sees
+    // them; everyone else gets them stripped even though they're in `formatted`.
+    if (!isSelf && !(await this.isMutualMatch(userId, viewerId))) {
+      (formatted as any).intimacyInterests = [];
+      (formatted as any).intimacyExperience = null;
+    }
 
     return {
       ...formatted,
@@ -287,6 +294,18 @@ export class UsersService {
       friendCount,
       isSelf,
     };
+  }
+
+  // A raw query (rather than injecting the matching module's repo) avoids a
+  // circular module dependency between users<->matching.
+  private async isMutualMatch(userId: string, viewerId?: string): Promise<boolean> {
+    if (!viewerId || viewerId === userId) return false;
+    const rows = await this.dataSource.query(
+      `SELECT 1 FROM matches WHERE status IN ('accepted', 'chat')
+         AND ((user1_id = $1 AND user2_id = $2) OR (user1_id = $2 AND user2_id = $1)) LIMIT 1`,
+      [userId, viewerId],
+    );
+    return rows.length > 0;
   }
 
   private async getMutualFriendsCount(userId: string, viewerId: string): Promise<number> {
@@ -370,6 +389,12 @@ export class UsersService {
       insuranceType: profile.insuranceType ?? null,
       interests: profile.interests ?? [],
       skills: profile.skills ?? [],
+      travelDestinations: profile.travelDestinations ?? [],
+      hairdresserFrequency: profile.hairdresserFrequency ?? null,
+      // Private — stripped for any viewer who isn't the owner or a confirmed
+      // mutual match, see getFullProfile.
+      intimacyInterests: profile.intimacyInterests ?? [],
+      intimacyExperience: profile.intimacyExperience ?? null,
       createdAt: profile.createdAt,
       // Never returned, so the Security page's post-activation check (which
       // reads this on every fresh load to decide whether to show "Enable

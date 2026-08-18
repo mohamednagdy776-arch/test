@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useMyProfile, useUpdateProfile } from '@/features/profile/hooks';
-import { INTEREST_GROUPS, SKILL_GROUPS, TagGroup } from '@/features/profile/extended-taxonomy';
+import { INTEREST_GROUPS, SKILL_GROUPS, INTIMACY_INTEREST_GROUP, TagGroup } from '@/features/profile/extended-taxonomy';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
@@ -15,7 +15,7 @@ const MAX_TAG_LENGTH = 60;
 const MAX_TAGS = 50;
 
 interface EnumField {
-  key: 'healthStatus' | 'employmentType' | 'quranMemorization' | 'mosqueAttendance' | 'insuranceType';
+  key: 'healthStatus' | 'employmentType' | 'quranMemorization' | 'mosqueAttendance' | 'insuranceType' | 'hairdresserFrequency';
   label: string;
   options: { value: string; label: string }[];
 }
@@ -69,6 +69,22 @@ const ENUM_FIELDS: EnumField[] = [
       { value: 'none', label: 'لا أملك أي تأمين' },
     ],
   },
+  {
+    key: 'hairdresserFrequency',
+    label: 'عدد مرات الذهاب لصالون التجميل',
+    options: [
+      { value: 'never', label: 'لا أذهب' },
+      { value: 'rarely', label: 'نادراً (سنوياً)' },
+      { value: 'monthly', label: 'شهرياً' },
+      { value: 'weekly', label: 'أسبوعياً' },
+    ],
+  },
+];
+
+const INTIMACY_EXPERIENCE_OPTIONS = [
+  { value: 'has_experience', label: 'لدي خبرة' },
+  { value: 'no_experience', label: 'ليس لدي خبرة' },
+  { value: 'wants_to_learn', label: 'أرغب في تعلم المزيد' },
 ];
 
 function TagChip({ tag, active, onClick, removable }: { tag: string; active: boolean; onClick: () => void; removable?: boolean }) {
@@ -181,6 +197,9 @@ export default function ExtendedProfilePage() {
   const [settleCountry, setSettleCountry] = useState('');
   const [interests, setInterests] = useState<string[]>([]);
   const [skills, setSkills] = useState<string[]>([]);
+  const [travelDestinations, setTravelDestinations] = useState<string[]>([]);
+  const [intimacyInterests, setIntimacyInterests] = useState<string[]>([]);
+  const [intimacyExperience, setIntimacyExperience] = useState('');
 
   useEffect(() => {
     if (!profile) return;
@@ -190,10 +209,14 @@ export default function ExtendedProfilePage() {
       quranMemorization: profile.quranMemorization ?? '',
       mosqueAttendance: profile.mosqueAttendance ?? '',
       insuranceType: profile.insuranceType ?? '',
+      hairdresserFrequency: profile.hairdresserFrequency ?? '',
     });
     setSettleCountry(profile.settleCountry ?? '');
     setInterests(profile.interests ?? []);
     setSkills(profile.skills ?? []);
+    setTravelDestinations(profile.travelDestinations ?? []);
+    setIntimacyInterests(profile.intimacyInterests ?? []);
+    setIntimacyExperience(profile.intimacyExperience ?? '');
   }, [profile]);
 
   const toggleTag = (list: string[], setList: (v: string[]) => void, tag: string) => {
@@ -223,6 +246,9 @@ export default function ExtendedProfilePage() {
         settleCountry: settleCountry.trim(),
         interests,
         skills,
+        travelDestinations,
+        intimacyInterests,
+        ...(intimacyExperience ? { intimacyExperience } : {}),
       });
       showToast('تم حفظ بياناتك بنجاح', 'success');
     } catch {
@@ -328,6 +354,56 @@ export default function ExtendedProfilePage() {
                 disabled={skills.length >= MAX_TAGS}
               />
               <TagPicker groups={SKILL_GROUPS} selected={skills} onToggle={(tag) => toggleTag(skills, setSkills, tag)} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card variant="default" className="bg-[var(--card)] border-[var(--border)]/50">
+          <CardHeader>
+            <CardTitle style={{ color: 'var(--foreground)' }}>السفر</CardTitle>
+            <CardDescription>الأماكن التي سافرت إليها أو ترغب في زيارتها</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CustomTagSection
+              label="الوجهات"
+              customTags={travelDestinations}
+              onAdd={(tag) => addCustomTag(travelDestinations, setTravelDestinations, tag)}
+              onRemove={(tag) => toggleTag(travelDestinations, setTravelDestinations, tag)}
+              disabled={travelDestinations.length >= 20}
+            />
+          </CardContent>
+        </Card>
+
+        <Card variant="default" className="bg-[var(--card)] border-[var(--border)]/50">
+          <CardHeader>
+            <CardTitle style={{ color: 'var(--foreground)' }}>معلومات خاصة</CardTitle>
+            <CardDescription>
+              تُعرض هذه المعلومات فقط لك ولطرف تمت الموافقة على التطابق معه من الجانبين — لا تظهر أبداً أثناء التصفح العام أو للأشخاص غير المتطابقين معك.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-5">
+              <TagPicker
+                groups={[INTIMACY_INTEREST_GROUP]}
+                selected={intimacyInterests}
+                onToggle={(tag) => toggleTag(intimacyInterests, setIntimacyInterests, tag)}
+              />
+              <div className="flex items-center justify-between gap-4 py-2">
+                <label className="text-sm font-medium flex-1" style={{ color: 'var(--foreground)' }}>
+                  الخبرة في العلاقات الحميمة
+                </label>
+                <select
+                  value={intimacyExperience}
+                  onChange={(e) => setIntimacyExperience(e.target.value)}
+                  className="shrink-0 w-auto min-w-fit px-4 py-2 rounded-xl border text-sm focus:outline-none focus:ring-2 transition-all cursor-pointer"
+                  style={{ borderColor: 'var(--border)', background: 'var(--card)', color: 'var(--foreground)' }}
+                >
+                  <option value="">— لم يُحدَّد —</option>
+                  {INTIMACY_EXPERIENCE_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </CardContent>
         </Card>

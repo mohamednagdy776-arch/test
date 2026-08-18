@@ -54,6 +54,12 @@ export class UpdateProfileDto {
   @IsOptional() @IsEnum(['life', 'health', 'none']) insuranceType?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) @MaxLength(60, { each: true }) interests?: string[];
   @IsOptional() @IsArray() @ArrayMaxSize(50) @IsString({ each: true }) @MaxLength(60, { each: true }) skills?: string[];
+  @IsOptional() @IsArray() @ArrayMaxSize(20) @IsString({ each: true }) @MaxLength(60, { each: true }) travelDestinations?: string[];
+  @IsOptional() @IsEnum(['never', 'rarely', 'monthly', 'weekly']) hairdresserFrequency?: string;
+
+  // Private (see Profile entity + UsersService#getFullProfile gating).
+  @IsOptional() @IsArray() @ArrayMaxSize(10) @IsString({ each: true }) @MaxLength(60, { each: true }) intimacyInterests?: string[];
+  @IsOptional() @IsEnum(['has_experience', 'no_experience', 'wants_to_learn']) intimacyExperience?: string;
 }
 
 export class ProfileWorkDto {

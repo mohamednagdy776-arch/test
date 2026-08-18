@@ -56,6 +56,14 @@ export const culturalLevelLabel = makeLabeler({
   low: 'منخفض', medium: 'متوسط', high: 'مرتفع',
 });
 
+export const hairdresserFrequencyLabel = makeLabeler({
+  never: 'لا أذهب', rarely: 'نادراً (سنوياً)', monthly: 'شهرياً', weekly: 'أسبوعياً',
+});
+
+export const intimacyExperienceLabel = makeLabeler({
+  has_experience: 'لدي خبرة', no_experience: 'ليس لدي خبرة', wants_to_learn: 'أرغب في تعلم المزيد',
+});
+
 export const healthStatusLabel = makeLabeler({
   healthy: 'سليم', has_condition: 'يعاني من حالة صحية',
 });

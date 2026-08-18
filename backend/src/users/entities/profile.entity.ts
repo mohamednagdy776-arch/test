@@ -169,6 +169,21 @@ export class Profile {
   @Column({ type: 'jsonb', default: () => "'[]'" })
   skills: string[];
 
+  @Column({ name: 'travel_destinations', type: 'jsonb', default: () => "'[]'" })
+  travelDestinations: string[];
+
+  @Column({ name: 'hairdresser_frequency', nullable: true })
+  hairdresserFrequency: string;
+
+  // Private — only ever returned to the profile owner or a viewer with a
+  // confirmed mutual match (gated in UsersService#getFullProfile). Never shown
+  // during public browsing/search, unlike the rest of the extended profile.
+  @Column({ name: 'intimacy_interests', type: 'jsonb', default: () => "'[]'" })
+  intimacyInterests: string[];
+
+  @Column({ name: 'intimacy_experience', nullable: true })
+  intimacyExperience: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }

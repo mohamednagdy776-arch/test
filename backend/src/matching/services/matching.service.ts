@@ -203,7 +203,10 @@ export class MatchingService {
       // (WEIGHT_INTERESTS) but nothing ever populated it, so that bucket was
       // always neutral (0.5) for every pair. Extended-profile interests/skills
       // (see Profile#interests/#skills) are the first real signal for it.
-      interests: [...(profile.interests ?? []), ...(profile.skills ?? [])],
+      // intimacyInterests feeds compatibility scoring same as interests/skills,
+      // but (unlike them) is never returned in the profile API to a non-match
+      // viewer — see UsersService#getFullProfile.
+      interests: [...(profile.interests ?? []), ...(profile.skills ?? []), ...(profile.intimacyInterests ?? [])],
     };
   }
 
@@ -328,7 +331,10 @@ export class MatchingService {
       preferredCountry: profile.preferredCountry,
       settleCountry: profile.settleCountry,
       quranMemorization: profile.quranMemorization,
-      interests: [...(profile.interests ?? []), ...(profile.skills ?? [])],
+      // intimacyInterests feeds compatibility scoring same as interests/skills,
+      // but (unlike them) is never returned in the profile API to a non-match
+      // viewer — see UsersService#getFullProfile.
+      interests: [...(profile.interests ?? []), ...(profile.skills ?? []), ...(profile.intimacyInterests ?? [])],
       createdAt: profile.createdAt,
     };
   }

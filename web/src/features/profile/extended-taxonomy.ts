@@ -63,6 +63,16 @@ export const INTEREST_GROUPS: TagGroup[] = [
   },
 ];
 
+// Private group — rendered in its own gated section of the Extended Profile
+// page, never mixed into INTEREST_GROUPS, so it's never fed to the general
+// interests TagPicker (backend also gates the stored value on display, see
+// UsersService#getFullProfile).
+export const INTIMACY_INTEREST_GROUP: TagGroup = {
+  label: 'الاهتمامات الجنسية',
+  labelKey: 'extendedProfile.interests.intimacy',
+  options: ['المساج', 'العلاقات الحميمة', 'الرومانسية'],
+};
+
 export const SKILL_GROUPS: TagGroup[] = [
   {
     label: 'اللغات والتقنية',
