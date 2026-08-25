@@ -139,6 +139,13 @@ export function ProfileModal({ userId, open, onClose }: ProfileModalProps) {
         {renderProfileField('Lifestyle', profile.lifestyle)}
         {renderProfileField('Prayer Level', profile.prayerLevel)}
         {renderProfileField('Looking For', profile.lookingFor)}
+        {renderProfileField('Religious Commitment', profile.religiousCommitment)}
+        {renderProfileField('Cultural Level', profile.culturalLevel)}
+        {renderProfileField('Marital Status', profile.maritalStatus)}
+        {renderProfileField('Children', profile.childrenCount?.toString())}
+        {renderProfileField('Willing to Relocate', profile.relocateWilling ? 'Yes' : profile.relocateWilling === false ? 'No' : undefined)}
+        {renderProfileField('Settle Country', profile.settleCountry)}
+        {renderProfileField('Quran Memorization', profile.quranMemorization)}
         {profile.dateOfBirth && renderProfileField('Date of Birth', new Date(profile.dateOfBirth).toLocaleDateString())}
         
         {profile.bio && (

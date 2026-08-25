@@ -437,6 +437,13 @@ export class MatchingService {
       bio: profile.bio || undefined,
       avatar: profile.avatarUrl || undefined,
       prayerLevel: profile.prayerLevel || undefined,
+      religiousCommitment: profile.religiousCommitment || undefined,
+      culturalLevel: profile.culturalLevel || undefined,
+      maritalStatus: profile.maritalStatus || undefined,
+      childrenCount: profile.childrenCount ?? undefined,
+      relocateWilling: profile.relocateWilling ?? undefined,
+      settleCountry: profile.settleCountry || undefined,
+      quranMemorization: profile.quranMemorization || undefined,
     };
   }
 }

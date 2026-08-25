@@ -104,6 +104,13 @@ export interface UserProfile {
   avatar?: string;
   prayerLevel?: 'never' | 'sometimes' | 'always';
   lookingFor?: string;
+  religiousCommitment?: string;
+  culturalLevel?: string;
+  maritalStatus?: string;
+  childrenCount?: number;
+  relocateWilling?: boolean;
+  settleCountry?: string;
+  quranMemorization?: string;
 }
 
 // Profile with match score

@@ -22,6 +22,13 @@ export class ProfileBasicDto {
   avatar?: string;
   prayerLevel?: string;
   lookingFor?: string;
+  religiousCommitment?: string;
+  culturalLevel?: string;
+  maritalStatus?: string;
+  childrenCount?: number;
+  relocateWilling?: boolean;
+  settleCountry?: string;
+  quranMemorization?: string;
 }
 
 export class ProfileWithMatchDto {
