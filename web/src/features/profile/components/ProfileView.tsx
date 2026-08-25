@@ -20,6 +20,8 @@ import {
   socialStatusLabel, educationLabel, lifestyleLabel,
   sectLabel, prayerLevelLabel, religiousCommitmentLabel,
   financialLevelLabel, culturalLevelLabel,
+  hairdresserFrequencyLabel, healthStatusLabel, employmentTypeLabel,
+  quranMemorizationLabel, mosqueAttendanceLabel, insuranceTypeLabel,
 } from '../labels';
 
 interface Props {
@@ -217,6 +219,17 @@ export const ProfileView = ({ userId }: Props) => {
           [t('profileView.field.financialLevel'), financialLevelLabel(profile.financialLevel)],
           [t('profileView.field.culturalLevel'), culturalLevelLabel(profile.culturalLevel)],
           [t('profileView.field.lifestyle'), lifestyleLabel(profile.lifestyle)],
+        ]} />
+      </ProfileSection>
+
+      <ProfileSection title={t('profileView.section.additionalInfo')} icon="🏥">
+        <Grid items={[
+          [t('profileView.field.hairdresserFrequency'), hairdresserFrequencyLabel(profile.hairdresserFrequency)],
+          [t('profileView.field.healthStatus'), healthStatusLabel(profile.healthStatus)],
+          [t('profileView.field.employmentType'), employmentTypeLabel(profile.employmentType)],
+          [t('profileView.field.quranMemorization'), quranMemorizationLabel(profile.quranMemorization)],
+          [t('profileView.field.mosqueAttendance'), mosqueAttendanceLabel(profile.mosqueAttendance)],
+          [t('profileView.field.insuranceType'), insuranceTypeLabel(profile.insuranceType)],
         ]} />
       </ProfileSection>
 
