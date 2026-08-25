@@ -9,10 +9,13 @@ import { ProfileHeader } from '@/features/profile/components/ProfileHeader';
 import { ProfileSection } from '@/features/profile/components/ProfileSection';
 import { ProfileTabs } from '@/features/profile/components/ProfileTabs';
 import { ActivityLogViewer } from '@/features/profile/components/ActivityLogViewer';
+import { ReportUserModal } from '@/features/profile/components/ReportUserModal';
 import { PostCard } from '@/features/posts/components/PostCard';
 import Link from 'next/link';
 import { useT } from '@/i18n/I18nProvider';
 import { relationshipStatusLabel } from '@/features/profile/labels';
+import { interestsApi } from '@/features/interests/api';
+import { useToast } from '@/components/ui/Toast';
 
 type Tab = 'posts' | 'about' | 'friends' | 'photos' | 'videos' | 'activity';
 
@@ -23,8 +26,10 @@ export default function UserProfilePage() {
   const { t } = useT();
   const params = useParams();
   const router = useRouter();
+  const { showToast } = useToast();
   const username = params.username as string;
   const [activeTab, setActiveTab] = useState<Tab>('posts');
+  const [reportOpen, setReportOpen] = useState(false);
 
   const { data: profileData, isLoading } = useQuery({
     queryKey: ['user-profile', username],
@@ -54,6 +59,22 @@ export default function UserProfilePage() {
   // manually navigated away and back (#351) -- redirect immediately instead.
   const blockUser     = useMutation({ mutationFn: () => profileApi.blockUser(profileUserId), onSuccess: () => { inval(); router.push('/friends'); } });
   const friendActionPending = sendRequest.isPending || cancelRequest.isPending || acceptRequest.isPending || unfriend.isPending;
+
+  // Send Salam — directed marriage-intent interest (#754), mirroring ProfileView.tsx.
+  const { data: sentInterestsData } = useQuery({
+    queryKey: ['sent-interests'],
+    queryFn: () => interestsApi.sent(),
+    enabled: !isSelf,
+  });
+  const alreadySentInterest = (sentInterestsData as any)?.data?.some((r: any) => r.user?.id === profileUserId) ?? false;
+  const sendInterest = useMutation({
+    mutationFn: () => interestsApi.send(profileUserId),
+    onSuccess: (res: any) => {
+      showToast(res?.message || t('profileView.interestSentToast'), 'success');
+      qc.invalidateQueries({ queryKey: ['sent-interests'] });
+    },
+    onError: () => showToast(t('profileView.interestSendError'), 'error'),
+  });
 
   if (isLoading) {
     return (
@@ -85,6 +106,10 @@ export default function UserProfilePage() {
         onAcceptRequest={!isSelf ? () => acceptRequest.mutate() : undefined}
         onUnfriend={!isSelf ? () => unfriend.mutate() : undefined}
         onBlock={!isSelf ? () => blockUser.mutate() : undefined}
+        onReport={!isSelf ? () => setReportOpen(true) : undefined}
+        onSendInterest={!isSelf ? () => sendInterest.mutate() : undefined}
+        sendInterestPending={sendInterest.isPending}
+        alreadySentInterest={alreadySentInterest}
         friendActionPending={!isSelf ? friendActionPending : false}
       />
       <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
@@ -99,6 +124,14 @@ export default function UserProfilePage() {
           : <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-8 text-center text-[var(--primary)]">{t('userPage.activityPrivate')}</div>
         )}
       </div>
+      {!isSelf && profileUserId && (
+        <ReportUserModal
+          userId={profileUserId}
+          userName={profile.fullName}
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
     </div>
   );
 }
