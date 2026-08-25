@@ -12,6 +12,7 @@ import { ActivityLogViewer } from '@/features/profile/components/ActivityLogView
 import { PostCard } from '@/features/posts/components/PostCard';
 import Link from 'next/link';
 import { useT } from '@/i18n/I18nProvider';
+import { relationshipStatusLabel } from '@/features/profile/labels';
 
 type Tab = 'posts' | 'about' | 'friends' | 'photos' | 'videos' | 'activity';
 
@@ -222,7 +223,7 @@ function AboutTab({ profile }: { profile: any }) {
           {profile.relationshipStatus && (
             <div className="rounded-xl bg-[var(--muted)] border border-[var(--border)] p-3">
               <p className="text-xs text-[var(--muted-foreground)] mb-0.5">الحالة الاجتماعية</p>
-              <p className="text-sm font-semibold text-[var(--foreground)]">{profile.relationshipStatus}</p>
+              <p className="text-sm font-semibold text-[var(--foreground)]">{relationshipStatusLabel(profile.relationshipStatus)}</p>
             </div>
           )}
           {profile.location && (
