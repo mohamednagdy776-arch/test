@@ -1,5 +1,6 @@
 import os
 import paramiko, json
+import shlex
 
 c = paramiko.SSHClient()
 c.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -9,9 +10,11 @@ BASE = "https://145-14-158-100.sslip.io/api/v1"
 
 def call(method, path, body=None, token=None):
     h = "-H 'Content-Type: application/json'"
-    if token: h += f" -H 'Authorization: Bearer {token}'"
-    d = f"-d '{json.dumps(body or {}).replace(chr(39), chr(39)+chr(92)+chr(39)+chr(39))}'" if body else ""
-    _, o, _ = c.exec_command(f"curl -s -X {method} '{BASE}{path}' {h} {d}")
+    # Use shlex.quote() to prevent OS command injection from token and other variables
+    if token: h += f" -H {shlex.quote(f'Authorization: Bearer {token}')}"
+    d = f"-d {shlex.quote(json.dumps(body or {}))}" if body else ""
+    cmd = f"curl -s -X {shlex.quote(method)} {shlex.quote(BASE + path)} {h} {d}"
+    _, o, _ = c.exec_command(cmd)
     raw = o.read().decode().strip()
     try: return json.loads(raw)
     except: return {"_raw": raw[:200]}
