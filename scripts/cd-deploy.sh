@@ -49,22 +49,44 @@ echo "==> Applying nginx config…"
 # container so it re-binds the current file. But EVERYTHING is behind this nginx,
 # so first validate the new config in a throwaway container — only recreate if it
 # passes, otherwise keep the running nginx so a bad config can't take the site down.
-# The validation container MUST join the compose network, otherwise `nginx -t`
-# cannot resolve the upstream service names (backend/web/admin/ai-service) and
-# fails with a false "host not found in upstream" — which previously made us skip
-# EVERY nginx update (force-recreate never ran).
-NET="$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}}{{end}}' tayyibt-backend-1 2>/dev/null)"
-NET="${NET:-tayyibt_tayyibt-network}"
-if docker run --rm --network "$NET" \
-     -v /opt/tayyibt/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
-     -v /opt/tayyibt/certs:/etc/nginx/certs:ro \
-     nginx:1.25-alpine nginx -t >/dev/null 2>&1; then
-  $COMPOSE up -d --force-recreate --no-deps nginx
+#
+# This nginx is the shared edge for EVERY site on the VPS. Other projects add their
+# site configs/certs/pages (docker cp) and attach nginx to their own networks at
+# runtime. Files now persist in /opt/edge-nginx (mounted, see docker-compose.vps.yml);
+# networks are not persisted by Docker, so: remember them, validate the FULL config
+# (all sites) with the same mounts on all those networks, and re-attach them BEFORE
+# the new nginx starts. If validation fails, keep the running nginx.
+EDGE=/opt/edge-nginx
+MOUNTS=(-v "$EDGE/etc-nginx:/etc/nginx" -v "$EDGE/www:/var/www"
+        -v /opt/tayyibt/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+        -v /opt/tayyibt/certs:/etc/nginx/certs:ro)
+attach() {
+  while read -r n; do
+    [ -n "$n" ] && [ "$n" != tayyibt_tayyibt-network ] && docker network connect "$n" "$1" 2>/dev/null || true
+  done < "$EDGE/networks.txt"
+}
+
+if [ ! -d "$EDGE/etc-nginx/conf.d" ] || [ ! -d "$EDGE/www" ]; then
+  echo "WARNING: $EDGE is not set up — refusing to recreate nginx (every other site would be lost). Keeping the running nginx." >&2
 else
-  echo "WARNING: new nginx.conf failed 'nginx -t' validation — keeping the running nginx." >&2
-  docker run --rm --network "$NET" \
-    -v /opt/tayyibt/docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
-    -v /opt/tayyibt/certs:/etc/nginx/certs:ro nginx:1.25-alpine nginx -t || true
+  { docker inspect tayyibt-nginx-1 --format '{{range $n,$v := .NetworkSettings.Networks}}{{$n}}{{"\n"}}{{end}}' 2>/dev/null
+    cat "$EDGE/networks.txt" 2>/dev/null; } | sed '/^$/d' | sort -u > "$EDGE/networks.txt.new" \
+    && mv "$EDGE/networks.txt.new" "$EDGE/networks.txt"
+
+  docker rm -f nginx-validate >/dev/null 2>&1 || true
+  docker create --name nginx-validate --network tayyibt_tayyibt-network "${MOUNTS[@]}" \
+    nginx:1.25-alpine nginx -t >/dev/null
+  attach nginx-validate
+  if out=$(docker start -a nginx-validate 2>&1); then
+    docker rm -f nginx-validate >/dev/null
+    $COMPOSE up -d --no-start --force-recreate --no-deps nginx
+    attach tayyibt-nginx-1
+    docker start tayyibt-nginx-1
+  else
+    docker rm -f nginx-validate >/dev/null
+    echo "WARNING: full nginx config failed 'nginx -t' validation — keeping the running nginx:" >&2
+    echo "$out" | tail -5 >&2
+  fi
 fi
 docker exec tayyibt-nginx-1 nginx -s reload 2>/dev/null || true
 
