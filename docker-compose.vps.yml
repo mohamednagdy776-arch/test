@@ -24,6 +24,11 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      # Shared edge for every site on this VPS: configs, certs, htpasswd files and
+      # static pages that other projects add (docker cp / nginx -s reload) live on
+      # the host in /opt/edge-nginx, so recreating nginx no longer deletes them.
+      - /opt/edge-nginx/etc-nginx:/etc/nginx
+      - /opt/edge-nginx/www:/var/www
       - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./certs:/etc/nginx/certs:ro
     depends_on:
