@@ -17,7 +17,11 @@ echo "==> Building images (cached layers reused; changed services rebuild)…"
 $COMPOSE build
 
 echo "==> Starting/refreshing services…"
-$COMPOSE up -d --remove-orphans
+# Everything except nginx: nginx fronts every site on the VPS and is only ever
+# recreated by the validated step below (full config test, networks re-attached
+# before start). Letting this generic `up -d` recreate it caused an outage.
+SERVICES="$($COMPOSE config --services | grep -vx nginx | tr '\n' ' ')"
+$COMPOSE up -d --remove-orphans $SERVICES
 
 # ── Database migrations ──────────────────────────────────────────────────────
 # Production runs with TypeORM `synchronize` disabled (#147), so schema changes
@@ -97,7 +101,8 @@ docker exec tayyibt-nginx-1 nginx -s reload 2>/dev/null || true
 echo "==> Waiting for the stack to report healthy…"
 health_ok=0
 for i in $(seq 1 30); do
-  code="$(curl -s -o /dev/null -w '%{http_code}' -k https://localhost/api/v1/health || echo 000)"
+  # Ask for Tayyibt by its own name: `localhost` falls to the edge default (IMS).
+  code="$(curl -s -o /dev/null -w '%{http_code}' -k --resolve 145-14-158-100.sslip.io:443:127.0.0.1 https://145-14-158-100.sslip.io/api/v1/health || echo 000)"
   echo "   health attempt $i/30 -> $code"
   if [ "$code" = "200" ]; then health_ok=1; break; fi
   sleep 5
