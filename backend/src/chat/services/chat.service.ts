@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, Not } from 'typeorm';
 import { Message } from '../entities/message.entity';
@@ -10,6 +10,7 @@ import { Profile } from '../../users/entities/profile.entity';
 import { Match } from '../../matching/entities/match.entity';
 import { SettingsService } from '../../settings/services/settings.service';
 import { FriendsService } from '../../friends/services/friends.service';
+import { NotificationDispatchService } from '../../notifications/services/notification-dispatch.service';
 
 @Injectable()
 export class ChatService {
@@ -23,7 +24,24 @@ export class ChatService {
     @InjectRepository(Match) private matchesRepo: Repository<Match>,
     private settingsService: SettingsService,
     private friendsService: FriendsService,
+    @Optional() private dispatch?: NotificationDispatchService,
   ) {}
+
+  // Phone push for a new message to every other participant. Body is a generic
+  // line, never the message text, so private chat content doesn't show on a
+  // locked screen. Respects the recipient's `newMessage` preference.
+  private pushNewMessage(conversationId: string, senderId: string, participantIds: string[]) {
+    if (!this.dispatch) return;
+    const dispatch = this.dispatch;
+    (async () => {
+      const sender = await this.usersRepo.findOne({ where: { id: senderId }, relations: ['profile'] });
+      const title = sender?.profile?.fullName || [sender?.firstName, sender?.lastName].filter(Boolean).join(' ') || 'طيبات';
+      for (const uid of participantIds) {
+        if (uid === senderId) continue;
+        dispatch.notify(uid, 'new_message', title, 'أرسل لك رسالة جديدة', { type: 'new_message', conversationId });
+      }
+    })().catch(() => undefined);
+  }
 
   // Enforce the recipient's "who can message me" privacy before a NEW 1:1
   // conversation is opened (#457). Fail-open: default/'public'/any error → allow,
@@ -264,7 +282,9 @@ export class ChatService {
       mediaUrl,
       storySnapshotUrl,
     });
-    return this.messagesRepo.save(msg);
+    const saved = await this.messagesRepo.save(msg);
+    this.pushNewMessage(conversationId, senderId, participantIds);
+    return saved;
   }
 
   async editMessage(messageId: string, userId: string, content: string) {

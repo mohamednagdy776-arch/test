@@ -15,6 +15,7 @@ import { User } from '../auth/entities/user.entity';
 import { Profile } from '../users/entities/profile.entity';
 import { FriendsModule } from '../friends/friends.module';
 import { SettingsModule } from '../settings/settings.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -32,6 +33,8 @@ import { SettingsModule } from '../settings/settings.module';
     FriendsModule,
     // For messaging-privacy enforcement (#457).
     SettingsModule,
+    // Phone push (FCM) for new messages.
+    NotificationsModule,
   ],
   providers: [ChatGateway, ChatService, TranslationService],
   controllers: [ChatController, CallsController],
