@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "105696232341",
+    "project_id": "tyibat",
+    "storage_bucket": "tyibat.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:105696232341:android:bbbd6f6b1c54eae1276c9c",
+        "android_client_info": {
+          "package_name": "com.tayyibt.tayyibt"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyArfeokdOLCksXcDj_oDf_ZvkNNVZ815bw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

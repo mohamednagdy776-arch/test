@@ -1,15 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Notification, NotificationType } from '../entities/notification.entity';
 import { CreateNotificationDto } from '../dto/create-notification.dto';
 import { User } from '../../auth/entities/user.entity';
+import { NotificationDispatchService } from './notification-dispatch.service';
 
 @Injectable()
 export class NotificationsService {
   constructor(
     @InjectRepository(Notification) private notificationRepo: Repository<Notification>,
     @InjectRepository(User) private usersRepo: Repository<User>,
+    @Optional() private dispatch?: NotificationDispatchService,
   ) {}
 
   // Notify a target user about an action by `actorId`. Never notifies a user
@@ -115,7 +117,29 @@ export class NotificationsService {
       actorId: actorId ?? undefined,
       readStatus: false,
     });
-    return this.notificationRepo.save(notification);
+    const saved = await this.notificationRepo.save(notification);
+    this.pushToDevices(userId, saved, actorId);
+    return saved;
+  }
+
+  // Mirror every in-app notification to the user's phones (FCM). Best-effort,
+  // not awaited — the in-app row is the source of truth. Title is the actor's
+  // name because messages read as "<actor> <message>" ("started following you").
+  private pushToDevices(userId: string, n: Notification, actorId?: string) {
+    if (!this.dispatch) return;
+    const dispatch = this.dispatch;
+    (async () => {
+      let title = 'طيبات';
+      if (actorId) {
+        const actor = await this.usersRepo.findOne({ where: { id: actorId }, relations: ['profile'] });
+        const name = actor?.profile?.fullName || [actor?.firstName, actor?.lastName].filter(Boolean).join(' ');
+        if (name) title = name;
+      }
+      const data: Record<string, string> = { notificationId: n.id, type: n.type };
+      if (n.entityType) data.entityType = n.entityType;
+      if (n.entityId) data.entityId = n.entityId;
+      dispatch.notify(userId, n.type, title, n.message, data);
+    })().catch(() => undefined);
   }
 
   async markAsRead(id: string, userId: string) {
