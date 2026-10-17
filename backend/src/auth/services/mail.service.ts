@@ -19,7 +19,7 @@ export class MailService {
       process.env.WEB_URL ||
       process.env.PUBLIC_WEB_URL ||
       (process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',')[0].trim() : '') ||
-      'https://145-14-158-100.sslip.io';
+      'https://tayyibt.higher-institute.tech';
     return fromEnv.replace(/\/+$/, '');
   }
 
