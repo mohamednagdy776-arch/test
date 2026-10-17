@@ -1,0 +1,114 @@
+name: Mobile Release
+
+# Installable builds of the Flutter app against production
+# (tayyibt.higher-institute.tech):
+# - android-release: signed APK (sideload) + AAB (Google Play). Runs on the
+#   self-hosted VPS runner because the upload keystore lives only on that host
+#   (/root/tayyibt-android-signing, root-only) -- no GitHub secrets needed.
+#   push-to-main / manual only, never pull_request: this repo is public and a
+#   PR must never run code on the VPS runner.
+# - ios-unsigned: unsigned .ipa for sideloading onto a personal iPhone with
+#   Sideloadly + a free Apple ID (7-day signature, no push). Replace with a
+#   signed TestFlight upload once there is an Apple Developer account.
+on:
+  push:
+    branches: [main]
+    paths: ['mobile/**', '.github/workflows/mobile-release.yml']
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-release
+  cancel-in-progress: true
+
+env:
+  API_URL: https://tayyibt.higher-institute.tech/api/v1
+  WS_URL: https://tayyibt.higher-institute.tech
+
+jobs:
+  android-release:
+    runs-on: [self-hosted, vps]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build signed APK + AAB (Flutter container)
+        run: |
+          set -e
+          SIGNING=/root/tayyibt-android-signing
+          test -f "$SIGNING/upload-keystore.jks"
+          umask 077
+          P=$(cat "$SIGNING/store-pass.txt")
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=upload\nstoreFile=/signing/upload-keystore.jks\n' "$P" "$P" \
+            > mobile/android/key.properties
+          # The VPS also serves every live site (15 GiB RAM, no swap). The
+          # project's gradle.properties asks for an 8G heap; an uncapped build
+          # took ~8 GiB and pushed the host to <1.5 GiB free. Hard-cap the
+          # container (an OOM kills only the build) and override Gradle/Kotlin
+          # heaps via GRADLE_USER_HOME/gradle.properties, which takes
+          # precedence over the project file.
+          docker run --rm --memory=5g --memory-swap=5g \
+            -v "$GITHUB_WORKSPACE/mobile:/app" \
+            -v "$SIGNING:/signing:ro" \
+            -v tayyibt-gradle-cache:/root/.gradle \
+            -w /app ghcr.io/cirruslabs/flutter:3.41.6 bash -c "
+              set -e
+              printf 'org.gradle.jvmargs=-Xmx2560m -XX:MaxMetaspaceSize=768m\norg.gradle.workers.max=2\nkotlin.daemon.jvmargs=-Xmx1g\n' > /root/.gradle/gradle.properties
+              flutter pub get
+              flutter build apk --release --dart-define=API_URL=$API_URL --dart-define=WS_URL=$WS_URL
+              flutter build appbundle --release --dart-define=API_URL=$API_URL --dart-define=WS_URL=$WS_URL
+              chown -R $(id -u):$(id -g) build"
+
+      - name: Remove signing config
+        if: always()
+        run: rm -f mobile/android/key.properties
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tayyibt-release-apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: tayyibt-release-aab
+          path: mobile/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+  ios-unsigned:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.6'
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build iOS (device, no codesign)
+        run: flutter build ios --release --no-codesign --dart-define=API_URL=$API_URL --dart-define=WS_URL=$WS_URL
+
+      # An .ipa is just Payload/Runner.app zipped; Sideloadly signs it with the
+      # user's Apple ID on install.
+      - name: Package unsigned .ipa
+        run: |
+          mkdir -p build/ipa/Payload
+          cp -R build/ios/iphoneos/Runner.app build/ipa/Payload/
+          cd build/ipa && zip -qry tayyibt-unsigned.ipa Payload
+
+      - name: Upload unsigned .ipa
+        uses: actions/upload-artifact@v4
+        with:
+          name: tayyibt-ios-unsigned-ipa
+          path: mobile/build/ipa/tayyibt-unsigned.ipa
+          retention-days: 30
