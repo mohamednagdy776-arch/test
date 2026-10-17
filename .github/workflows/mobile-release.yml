@@ -15,6 +15,12 @@ on:
     branches: [main]
     paths: ['mobile/**', '.github/workflows/mobile-release.yml']
   workflow_dispatch:
+    inputs:
+      platform:
+        description: Which builds to produce
+        type: choice
+        options: [all, ios, android]
+        default: all
 
 concurrency:
   group: mobile-release
@@ -26,6 +32,7 @@ env:
 
 jobs:
   android-release:
+    if: github.event_name == 'push' || inputs.platform != 'ios'
     runs-on: [self-hosted, vps]
     timeout-minutes: 45
     steps:
@@ -77,6 +84,7 @@ jobs:
           retention-days: 30
 
   ios-unsigned:
+    if: github.event_name == 'push' || inputs.platform != 'android'
     runs-on: macos-latest
     timeout-minutes: 60
     defaults:
@@ -98,13 +106,28 @@ jobs:
       - name: Build iOS (device, no codesign)
         run: flutter build ios --release --no-codesign --dart-define=API_URL=$API_URL --dart-define=WS_URL=$WS_URL
 
-      # An .ipa is just Payload/Runner.app zipped; Sideloadly signs it with the
-      # user's Apple ID on install.
+      # --no-codesign leaves Runner and most pod frameworks with NO code
+      # signature load command at all, and Sideloadly then installs them
+      # unsigned (iOS: "0xe800801c No code signature found"). Ad-hoc sign
+      # (no Apple account needed) so every Mach-O has a signature for
+      # Sideloadly to replace with the user's Apple ID one. Inside-out:
+      # frameworks first, then the app.
+      - name: Ad-hoc sign app and frameworks
+        run: |
+          APP=build/ios/iphoneos/Runner.app
+          for fw in "$APP"/Frameworks/*.framework; do
+            codesign --force --sign - --timestamp=none "$fw"
+          done
+          codesign --force --sign - --timestamp=none "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+
+      # An .ipa is just Payload/Runner.app zipped; Sideloadly re-signs it with
+      # the user's Apple ID on install.
       - name: Package unsigned .ipa
         run: |
           mkdir -p build/ipa/Payload
           cp -R build/ios/iphoneos/Runner.app build/ipa/Payload/
-          cd build/ipa && zip -qry tayyibt-unsigned.ipa Payload
+          cd build/ipa && zip -qr tayyibt-unsigned.ipa Payload
 
       - name: Upload unsigned .ipa
         uses: actions/upload-artifact@v4
