@@ -1,5 +1,5 @@
 # ── Stage 1: Build ──────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 # glibc shim so the Next.js musl SWC binary loads on alpine.
 RUN apk add --no-cache libc6-compat
@@ -32,7 +32,7 @@ ENV NEXT_IGNORE_INCORRECT_LOCKFILE=1
 RUN npm run build
 
 # ── Stage 2: Production image ────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 
 # Runtime glibc shim for the Next.js standalone server.
 RUN apk add --no-cache libc6-compat
