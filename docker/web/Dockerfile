@@ -1,5 +1,5 @@
 # ── Stage 1: Build ──────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 # Install dependencies needed for Next.js SWC
 RUN apk add --no-cache libc6-compat
@@ -23,7 +23,7 @@ ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 RUN npm run build
 
 # ── Stage 2: Production image ────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 
 # Install dependencies needed for runtime
 RUN apk add --no-cache libc6-compat
